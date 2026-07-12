@@ -1,4 +1,4 @@
-﻿-- ============================================
+-- ============================================
 -- Realm of Spirits - World Spawner
 -- GDD v2.0: Otaku Haven hub + legacy world pieces
 -- ============================================
@@ -23,7 +23,7 @@ local function GetGroundPosition(x, z, excludeList)
 
 	local function isWalkable(part)
 		local n = part.Name
-		-- РєРІРµСЃС‚РѕСЂ РІСЃРµРіРґР° С‚РѕР»СЊРєРѕ РЅР° СѓР»РёС†Рµ (Baseplate), РЅРµ РІРЅСѓС‚СЂРё SafeZone/РјР°РіР°Р·РёРЅР°
+		-- квестор всегда только на улице (Baseplate), не внутри SafeZone/магазина
 		if n == "Baseplate" then
 			return true
 		end
@@ -39,7 +39,7 @@ local function GetGroundPosition(x, z, excludeList)
 		return false
 	end
 
-	-- РЅРµСЃРєРѕР»СЊРєРѕ РїРѕРїС‹С‚РѕРє: РїСЂРѕРїСѓСЃРєР°РµРј СЃС‚РµРЅС‹/РєСЂС‹С€Рё/combat Рё РёС‰РµРј РїРѕР»
+	-- несколько попыток: пропускаем стены/крыши/combat и ищем пол
 	local originY = 12
 	for _ = 1, 8 do
 		local result = workspace:Raycast(Vector3.new(x, originY, z), Vector3.new(0, -40, 0), rayParams)
@@ -97,7 +97,7 @@ end
 local function BuildQuestMasterCFrame(pos, faceDir)
 	local dir = Vector3.new(faceDir.X, 0, faceDir.Z)
 	if dir.Magnitude < 0.01 then
-		dir = Vector3.new(1, 0, 0) -- СЃРјРѕС‚СЂРёС‚ Рє РјР°РіР°Р·РёРЅСѓ СЃ СѓР»РёС†С‹ СЃР»РµРІР°
+		dir = Vector3.new(1, 0, 0) -- смотрит к магазину с улицы слева
 	else
 		dir = dir.Unit
 	end
@@ -129,7 +129,7 @@ local function AlignModelToGround(model, targetPos)
 		if typeof(faceAttr) == "Vector3" then
 			faceDir = faceAttr
 		end
-		-- РІСЃРµРіРґР° Baseplate (РІРµСЂС…), С‡С‚РѕР±С‹ РЅРµ РїР°СЂРёС‚СЊ РёР·вЂ‘Р·Р° РґСЂСѓРіРёС… hit'РѕРІ Р»СѓС‡Р°
+		-- всегда Baseplate (верх), чтобы не парить из‑за других hit'ов луча
 		local bp = workspace:FindFirstChild("Baseplate")
 		local groundY = bp and (bp.Position.Y + bp.Size.Y * 0.5) or ground.Y
 		model:PivotTo(BuildQuestMasterCFrame(Vector3.new(pos.X, groundY, pos.Z), faceDir))
@@ -156,7 +156,7 @@ local function AlignModelToGround(model, targetPos)
 	end
 
 	if model.Name == "QuestMaster" then
-		-- Skirt РєР°Рє PrimaryPart Р»РѕРјР°РµС‚ WorldPivot: СЂРёРі Р»РµР¶РёС‚ РЅР° Р±РѕРєСѓ
+		-- Skirt как PrimaryPart ломает WorldPivot: риг лежит на боку
 		model.PrimaryPart = nil
 	else
 		local skirt = model:FindFirstChild("Skirt", true)
@@ -179,7 +179,7 @@ local function LockQuestMasterPhysics(model)
 	end
 end
 
--- РџСЂРѕРјРїС‚ РќР• РЅР° HeadBase РІРЅСѓС‚СЂРё Generated: РїСЂРѕС†РµРґСѓСЂРЅР°СЏ РіРµРЅРµСЂР°С†РёСЏ СЃРЅРѕСЃРёС‚ РґРѕС‡РµСЂРЅРёРµ РёРЅСЃС‚Р°РЅСЃС‹.
+-- Промпт НЕ на HeadBase внутри Generated: процедурная генерация сносит дочерние инстансы.
 local function EnsureQuestMasterInteract(model)
 	if not model then return end
 	local anchor = model:FindFirstChild("QuestInteractAnchor")
@@ -210,8 +210,8 @@ local function EnsureQuestMasterInteract(model)
 		prompt.Name = "QuestPrompt"
 		prompt.Parent = anchor
 	end
-	prompt.ActionText = "РџРѕРіРѕРІРѕСЂРёС‚СЊ"
-	prompt.ObjectText = "РњРёРєР° В· РљРІРµСЃС‚РѕСЂ"
+	prompt.ActionText = "Поговорить"
+	prompt.ObjectText = "Мика · Квестор"
 	prompt.Enabled = true
 	prompt.MaxActivationDistance = 18
 	prompt.RequiresLineOfSight = false
@@ -274,13 +274,13 @@ local function SetupQuestMaster()
 		if nameTag then
 			local label = nameTag:FindFirstChildWhichIsA("TextLabel")
 			if label then
-				label.Text = "РњРёРєР° В· РљРІРµСЃС‚РѕСЂ"
+				label.Text = "Мика · Квестор"
 			end
 		end
 	end
 
 	settle()
-	-- РїСЂРѕС†РµРґСѓСЂРЅР°СЏ РјРѕРґРµР»СЊ РїРµСЂРµСЃРѕР±РёСЂР°РµС‚ Generated РїРѕСЃР»Рµ СЃС‚Р°СЂС‚Р°
+	-- процедурная модель пересобирает Generated после старта
 	task.delay(0.5, settle)
 	task.delay(1.5, settle)
 	task.delay(3, settle)
@@ -305,17 +305,10 @@ local function CreateWorld()
 		baseplate.Parent = workspace
 	end
 
-	if not workspace:FindFirstChild("PlayerHouse") then
-		local house = Instance.new("Model")
-		house.Name = "PlayerHouse"
-		local base = Instance.new("Part")
-		base.Name = "Base"
-		base.Size = Vector3.new(20, 1, 20)
-		base.Position = Vector3.new(0, 0.5, 0)
-		base.Anchored = true
-		base.BrickColor = BrickColor.new("Light brown")
-		base.Parent = house
-		house.Parent = workspace
+	-- PlayerHouse убран: не несёт геймплейной нагрузки
+	local legacyHouse = workspace:FindFirstChild("PlayerHouse")
+	if legacyHouse then
+		legacyHouse:Destroy()
 	end
 
 	if not workspace:FindFirstChild("BattleArena") then
@@ -347,7 +340,7 @@ CreateWorld()
 task.spawn(function()
 	task.wait(1)
 	EnsureQuestMasterStable()
-	-- СЂРµРґРєР°СЏ СЃС‚СЂР°С…РѕРІРєР°, Р±РµР· РїРѕСЃС‚РѕСЏРЅРЅРѕРіРѕ РїРµСЂРµРІРѕСЂРѕС‚Р°
+	-- редкая страховка, без постоянного переворота
 	while true do
 		task.wait(8)
 		EnsureQuestMasterStable()
@@ -355,4 +348,3 @@ task.spawn(function()
 end)
 
 print("Realm of Spirits - World Spawner loaded!")
-

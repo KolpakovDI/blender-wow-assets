@@ -1,4 +1,4 @@
-﻿local ZoneConfig = {}
+local ZoneConfig = {}
 
 ZoneConfig.HavenCenter = Vector3.new(0, 0, 35)
 ZoneConfig.AkihabaraOffset = Vector3.new(70, 0, 0)
@@ -27,13 +27,12 @@ function ZoneConfig.GetSpiritSpawnPositions()
 	return ZoneConfig.SpiritSpawnPositions
 end
 
--- Р—Р°РїРѕР»РЅСЏР№С‚Рµ SoundId РІ С„РѕСЂРјР°С‚Рµ С‡РёСЃР»Р° РёР»Рё rbxassetid://<id>
+-- Заполняйте SoundId числом или rbxassetid://<id> (можно заменить своими треками)
 ZoneConfig.Music = {
-	Safe = {SoundId = "", Volume = 0.35},
-	Genkan = {SoundId = "", Volume = 0.30},
-	Exit = {SoundId = "", Volume = 0.32},
-	Combat = {SoundId = "", Volume = 0.40},
+	Safe = {SoundId = "9043887091", Volume = 0.32}, -- Lo-Fi chill
+	Genkan = {SoundId = "1848354536", Volume = 0.28}, -- relaxed
+	Exit = {SoundId = "9047104571", Volume = 0.34}, -- transition
+	Combat = {SoundId = "9047105584", Volume = 0.40}, -- J-Rock-ish energy
 }
 
 return ZoneConfig
-
