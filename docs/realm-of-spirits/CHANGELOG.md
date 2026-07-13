@@ -7,11 +7,24 @@
 ## [Unreleased]
 
 ### Added
+- Otaku Haven 2.0: магазин 76×76, 2 этаж (RoomA/B), anime-лестница, балкон, сплошная черепичная крыша (`roofLift`), фусума дракон/бамбук
+- `BattleArenaBuilder` — cyberpunk-арена (портал вход/выход, teal/orange)
+- Genkan slippers: визуальные тапочки на ногах в Safe/Genkan, снимаются на Exit/Combat
+- Spirit XP за победу в бою + прогресс квеста `LevelUpSpirit`
+- `WorldLootService` — огненные кристаллы (ItemId 101) и сундуки в Akihabara для побочных квестов
+- QuestUI Focus Mode — камера к Мике при открытии диалога (X/Esc сброс)
+- Mika 2D-Live — BillboardGui эмоции Talk/Joy/Panic/Point/Bow над квестором
+- Genkan — скрытие уличной обуви + тапочки (подошва/верх/ремешок)
+- Mika 2D-Live faces — procedural face panel (глаза/рот/брови) вместо глифов
+- Gacha Robux — `MarketplaceService` + `ZoneConfig.GachaRobuxProductId` + prompt R
 - Otaku Haven Alpha+: стеклянный фасад с раздвижными дверями, северная стена с выходной дверью в Akihabara, колокольчик на входе (звук), FOMO-таймер лимитированной гачи (2ч), примерочная `FittingRoom`, реплики Мики в Quest UI
 - `ZoneConfig.Music` — стартовые SoundId для Safe/Genkan/Exit/Combat (можно заменить своими)
 - Мерцание PointLight витрин в `ZoneController`
 
 ### Fixed
+- `QuestSystem` — `CatchDifferentSpirits` считает только уникальные SpiritId; AcceptQuest засчитывает уже пойманных духов; `FindChests` прогресс
+- `ZoneSystem` — приоритет зон при перекрытии Safe/Genkan/Exit; `CanQuery=true` на zone volumes; корректный Genkan detect стоя
+- `MusicController` — треки Genkan/Exit по `ZoneDetail`, а не только Safe/Combat
 - `WorldSpawner` удаляет старый `PlayerHouse`, чтобы в мире оставались Otaku Haven + Akihabara
 - `ZoneController` — колокольчик срабатывает через широкий входной триггер, а не только через высокую модель колокольчика
 - Промпты манги/гачи в place были `Enabled=false` («soon») — включены и локализованы
@@ -22,6 +35,7 @@
 - `ClientController` — `exitNormalMode()` сбрасывает `isInBattle` и выбор цели
 
 ### Changed
+- `ZoneConfig` — Haven/Safe/Combat сдвинуты (магазин не пересекает Combat); Мика `(-12,-38)`; Safe Z=160; wall2H 2 этажа = 12
 - Manga shelf UX: вывеска, floor arrow, понятный prompt и таймер баффа; старые placeholder hints убраны
 - `ClientController` — выбор духа мышью (mouse.Target + raycast + GuiInset + screen proximity), подсветка цели, маркер `?`/`⚔` для квестов; выбор работает на любой дистанции, E/F — в радиусе 45 studs
 - `UIController` — `MainFrame.Active = false`, чтобы прозрачный UI не перехватывал клики

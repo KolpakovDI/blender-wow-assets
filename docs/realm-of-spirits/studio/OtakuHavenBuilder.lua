@@ -33,11 +33,13 @@ local function makeZone(name, zoneType, center, size, parent)
 		Transparency = 1,
 		CanCollide = false,
 		CanTouch = true,
-		CanQuery = false,
+		CanQuery = true,
+		CastShadow = false,
 		Color = Color3.fromRGB(170, 120, 255),
 		Parent = parent,
 	})
 	z:SetAttribute("ZoneType", zoneType)
+	z:AddTag("ZoneVolume")
 	return z
 end
 
@@ -464,8 +466,9 @@ end
 local function addGlassFacadeAndSlidingDoor(parent, center, half, wallH)
 	local facadeZ = center.Z - half
 	local glassY = wallH / 2
-	local doorW = 6
-	local panelW = (38 - doorW) / 2 -- 16 each side
+	local doorW = 8
+	local facadeWidth = half * 2
+	local panelW = (facadeWidth - doorW) / 2
 	local glassColor = Color3.fromRGB(170, 220, 245)
 	local frameColor = Color3.fromRGB(40, 45, 55)
 
@@ -608,6 +611,500 @@ local function addGlassFacadeAndSlidingDoor(parent, center, half, wallH)
 	return entrance
 end
 
+local function decorateFusumaFace(part, face, kind)
+	local gui = Instance.new("SurfaceGui")
+	gui.Face = face
+	gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+	gui.PixelsPerStud = 40
+	gui.Parent = part
+
+	local bg = Instance.new("Frame")
+	bg.Name = "Paper"
+	bg.Size = UDim2.fromScale(1, 1)
+	bg.BackgroundColor3 = Color3.fromRGB(245, 235, 210)
+	bg.BorderSizePixel = 0
+	bg.Parent = gui
+
+	-- деревянная сетка фусумы
+	for i = 1, 3 do
+		local v = Instance.new("Frame")
+		v.Size = UDim2.new(0, 4, 1, 0)
+		v.Position = UDim2.fromScale(i / 4, 0)
+		v.BackgroundColor3 = Color3.fromRGB(90, 55, 30)
+		v.BorderSizePixel = 0
+		v.Parent = bg
+	end
+	for i = 1, 4 do
+		local h = Instance.new("Frame")
+		h.Size = UDim2.new(1, 0, 0, 4)
+		h.Position = UDim2.fromScale(0, i / 5)
+		h.BackgroundColor3 = Color3.fromRGB(90, 55, 30)
+		h.BorderSizePixel = 0
+		h.Parent = bg
+	end
+
+	if kind == "dragon" then
+		local dragon = Instance.new("TextLabel")
+		dragon.Size = UDim2.fromScale(0.9, 0.7)
+		dragon.Position = UDim2.fromScale(0.05, 0.1)
+		dragon.BackgroundTransparency = 1
+		dragon.Text = "龍\n雲"
+		dragon.TextColor3 = Color3.fromRGB(160, 40, 45)
+		dragon.TextScaled = true
+		dragon.Font = Enum.Font.GothamBold
+		dragon.Parent = bg
+		local sub = Instance.new("TextLabel")
+		sub.Size = UDim2.fromScale(0.9, 0.18)
+		sub.Position = UDim2.fromScale(0.05, 0.78)
+		sub.BackgroundTransparency = 1
+		sub.Text = "〜 dragon 〜"
+		sub.TextColor3 = Color3.fromRGB(120, 70, 40)
+		sub.TextScaled = true
+		sub.Font = Enum.Font.Gotham
+		sub.Parent = bg
+	else
+		-- бамбук: стебли + листья текстом
+		for i = 1, 5 do
+			local stalk = Instance.new("Frame")
+			stalk.Size = UDim2.new(0, 10, 0.78, 0)
+			stalk.Position = UDim2.new(0.12 + (i - 1) * 0.16, 0, 0.12, 0)
+			stalk.BackgroundColor3 = Color3.fromRGB(70, 130, 55)
+			stalk.BorderSizePixel = 0
+			stalk.Parent = bg
+			for n = 1, 4 do
+				local node = Instance.new("Frame")
+				node.Size = UDim2.new(1.4, 0, 0, 5)
+				node.Position = UDim2.new(-0.2, 0, n / 5, 0)
+				node.BackgroundColor3 = Color3.fromRGB(45, 90, 35)
+				node.BorderSizePixel = 0
+				node.Parent = stalk
+			end
+		end
+		local leaf = Instance.new("TextLabel")
+		leaf.Size = UDim2.fromScale(0.9, 0.22)
+		leaf.Position = UDim2.fromScale(0.05, 0.02)
+		leaf.BackgroundTransparency = 1
+		leaf.Text = "竹  竹  竹"
+		leaf.TextColor3 = Color3.fromRGB(40, 100, 50)
+		leaf.TextScaled = true
+		leaf.Font = Enum.Font.GothamBold
+		leaf.Parent = bg
+	end
+end
+
+local function addFusumaRoomDoor(parent, center, half, floor2Y, wall2H, floorSize)
+	local wood = Color3.fromRGB(110, 70, 40)
+	local paper = Color3.fromRGB(240, 228, 200)
+	local wallT = 1
+	local doorW = 0.45 -- thickness on X
+	local doorH = wall2H - 1.4
+	local leafD = 5.5 -- depth along Z per leaf
+	local openingD = leafD * 2 + 0.4
+	local openingZ = center.Z
+	local divX = center.X
+	local yMid = floor2Y + wall2H / 2
+
+	local zMin = center.Z - half + 1
+	local zMax = center.Z + half - 1
+	local open0 = openingZ - openingD / 2
+	local open1 = openingZ + openingD / 2
+
+	local function divPanel(name, z0, z1)
+		if z1 - z0 < 0.5 then return end
+		makePart({
+			Name = name,
+			Size = Vector3.new(wallT, wall2H - 0.4, z1 - z0),
+			Position = Vector3.new(divX, yMid, (z0 + z1) / 2),
+			Color = Color3.fromRGB(220, 200, 235),
+			Parent = parent,
+		})
+	end
+	divPanel("RoomDividerS", zMin, open0)
+	divPanel("RoomDividerN", open1, zMax)
+
+	-- верхняя перемычка над проёмом
+	makePart({
+		Name = "FusumaHeader",
+		Size = Vector3.new(wallT + 0.4, 1.1, openingD + 1),
+		Position = Vector3.new(divX, floor2Y + wall2H - 0.55, openingZ),
+		Color = wood,
+		Material = Enum.Material.Wood,
+		Parent = parent,
+	})
+	-- порог
+	makePart({
+		Name = "FusumaSill",
+		Size = Vector3.new(wallT + 0.6, 0.35, openingD + 0.6),
+		Position = Vector3.new(divX, floor2Y + 0.55, openingZ),
+		Color = wood,
+		Material = Enum.Material.Wood,
+		Parent = parent,
+	})
+
+	local fusuma = Instance.new("Model")
+	fusuma.Name = "FusumaDoor"
+	fusuma.Parent = parent
+
+	local leftClosed = CFrame.new(divX, floor2Y + 0.7 + doorH / 2, openingZ - leafD / 2)
+	local rightClosed = CFrame.new(divX, floor2Y + 0.7 + doorH / 2, openingZ + leafD / 2)
+	local slide = leafD - 0.3
+	local leftOpen = leftClosed * CFrame.new(0, 0, -slide)
+	local rightOpen = rightClosed * CFrame.new(0, 0, slide)
+
+	local function makeLeaf(name, cf, artKind)
+		local leaf = makePart({
+			Name = name,
+			Size = Vector3.new(doorW, doorH, leafD - 0.15),
+			CFrame = cf,
+			Color = paper,
+			Material = Enum.Material.SmoothPlastic,
+			Parent = fusuma,
+		})
+		decorateFusumaFace(leaf, Enum.NormalId.Left, artKind)
+		decorateFusumaFace(leaf, Enum.NormalId.Right, artKind)
+		return leaf
+	end
+
+	local leftDoor = makeLeaf("FusumaLeft", leftClosed, "dragon")
+	local rightDoor = makeLeaf("FusumaRight", rightClosed, "bamboo")
+
+	local sensor = makePart({
+		Name = "FusumaSensor",
+		Size = Vector3.new(4, doorH, openingD),
+		Position = Vector3.new(divX, floor2Y + 0.7 + doorH / 2, openingZ),
+		Transparency = 1,
+		CanCollide = false,
+		CanQuery = true,
+		CanTouch = false,
+		Parent = fusuma,
+	})
+
+	local prompt = Instance.new("ProximityPrompt")
+	prompt.Name = "FusumaPrompt"
+	prompt.ObjectText = "Фусума"
+	prompt.ActionText = "Раздвинуть"
+	prompt.KeyboardKeyCode = Enum.KeyCode.E
+	prompt.MaxActivationDistance = 12
+	prompt.RequiresLineOfSight = false
+	prompt.Parent = sensor
+
+	local click = Instance.new("ClickDetector")
+	click.MaxActivationDistance = 20
+	click.Parent = sensor
+
+	local isOpen = false
+	local busy = false
+	local autoCloseToken = 0
+	local tweenInfo = TweenInfo.new(0.55, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+
+	local function setOpen(open)
+		if busy or open == isOpen then return end
+		busy = true
+		isOpen = open
+		leftDoor.CanCollide = not open
+		rightDoor.CanCollide = not open
+		TweenService:Create(leftDoor, tweenInfo, { CFrame = open and leftOpen or leftClosed }):Play()
+		TweenService:Create(rightDoor, tweenInfo, { CFrame = open and rightOpen or rightClosed }):Play()
+		prompt.ActionText = open and "Закрыть" or "Раздвинуть"
+		task.delay(0.6, function()
+			busy = false
+		end)
+		if open then
+			autoCloseToken += 1
+			local token = autoCloseToken
+			task.delay(5, function()
+				if token == autoCloseToken and isOpen then
+					setOpen(false)
+				end
+			end)
+		end
+	end
+
+	local function toggle()
+		setOpen(not isOpen)
+	end
+	prompt.Triggered:Connect(toggle)
+	click.MouseClick:Connect(toggle)
+	return fusuma
+end
+
+local function addUpperFloorRoofAndBalcony(haven, center, half, floor1H)
+	local upper = Instance.new("Folder")
+	upper.Name = "UpperFloor"
+	upper.Parent = haven
+
+	local floorSize = half * 2
+	local floor2Y = floor1H + 0.5
+	local wall2H = 12
+	local wallT = 1
+	local wood = Color3.fromRGB(255, 240, 225)
+	local wallPink = Color3.fromRGB(235, 210, 245)
+	local tileColor = Color3.fromRGB(170, 55, 50)
+	local tileDark = Color3.fromRGB(130, 40, 40)
+
+	-- Перекрытие 2 этажа с проёмом под лестницу (SW)
+	do
+		local t = 0.8
+		local holeW, holeD = 8, 22
+		local holeX = center.X - half + 5
+		local holeZ = center.Z - half + 18
+		local y = floor2Y
+		local xMin, xMax = center.X - half + 0.5, center.X + half - 0.5
+		local zMin, zMax = center.Z - half + 0.5, center.Z + half - 0.5
+		local hx0, hx1 = holeX - holeW / 2, holeX + holeW / 2
+		local hz0, hz1 = holeZ - holeD / 2, holeZ + holeD / 2
+		local function floorPanel(name, x0, x1, z0, z1)
+			if x1 - x0 < 0.5 or z1 - z0 < 0.5 then return end
+			makePart({
+				Name = name,
+				Size = Vector3.new(x1 - x0, t, z1 - z0),
+				Position = Vector3.new((x0 + x1) / 2, y, (z0 + z1) / 2),
+				Color = wood,
+				Material = Enum.Material.WoodPlanks,
+				Parent = upper,
+			})
+		end
+		floorPanel("Floor2_N", xMin, xMax, hz1, zMax)
+		floorPanel("Floor2_S", xMin, xMax, zMin, hz0)
+		floorPanel("Floor2_W", xMin, hx0, hz0, hz1)
+		floorPanel("Floor2_E", hx1, xMax, hz0, hz1)
+	end
+
+	-- Стены 2 этажа
+	makePart({ Name = "Wall2Left", Size = Vector3.new(wallT, wall2H, floorSize), Position = center + Vector3.new(-half, floor2Y + wall2H / 2, 0), Color = wallPink, Parent = upper })
+	makePart({ Name = "Wall2Right", Size = Vector3.new(wallT, wall2H, floorSize), Position = center + Vector3.new(half, floor2Y + wall2H / 2, 0), Color = wallPink, Parent = upper })
+	makePart({ Name = "Wall2North", Size = Vector3.new(floorSize, wall2H, wallT), Position = center + Vector3.new(0, floor2Y + wall2H / 2, half), Color = wallPink, Parent = upper })
+	-- Юг 2 этажа с проёмом на балкон
+	do
+		local doorW = 8
+		local panelW = (floorSize - doorW) / 2
+		local z = center.Z - half
+		makePart({ Name = "Wall2SouthL", Size = Vector3.new(panelW, wall2H, wallT), Position = Vector3.new(center.X - doorW / 2 - panelW / 2, floor2Y + wall2H / 2, z), Color = wallPink, Parent = upper })
+		makePart({ Name = "Wall2SouthR", Size = Vector3.new(panelW, wall2H, wallT), Position = Vector3.new(center.X + doorW / 2 + panelW / 2, floor2Y + wall2H / 2, z), Color = wallPink, Parent = upper })
+		makePart({ Name = "Wall2SouthHeader", Size = Vector3.new(doorW + 0.5, 1.2, wallT), Position = Vector3.new(center.X, floor2Y + wall2H - 0.6, z), Color = wallPink, Parent = upper })
+	end
+
+	-- Перегородка + раздвижная фусума (дракон / бамбук) между комнатами
+	addFusumaRoomDoor(upper, center, half, floor2Y, wall2H, floorSize)
+
+	local roomA = Instance.new("Folder")
+	roomA.Name = "RoomA"
+	roomA.Parent = upper
+	local roomB = Instance.new("Folder")
+	roomB.Name = "RoomB"
+	roomB.Parent = upper
+
+	-- Комната A (запад): lounge / манга
+	makePart({
+		Name = "RoomA_TatamiHint",
+		Size = Vector3.new(half - 4, 0.12, half - 6),
+		Position = center + Vector3.new(-half / 2, floor2Y + 0.5, 0),
+		Color = Color3.fromRGB(230, 210, 150),
+		Material = Enum.Material.Fabric,
+		CanCollide = false,
+		Parent = roomA,
+	})
+	makePart({
+		Name = "RoomA_Shelf",
+		Size = Vector3.new(10, 4, 1.2),
+		Position = center + Vector3.new(-half + 6, floor2Y + 2.5, half - 6),
+		Color = Color3.fromRGB(120, 80, 50),
+		Material = Enum.Material.Wood,
+		Parent = roomA,
+	})
+
+	-- Комната B (восток): cosplay / staff
+	makePart({
+		Name = "RoomB_Carpet",
+		Size = Vector3.new(half - 4, 0.12, half - 6),
+		Position = center + Vector3.new(half / 2, floor2Y + 0.5, 0),
+		Color = Color3.fromRGB(255, 180, 210),
+		Material = Enum.Material.Fabric,
+		CanCollide = false,
+		Parent = roomB,
+	})
+	makePart({
+		Name = "RoomB_Mirror",
+		Size = Vector3.new(0.4, 5, 6),
+		Position = center + Vector3.new(half - 2, floor2Y + 3.2, 0),
+		Color = Color3.fromRGB(200, 230, 255),
+		Material = Enum.Material.Glass,
+		Transparency = 0.35,
+		Parent = roomB,
+	})
+
+	-- Лестница аниме-стиль (у левой стены, от входа вверх)
+	local stairs = Instance.new("Model")
+	stairs.Name = "AnimeStairs"
+	stairs.Parent = upper
+	local steps = 14
+	local stepH = floor2Y / steps
+	local stepD = 1.35
+	local stairX = center.X - half + 5
+	local startZ = center.Z - half + 10
+	for i = 1, steps do
+		local y = 1 + i * stepH
+		local z = startZ + (i - 1) * stepD
+		makePart({
+			Name = "Step" .. i,
+			Size = Vector3.new(5.5, math.max(0.35, stepH * 0.9), stepD * 0.95),
+			Position = Vector3.new(stairX, y, z),
+			Color = Color3.fromRGB(190, 140, 95),
+			Material = Enum.Material.Wood,
+			Parent = stairs,
+		})
+		-- розовый акцент на торце
+		if i % 2 == 0 then
+			makePart({
+				Name = "StepAccent" .. i,
+				Size = Vector3.new(5.6, 0.12, 0.2),
+				Position = Vector3.new(stairX, y + stepH * 0.4, z + stepD * 0.35),
+				Color = Color3.fromRGB(255, 140, 190),
+				Material = Enum.Material.Neon,
+				CanCollide = false,
+				Transparency = 0.35,
+				Parent = stairs,
+			})
+		end
+	end
+	-- перила
+	for i = 1, steps, 2 do
+		local y = 1 + i * stepH + 1.4
+		local z = startZ + (i - 1) * stepD
+		makePart({
+			Name = "RailPost" .. i,
+			Size = Vector3.new(0.25, 2.6, 0.25),
+			Position = Vector3.new(stairX + 2.6, y, z),
+			Color = Color3.fromRGB(255, 200, 230),
+			Material = Enum.Material.SmoothPlastic,
+			Parent = stairs,
+		})
+	end
+	makePart({
+		Name = "Handrail",
+		Size = Vector3.new(0.28, 0.28, steps * stepD),
+		Position = Vector3.new(stairX + 2.6, floor2Y + 1.2, startZ + (steps * stepD) / 2 - stepD),
+		Color = Color3.fromRGB(255, 170, 210),
+		Material = Enum.Material.SmoothPlastic,
+		Parent = stairs,
+	})
+
+	-- Балкон на южном фасаде
+	local balcony = Instance.new("Model")
+	balcony.Name = "Balcony"
+	balcony.Parent = upper
+	local balZ = center.Z - half - 5
+	makePart({
+		Name = "BalconyFloor",
+		Size = Vector3.new(28, 0.6, 10),
+		Position = Vector3.new(center.X, floor2Y + 0.2, balZ),
+		Color = Color3.fromRGB(240, 220, 200),
+		Material = Enum.Material.WoodPlanks,
+		Parent = balcony,
+	})
+	-- ограждение
+	for _, off in ipairs({
+		{Vector3.new(0, 1.4, -4.7), Vector3.new(28, 2.4, 0.3)},
+		{Vector3.new(-13.7, 1.4, 0), Vector3.new(0.3, 2.4, 10)},
+		{Vector3.new(13.7, 1.4, 0), Vector3.new(0.3, 2.4, 10)},
+	}) do
+		makePart({
+			Name = "BalconyRail",
+			Size = off[2],
+			Position = Vector3.new(center.X, floor2Y + 0.2, balZ) + off[1],
+			Color = Color3.fromRGB(255, 190, 220),
+			Material = Enum.Material.SmoothPlastic,
+			Parent = balcony,
+		})
+	end
+	-- столрики на перилах
+	for i = -4, 4 do
+		makePart({
+			Name = "BalconyPick" .. i,
+			Size = Vector3.new(0.2, 2.2, 0.2),
+			Position = Vector3.new(center.X + i * 3, floor2Y + 1.4, balZ - 4.7),
+			Color = Color3.fromRGB(255, 255, 255),
+			Parent = balcony,
+		})
+	end
+
+		-- Сплошная черепичная крыша (без просветов), приподнята над стенами
+	local roof = Instance.new("Folder")
+	roof.Name = "TileRoof"
+	roof.Parent = upper
+	local roofLift = 2.5 -- зазор над стеной, чтобы не цеплять головой у скатов
+	local roofBaseY = floor2Y + wall2H + roofLift
+	local roofLen = floorSize + 10
+	local pitch = math.rad(28)
+
+	-- Герметичный потолок под скатами
+	makePart({
+		Name = "RoofCeiling",
+		Size = Vector3.new(floorSize + 2, 1.2, floorSize + 2),
+		Position = center + Vector3.new(0, floor2Y + wall2H + 0.6, 0),
+		Color = tileDark,
+		Material = Enum.Material.Slate,
+		Parent = roof,
+	})
+
+	-- Сплошные скаты (левый / правый) — выше стен
+	for _, side in ipairs({-1, 1}) do
+		local span = half + 5
+		makePart({
+			Name = side < 0 and "RoofSlopeL" or "RoofSlopeR",
+			Size = Vector3.new(span + 4, 1.8, roofLen),
+			CFrame = CFrame.new(center.X + side * (span * 0.45), roofBaseY + 4.5, center.Z)
+				* CFrame.Angles(0, 0, side * (-pitch)),
+			Color = tileColor,
+			Material = Enum.Material.Slate,
+			Parent = roof,
+		})
+	end
+
+	-- Декоративная черепица поверх (с перекрытием, без дыр)
+	local rows = 12
+	local cols = 22
+	for row = 0, rows - 1 do
+		local t = row / math.max(1, rows - 1)
+		local y = roofBaseY + 0.5 + t * 9.2
+		local xOff = (half + 3) * (1 - t * 0.92)
+		for _, side in ipairs({-1, 1}) do
+			for col = 0, cols - 1 do
+				local z = center.Z - half - 3 + col * ((floorSize + 8) / (cols - 0.01))
+				makePart({
+					Name = "Tile",
+					Size = Vector3.new(3.6, 0.5, 2.8),
+					CFrame = CFrame.new(center.X + side * xOff, y, z)
+						* CFrame.Angles(0, 0, side * (-pitch)),
+					Color = ((row + col) % 2 == 0) and tileColor or tileDark,
+					Material = Enum.Material.Slate,
+					CanCollide = false,
+					Parent = roof,
+				})
+			end
+		end
+	end
+
+	makePart({
+		Name = "RoofRidge",
+		Size = Vector3.new(4, 1.6, floorSize + 12),
+		Position = center + Vector3.new(0, roofBaseY + 9.5, 0),
+		Color = tileDark,
+		Material = Enum.Material.Slate,
+		Parent = roof,
+	})
+	for _, side in ipairs({-1, 1}) do
+		makePart({
+			Name = "RoofOrnament",
+			Size = Vector3.new(2, 3, 2),
+			Position = center + Vector3.new(0, roofBaseY + 11.5, side * (half + 1)),
+			Color = Color3.fromRGB(255, 210, 80),
+			Material = Enum.Material.SmoothPlastic,
+			Parent = roof,
+		})
+	end
+end
+
 function OtakuHavenBuilder.Build()
 	local existing = workspace:FindFirstChild("OtakuHaven")
 	if existing then existing:Destroy() end
@@ -626,28 +1123,29 @@ function OtakuHavenBuilder.Build()
 
 	local center = ZoneConfig.HavenCenter
 	local floorY = 1.0
+	local floorSize = 76
+	local half = floorSize / 2
+	local wallH, wallT = 11, 1
 
 	makePart({
 		Name = "Floor",
-		Size = Vector3.new(38, 1, 38),
+		Size = Vector3.new(floorSize, 1, floorSize),
 		Position = center + Vector3.new(0, floorY, 0),
 		Color = Color3.fromRGB(255, 245, 235),
 		Material = Enum.Material.WoodPlanks,
 		Parent = haven,
 	})
 
-	local wallH, wallT = 10, 1
-	local half = 19
 	-- фасад (юг): стекло + раздвижная дверь вместо глухой WallBack
 	addGlassFacadeAndSlidingDoor(haven, center, half, wallH)
-	makePart({ Name = "WallLeft", Size = Vector3.new(wallT, wallH, 38), Position = center + Vector3.new(-half, wallH / 2, 0), Color = Color3.fromRGB(230, 210, 255), Parent = haven })
-	makePart({ Name = "WallRight", Size = Vector3.new(wallT, wallH, 38), Position = center + Vector3.new(half, wallH / 2, 0), Color = Color3.fromRGB(230, 210, 255), Parent = haven })
+	makePart({ Name = "WallLeft", Size = Vector3.new(wallT, wallH, floorSize), Position = center + Vector3.new(-half, wallH / 2, 0), Color = Color3.fromRGB(230, 210, 255), Parent = haven })
+	makePart({ Name = "WallRight", Size = Vector3.new(wallT, wallH, floorSize), Position = center + Vector3.new(half, wallH / 2, 0), Color = Color3.fromRGB(230, 210, 255), Parent = haven })
 
 	-- стенка напротив стеклянной витрины (север), с проёмом на выход в Акихабару
 	do
 		local backZ = center.Z + half
-		local exitW = 10
-		local panelW = (38 - exitW) / 2
+		local exitW = 12
+		local panelW = (floorSize - exitW) / 2
 		local wallColor = Color3.fromRGB(245, 225, 240)
 		makePart({
 			Name = "WallNorthLeft",
@@ -671,6 +1169,8 @@ function OtakuHavenBuilder.Build()
 			Parent = haven,
 		})
 	end
+
+	addUpperFloorRoofAndBalcony(haven, center, half, wallH)
 
 	makePart({
 		Name = "Counter",
@@ -714,7 +1214,7 @@ function OtakuHavenBuilder.Build()
 	bellSound.Volume = 0.85
 	bellSound.Parent = bell
 
-	addNeonSign(haven, center + Vector3.new(0, 9, -14))
+	addNeonSign(haven, center + Vector3.new(0, wallH + 2, -half - 1))
 	addLEDDisplay(decor, center + Vector3.new(-12, 5, -8), "NEW\nSPIRITS")
 	addLEDDisplay(decor, center + Vector3.new(12, 5, -8), "LO-FI\nON")
 	addPoster(decor, center + Vector3.new(-17, 5, -5), Color3.fromRGB(255, 100, 150))
@@ -752,25 +1252,6 @@ function OtakuHavenBuilder.Build()
 	akihabara.Parent = workspace
 	local combat = ZoneConfig.Zones.Combat
 	makeZone("CombatZone", "Combat", combat.Center, combat.Size, akihabara)
-	local signPart = makePart({
-		Name = "ZoneSign",
-		Size = Vector3.new(12, 1, 12),
-		Position = combat.Center + Vector3.new(0, 0.5, -50),
-		Color = Color3.fromRGB(80, 80, 100),
-		Parent = akihabara,
-	})
-	local bg = Instance.new("BillboardGui")
-	bg.Size = UDim2.new(0, 180, 0, 40)
-	bg.StudsOffset = Vector3.new(0, 3, 0)
-	bg.Parent = signPart
-	local t = Instance.new("TextLabel")
-	t.Size = UDim2.fromScale(1, 1)
-	t.BackgroundTransparency = 1
-	t.Text = "Akihabara - Combat Zone"
-	t.TextColor3 = Color3.fromRGB(255, 200, 80)
-	t.TextScaled = true
-	t.Font = Enum.Font.GothamBold
-	t.Parent = bg
 
 	local atmosphere = Lighting:FindFirstChild("OtakuHavenAtmosphere")
 	if not atmosphere then
@@ -781,6 +1262,25 @@ function OtakuHavenBuilder.Build()
 		atmosphere.Color = Color3.fromRGB(255, 220, 240)
 		atmosphere.Decay = Color3.fromRGB(180, 140, 200)
 		atmosphere.Parent = Lighting
+	end
+
+	-- Стены/декор непрозрачны; стекло/зоны-триггеры не трогаем
+	for _, d in ipairs(haven:GetDescendants()) do
+		if d:IsA("BasePart") then
+			local name = string.lower(d.Name)
+			local mat = d.Material
+			local isGlass = mat == Enum.Material.Glass
+				or mat == Enum.Material.ForceField
+				or string.find(name, "glass", 1, true)
+				or string.find(name, "window", 1, true)
+			local isZoneTrigger = d.Transparency >= 1 or string.find(name, "zone", 1, true)
+			if not isGlass and not isZoneTrigger and d.Transparency > 0 then
+				d.Transparency = 0
+			end
+		end
+		if d:IsA("BillboardGui") then
+			d.AlwaysOnTop = false
+		end
 	end
 
 	return haven
