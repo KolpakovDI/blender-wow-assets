@@ -1,38 +1,40 @@
 # NEXT SESSION
 
-**Статус:** боевой пайплайн подключён. Следующий фокус — play-тест и полировка боя / контент.
+**Статус:** **P1 Identity** — UX shipped в Studio (нужен play-тест + Ctrl+S).
 
 Дата якоря: 2026-07-14
 
-## Cursor infra (готово)
+## Цели (locked)
 
-- Skills: `.cursor/skills/realm-orchestrator`, `realm-studio-mcp`, `realm-session-checkpoint`, `realm-battle-pipeline`
-- Agent: `.cursor/agents/realm-orchestrator.md`
-- Rules: `realm-of-spirits.mdc`, `realm-cursor-workflow.mdc` (alwaysApply)
-- Entry: `AGENTS.md`
+См. [`GOALS.md`](./GOALS.md) и GDD §9.
 
-## Боевой пайплайн (готово)
+| Done | P0 Core + P0 Hub |
+| Now | **P1 Identity** — play-тест критериев ниже |
+| Later | Explore / Social → P2 Scale по gate |
 
-1. ~~SkillCatalog / EffectCatalog / ItemCatalog~~ — DONE
-2. ~~Battle Orchestrator~~ — DONE (`ServerScriptService.RealmOfSpirits.BattleOrchestrator`)
-3. ~~Проводка GameManager Attack + Enemy AI~~ — DONE
-4. ~~Боевой UI: 3 слота навыков~~ — DONE (`UIController` Attack3Button)
+## P1 Identity — критерии
 
-## Когда продолжишь игру
+1. ≥80% эволюций открывают Skill slot 3 в боевом UI
+2. Guided path до первой эволюции ощутим (кристаллы + lvl + battles)
+3. Ранг / следующий порог ≤2 клика в UI
+4. Announce/feedback при эволюции (не тихий swap)
 
-1. **Play-тест боя** в Studio: CD/MP/stun, heal, 3-й навык, победа/поражение/flee
-2. Полировка BattleSystem / баланс / эффекты по результатам теста
-3. Только потом — декор Otaku Haven / арены
+## Что уже в place (Ctrl+S обязателен для .rbxl)
 
-## Контекст уже сделан (мир)
+- Карточка духа: реальные навыки, прогресс эволюции, кнопка по lvl/кристаллам/победам
+- `EvolutionSuccess` → баннер + 3-й навык; сервер пишет `SkillIds`
+- Профиль: следующий ранг; «Ранг →» открывает `rankFrame`
+- QuestUI: узкая панель сверху, список квестов со скроллом, описание до Принять/Сдать
+- ZoneBanner «Otaku Haven» справа; Live2D emoji над Микой выключен
 
-- Otaku Haven 2×, 2 этаж, фусума, сплошная крыша, wall2H=12, roofLift=2.5
-- Мика (-12, -38), Safe 160 по Z, Combat без пересечения с магазином
-- BattleArenaBuilder cyberpunk
-- Place: `RealmOfSpirits second.rbxl` — **Ctrl+S в Studio** (rbxl не в git)
+## Play-тест (следующий шаг)
 
-## Studio SoT
+1. **Ctrl+S** place: `C:\Mimo\RealmOfSpirits\RealmOfSpirits second.rbxl`
+2. Дух → детали: навыки из каталога, строка «→ форма / ур / кристаллы / победы»
+3. Собрать 5× огненный кристалл (Akihabara), lvl 10, 10 побед → ЭВОЛЮЦИЯ → баннер
+4. Бой после эво: виден Attack3
+5. Профиль (1 клик) → следующий порог; «Ранг →» (2 клик) → детали ранга
 
-- `ReplicatedStorage.RealmOfSpirits`: ZoneConfig, SpiritDatabase, SkillCatalog, EffectCatalog, ItemCatalog
-- `ServerScriptService.RealmOfSpirits`: BattleOrchestrator, OtakuHavenBuilder, BattleArenaBuilder, GameManager, BattleSystem
-- Docs mirrors: `docs/realm-of-spirits/studio/BattleOrchestrator.lua`, catalogs, `UIController.lua`
+## Place
+
+`C:\Mimo\RealmOfSpirits\RealmOfSpirits second.rbxl` — **Ctrl+S**

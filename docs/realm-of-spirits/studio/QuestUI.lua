@@ -1,4 +1,4 @@
--- ============================================
+﻿-- ============================================
 -- Realm of Spirits - Quest UI Client
 -- Интерфейс системы квестов
 -- ============================================
@@ -6,6 +6,106 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+
+local focusActive = false
+local savedCameraType = nil
+local savedAutoRotate = nil
+local savedMikaFaceDir = nil
+
+local function endMikaFocus()
+	if not focusActive then return end
+	focusActive = false
+	local camera = workspace.CurrentCamera
+	if camera then
+		camera.CameraType = savedCameraType or Enum.CameraType.Custom
+	end
+	savedCameraType = nil
+
+	local character = Players.LocalPlayer.Character
+	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+	if humanoid and savedAutoRotate ~= nil then
+		humanoid.AutoRotate = savedAutoRotate
+	end
+	savedAutoRotate = nil
+
+	local questMaster = workspace:FindFirstChild("QuestMaster")
+	if questMaster and savedMikaFaceDir ~= nil then
+		questMaster:SetAttribute("FaceDir", savedMikaFaceDir)
+	end
+	savedMikaFaceDir = nil
+end
+
+local function facePlayerAndMika(questMaster)
+	local character = Players.LocalPlayer.Character
+	local hrp = character and character:FindFirstChild("HumanoidRootPart")
+	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+	if not hrp or not questMaster then
+		return hrp
+	end
+
+	local mikaPos = questMaster:GetPivot().Position
+	local playerPos = hrp.Position
+	local toMika = Vector3.new(mikaPos.X - playerPos.X, 0, mikaPos.Z - playerPos.Z)
+	if toMika.Magnitude > 0.05 then
+		hrp.CFrame = CFrame.lookAt(playerPos, playerPos + toMika.Unit)
+	end
+
+	if humanoid then
+		if savedAutoRotate == nil then
+			savedAutoRotate = humanoid.AutoRotate
+		end
+		humanoid.AutoRotate = false
+	end
+
+	local toPlayer = Vector3.new(playerPos.X - mikaPos.X, 0, playerPos.Z - mikaPos.Z)
+	if toPlayer.Magnitude > 0.05 then
+		if savedMikaFaceDir == nil then
+			local prev = questMaster:GetAttribute("FaceDir")
+			savedMikaFaceDir = typeof(prev) == "Vector3" and prev or Vector3.new(1, 0, 0)
+		end
+		local faceDir = toPlayer.Unit
+		questMaster:SetAttribute("FaceDir", faceDir)
+		local mikaY = questMaster:GetPivot().Position.Y
+		local flat = Vector3.new(mikaPos.X, mikaY, mikaPos.Z)
+		questMaster:PivotTo(CFrame.lookAt(flat, flat + faceDir))
+	end
+
+	return hrp
+end
+
+local function startMikaFocus()
+	local questMaster = workspace:FindFirstChild("QuestMaster")
+	local camera = workspace.CurrentCamera
+	if not questMaster or not camera then return end
+
+	local hrp = facePlayerAndMika(questMaster)
+	local pivot = questMaster:GetPivot()
+	local mikaPos = pivot.Position
+	-- Центр тела: Мика целиком в кадре, верх экрана свободен под UI
+	local lookTarget = mikaPos + Vector3.new(0, 1.35, 0)
+
+	local camPos
+	if hrp then
+		local flat = Vector3.new(mikaPos.X - hrp.Position.X, 0, mikaPos.Z - hrp.Position.Z)
+		local dir = flat.Magnitude > 0.05 and flat.Unit or pivot.LookVector
+		camPos = mikaPos - dir * 23.2 + Vector3.new(0, 3.4, 0)
+	else
+		camPos = mikaPos - pivot.LookVector * 23.2 + Vector3.new(0, 3.4, 0)
+	end
+
+	if not focusActive then
+		savedCameraType = camera.CameraType
+	end
+	focusActive = true
+	camera.CameraType = Enum.CameraType.Scriptable
+	TweenService:Create(camera, TweenInfo.new(0.55, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		CFrame = CFrame.lookAt(camPos, lookTarget),
+	}):Play()
+end
+
+-- Escape closing is wired after questPanel is created
+
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
@@ -52,8 +152,8 @@ screenGui.Parent = playerGui
 
 local questPanel = Instance.new("Frame")
 questPanel.Name = "QuestPanel"
-questPanel.Size = UDim2.new(0, 700, 0, 500)
-questPanel.Position = UDim2.new(0.5, -350, 0.5, -250)
+questPanel.Size = UDim2.new(0, 260, 0, 340)
+questPanel.Position = UDim2.new(0.5, -130, 0, 10)
 questPanel.BackgroundColor3 = COLORS.Background
 questPanel.BorderSizePixel = 0
 questPanel.Visible = false
@@ -70,8 +170,8 @@ panelStroke.Parent = questPanel
 
 -- Заголовок
 local titleLabel = Instance.new("TextLabel")
-titleLabel.Size = UDim2.new(1, -50, 0, 50)
-titleLabel.Position = UDim2.new(0, 20, 0, 10)
+titleLabel.Size = UDim2.new(1, -40, 0, 24)
+titleLabel.Position = UDim2.new(0, 12, 0, 6)
 titleLabel.BackgroundTransparency = 1
 titleLabel.Text = "Мика · Квестор"
 titleLabel.TextColor3 = COLORS.Accent
@@ -82,13 +182,13 @@ titleLabel.Parent = questPanel
 
 local dialogueLabel = Instance.new("TextLabel")
 dialogueLabel.Name = "MikaDialogue"
-dialogueLabel.Size = UDim2.new(1, -40, 0, 48)
-dialogueLabel.Position = UDim2.new(0, 20, 0, 52)
+dialogueLabel.Size = UDim2.new(1, -20, 0, 28)
+dialogueLabel.Position = UDim2.new(0, 10, 0, 30)
 dialogueLabel.BackgroundColor3 = Color3.fromRGB(45, 35, 70)
 dialogueLabel.BackgroundTransparency = 0.2
 dialogueLabel.TextColor3 = COLORS.Text
 dialogueLabel.TextWrapped = true
-dialogueLabel.TextSize = 14
+dialogueLabel.TextSize = 12
 dialogueLabel.Font = Enum.Font.Gotham
 dialogueLabel.TextXAlignment = Enum.TextXAlignment.Left
 dialogueLabel.Text = "Мика: Добро пожаловать в Otaku Haven! Тебе как раз нужна помощь героя..."
@@ -99,8 +199,8 @@ dlgCorner.Parent = dialogueLabel
 
 -- Кнопка закрытия
 local closeBtn = Instance.new("TextButton")
-closeBtn.Size = UDim2.new(0, 40, 0, 40)
-closeBtn.Position = UDim2.new(1, -50, 0, 15)
+closeBtn.Size = UDim2.new(0, 28, 0, 28)
+closeBtn.Position = UDim2.new(1, -36, 0, 8)
 closeBtn.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
 closeBtn.Text = "X"
 closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -113,20 +213,29 @@ closeCorner.CornerRadius = UDim.new(1, 0)
 closeCorner.Parent = closeBtn
 
 closeBtn.MouseButton1Click:Connect(function()
+	endMikaFocus()
 	questPanel.Visible = false
+end)
+
+UserInputService.InputBegan:Connect(function(input, processed)
+	if processed then return end
+	if input.KeyCode == Enum.KeyCode.Escape and questPanel.Visible then
+		endMikaFocus()
+		questPanel.Visible = false
+	end
 end)
 
 -- Вкладки (Доступные / Активные / Выполненные)
 local tabContainer = Instance.new("Frame")
-tabContainer.Size = UDim2.new(1, -30, 0, 40)
-tabContainer.Position = UDim2.new(0, 15, 0, 65)
+tabContainer.Size = UDim2.new(1, -16, 0, 24)
+tabContainer.Position = UDim2.new(0, 8, 0, 58)
 tabContainer.BackgroundTransparency = 1
 tabContainer.Parent = questPanel
 
 local tabLayout = Instance.new("UIListLayout")
 tabLayout.FillDirection = Enum.FillDirection.Horizontal
 tabLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
-tabLayout.Padding = UDim.new(0, 10)
+tabLayout.Padding = UDim.new(0, 4)
 tabLayout.Parent = tabContainer
 
 local currentTab = "Available"
@@ -134,16 +243,17 @@ local tabButtons = {}
 
 local function createTab(name, text)
 	local btn = Instance.new("TextButton")
-	btn.Size = UDim2.new(0, 140, 0, 35)
+	btn.Size = UDim2.new(0.333, -3, 1, -2)
 	btn.BackgroundColor3 = COLORS.Button
 	btn.Text = text
 	btn.TextColor3 = COLORS.Text
-	btn.Font = Enum.Font.GothamBold
-	btn.TextScaled = true
+	btn.Font = Enum.Font.Gotham
+	btn.TextScaled = false
+	btn.TextSize = 11
 	btn.Parent = tabContainer
 
 	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, 8)
+	corner.CornerRadius = UDim.new(0, 5)
 	corner.Parent = btn
 
 	btn.MouseButton1Click:Connect(function()
@@ -162,50 +272,85 @@ createTab("Available", "Доступные")
 createTab("Active", "Активные")
 createTab("Completed", "Выполненные")
 
--- Список квестов (левая панель)
+-- Тело: список + описание от вкладок до кнопки Принять/Сдать
+-- Окно описания: от нижнего края вкладок до кнопки Принять/Сдать
+local QUEST_BODY_TOP = 84
+local QUEST_FOOTER_H = 24
+local QUEST_LIST_H = 88
+local questBody = Instance.new("Frame")
+questBody.Name = "QuestBody"
+questBody.Size = UDim2.new(1, -16, 1, -(QUEST_BODY_TOP + QUEST_FOOTER_H))
+questBody.Position = UDim2.new(0, 8, 0, QUEST_BODY_TOP)
+questBody.BackgroundColor3 = COLORS.Panel
+questBody.BorderSizePixel = 0
+questBody.ClipsDescendants = true
+questBody.Parent = questPanel
+
+local bodyCorner = Instance.new("UICorner")
+bodyCorner.CornerRadius = UDim.new(0, 8)
+bodyCorner.Parent = questBody
+
+-- Описание на всю высоту окна
+local questDetailFrame = Instance.new("ScrollingFrame")
+questDetailFrame.Name = "QuestDetail"
+questDetailFrame.Size = UDim2.new(1, -8, 1, -8)
+questDetailFrame.Position = UDim2.new(0, 4, 0, 4)
+questDetailFrame.BackgroundTransparency = 1
+questDetailFrame.BorderSizePixel = 0
+questDetailFrame.ScrollBarThickness = 3
+questDetailFrame.ScrollBarImageColor3 = COLORS.Accent
+questDetailFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+questDetailFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+questDetailFrame.ScrollingDirection = Enum.ScrollingDirection.Y
+questDetailFrame.Parent = questBody
+
+-- Компактный выбор квеста сверху окна описания
 local questListFrame = Instance.new("ScrollingFrame")
 questListFrame.Name = "QuestList"
-questListFrame.Size = UDim2.new(0, 280, 1, -130)
-questListFrame.Position = UDim2.new(0, 15, 0, 115)
-questListFrame.BackgroundColor3 = COLORS.Panel
+questListFrame.Size = UDim2.new(1, -8, 0, QUEST_LIST_H)
+questListFrame.Position = UDim2.new(0, 4, 0, 4)
+questListFrame.BackgroundColor3 = Color3.fromRGB(35, 28, 55)
+questListFrame.BackgroundTransparency = 0.15
 questListFrame.BorderSizePixel = 0
 questListFrame.ScrollBarThickness = 4
 questListFrame.ScrollBarImageColor3 = COLORS.Accent
-questListFrame.Parent = questPanel
+questListFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+questListFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+questListFrame.ScrollingDirection = Enum.ScrollingDirection.Y
+questListFrame.ZIndex = 6
+questListFrame.Parent = questBody
 
 local listCorner = Instance.new("UICorner")
-listCorner.CornerRadius = UDim.new(0, 8)
+listCorner.CornerRadius = UDim.new(0, 6)
 listCorner.Parent = questListFrame
 
 local listLayout = Instance.new("UIListLayout")
-listLayout.Padding = UDim.new(0, 8)
+listLayout.Padding = UDim.new(0, 2)
 listLayout.SortOrder = Enum.SortOrder.LayoutOrder
 listLayout.Parent = questListFrame
 
--- Детали квеста (правая панель)
-local questDetailFrame = Instance.new("Frame")
-questDetailFrame.Name = "QuestDetail"
-questDetailFrame.Size = UDim2.new(0, 380, 1, -130)
-questDetailFrame.Position = UDim2.new(0, 305, 0, 115)
-questDetailFrame.BackgroundColor3 = COLORS.Panel
-questDetailFrame.BorderSizePixel = 0
-questDetailFrame.Parent = questPanel
-
-local detailCorner = Instance.new("UICorner")
-detailCorner.CornerRadius = UDim.new(0, 8)
-detailCorner.Parent = questDetailFrame
-
 local detailPadding = Instance.new("UIPadding")
-detailPadding.PaddingTop = UDim.new(0, 15)
-detailPadding.PaddingBottom = UDim.new(0, 15)
-detailPadding.PaddingLeft = UDim.new(0, 15)
-detailPadding.PaddingRight = UDim.new(0, 15)
+detailPadding.PaddingTop = UDim.new(0, QUEST_LIST_H + 8)
+detailPadding.PaddingBottom = UDim.new(0, 6)
+detailPadding.PaddingLeft = UDim.new(0, 8)
+detailPadding.PaddingRight = UDim.new(0, 8)
 detailPadding.Parent = questDetailFrame
 
 local detailLayout = Instance.new("UIListLayout")
-detailLayout.Padding = UDim.new(0, 10)
+detailLayout.Padding = UDim.new(0, 4)
 detailLayout.SortOrder = Enum.SortOrder.LayoutOrder
 detailLayout.Parent = questDetailFrame
+
+questDetailFrame.ClipsDescendants = true
+
+local actionFooter = Instance.new("Frame")
+actionFooter.Name = "ActionFooter"
+actionFooter.Size = UDim2.new(1, -20, 0, 22)
+actionFooter.Position = UDim2.new(0, 10, 1, -24)
+actionFooter.BackgroundTransparency = 1
+actionFooter.ZIndex = 8
+actionFooter.Visible = false
+actionFooter.Parent = questPanel
 
 -- Переменные для данных
 local readyToTurnInIds = {}
@@ -249,7 +394,7 @@ local currentQuestData = {
 
 local function clearQuestList()
 	for _, child in ipairs(questListFrame:GetChildren()) do
-		if not child:IsA("UIListLayout") then
+		if not child:IsA("UIListLayout") and not child:IsA("UICorner") and not child:IsA("UIPadding") then
 			child:Destroy()
 		end
 	end
@@ -260,6 +405,13 @@ local function clearDetail()
 		if not child:IsA("UIListLayout") and not child:IsA("UIPadding") then
 			child:Destroy()
 		end
+	end
+	local footer = questPanel:FindFirstChild("ActionFooter")
+	if footer then
+		for _, c in ipairs(footer:GetChildren()) do
+			c:Destroy()
+		end
+		footer.Visible = false
 	end
 end
 
@@ -272,18 +424,18 @@ end
 
 local function createRewardLabel(parent, icon, text, color)
 	local frame = Instance.new("Frame")
-	frame.Size = UDim2.new(1, 0, 0, 25)
+	frame.Size = UDim2.new(1, 0, 0, 16)
 	frame.BackgroundTransparency = 1
 	frame.Parent = parent
 
 	local layout = Instance.new("UIListLayout")
 	layout.FillDirection = Enum.FillDirection.Horizontal
 	layout.VerticalAlignment = Enum.VerticalAlignment.Center
-	layout.Padding = UDim.new(0, 8)
+	layout.Padding = UDim.new(0, 4)
 	layout.Parent = frame
 
 	local iconLabel = Instance.new("TextLabel")
-	iconLabel.Size = UDim2.new(0, 25, 0, 25)
+	iconLabel.Size = UDim2.new(0, 16, 0, 16)
 	iconLabel.BackgroundTransparency = 1
 	iconLabel.Text = icon
 	iconLabel.TextColor3 = color
@@ -292,12 +444,13 @@ local function createRewardLabel(parent, icon, text, color)
 	iconLabel.Parent = frame
 
 	local textLabel = Instance.new("TextLabel")
-	textLabel.Size = UDim2.new(1, -35, 0, 25)
+	textLabel.Size = UDim2.new(1, -20, 0, 16)
 	textLabel.BackgroundTransparency = 1
 	textLabel.Text = text
 	textLabel.TextColor3 = color
-	textLabel.Font = Enum.Font.GothamBold
-	textLabel.TextScaled = true
+	textLabel.Font = Enum.Font.Gotham
+	textLabel.TextScaled = false
+	textLabel.TextSize = 11
 	textLabel.TextXAlignment = Enum.TextXAlignment.Left
 	textLabel.Parent = frame
 end
@@ -307,54 +460,59 @@ local function showQuestDetail(quest, isActive, progress, readyToTurnIn)
 
 	-- Название
 	local nameLbl = Instance.new("TextLabel")
-	nameLbl.Size = UDim2.new(1, 0, 0, 30)
+	nameLbl.Size = UDim2.new(1, 0, 0, 18)
 	nameLbl.BackgroundTransparency = 1
 	nameLbl.Text = quest.Name or "Unknown"
 	nameLbl.TextColor3 = (quest.Type == "Story") and COLORS.Story or COLORS.Side
-	nameLbl.Font = Enum.Font.FredokaOne
-	nameLbl.TextScaled = true
+	nameLbl.Font = Enum.Font.GothamBold
+	nameLbl.TextScaled = false
+	nameLbl.TextSize = 14
 	nameLbl.TextXAlignment = Enum.TextXAlignment.Left
 	nameLbl.Parent = questDetailFrame
 
 	-- Тип и уровень
 	local typeLbl = Instance.new("TextLabel")
-	typeLbl.Size = UDim2.new(1, 0, 0, 20)
+	typeLbl.Size = UDim2.new(1, 0, 0, 14)
 	typeLbl.BackgroundTransparency = 1
 	typeLbl.Text = (quest.Type == "Story" and "Сюжетный" or "Побочный") .. " квест · Ур. " .. (quest.Level or 1)
 	typeLbl.TextColor3 = COLORS.SubText
 	typeLbl.Font = Enum.Font.Gotham
-	typeLbl.TextScaled = true
+	typeLbl.TextScaled = false
+	typeLbl.TextSize = 11
 	typeLbl.TextXAlignment = Enum.TextXAlignment.Left
 	typeLbl.Parent = questDetailFrame
 
 	-- Описание
 	local descLbl = Instance.new("TextLabel")
-	descLbl.Size = UDim2.new(1, 0, 0, 50)
+	descLbl.Size = UDim2.new(1, 0, 0, 0)
+	descLbl.AutomaticSize = Enum.AutomaticSize.Y
 	descLbl.BackgroundTransparency = 1
 	descLbl.Text = quest.Description or ""
 	descLbl.TextColor3 = COLORS.Text
 	descLbl.Font = Enum.Font.Gotham
 	descLbl.TextWrapped = true
-	descLbl.TextScaled = true
+	descLbl.TextScaled = false
+	descLbl.TextSize = 12
 	descLbl.TextXAlignment = Enum.TextXAlignment.Left
 	descLbl.TextYAlignment = Enum.TextYAlignment.Top
 	descLbl.Parent = questDetailFrame
 
 	-- Цели
 	local objTitle = Instance.new("TextLabel")
-	objTitle.Size = UDim2.new(1, 0, 0, 20)
+	objTitle.Size = UDim2.new(1, 0, 0, 14)
 	objTitle.BackgroundTransparency = 1
 	objTitle.Text = "Цели:"
 	objTitle.TextColor3 = COLORS.Accent
 	objTitle.Font = Enum.Font.GothamBold
-	objTitle.TextScaled = true
+	objTitle.TextScaled = false
+	objTitle.TextSize = 12
 	objTitle.TextXAlignment = Enum.TextXAlignment.Left
 	objTitle.Parent = questDetailFrame
 
 	if quest.Objectives then
 		for i, obj in ipairs(quest.Objectives) do
 			local objFrame = Instance.new("Frame")
-			objFrame.Size = UDim2.new(1, 0, 0, 25)
+			objFrame.Size = UDim2.new(1, 0, 0, 16)
 			objFrame.BackgroundTransparency = 1
 			objFrame.Parent = questDetailFrame
 
@@ -362,7 +520,9 @@ local function showQuestDetail(quest, isActive, progress, readyToTurnIn)
 			if obj.Type == "CatchSpirit" then objText = "Поймать духов: " .. obj.Count
 			elseif obj.Type == "DefeatEnemies" then objText = "Победить врагов: " .. obj.Count
 			elseif obj.Type == "CatchDifferentSpirits" then objText = "Поймать разных духов: " .. obj.Count
-			elseif obj.Type == "CollectItem" then objText = "Собрать предметы: " .. obj.Count
+			elseif obj.Type == "CollectItem" then objText = "Собрать огненные кристаллы: " .. obj.Count
+			elseif obj.Type == "LevelUpSpirit" then objText = "Прокачать духа до уровня: " .. (obj.TargetLevel or obj.Count)
+			elseif obj.Type == "FindChests" then objText = "Найти сундуки: " .. obj.Count
 			elseif obj.Type == "LevelUpSpirit" then objText = "Прокачать духа до ур. " .. (obj.TargetLevel or 10)
 			elseif obj.Type == "FindChests" then objText = "Найти сундуки: " .. obj.Count
 			end
@@ -377,7 +537,8 @@ local function showQuestDetail(quest, isActive, progress, readyToTurnIn)
 			objLbl.Text = "• " .. objText
 			objLbl.TextColor3 = COLORS.Text
 			objLbl.Font = Enum.Font.Gotham
-			objLbl.TextScaled = true
+			objLbl.TextScaled = false
+			objLbl.TextSize = 11
 			objLbl.TextXAlignment = Enum.TextXAlignment.Left
 			objLbl.Parent = objFrame
 		end
@@ -385,22 +546,24 @@ local function showQuestDetail(quest, isActive, progress, readyToTurnIn)
 
 	-- Награды
 	local rewTitle = Instance.new("TextLabel")
-	rewTitle.Size = UDim2.new(1, 0, 0, 20)
+	rewTitle.Size = UDim2.new(1, 0, 0, 14)
 	rewTitle.BackgroundTransparency = 1
 	rewTitle.Text = "Награды:"
 	rewTitle.TextColor3 = COLORS.Accent
 	rewTitle.Font = Enum.Font.GothamBold
-	rewTitle.TextScaled = true
+	rewTitle.TextScaled = false
+	rewTitle.TextSize = 12
 	rewTitle.TextXAlignment = Enum.TextXAlignment.Left
 	rewTitle.Parent = questDetailFrame
 
 	local rewardsFrame = Instance.new("Frame")
-	rewardsFrame.Size = UDim2.new(1, 0, 0, 120)
+	rewardsFrame.Size = UDim2.new(1, 0, 0, 0)
+	rewardsFrame.AutomaticSize = Enum.AutomaticSize.Y
 	rewardsFrame.BackgroundTransparency = 1
 	rewardsFrame.Parent = questDetailFrame
 
 	local rewLayout = Instance.new("UIListLayout")
-	rewLayout.Padding = UDim.new(0, 5)
+	rewLayout.Padding = UDim.new(0, 2)
 	rewLayout.Parent = rewardsFrame
 
 	local r = quest.Rewards
@@ -430,29 +593,35 @@ local function showQuestDetail(quest, isActive, progress, readyToTurnIn)
 
 	-- Кнопка принятия (только для доступных квестов)
 	if readyToTurnIn then
+		local footer = questPanel:FindFirstChild("ActionFooter")
+		if footer then footer.Visible = true end
 		local turnInBtn = Instance.new("TextButton")
-		turnInBtn.Size = UDim2.new(1, 0, 0, 40)
+		turnInBtn.Size = UDim2.new(1, 0, 1, 0)
 		turnInBtn.BackgroundColor3 = COLORS.Gold
 		turnInBtn.Text = "Сдать квест"
 		turnInBtn.TextColor3 = Color3.fromRGB(30, 20, 10)
-		turnInBtn.Font = Enum.Font.FredokaOne
-		turnInBtn.TextScaled = true
-		turnInBtn.Parent = questDetailFrame
+		turnInBtn.Font = Enum.Font.GothamBold
+		turnInBtn.TextScaled = false
+		turnInBtn.TextSize = 12
+		turnInBtn.Parent = footer or questDetailFrame
 		local turnInCorner = Instance.new("UICorner")
-		turnInCorner.CornerRadius = UDim.new(0, 8)
+		turnInCorner.CornerRadius = UDim.new(0, 6)
 		turnInCorner.Parent = turnInBtn
 		turnInBtn.MouseButton1Click:Connect(function()
 			QuestEvent:FireServer("TurnInQuest", {QuestId = quest.Id})
 		end)
 	elseif not isActive and not quest._completed then
+		local footer = questPanel:FindFirstChild("ActionFooter")
+		if footer then footer.Visible = true end
 		local acceptBtn = Instance.new("TextButton")
-		acceptBtn.Size = UDim2.new(1, 0, 0, 40)
+		acceptBtn.Size = UDim2.new(1, 0, 1, 0)
 		acceptBtn.BackgroundColor3 = COLORS.Accent
 		acceptBtn.Text = "Принять квест"
 		acceptBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-		acceptBtn.Font = Enum.Font.FredokaOne
-		acceptBtn.TextScaled = true
-		acceptBtn.Parent = questDetailFrame
+		acceptBtn.Font = Enum.Font.GothamBold
+		acceptBtn.TextScaled = false
+		acceptBtn.TextSize = 12
+		acceptBtn.Parent = footer or questDetailFrame
 
 		local acceptCorner = Instance.new("UICorner")
 		acceptCorner.CornerRadius = UDim.new(0, 8)
@@ -468,10 +637,11 @@ local selectedQuest = nil
 
 local function createQuestEntry(quest, isActive, progress, order, readyToTurnIn)
 	local entry = Instance.new("TextButton")
-	entry.Size = UDim2.new(1, -10, 0, 50)
+	entry.Size = UDim2.new(1, -6, 0, 26)
 	entry.BackgroundColor3 = COLORS.Button
 	entry.Text = ""
 	entry.LayoutOrder = order or 0
+	entry.ZIndex = 7
 	entry.Parent = questListFrame
 
 	local corner = Instance.new("UICorner")
@@ -484,24 +654,28 @@ local function createQuestEntry(quest, isActive, progress, order, readyToTurnIn)
 	entryLayout.Parent = entry
 
 	local nameLbl = Instance.new("TextLabel")
-	nameLbl.Size = UDim2.new(1, -16, 0, 22)
-	nameLbl.Position = UDim2.new(0, 8, 0, 4)
+	nameLbl.Size = UDim2.new(1, -12, 0, 12)
+	nameLbl.Position = UDim2.new(0, 6, 0, 2)
 	nameLbl.BackgroundTransparency = 1
 	nameLbl.Text = quest.Name or "Unknown"
 	nameLbl.TextColor3 = (quest.Type == "Story") and COLORS.Story or COLORS.Side
 	nameLbl.Font = Enum.Font.GothamBold
-	nameLbl.TextScaled = true
+	nameLbl.TextScaled = false
+	nameLbl.TextSize = 11
 	nameLbl.TextXAlignment = Enum.TextXAlignment.Left
+	nameLbl.TextTruncate = Enum.TextTruncate.AtEnd
 	nameLbl.Parent = entry
 
 	local infoLbl = Instance.new("TextLabel")
-	infoLbl.Size = UDim2.new(1, -16, 0, 18)
-	infoLbl.Position = UDim2.new(0, 8, 0, 26)
+	infoLbl.Size = UDim2.new(1, -12, 0, 11)
+	infoLbl.Position = UDim2.new(0, 6, 0, 14)
 	infoLbl.BackgroundTransparency = 1
 	infoLbl.TextColor3 = COLORS.SubText
 	infoLbl.Font = Enum.Font.Gotham
-	infoLbl.TextScaled = true
+	infoLbl.TextScaled = false
+	infoLbl.TextSize = 9
 	infoLbl.TextXAlignment = Enum.TextXAlignment.Left
+	infoLbl.TextTruncate = Enum.TextTruncate.AtEnd
 	infoLbl.Parent = entry
 
 	if readyToTurnIn then
@@ -661,6 +835,7 @@ QuestEvent.OnClientEvent:Connect(function(action, data)
 		tabButtons.Completed.BackgroundColor3 = (currentTab == "Completed") and COLORS.ButtonHover or COLORS.Button
 
 		questPanel.Visible = true
+		startMikaFocus()
 		showQuestList(currentTab)
 
 		-- Анимация появления
@@ -742,3 +917,4 @@ task.defer(function()
 end)
 
 print("Realm of Spirits - Quest UI загружен!")
+

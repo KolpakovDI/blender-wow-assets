@@ -1,8 +1,77 @@
 ﻿local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
 local questMaster = script.Parent
 
 local basePivot = nil
 local isAnimating = false
+
+-- 2D-Live лица (GDD Scene 2): procedural face panel вместо глифов
+local FACE_SKIN = Color3.fromRGB(255, 224, 210)
+local EMOTIONS = {
+	Idle = { title = "", color = Color3.fromRGB(210, 195, 230), eye = "dot", mouth = "flat", brow = 0 },
+	Talk = { title = "いらっしゃいませ!", color = Color3.fromRGB(255, 170, 220), eye = "happy", mouth = "open", brow = -2 },
+	Success = { title = "やった！", color = Color3.fromRGB(255, 220, 90), eye = "happy", mouth = "grin", brow = -4 },
+	Joy = { title = "やった！", color = Color3.fromRGB(255, 220, 90), eye = "happy", mouth = "grin", brow = -4 },
+	Fail = { title = "ええっ!?", color = Color3.fromRGB(255, 110, 130), eye = "wide", mouth = "shock", brow = 6 },
+	Panic = { title = "ええっ!?", color = Color3.fromRGB(255, 110, 130), eye = "wide", mouth = "shock", brow = 6 },
+	Point = { title = "がんばれ!", color = Color3.fromRGB(120, 210, 255), eye = "determined", mouth = "smile", brow = -1 },
+	Bow = { title = "よろしく", color = Color3.fromRGB(180, 220, 255), eye = "soft", mouth = "smile", brow = 0 },
+}
+
+local liveGui, livePanel, liveFace, liveTitle
+local leftEye, rightEye, mouth, leftBrow, rightBrow, blushL, blushR
+local emotionToken = 0
+
+local function makeFacePart(parent, name, size, pos, color, radius)
+	local f = Instance.new("Frame")
+	f.Name = name
+	f.Size = size
+	f.Position = pos
+	f.BackgroundColor3 = color
+	f.BorderSizePixel = 0
+	f.Parent = parent
+	local c = Instance.new("UICorner")
+	c.CornerRadius = UDim.new(0, radius or 8)
+	c.Parent = f
+	return f
+end
+
+local function ensureLive2D()
+	-- Отключено: окно с эмодзи над головой Мики
+	local existing = questMaster:FindFirstChild("Live2DEmotion")
+	if existing then existing:Destroy() end
+	liveGui = nil
+	facePanel = nil
+end
+
+local function showEmotion(key, duration)
+	if true then return end -- Live2D emoji billboard disabled
+	ensureLive2D()
+	local emo = EMOTIONS[key] or EMOTIONS.Idle
+	emotionToken += 1
+	local token = emotionToken
+	liveGui.Enabled = true
+	liveTitle.Text = emo.title
+	applyFaceStyle(emo)
+	local stroke = livePanel:FindFirstChild("Stroke")
+	if stroke then stroke.Color = emo.color end
+	livePanel.Size = UDim2.new(0.75, 0, 0.75, 0)
+	livePanel.Position = UDim2.new(0.125, 0, 0.125, 0)
+	TweenService:Create(livePanel, TweenInfo.new(0.18, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+		Size = UDim2.new(1, 0, 1, 0),
+		Position = UDim2.new(0, 0, 0, 0),
+	}):Play()
+	task.delay(duration or 2.2, function()
+		if token ~= emotionToken then return end
+		local idle = EMOTIONS.Idle
+		liveTitle.Text = idle.title
+		applyFaceStyle(idle)
+		if stroke then stroke.Color = idle.color end
+	end)
+end
+
+ensureLive2D()
+showEmotion("Idle", 0.1)
 
 local function buildQuestMasterCFrame(pos, faceDir)
 	local dir = Vector3.new(faceDir.X, 0, faceDir.Z)
@@ -153,8 +222,8 @@ local function ensurePrompt()
 		prompt.Name = "QuestPrompt"
 		prompt.Parent = anchor
 	end
-	prompt.ActionText = "РџРѕРіРѕРІРѕСЂРёС‚СЊ"
-	prompt.ObjectText = "РњРёРєР° В· РљРІРµСЃС‚РѕСЂ"
+	prompt.ActionText = "Поговорить"
+	prompt.ObjectText = "Мика · Квестор"
 	prompt.MaxActivationDistance = 18
 	prompt.RequiresLineOfSight = false
 	prompt.KeyboardKeyCode = Enum.KeyCode.E
@@ -185,12 +254,24 @@ end)
 
 questMaster:GetAttributeChangedSignal("Reaction"):Connect(function()
 	local reaction = questMaster:GetAttribute("Reaction")
-	if reaction == "Success" then
+	if not reaction then return end
+	if reaction == "Success" or reaction == "Joy" then
+		showEmotion("Joy", 2.5)
 		PlayCheer()
-	elseif reaction == "Fail" then
+	elseif reaction == "Fail" or reaction == "Panic" then
+		showEmotion("Panic", 2.2)
 		PlayChibiFail()
 	elseif reaction == "Bow" then
+		showEmotion("Bow", 2.0)
 		PlayBow()
+	elseif reaction == "Talk" then
+		showEmotion("Talk", 2.4)
+	elseif reaction == "Point" then
+		showEmotion("Point", 2.4)
+		SetHighlight(Color3.fromRGB(120, 200, 255))
+		task.delay(0.8, function() SetHighlight(Color3.fromRGB(180, 120, 255)) end)
+	else
+		showEmotion("Idle", 1.0)
 	end
 end)
 
@@ -204,4 +285,3 @@ questMaster:GetAttributeChangedSignal("FaceUserId"):Connect(function()
 end)
 
 print("QuestMaster behavior loaded (upright, prompt ensured)")
-

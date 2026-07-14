@@ -349,18 +349,20 @@ function QuestSystem:UpdateProgress(progressType, data)
 						progress.Current = progress.Current + 1
 					elseif progressType == "CatchDifferentSpirits" then
 						if data and data.SpiritId then
-							local alreadyCaught = false
-							for j = 1, i - 1 do
-								if self.QuestProgress[questId][j].SpiritId == data.SpiritId then
-									alreadyCaught = true
-									break
-								end
-							end
-							if not alreadyCaught then
+							progress.CaughtIds = progress.CaughtIds or {}
+							local spiritKey = tostring(data.SpiritId)
+							if not progress.CaughtIds[spiritKey] then
+								progress.CaughtIds[spiritKey] = true
 								progress.Current = progress.Current + 1
-								progress.SpiritId = data.SpiritId
 							end
 						end
+					elseif progressType == "LevelUpSpirit" then
+						local reached = (data and (data.Level or data.NewLevel)) or 0
+						if reached > progress.Current then
+							progress.Current = reached
+						end
+					elseif progressType == "FindChests" then
+						progress.Current = progress.Current + (data and data.Count or 1)
 					elseif progressType == "CollectItem" then
 						if data and data.ItemId == objective.ItemId then
 							progress.Current = progress.Current + (data.Count or 1)
@@ -384,7 +386,6 @@ function QuestSystem:UpdateProgress(progressType, data)
 end
 
 function QuestSystem:AreAllObjectivesComplete(questId)
-	if self.ReadyToTurnIn[questId] then return false end
 	local quest = QuestDatabase[questId]
 	local progress = self.QuestProgress[questId]
 	if not quest or not progress then return false end

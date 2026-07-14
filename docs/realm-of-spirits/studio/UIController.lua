@@ -645,7 +645,7 @@ mpFill = mpFillNode
 -- ============================================
 
 local attack1Button = CreateTextButton(battleFrame, "Attack1Button",
-	UDim2.new(0.28, 5, 0, 130),
+	UDim2.new(0.22, 5, 0, 130),
 	UDim2.new(0.1, 0, 0, 35),
 	"Коготь Духа",
 	Color3.fromRGB(180, 70, 70),
@@ -653,7 +653,7 @@ local attack1Button = CreateTextButton(battleFrame, "Attack1Button",
 )
 
 local attack2Button = CreateTextButton(battleFrame, "Attack2Button",
-	UDim2.new(0.38, 0, 0, 130),
+	UDim2.new(0.32, 0, 0, 130),
 	UDim2.new(0.1, 0, 0, 35),
 	"Призрачный Вихрь",
 	Color3.fromRGB(180, 70, 70),
@@ -661,15 +661,23 @@ local attack2Button = CreateTextButton(battleFrame, "Attack2Button",
 )
 
 local attack3Button = CreateTextButton(battleFrame, "Attack3Button",
-	UDim2.new(0.48, -5, 0, 130),
+	UDim2.new(0.42, -5, 0, 130),
 	UDim2.new(0.1, 0, 0, 35),
 	"Навык 3",
 	Color3.fromRGB(180, 70, 70),
 	"✦"
 )
 
+local potionButton = CreateTextButton(battleFrame, "PotionButton",
+	UDim2.new(0.52, -5, 0, 130),
+	UDim2.new(0.1, 0, 0, 35),
+	"Зелье x0",
+	Color3.fromRGB(70, 160, 100),
+	"🧪"
+)
+
 local fleeButton = CreateTextButton(battleFrame, "FleeButton",
-	UDim2.new(0.58, -5, 0, 130),
+	UDim2.new(0.62, -5, 0, 130),
 	UDim2.new(0.1, 0, 0, 35),
 	"Побег",
 	Color3.fromRGB(100, 100, 180),
@@ -678,6 +686,7 @@ local fleeButton = CreateTextButton(battleFrame, "FleeButton",
 WoWUITheme.StyleActionButton(attack1Button)
 WoWUITheme.StyleActionButton(attack2Button)
 WoWUITheme.StyleActionButton(attack3Button)
+WoWUITheme.StyleActionButton(potionButton)
 WoWUITheme.StyleActionButton(fleeButton)
 
 -- ============================================
@@ -1498,6 +1507,28 @@ local function UpdateBattleSkillButtons(battleData)
 	SetBattleSkillButton(attack2Button, "Призрачный Вихрь", skills and skills[2], mp)
 	SetBattleSkillButton(attack3Button, "Навык 3", skills and skills[3], mp)
 	attack3Button.Visible = skills ~= nil and skills[3] ~= nil
+
+	local count = tonumber(battleData and battleData.PotionCount) or 0
+	local cd = tonumber(battleData and battleData.PotionCooldown) or 0
+	local hpFull = false
+	if battleData and battleData.PlayerHP and battleData.PlayerMaxHP then
+		hpFull = battleData.PlayerHP >= battleData.PlayerMaxHP
+	end
+	local potionTitle
+	if cd > 0.05 then
+		potionTitle = string.format("%.1fс", cd)
+	else
+		potionTitle = string.format("Зелье x%d", count)
+	end
+	local potionLabel = potionButton:FindFirstChild("ButtonLabel")
+	if potionLabel then
+		potionLabel.Text = potionTitle
+	else
+		potionButton.Text = potionTitle
+	end
+	local disabled = count <= 0 or cd > 0.05 or hpFull
+	potionButton.BackgroundColor3 = disabled and Color3.fromRGB(95, 95, 95) or Color3.fromRGB(70, 160, 100)
+	potionButton.Active = not disabled
 end
 
 -- ============================================
@@ -1599,6 +1630,25 @@ attack3Button.MouseButton1Click:Connect(function()
 	else
 		ShowNotification("Навык 3 недоступен")
 	end
+end)
+
+potionButton.MouseButton1Click:Connect(function()
+	if not CurrentBattle then return end
+	local count = tonumber(CurrentBattle.PotionCount) or 0
+	local cd = tonumber(CurrentBattle.PotionCooldown) or 0
+	if count <= 0 then
+		ShowNotification("Нет зелий здоровья")
+		return
+	end
+	if cd > 0.05 then
+		ShowNotification("Зелье перезаряжается")
+		return
+	end
+	if CurrentBattle.PlayerHP and CurrentBattle.PlayerMaxHP and CurrentBattle.PlayerHP >= CurrentBattle.PlayerMaxHP then
+		ShowNotification("HP уже полное")
+		return
+	end
+	BattleEvent:FireServer("UsePotion", {})
 end)
 
 fleeButton.MouseButton1Click:Connect(function()

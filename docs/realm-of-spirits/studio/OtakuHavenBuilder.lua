@@ -43,6 +43,69 @@ local function makeZone(name, zoneType, center, size, parent)
 	return z
 end
 
+local function addGenkanMat(parent, position)
+	-- стильный коврик генкана: рамка + ткань + неоновая полоса
+	local model = Instance.new("Model")
+	model.Name = "GenkanMat"
+	model.Parent = parent
+
+	local function matPart(name, size, offset, color, material)
+		local p = makePart({
+			Name = name,
+			Size = size,
+			Position = position + offset,
+			Color = color,
+			Material = material or Enum.Material.Fabric,
+			CanCollide = false,
+			CanQuery = false,
+			CanTouch = false,
+			Parent = model,
+		})
+		return p
+	end
+
+	-- тёмная рамка (индиго)
+	matPart("MatFrame", Vector3.new(8.4, 0.12, 4.4), Vector3.new(0, 0, 0), Color3.fromRGB(35, 28, 55), Enum.Material.SmoothPlastic)
+	-- основной ковёр (пыльная роза / сакура)
+	local pad = matPart("MatPad", Vector3.new(7.6, 0.14, 3.6), Vector3.new(0, 0.04, 0), Color3.fromRGB(255, 185, 210), Enum.Material.Fabric)
+	-- внутреннее поле (крем)
+	matPart("MatInner", Vector3.new(6.2, 0.05, 2.4), Vector3.new(0, 0.1, 0), Color3.fromRGB(255, 245, 250), Enum.Material.Fabric)
+	-- неоновая полоса-акцент
+	local stripe = matPart("MatStripe", Vector3.new(6.0, 0.04, 0.22), Vector3.new(0, 0.12, -0.85), Color3.fromRGB(255, 110, 200), Enum.Material.Neon)
+	local light = Instance.new("PointLight")
+	light.Color = Color3.fromRGB(255, 120, 200)
+	light.Brightness = 0.45
+	light.Range = 6
+	light.Parent = stripe
+	-- вторая тонкая полоса
+	matPart("MatStripe2", Vector3.new(6.0, 0.04, 0.12), Vector3.new(0, 0.12, 0.9), Color3.fromRGB(180, 140, 255), Enum.Material.Neon)
+
+	local gui = Instance.new("SurfaceGui")
+	gui.Name = "MatLabel"
+	gui.Face = Enum.NormalId.Top
+	gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+	gui.PixelsPerStud = 40
+	gui.LightInfluence = 0.2
+	gui.Parent = pad
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.fromScale(1, 1)
+	label.BackgroundTransparency = 1
+	label.Text = "GENKAN  ·  いらっしゃいませ"
+	label.TextColor3 = Color3.fromRGB(90, 50, 90)
+	label.TextTransparency = 0.15
+	label.Font = Enum.Font.GothamMedium
+	label.TextScaled = true
+	label.Parent = gui
+	local padText = Instance.new("UIPadding")
+	padText.PaddingLeft = UDim.new(0.08, 0)
+	padText.PaddingRight = UDim.new(0.08, 0)
+	padText.PaddingTop = UDim.new(0.28, 0)
+	padText.PaddingBottom = UDim.new(0.28, 0)
+	padText.Parent = label
+
+	return model
+end
+
 local function addNeonSign(parent, position)
 	local sign = Instance.new("Model")
 	sign.Name = "NeonSign"
@@ -698,13 +761,14 @@ local function addFusumaRoomDoor(parent, center, half, floor2Y, wall2H, floorSiz
 	local wallT = 1
 	local doorW = 0.45 -- thickness on X
 	local doorH = wall2H - 1.4
-	local leafD = 5.5 -- depth along Z per leaf
+	-- в 2 раза шире + южный коридор свободен для выхода на балкон
+	local leafD = 11 -- depth along Z per leaf (was 5.5)
 	local openingD = leafD * 2 + 0.4
 	local openingZ = center.Z
 	local divX = center.X
 	local yMid = floor2Y + wall2H / 2
 
-	local zMin = center.Z - half + 1
+	local balconyClearZ = center.Z - half + 12
 	local zMax = center.Z + half - 1
 	local open0 = openingZ - openingD / 2
 	local open1 = openingZ + openingD / 2
@@ -719,7 +783,7 @@ local function addFusumaRoomDoor(parent, center, half, floor2Y, wall2H, floorSiz
 			Parent = parent,
 		})
 	end
-	divPanel("RoomDividerS", zMin, open0)
+	divPanel("RoomDividerS", balconyClearZ, open0)
 	divPanel("RoomDividerN", open1, zMax)
 
 	-- верхняя перемычка над проёмом
@@ -876,7 +940,7 @@ local function addUpperFloorRoofAndBalcony(haven, center, half, floor1H)
 	makePart({ Name = "Wall2North", Size = Vector3.new(floorSize, wall2H, wallT), Position = center + Vector3.new(0, floor2Y + wall2H / 2, half), Color = wallPink, Parent = upper })
 	-- Юг 2 этажа с проёмом на балкон
 	do
-		local doorW = 8
+		local doorW = 14
 		local panelW = (floorSize - doorW) / 2
 		local z = center.Z - half
 		makePart({ Name = "Wall2SouthL", Size = Vector3.new(panelW, wall2H, wallT), Position = Vector3.new(center.X - doorW / 2 - panelW / 2, floor2Y + wall2H / 2, z), Color = wallPink, Parent = upper })
@@ -1181,13 +1245,7 @@ function OtakuHavenBuilder.Build()
 		Parent = haven,
 	})
 
-	makePart({
-		Name = "GenkanMat",
-		Size = Vector3.new(8, 0.15, 4),
-		Position = ZoneConfig.Zones.Genkan.Center + Vector3.new(0, 1.08, 0),
-		Color = Color3.fromRGB(180, 140, 100),
-		Parent = decor,
-	})
+	addGenkanMat(decor, Vector3.new(ZoneConfig.Zones.Genkan.Center.X, 1.55, ZoneConfig.Zones.Genkan.Center.Z))
 
 	local bell = makePart({
 		Name = "EntranceBell",
@@ -1198,10 +1256,13 @@ function OtakuHavenBuilder.Build()
 		Parent = decor,
 	})
 	bell:SetAttribute("RingOnTouch", true)
+	local genkanCfg = ZoneConfig.Zones and ZoneConfig.Zones.Genkan
+	local bellCenter = genkanCfg and genkanCfg.Center or Vector3.new(center.X, 3, center.Z - 34)
+	local bellSize = genkanCfg and genkanCfg.Size or Vector3.new(12, 10, 8)
 	local bellTrigger = makePart({
 		Name = "BellTrigger",
-		Size = Vector3.new(10, 8, 6),
-		Position = Vector3.new(center.X, 4, center.Z - 13),
+		Size = Vector3.new(math.max(10, bellSize.X), 8, math.max(6, bellSize.Z)),
+		Position = Vector3.new(bellCenter.X, 4, bellCenter.Z),
 		Transparency = 1,
 		CanCollide = false,
 		CanTouch = true,
@@ -1214,7 +1275,12 @@ function OtakuHavenBuilder.Build()
 	bellSound.Volume = 0.85
 	bellSound.Parent = bell
 
-	addNeonSign(haven, center + Vector3.new(0, wallH + 2, -half - 1))
+	-- Вывеска над дверью на балкон (2 этаж, юг)
+	do
+		local floor2Y = wallH + 0.5
+		local wall2H = 12
+		addNeonSign(haven, Vector3.new(center.X, floor2Y + wall2H + 1.4, center.Z - half - 0.55))
+	end
 	addLEDDisplay(decor, center + Vector3.new(-12, 5, -8), "NEW\nSPIRITS")
 	addLEDDisplay(decor, center + Vector3.new(12, 5, -8), "LO-FI\nON")
 	addPoster(decor, center + Vector3.new(-17, 5, -5), Color3.fromRGB(255, 100, 150))
