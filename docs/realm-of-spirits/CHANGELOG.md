@@ -7,6 +7,8 @@
 ## [Unreleased]
 
 ### Added
+- `BattleOrchestrator` — валидация CD/MP/stun, resolve игрока/врага, mana regen; `GameManager` Attack + Enemy AI делегируют в оркестратор
+- Боевой UI: третий слот навыка (`Attack3Button`) в `UIController`
 - `SkillCatalog` / `EffectCatalog` / `ItemCatalog` — общие каталоги способностей, эффектов и предметов (`ReplicatedStorage.RealmOfSpirits`)
 - Otaku Haven 2.0: магазин 76×76, 2 этаж (RoomA/B), anime-лестница, балкон, сплошная черепичная крыша (`roofLift`), фусума дракон/бамбук
 - `BattleArenaBuilder` — cyberpunk-арена (портал вход/выход, teal/orange)

@@ -1,6 +1,6 @@
 # NEXT SESSION
 
-**Статус:** разработка геймплея на **паузе**. Сейчас приоритет — Cursor-инфраструктура (уже заложена) и следующий боевой код, когда снимешь паузу.
+**Статус:** боевой пайплайн подключён. Следующий фокус — play-тест и полировка боя / контент.
 
 Дата якоря: 2026-07-14
 
@@ -11,13 +11,18 @@
 - Rules: `realm-of-spirits.mdc`, `realm-cursor-workflow.mdc` (alwaysApply)
 - Entry: `AGENTS.md`
 
-## Когда снова включишь игру — порядок жёсткий
+## Боевой пайплайн (готово)
 
-1. ~~SkillCatalog / EffectCatalog / ItemCatalog~~ — DONE (Studio + docs mirrors)
-2. **Battle Orchestrator** — модуль применения скиллов, валидация CD/MP/stun, синк UI ← **первый геймплей-таск**
-3. Проводка `GameManager` + `BattleSystem` + боевой UI под 3 слота
+1. ~~SkillCatalog / EffectCatalog / ItemCatalog~~ — DONE
+2. ~~Battle Orchestrator~~ — DONE (`ServerScriptService.RealmOfSpirits.BattleOrchestrator`)
+3. ~~Проводка GameManager Attack + Enemy AI~~ — DONE
+4. ~~Боевой UI: 3 слота навыков~~ — DONE (`UIController` Attack3Button)
 
-Не начинать с декора Otaku Haven / арены, пока оркестратор не поднят.
+## Когда продолжишь игру
+
+1. **Play-тест боя** в Studio: CD/MP/stun, heal, 3-й навык, победа/поражение/flee
+2. Полировка BattleSystem / баланс / эффекты по результатам теста
+3. Только потом — декор Otaku Haven / арены
 
 ## Контекст уже сделан (мир)
 
@@ -29,4 +34,5 @@
 ## Studio SoT
 
 - `ReplicatedStorage.RealmOfSpirits`: ZoneConfig, SpiritDatabase, SkillCatalog, EffectCatalog, ItemCatalog
-- `ServerScriptService.RealmOfSpirits`: OtakuHavenBuilder, BattleArenaBuilder, GameManager, BattleSystem
+- `ServerScriptService.RealmOfSpirits`: BattleOrchestrator, OtakuHavenBuilder, BattleArenaBuilder, GameManager, BattleSystem
+- Docs mirrors: `docs/realm-of-spirits/studio/BattleOrchestrator.lua`, catalogs, `UIController.lua`

@@ -645,7 +645,7 @@ mpFill = mpFillNode
 -- ============================================
 
 local attack1Button = CreateTextButton(battleFrame, "Attack1Button",
-	UDim2.new(0.35, 5, 0, 130),
+	UDim2.new(0.28, 5, 0, 130),
 	UDim2.new(0.1, 0, 0, 35),
 	"Коготь Духа",
 	Color3.fromRGB(180, 70, 70),
@@ -653,15 +653,23 @@ local attack1Button = CreateTextButton(battleFrame, "Attack1Button",
 )
 
 local attack2Button = CreateTextButton(battleFrame, "Attack2Button",
-	UDim2.new(0.45, 0, 0, 130),
+	UDim2.new(0.38, 0, 0, 130),
 	UDim2.new(0.1, 0, 0, 35),
 	"Призрачный Вихрь",
 	Color3.fromRGB(180, 70, 70),
 	"🌀"
 )
 
+local attack3Button = CreateTextButton(battleFrame, "Attack3Button",
+	UDim2.new(0.48, -5, 0, 130),
+	UDim2.new(0.1, 0, 0, 35),
+	"Навык 3",
+	Color3.fromRGB(180, 70, 70),
+	"✦"
+)
+
 local fleeButton = CreateTextButton(battleFrame, "FleeButton",
-	UDim2.new(0.55, -5, 0, 130),
+	UDim2.new(0.58, -5, 0, 130),
 	UDim2.new(0.1, 0, 0, 35),
 	"Побег",
 	Color3.fromRGB(100, 100, 180),
@@ -669,6 +677,7 @@ local fleeButton = CreateTextButton(battleFrame, "FleeButton",
 )
 WoWUITheme.StyleActionButton(attack1Button)
 WoWUITheme.StyleActionButton(attack2Button)
+WoWUITheme.StyleActionButton(attack3Button)
 WoWUITheme.StyleActionButton(fleeButton)
 
 -- ============================================
@@ -1487,6 +1496,8 @@ local function UpdateBattleSkillButtons(battleData)
 	local mp = battleData and battleData.PlayerMP or 0
 	SetBattleSkillButton(attack1Button, "Коготь Духа", skills and skills[1], mp)
 	SetBattleSkillButton(attack2Button, "Призрачный Вихрь", skills and skills[2], mp)
+	SetBattleSkillButton(attack3Button, "Навык 3", skills and skills[3], mp)
+	attack3Button.Visible = skills ~= nil and skills[3] ~= nil
 end
 
 -- ============================================
@@ -1577,6 +1588,16 @@ attack2Button.MouseButton1Click:Connect(function()
 		BattleEvent:FireServer("Attack", {SkillIndex = 2})
 	else
 		ShowNotification("Навык 2 недоступен")
+	end
+end)
+
+attack3Button.MouseButton1Click:Connect(function()
+	if not CurrentBattle then return end
+	local s = CurrentBattle.PlayerSkills and CurrentBattle.PlayerSkills[3]
+	if s and (tonumber(s.Cooldown) or 0) <= 0.05 and (CurrentBattle.PlayerMP or 0) >= (tonumber(s.Cost) or 0) then
+		BattleEvent:FireServer("Attack", {SkillIndex = 3})
+	else
+		ShowNotification("Навык 3 недоступен")
 	end
 end)
 

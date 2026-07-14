@@ -1,0 +1,224 @@
+-- BattleOrchestrator - skill validation + resolve + effects for Realm of Spirits
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local realmFolder = ReplicatedStorage:WaitForChild("RealmOfSpirits")
+local SkillCatalog = require(realmFolder:WaitForChild("SkillCatalog"))
+local EffectCatalog = require(realmFolder:WaitForChild("EffectCatalog"))
+local SpiritDatabase = require(realmFolder:WaitForChild("SpiritDatabase"))
+
+local BattleOrchestrator = {}
+
+function BattleOrchestrator.CreateEffectsState()
+	return EffectCatalog.CreateState()
+end
+
+function BattleOrchestrator.BuildAbilities(spiritInfo, maxSlots)
+	return SkillCatalog.BuildAbilities(spiritInfo, maxSlots or 3)
+end
+
+local function sideFields(side)
+	if side == "Enemy" then
+		return "EnemyAbilities", "EnemyCooldowns", "EnemyMP", "EnemyEffects", "PlayerEffects", "EnemyHP", "PlayerHP"
+	end
+	return "PlayerAbilities", "PlayerCooldowns", "PlayerMP", "PlayerEffects", "EnemyEffects", "PlayerHP", "EnemyHP"
+end
+
+function BattleOrchestrator.CanUseSkill(battle, side, skillIndex, now)
+	now = now or os.clock()
+	local abKey, cdKey, mpKey, selfFxKey = sideFields(side)
+	local abilities = battle[abKey]
+	local ability = abilities and abilities[skillIndex]
+	if not ability then
+		return false, "Навык недоступен", nil
+	end
+	local cooldownUntil = (battle[cdKey] and battle[cdKey][skillIndex]) or 0
+	if now < cooldownUntil then
+		local left = math.max(0, cooldownUntil - now)
+		return false, string.format("%s перезаряжается: %.1fс", ability.Name, left), ability
+	end
+	local selfFx = battle[selfFxKey]
+	if selfFx and (selfFx.StunLeft or 0) > 0 then
+		return false, "Stun", ability
+	end
+	if (battle[mpKey] or 0) < (ability.Cost or 0) then
+		return false, "Недостаточно маны", ability
+	end
+	return true, nil, ability
+end
+
+function BattleOrchestrator.RegenMana(battle, playerDelta, enemyDelta)
+	battle.PlayerMP = math.min(100, (battle.PlayerMP or 0) + (playerDelta or 0))
+	battle.EnemyMP = math.min(100, (battle.EnemyMP or 0) + (enemyDelta or 0))
+end
+
+--- First enemy skill ready by CD+MP (stun is handled in ExecuteEnemySkill).
+function BattleOrchestrator.PickReadyEnemySkill(battle, now)
+	now = now or os.clock()
+	for i, ability in ipairs(battle.EnemyAbilities or {}) do
+		local cooldownUntil = (battle.EnemyCooldowns and battle.EnemyCooldowns[i]) or 0
+		if now >= cooldownUntil and (battle.EnemyMP or 0) >= (ability.Cost or 0) then
+			return i, ability
+		end
+	end
+	return nil, nil
+end
+
+local function spendAndCooldown(battle, side, skillIndex, ability, now)
+	now = now or os.clock()
+	local _, cdKey, mpKey = sideFields(side)
+	battle[mpKey] = math.max(0, (battle[mpKey] or 0) - (ability.Cost or 0))
+	battle[cdKey] = battle[cdKey] or {}
+	battle[cdKey][skillIndex] = now + math.max(0, ability.Cooldown or 0)
+end
+
+--- Execute a player skill. opts: { DamageMultiplier = number }
+function BattleOrchestrator.ExecutePlayerSkill(battle, skillIndex, opts)
+	opts = opts or {}
+	local now = opts.Now or os.clock()
+	local ok, reason, ability = BattleOrchestrator.CanUseSkill(battle, "Player", skillIndex, now)
+	if not ok then
+		if reason == "Stun" then
+			EffectCatalog.Step(battle.PlayerEffects)
+			return { Ok = false, Kind = "Stun", Message = "Вы оглушены и пропускаете ход!", Ability = ability }
+		end
+		return { Ok = false, Kind = "Blocked", Message = reason or "Навык недоступен", Ability = ability }
+	end
+
+	spendAndCooldown(battle, "Player", skillIndex, ability, now)
+	local playerSpirit = battle.PlayerSpirit
+
+	if ability.Type == "Heal" then
+		local heal = math.max(1, math.floor((ability.HealAmount or 20) + ((playerSpirit.Level or 1) * 1.5)))
+		battle.PlayerHP = math.min(battle.PlayerMaxHP, battle.PlayerHP + heal)
+		local effectText = EffectCatalog.Apply(ability.Effect, battle.PlayerEffects, battle.EnemyEffects)
+		EffectCatalog.Step(battle.PlayerEffects)
+		EffectCatalog.Step(battle.EnemyEffects)
+		battle.Turn = (battle.Turn or 1) + 1
+		local msg = "Вы восстановили " .. heal .. " HP! (" .. ability.Name .. ")"
+		if effectText ~= "" then msg = msg .. " • " .. effectText end
+		return { Ok = true, Kind = "Heal", Message = msg, Ability = ability, Ended = false }
+	end
+
+	local spiritAtk = 10
+	do
+		local info = SpiritDatabase.Get(playerSpirit.Id)
+		if info and info.BaseStats then
+			spiritAtk = info.BaseStats.Attack or 10
+		end
+	end
+	local damage = (ability.Damage or 15)
+		+ ((playerSpirit.Level or 1) * 3)
+		+ math.floor(spiritAtk * 0.55)
+		+ math.random(0, 6)
+	if opts.DamageMultiplier then
+		damage = math.floor(damage * opts.DamageMultiplier)
+	end
+	damage = EffectCatalog.ComputeDamage(damage, battle.PlayerEffects, battle.EnemyEffects)
+	battle.EnemyHP = math.max(0, battle.EnemyHP - damage)
+	local effectText = EffectCatalog.Apply(ability.Effect, battle.PlayerEffects, battle.EnemyEffects)
+
+	local burnDamage
+	battle.EnemyHP, burnDamage = EffectCatalog.ApplyBurnTick(battle.EnemyHP, battle.EnemyEffects)
+	EffectCatalog.Step(battle.PlayerEffects)
+	EffectCatalog.Step(battle.EnemyEffects)
+
+	if battle.EnemyHP <= 0 then
+		return {
+			Ok = true,
+			Kind = "Attack",
+			Message = "Вы нанесли " .. damage .. " урона! (" .. ability.Name .. ")",
+			Ability = ability,
+			Damage = damage,
+			BurnDamage = burnDamage,
+			EffectText = effectText,
+			Ended = true,
+			Winner = "Player",
+		}
+	end
+
+	battle.Turn = (battle.Turn or 1) + 1
+	local msg = "Вы нанесли " .. damage .. " урона! (" .. ability.Name .. ")"
+	if effectText ~= "" then msg = msg .. " • " .. effectText end
+	if burnDamage and burnDamage > 0 then msg = msg .. " • Горение: -" .. burnDamage .. " HP" end
+	return {
+		Ok = true,
+		Kind = "Attack",
+		Message = msg,
+		Ability = ability,
+		Damage = damage,
+		BurnDamage = burnDamage,
+		EffectText = effectText,
+		Ended = false,
+	}
+end
+
+--- Execute an enemy skill against the player.
+function BattleOrchestrator.ExecuteEnemySkill(battle, skillIndex, opts)
+	opts = opts or {}
+	local now = opts.Now or os.clock()
+	local ok, reason, ability = BattleOrchestrator.CanUseSkill(battle, "Enemy", skillIndex, now)
+	if not ok then
+		if reason == "Stun" then
+			EffectCatalog.Step(battle.PlayerEffects)
+			EffectCatalog.Step(battle.EnemyEffects)
+			local name = battle.EnemyInfo and battle.EnemyInfo.Name or "Враг"
+			return { Ok = false, Kind = "Stun", Message = name .. " оглушен и пропускает ход", Ability = ability }
+		end
+		return { Ok = false, Kind = "Blocked", Message = reason, Ability = ability }
+	end
+
+	spendAndCooldown(battle, "Enemy", skillIndex, ability, now)
+
+	local playerDef = 10
+	do
+		local pInfo = battle.PlayerSpirit and SpiritDatabase.Get(battle.PlayerSpirit.Id)
+		if pInfo and pInfo.BaseStats then
+			playerDef = pInfo.BaseStats.Defense or 10
+		end
+	end
+	local rawEnemy = (ability.Damage or 10) + math.random(-2, 2)
+	local level = (battle.PlayerSpirit and battle.PlayerSpirit.Level) or 1
+	local earlyFactor = (level <= 5) and 0.65 or 0.85
+	local damage = EffectCatalog.ComputeDamage(
+		math.max(3, math.floor(rawEnemy * earlyFactor) - math.floor(playerDef * 0.3)),
+		battle.EnemyEffects,
+		battle.PlayerEffects
+	)
+	battle.PlayerHP = math.max(0, battle.PlayerHP - damage)
+	local effectText = EffectCatalog.Apply(ability.Effect, battle.EnemyEffects, battle.PlayerEffects)
+
+	local burnDamage
+	battle.PlayerHP, burnDamage = EffectCatalog.ApplyBurnTick(battle.PlayerHP, battle.PlayerEffects)
+	EffectCatalog.Step(battle.PlayerEffects)
+	EffectCatalog.Step(battle.EnemyEffects)
+
+	local name = battle.EnemyInfo and battle.EnemyInfo.Name or "Враг"
+	if battle.PlayerHP <= 0 then
+		return {
+			Ok = true,
+			Kind = "Attack",
+			Message = name .. ": " .. ability.Name .. "! -" .. damage .. " HP",
+			Ability = ability,
+			Damage = damage,
+			BurnDamage = burnDamage,
+			EffectText = effectText,
+			Ended = true,
+			Winner = "Enemy",
+		}
+	end
+
+	local msg = name .. ": " .. ability.Name .. "! -" .. damage .. " HP"
+	if effectText ~= "" then msg = msg .. " • " .. effectText end
+	if burnDamage and burnDamage > 0 then msg = msg .. " • Горение: -" .. burnDamage .. " HP" end
+	return {
+		Ok = true,
+		Kind = "Attack",
+		Message = msg,
+		Ability = ability,
+		Damage = damage,
+		BurnDamage = burnDamage,
+		EffectText = effectText,
+		Ended = false,
+	}
+end
+
+return BattleOrchestrator
