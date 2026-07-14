@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "hooks": {
+    "afterFileEdit": [
+      {
+        "command": "powershell -ExecutionPolicy Bypass -File .cursor/hooks/remind-changelog.ps1"
+      },
+      {
+        "command": "powershell -ExecutionPolicy Bypass -File .cursor/hooks/run-project-checks.ps1",
+        "timeout": 20
+      }
+    ]
+  }
+}

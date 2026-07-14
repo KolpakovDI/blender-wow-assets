@@ -1,0 +1,12 @@
+---
+description: Cursor workflow for Realm of Spirits — orchestrator, skills, Studio SoT
+alwaysApply: true
+---
+
+# Realm Cursor Workflow
+
+- On Realm of Spirits / Studio / battle / Haven / catalogs tasks: follow `.cursor/skills/realm-orchestrator/SKILL.md` and `docs/realm-of-spirits/NEXT-SESSION.md`.
+- Place SoT is the `.rbxl` (not git). After Studio edits remind **Ctrl+S**.
+- Prefer project skills under `.cursor/skills/realm-*` over inventing ad-hoc process.
+- Gameplay/code changes → update `docs/realm-of-spirits/CHANGELOG.md` `[Unreleased]`.
+- Commit only when the user explicitly asks; never commit `.rbxl` or secrets.

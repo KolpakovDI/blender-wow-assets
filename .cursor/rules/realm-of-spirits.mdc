@@ -1,0 +1,33 @@
+---
+description: Track changes to Realm of Spirits Roblox project
+globs:
+  - docs/realm-of-spirits/**
+alwaysApply: false
+---
+
+# Realm of Spirits — Change Tracking
+
+When modifying the Roblox project RealmOfSpirits (via MCP or docs):
+
+1. After any gameplay/code change in Studio, update `docs/realm-of-spirits/CHANGELOG.md` under `[Unreleased]`:
+   - Added — new features, scripts, systems
+   - Changed — balance, refactors, behavior changes
+   - Fixed — bug fixes
+   - Removed — deleted features/assets
+
+2. If architecture or systems change significantly, update `docs/realm-of-spirits/PROJECT.md`.
+
+3. If game design changes (mechanics, progression, content), update `docs/realm-of-spirits/GDD.md`.
+
+4. Entry format:
+   ```
+   ### Category
+   - Brief description (script/path if relevant)
+   ```
+
+5. On release milestone, move `[Unreleased]` items to a new version section with date.
+
+Project place: RealmOfSpirits second.rbxl  
+MCP server: user-Roblox_Studio  
+
+Session routing: `AGENTS.md` + skill `realm-orchestrator`. Priority file: `docs/realm-of-spirits/NEXT-SESSION.md`.

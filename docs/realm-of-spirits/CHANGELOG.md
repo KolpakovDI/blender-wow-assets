@@ -7,6 +7,7 @@
 ## [Unreleased]
 
 ### Added
+- `SkillCatalog` / `EffectCatalog` / `ItemCatalog` — общие каталоги способностей, эффектов и предметов (`ReplicatedStorage.RealmOfSpirits`)
 - Otaku Haven 2.0: магазин 76×76, 2 этаж (RoomA/B), anime-лестница, балкон, сплошная черепичная крыша (`roofLift`), фусума дракон/бамбук
 - `BattleArenaBuilder` — cyberpunk-арена (портал вход/выход, teal/orange)
 - Genkan slippers: визуальные тапочки на ногах в Safe/Genkan, снимаются на Exit/Combat
@@ -35,6 +36,8 @@
 - `ClientController` — `exitNormalMode()` сбрасывает `isInBattle` и выбор цели
 
 ### Changed
+- `SpiritDatabase` — духи на `SkillIds`; shop через `ItemCatalog.ShopIds`
+- `GameManager` / `BattleSystem` — используют shared Skill/Effect catalogs (до 3 скиллов)
 - `ZoneConfig` — Haven/Safe/Combat сдвинуты (магазин не пересекает Combat); Мика `(-12,-38)`; Safe Z=160; wall2H 2 этажа = 12
 - Manga shelf UX: вывеска, floor arrow, понятный prompt и таймер баффа; старые placeholder hints убраны
 - `ClientController` — выбор духа мышью (mouse.Target + raycast + GuiInset + screen proximity), подсветка цели, маркер `?`/`⚔` для квестов; выбор работает на любой дистанции, E/F — в радиусе 45 studs
