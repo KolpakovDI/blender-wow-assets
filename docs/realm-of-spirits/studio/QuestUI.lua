@@ -276,7 +276,7 @@ createTab("Completed", "Выполненные")
 -- Окно описания: от нижнего края вкладок до кнопки Принять/Сдать
 local QUEST_BODY_TOP = 84
 local QUEST_FOOTER_H = 24
-local QUEST_LIST_H = 88
+local QUEST_LIST_H = 120
 local questBody = Instance.new("Frame")
 questBody.Name = "QuestBody"
 questBody.Size = UDim2.new(1, -16, 1, -(QUEST_BODY_TOP + QUEST_FOOTER_H))

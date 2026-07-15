@@ -30,6 +30,7 @@
 - Мерцание PointLight витрин в `ZoneController`
 
 ### Fixed
+- `QuestSystem` / `QuestUI` — «Помощь торговцу» (101) был в Available, но прятался ниже короткого списка из‑за `pairs()`; сортировка Level→Id + высота списка 120
 - `UIController` — навыки в карточке духа из каталога (не плейсхолдеры); кнопка эволюции по реальным требованиям; `rankFrame` открывается из Профиля (раньше никогда не показывался)
 - `EvolutionSystem` — при эволюции пишутся `SkillIds`; клиент получает `OldName` / `UnlockedSkill` для announce
 - `BellTrigger` / `OtakuHavenBuilder` — колокол на объёме Genkan (раньше offset внутри зала)
@@ -66,6 +67,22 @@
 - `QuestUI` — компактный диалог Мики сверху: вкладки, скролл-список квестов, окно описания до кнопки Принять/Сдать; focus-камера и face-to-face
 - `ZoneController` — баннер «Otaku Haven» справа сверху (не перекрывает диалог Мики)
 - `QuestMasterBehavior` — Live2D emoji billboard над Микой отключён
+
+### Fixed
+- `GameManager` / `DataStoreManager` — у пойманных и стартовых духов пишутся `Name` + `SkillIds`; `NormalizeSpirits` на LoadData
+- `EvolutionSystem` — `OldName` берётся из каталога, если у инстанса нет имени
+- `GameManager` — `BonusHP` эволюции учитывается в max HP боя
+- `RankSystem:PromoteRank` — награды в `CopperCoins` (раньше писало в несуществующий `Coins`)
+- `ZoneController` — `EntranceBell` как Model: `Touched` вешается на BasePart
+
+### Applied (2026-07-15)
+- P1 Identity: server/client auto-suite PASS (slot3×5, evolve meta, rank next, UI hooks)
+- P1 Identity: manual Play PASS (evo banner, Attack3, rank ≤2 клика); Studio DevBoost: `[DEV] Evo Boost` / LeftAlt+B (F9 = консоль Studio)
+- P1 Explore Slice A: tutorial FireCrystal у Exit→Combat, весь лут в Combat AABB; toast Exit/Combat про кристаллы (E)
+- `UIController` — имена предметов в сумке/инвентаре из `ItemCatalog` (кристалл 101 больше не «Предмет #101»)
+- P1 Explore Slice B: `WorldLootService` — ледяные кристаллы (ItemId 102) в Combat; типы лута: fire / ice / chest
+- P1 Explore Slice C: side 103 — Посох Хранителя через UniqueItems (не ghost Inventory Id7); side 105 prereq = 101–104
+- P1 Explore Slice C UX: Available sort Level→Id + `QUEST_LIST_H=120` — «Помощь торговцу» видна сразу после «Первые шаги» (funnel play-тест — следующий сеанс)
 
 ### Applied (2026-07-14)
 - P0 Core E2E play-тест подтверждён (квест/ловля/бой); фокус сдвинут на P0 Hub

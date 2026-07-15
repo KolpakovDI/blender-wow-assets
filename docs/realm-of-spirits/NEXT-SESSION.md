@@ -1,40 +1,65 @@
 # NEXT SESSION
 
-**Статус:** **P1 Identity** — UX shipped в Studio (нужен play-тест + Ctrl+S).
+**Статус:** P1 Identity PASS · Explore A/B PASS · Explore C (код+UX) готово → **завтра play-тест funnel 101**.
 
-Дата якоря: 2026-07-14
+Дата якоря: 2026-07-15 (вечер) → план на **2026-07-16**
 
 ## Цели (locked)
 
 См. [`GOALS.md`](./GOALS.md) и GDD §9.
 
-| Done | P0 Core + P0 Hub |
-| Now | **P1 Identity** — play-тест критериев ниже |
-| Later | Explore / Social → P2 Scale по gate |
+| Done | P0 Core + P0 Hub + **P1 Identity** + Explore A/B |
+| Now | **P1 Explore C** — сдать side **101**, закрыть gate Explore |
+| Later | Social → P2 Scale по gate |
 
-## P1 Identity — критерии
+## Старт сессии (порядок жёсткий)
 
-1. ≥80% эволюций открывают Skill slot 3 в боевом UI
-2. Guided path до первой эволюции ощутим (кристаллы + lvl + battles)
-3. Ранг / следующий порог ≤2 клика в UI
-4. Announce/feedback при эволюции (не тихий swap)
+1. **Ctrl+S** проверка place открыт: `RealmOfSpirits second.rbxl`
+2. Play → Мика → **Доступные**: вторым должен быть **«Помощь торговцу»** (101)
+3. Accept 101 → Combat → подобрать **5× огненный кристалл** (ItemId 101) → сдать Мике
+4. Если PASS → отметить Explore C / Explore gate в GOALS + CHANGELOG; иначе фиксить прогресс `CollectItem`
+5. Только после gate Explore: **P1 Social** (fair combat / cosmetics gacha) — не раньше
 
-## Что уже в place (Ctrl+S обязателен для .rbxl)
+## План на завтра (чеклист)
 
-- Карточка духа: реальные навыки, прогресс эволюции, кнопка по lvl/кристаллам/победам
-- `EvolutionSuccess` → баннер + 3-й навык; сервер пишет `SkillIds`
-- Профиль: следующий ранг; «Ранг →» открывает `rankFrame`
-- QuestUI: узкая панель сверху, список квестов со скроллом, описание до Принять/Сдать
-- ZoneBanner «Otaku Haven» справа; Live2D emoji над Микой выключен
+### Обязательно (Explore C gate)
 
-## Play-тест (следующий шаг)
+- [ ] Funnel 101: Accept → 5 fire crystals → Turn-in (XP/монеты/зелья)
+- [ ] Прогресс квеста тикает от лута (`CollectItem`), не только от инвентаря вручную
+- [ ] После сдачи 101 нет в Available; есть в Completed
 
-1. **Ctrl+S** place: `C:\Mimo\RealmOfSpirits\RealmOfSpirits second.rbxl`
-2. Дух → детали: навыки из каталога, строка «→ форма / ур / кристаллы / победы»
-3. Собрать 5× огненный кристалл (Akihabara), lvl 10, 10 побед → ЭВОЛЮЦИЯ → баннер
-4. Бой после эво: виден Attack3
-5. Профиль (1 клик) → следующий порог; «Ранг →» (2 клик) → детали ранга
+### Желательно (смоук side)
 
-## Place
+- [ ] В Available видны 102/103 (после сдачи 101); 104 после story 1; 105 после 101–104
+- [ ] Spot-check: side 103 награда = UniqueItem «Посох Хранителя» + зелья (код уже в place)
 
-`C:\Mimo\RealmOfSpirits\RealmOfSpirits second.rbxl` — **Ctrl+S**
+### Не трогать завтра (пока Explore не PASS)
+
+- Декор Haven / новые зоны
+- PvP / Scale
+- Новый большой фича-спайк Social
+
+## Уже в place (напоминание)
+
+### Identity — PASS
+- Evo banner, Attack3, rank ≤2 клика; DevBoost LeftAlt+B / `[DEV] Evo Boost`
+
+### Explore A/B — PASS
+- Tutorial crystal, Combat loot, ice 102, toast, имена ItemCatalog
+
+### Explore C — код готов
+- 103 UniqueItems; 105 prereq 101–104
+- Available sort Level→Id; список Мики `QUEST_LIST_H = 120`
+
+## Studio SoT
+
+Place: `C:\Mimo\RealmOfSpirits\RealmOfSpirits second.rbxl` — **не в git**; после правок **Ctrl+S**.
+
+| Module | Path |
+|--------|------|
+| QuestSystem | `ServerScriptService.RealmOfSpirits.QuestSystem` |
+| QuestUI | `StarterPlayer.StarterPlayerScripts.QuestUI` |
+| WorldLootService | `ServerScriptService.RealmOfSpirits.WorldLootService` |
+| GameManager | `ServerScriptService.RealmOfSpirits.GameManager` |
+
+Зеркала: `docs/realm-of-spirits/studio/`. Ноты дня: [`SESSION-2026-07-15.md`](./SESSION-2026-07-15.md).

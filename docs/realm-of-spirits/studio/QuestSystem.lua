@@ -533,7 +533,7 @@ local function BuildAvailableQuests(questSystem)
 	for questId, quest in pairs(QuestDatabase) do
 		if not questSystem.ActiveQuests[questId] and not questSystem.CompletedQuests[questId] then
 			local canTake = true
-			for _, prereqId in ipairs(quest.Prerequisites) do
+			for _, prereqId in ipairs(quest.Prerequisites or {}) do
 				if not questSystem.CompletedQuests[prereqId] then
 					canTake = false
 					break
@@ -544,6 +544,15 @@ local function BuildAvailableQuests(questSystem)
 			end
 		end
 	end
+	-- Стабильный порядок: уровень → Id (иначе pairs() прячет побочные ниже скролла)
+	table.sort(availableQuests, function(a, b)
+		local la = tonumber(a.Level) or 1
+		local lb = tonumber(b.Level) or 1
+		if la ~= lb then
+			return la < lb
+		end
+		return (tonumber(a.Id) or 0) < (tonumber(b.Id) or 0)
+	end)
 	return availableQuests
 end
 
