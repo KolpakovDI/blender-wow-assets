@@ -7,6 +7,9 @@
 ## [Unreleased]
 
 ### Added
+- `QuestTrackerHud` — окно активных квестов под миникартой: название, счётчики целей, золотой `!` / изумрудный `?`
+- `UIFeedback` — центральные flash-сообщения и всплывающий урон в бою (вынесено из `UIController` из‑за лимита Luau locals)
+- Бой — числа урона над головой: белые по врагу, кроваво‑красные по игроку (float + fade)
 - Миникарта: здания/POI (Haven, Вход, Exit, Мика, Акихабара, Арена, спавн, колокол), кристаллы/сундуки в радиусе, подписи и направление взгляда; конфиг `ZoneConfig.MinimapLandmarks`
 - P1 Identity: прогресс эволюции в карточке духа (ур./кристаллы/победы + тизер 3-го навыка), announce-баннер `EvolutionSuccess`, ранг и следующий порог в Профиле + кнопка «Ранг →»
 - Боевая кнопка зелья здоровья (`UsePotion`, +40 HP, CD 3с, счётчик в UI)
@@ -30,6 +33,13 @@
 - Мерцание PointLight витрин в `ZoneController`
 
 ### Fixed
+- Аудит 2026-07-18: zoom BtnGlow не перехватывает клики; `QuestTrackerHud` refresh из `OpenQuestUI.Active`; catch unlock nil-safe
+- `QuestTrackerHud` — название квеста читается чётко (контраст, обводка, ZIndex; empty-лейбл больше не перекрывает строки)
+- Поимка без ловушек (ItemId 1): кнопка/E неактивны в обычном режиме и при квестах; «НЕТ ЛОВУШКИ» — крупно по центру экрана 1,5 с
+- `UIController` — compile error «Out of local registers» (overlay-логика → `UIFeedback`)
+- Грозовой Дракон (SpiritId 4): `MovementType = Walk`, спавн на CombatZone (не на BattleArena sign), принудительная посадка на землю
+- `QuestSystem` — сдача CollectItem списывает предметы + проверка инвентаря; Accept больше не авто-закрывает CatchSpirit от стартового духа; seed CollectItem из инвентаря; nil-guard data/Stats/Inventory; story 4–6 Items → реальные Id из ItemCatalog (1/2/3)
+- `QuestUI` — цели CollectItem и награды Items из ItemCatalog; имена UniqueItems; убран дубль elseif
 - `QuestSystem` / `QuestUI` — «Помощь торговцу» (101) был в Available, но прятался ниже короткого списка из‑за `pairs()`; сортировка Level→Id + высота списка 120
 - `UIController` — навыки в карточке духа из каталога (не плейсхолдеры); кнопка эволюции по реальным требованиям; `rankFrame` открывается из Профиля (раньше никогда не показывался)
 - `EvolutionSystem` — при эволюции пишутся `SkillIds`; клиент получает `OldName` / `UnlockedSkill` для announce
@@ -49,6 +59,7 @@
 - `ClientController` — `exitNormalMode()` сбрасывает `isInBattle` и выбор цели
 
 ### Changed
+- `UIController` — панель «Мои духи» в левом нижнем углу; кнопки зума миникарты крупнее и на краю круга (Q1 / Q4)
 - Otaku Haven: вывеска «Otaku Haven» над дверью на балкон; фусума между комнатами ×2 шире + южный коридор; проём на балкон 14 studs
 - `SpiritDatabase` — духи на `SkillIds`; shop через `ItemCatalog.ShopIds`
 - `GameManager` / `BattleSystem` — используют shared Skill/Effect catalogs (до 3 скиллов)

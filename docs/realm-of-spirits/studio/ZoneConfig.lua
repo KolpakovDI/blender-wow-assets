@@ -24,7 +24,7 @@ ZoneConfig.SpiritSpawnPositions = {
 	[1] = Vector3.new(75, 0, 40),
 	[2] = Vector3.new(95, 0, 30),
 	[3] = Vector3.new(85, 0, 55),
-	[4] = Vector3.new(115, 0, 50),
+	[4] = Vector3.new(88, 0, 52),
 	[5] = Vector3.new(100, 0, 25),
 }
 

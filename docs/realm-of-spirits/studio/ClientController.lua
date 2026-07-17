@@ -196,7 +196,12 @@ local function selectSpirit(spiritModel)
 		local hint = "Выбран: " .. name
 		if relevant then hint = hint .. "  [Квест]" end
 		if isWithinRange(selectedSpirit) then
-			hint = hint .. "  ·  E — поймать  ·  F — бой"
+			local canCatch = (_G.GetTrapCount and _G.GetTrapCount() or 0) > 0
+			if canCatch then
+				hint = hint .. "  ·  E — поймать  ·  F — бой"
+			else
+				hint = hint .. "  ·  F — бой"
+			end
 		else
 			hint = hint .. "  ·  Подойдите ближе (до " .. MAX_TARGET_DISTANCE .. " studs)"
 		end
@@ -325,6 +330,11 @@ end)
 
 function TryCatchSpirit(spirit)
 	if not spirit or isInBattle then return end
+	if (_G.GetTrapCount and _G.GetTrapCount() or 0) <= 0 then
+		if _G.ShowNoTrapMessage then _G.ShowNoTrapMessage() end
+		if _G.UpdateCatchAvailability then _G.UpdateCatchAvailability() end
+		return
+	end
 	if not isWithinRange(spirit) then
 		setTargetHint("Слишком далеко для поимки!")
 		return

@@ -346,7 +346,11 @@ task.spawn(function()
 
 	trigger.Touched:Connect(onBellTouch)
 	if bell then
-		bell.Touched:Connect(onBellTouch)
+		local bellPart = bell:IsA("BasePart") and bell
+			or (bell:IsA("Model") and (bell.PrimaryPart or bell:FindFirstChildWhichIsA("BasePart", true)))
+		if bellPart then
+			bellPart.Touched:Connect(onBellTouch)
+		end
 	end
 
 	-- лёгкое мерцание LED/PointLight витрин
