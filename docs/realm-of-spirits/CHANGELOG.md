@@ -7,6 +7,7 @@
 ## [Unreleased]
 
 ### Added
+- `FAIR-COMBAT.md` — политика P1 Social; gacha cosmetics-only; `PlayerTradeSystem` (1-slot P2P, Safe)
 - Explore C PASS (2026-07-18 Play): side **101** «Помощь торговцу» — Accept → 5× огненный кристалл → трекер `5/5` + `?` → TurnIn у Мики (кристаллы списываются)
 - `QuestTrackerHud` — окно активных квестов под миникартой: название, счётчики целей, золотой `!` / изумрудный `?`
 - `UIFeedback` — центральные flash-сообщения и всплывающий урон в бою (вынесено из `UIController` из‑за лимита Luau locals)

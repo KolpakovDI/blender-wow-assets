@@ -8,7 +8,10 @@ if not havenEvent then
 	havenEvent.Name = "OtakuHaven"
 	havenEvent.Parent = RealmFolder
 end
+local MarketplaceService = game:GetService("MarketplaceService")
+local ZoneConfig = require(RealmFolder:WaitForChild("ZoneConfig"))
 local GACHA_COST = 50
+local GACHA_ROBUX_PRODUCT_ID = tonumber(ZoneConfig.GachaRobuxProductId) or 0
 local hooked = {}
 -- FOMO: лимитированная коллекция гачи (2 часа от старта сервера)
 local GACHA_FOMO_DURATION = 2 * 60 * 60
@@ -44,28 +47,38 @@ local function giveInventoryItem(playerData, itemId, quantity)
 	end
 	table.insert(playerData.Inventory, { Id = itemId, Quantity = quantity })
 end
+local function grantGachaReward(player, playerData)
+	-- Fair-combat: gacha (coins + Robux) = cosmetics only (см. docs/FAIR-COMBAT.md)
+	local roll = math.random(1, 100)
+	playerData.Cosmetics = playerData.Cosmetics or {}
+	local rarity, title, stickerPrefix
+	if roll <= 60 then
+		rarity, title, stickerPrefix = "Common", "Фигурка", "Fig_"
+	elseif roll <= 90 then
+		rarity, title, stickerPrefix = "Rare", "Редкая фигурка", "FigRare_"
+	else
+		rarity, title, stickerPrefix = "Legendary", "Мифическая фигурка", "FigMyth_"
+	end
+	local stickerId = stickerPrefix .. math.random(1000, 9999)
+	table.insert(playerData.Cosmetics, {
+		Id = stickerId,
+		Rarity = rarity,
+		Name = title,
+		ObtainedAt = os.time(),
+	})
+	return {
+		Type = "Cosmetic",
+		Title = title,
+		Rarity = rarity,
+		CosmeticId = stickerId,
+		Message = title .. " (" .. rarity .. ") — только косметика, без бонусов в бою",
+	}
+end
 local function rollGacha(playerData)
 	local totalCopper = getTotalCopper(playerData)
 	if totalCopper < GACHA_COST then return false, "Need " .. GACHA_COST .. " copper coins" end
 	setFromTotalCopper(playerData, totalCopper - GACHA_COST)
-	local roll = math.random(1, 100)
-	local reward
-	if roll <= 40 then
-		local coins = math.random(10, 30)
-		setFromTotalCopper(playerData, getTotalCopper(playerData) + coins)
-		reward = { Type = "Coins", Amount = coins, Message = "+" .. coins .. " copper!" }
-	elseif roll <= 70 then
-		giveInventoryItem(playerData, 1, 1)
-		reward = { Type = "Item", ItemId = 1, Message = "Trap x1!" }
-	elseif roll <= 90 then
-		giveInventoryItem(playerData, 2, 1)
-		reward = { Type = "Item", ItemId = 2, Message = "Health potion x1!" }
-	else
-		playerData.Cosmetics = playerData.Cosmetics or {}
-		table.insert(playerData.Cosmetics, "Sticker_" .. math.random(1000, 9999))
-		reward = { Type = "Cosmetic", Message = "Rare sticker cosmetic!" }
-	end
-	return true, reward
+	return true, grantGachaReward(nil, playerData)
 end
 local function onMangaPrompt(player)
 	if not isInSafeZone(player) then notify(player, "Toast", { Text = "Читать мангу можно только в Otaku Haven" }); return end
@@ -98,6 +111,49 @@ local function onGachaPrompt(player)
 		if dataEvent then dataEvent:FireClient(player, "FullSync", playerData) end
 	else notify(player, "Toast", { Text = result }) end
 end
+
+local function deliverGachaResult(player, playerData, reward, paidWith)
+	reward.FomoSecondsLeft = getFomoSecondsLeft()
+	reward.PaidWith = paidWith or "Coins"
+	notify(player, "GachaResult", reward)
+	local dataEvent = RealmFolder:FindFirstChild("DataSync")
+	if dataEvent then dataEvent:FireClient(player, "FullSync", playerData) end
+end
+
+local function onGachaRobuxPrompt(player)
+	if not isInSafeZone(player) then notify(player, "Toast", { Text = "Гашапон только в Otaku Haven" }); return end
+	if getFomoSecondsLeft() <= 0 then
+		notify(player, "Toast", { Text = "Лимитированная коллекция закончилась" })
+		return
+	end
+	if GACHA_ROBUX_PRODUCT_ID <= 0 then
+		notify(player, "Toast", { Text = "Robux-гача: задайте ZoneConfig.GachaRobuxProductId" })
+		return
+	end
+	MarketplaceService:PromptProductPurchase(player, GACHA_ROBUX_PRODUCT_ID)
+end
+
+MarketplaceService.ProcessReceipt = function(receiptInfo)
+	if GACHA_ROBUX_PRODUCT_ID <= 0 or receiptInfo.ProductId ~= GACHA_ROBUX_PRODUCT_ID then
+		return Enum.ProductPurchaseDecision.NotProcessedYet
+	end
+	local player = game:GetService("Players"):GetPlayerByUserId(receiptInfo.PlayerId)
+	if not player then
+		return Enum.ProductPurchaseDecision.NotProcessedYet
+	end
+	local playerData = getPlayerData(player)
+	if not playerData then
+		return Enum.ProductPurchaseDecision.NotProcessedYet
+	end
+	if getFomoSecondsLeft() <= 0 then
+		notify(player, "Toast", { Text = "Сезон гачи закончился" })
+		return Enum.ProductPurchaseDecision.PurchaseGranted
+	end
+	local reward = grantGachaReward(player, playerData)
+	deliverGachaResult(player, playerData, reward, "Robux")
+	return Enum.ProductPurchaseDecision.PurchaseGranted
+end
+
 local function onFittingPrompt(player)
 	if isInSafeZone(player) then notify(player, "OpenTrade", {}) end
 end
@@ -120,8 +176,25 @@ local function setupHaven(model)
 				if p then p.Enabled = true; p.ActionText = "Читать"; p.ObjectText = "Манга «Путь Меча»"; p.RequiresLineOfSight = false; p.MaxActivationDistance = 12 end
 				hookPrompt(part, onMangaPrompt)
 			elseif name == "GachaMachine" then
-				if p then p.Enabled = true; p.ActionText = "Крутить (" .. GACHA_COST .. " меди)"; p.ObjectText = "Гашапон"; p.RequiresLineOfSight = false end
+				if p then p.Enabled = true; p.ActionText = "Крутить (" .. GACHA_COST .. " меди)"; p.ObjectText = "Гашапон · только косметика"; p.RequiresLineOfSight = false; p.KeyboardKeyCode = Enum.KeyCode.E end
 				hookPrompt(part, onGachaPrompt)
+				local robuxPrompt = part:FindFirstChild("GachaRobuxPrompt")
+				if not robuxPrompt then
+					robuxPrompt = Instance.new("ProximityPrompt")
+					robuxPrompt.Name = "GachaRobuxPrompt"
+					local host = part:IsA("BasePart") and part or (part.PrimaryPart or part:FindFirstChildWhichIsA("BasePart", true) or part)
+					robuxPrompt.Parent = host
+				end
+				robuxPrompt.ActionText = "Крутить (Robux)"
+				robuxPrompt.ObjectText = "Гашапон VIP · косметика"
+				robuxPrompt.RequiresLineOfSight = false
+				robuxPrompt.MaxActivationDistance = 12
+				robuxPrompt.UIOffset = Vector2.new(0, 80)
+				robuxPrompt.KeyboardKeyCode = Enum.KeyCode.R
+				robuxPrompt.Enabled = true
+				if not hooked[robuxPrompt] then
+					hooked[robuxPrompt] = robuxPrompt.Triggered:Connect(function(plr) onGachaRobuxPrompt(plr) end)
+				end
 			elseif name == "FittingRoom" then
 				if p then p.Enabled = true; p.ActionText = "Магазин / Трейд"; p.ObjectText = "Примерочная"; p.RequiresLineOfSight = false end
 				hookPrompt(part, onFittingPrompt)
@@ -150,6 +223,16 @@ task.spawn(function()
 				notify(plr, "GachaFomo", { SecondsLeft = left, SeasonEnd = gachaSeasonEnd })
 			end
 		end
+	end
+end)
+
+
+task.defer(function()
+	local ok, err = pcall(function()
+		require(script.Parent:WaitForChild("PlayerTradeSystem")).Start()
+	end)
+	if not ok then
+		warn("[OtakuHaven] PlayerTradeSystem failed: ", err)
 	end
 end)
 
