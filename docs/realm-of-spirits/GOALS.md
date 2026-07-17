@@ -113,5 +113,5 @@
 1. ~~P0 Core E2E~~ — OK.
 2. ~~P0 Hub~~ — OK.
 3. ~~P1 Identity~~ — OK (auto + manual Play 2026-07-15).
-4. **Now:** P1 Explore — A/B PASS; C код+UX готовы → **play-тест funnel side 101** (см. `NEXT-SESSION.md`).
-5. **Later:** Social; Scale только по gate.
+4. ~~P1 Explore~~ — A/B/C PASS (funnel side 101 Play 2026-07-18: Accept→5× кристалл→трекер `?`→сдача).
+5. **Now:** P1 Social (fair-combat policy first); Scale только по gate.

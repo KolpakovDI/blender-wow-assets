@@ -1,6 +1,6 @@
 # NEXT SESSION
 
-**Статус:** UI/combat polish checkpoint (2026-07-18) · Explore C funnel 101 ещё на play-подтверждении.
+**Статус:** Explore C **PASS** (2026-07-18) → следующий фокус **P1 Social**.
 
 Дата якоря: 2026-07-18
 
@@ -8,40 +8,23 @@
 
 См. [`GOALS.md`](./GOALS.md) и GDD §9.
 
-| Done | P0 Core + P0 Hub + **P1 Identity** + Explore A/B · UI: traps/dragon/damage/tracker |
-| Now | **P1 Explore C** — сдать side **101**, закрыть gate Explore |
-| Later | Social → P2 Scale по gate |
+| Done | P0 Core + P0 Hub + P1 Identity + Explore A/B/**C** · UI polish |
+| Now | **P1 Social** — fair-combat policy → party/trade slice |
+| Later | P2 Scale по gate |
 
 ## Старт сессии (порядок жёсткий)
 
-1. **Ctrl+S** place: `RealmOfSpirits second.rbxl` (если не сохраняли после 2026-07-18)
-2. Play → Мика → **Доступные**: **«Помощь торговцу»** (101) → Accept
-3. Проверить трекер под миникартой: название, `!` / счётчик кристаллов
-4. Combat → **5× огненный кристалл** → трекер `?` → сдать у Мики
-5. PASS → отметить Explore C в GOALS + CHANGELOG; иначе фиксить CollectItem
-6. После gate Explore: **P1 Social** — не раньше
+1. **Ctrl+S** place при необходимости
+2. Прочитать GDD / GOALS про Social + fair-combat
+3. Набросать минимальный Social vertical slice (без PvP до policy)
+4. Не возвращаться к Haven décor / Explore polish без явного запроса
 
-## Исправлено / проверено 2026-07-18
+## Explore C — PASS (Play 2026-07-18)
 
-- Ловушки: catch disabled + «НЕТ ЛОВУШКИ» по центру 1.5с
-- Дракон (Id 4): Walk, спавн CombatZone `(88,52)`, посадка на землю (~y=2.8)
-- Бой: floating damage (белые / кроваво-красные)
-- UI: духи слева снизу; зум миникарты Q1/Q4; `QuestTrackerHud` под картой
-- Аудит Play: UIController/Client/GM грузятся без ошибок; quality_gate OK
-- Hardening: zoom BtnGlow `Active=false`; tracker OpenQuestUI→Active; catch nil-guard
+- Accept 101 у Мики → трекер: «Помощь торговцу» `!` `0/5`
+- Сбор 5× FireCrystal (ProximityPrompt E) → `5/5` + изумрудный `?`
+- TurnIn у Мики → трекер пуст; квест снят
 
 ## Studio SoT
 
 Place: `C:\Mimo\RealmOfSpirits\RealmOfSpirits second.rbxl` — **не в git**; после правок **Ctrl+S**.
-
-| Module | Path |
-|--------|------|
-| QuestTrackerHud | `ReplicatedStorage.RealmOfSpirits.QuestTrackerHud` |
-| UIFeedback | `ReplicatedStorage.RealmOfSpirits.UIFeedback` |
-| ZoneConfig | `ReplicatedStorage.RealmOfSpirits.ZoneConfig` |
-| UIController | `StarterGui.UIController` |
-| ClientController | `StarterPlayer.StarterPlayerScripts.ClientController` |
-| GameManager | `ServerScriptService.RealmOfSpirits.GameManager` |
-| SpiritAnimation | `ServerScriptService.RealmOfSpirits.SpiritAnimation` |
-| SpiritDatabase | `ReplicatedStorage.RealmOfSpirits.SpiritDatabase` |
-| QuestSystem | `ServerScriptService.RealmOfSpirits.QuestSystem` |
