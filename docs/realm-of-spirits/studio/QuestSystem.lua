@@ -1,13 +1,13 @@
-﻿-- ============================================
+-- ============================================
 -- Realm of Spirits - Quest System
--- РЎРёСЃС‚РµРјР° РєРІРµСЃС‚РѕРІ СЃ РјРѕРЅРµС‚Р°РјРё, РѕРїС‹С‚РѕРј, СЂРµРїСѓС‚Р°С†РёРµР№ Рё СѓРЅРёРєР°Р»СЊРЅС‹РјРё РїСЂРµРґРјРµС‚Р°РјРё
+-- Система квестов с монетами, опытом, репутацией и уникальными предметами
 -- ============================================
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 
--- RemoteEvents (РёСЃРїРѕР»СЊР·СѓРµРј РїР°РїРєСѓ RealmOfSpirits)
+-- RemoteEvents (используем папку RealmOfSpirits)
 local realmFolder = ReplicatedStorage:FindFirstChild("RealmOfSpirits")
 if not realmFolder then
 	realmFolder = Instance.new("Folder")
@@ -28,29 +28,29 @@ if not DataEvent then
 end
 
 -- ============================================
--- РЈРЅРёРєР°Р»СЊРЅС‹Рµ РїСЂРµРґРјРµС‚С‹ (РЅР°РіСЂР°РґС‹ Р·Р° РєРІРµСЃС‚С‹)
+-- Уникальные предметы (награды за квесты)
 -- ============================================
 
 local UniqueItemDatabase = {
-	[1] = {Id = 1, Name = "РђРјСѓР»РµС‚ Р”СЂРµРІРЅРµРіРѕ РњР°СЃС‚РµСЂР°", Rarity = "Legendary", Description = "РЈРІРµР»РёС‡РёРІР°РµС‚ РѕРїС‹С‚ РЅР° 15%"},
-	[2] = {Id = 2, Name = "РљРѕР»СЊС†Рѕ РЎС‚РёС…РёР№", Rarity = "Epic", Description = "+10% СѓСЂРѕРЅ РІСЃРµРј РґСѓС…Р°Рј"},
-	[3] = {Id = 3, Name = "РЎРІРёС‚РѕРє РџСЂРёР·С‹РІР°", Rarity = "Rare", Description = "РџРѕР·РІРѕР»СЏРµС‚ РїСЂРёР·РІР°С‚СЊ СЃР»СѓС‡Р°Р№РЅРѕРіРѕ РґСѓС…Р°"},
-	[4] = {Id = 4, Name = "РџР»Р°С‰ РњСѓРґСЂРµС†Р°", Rarity = "Epic", Description = "+20% Р·Р°С‰РёС‚Р°, +10% СЃРєРѕСЂРѕСЃС‚СЊ"},
-	[5] = {Id = 5, Name = "РљРѕСЂРѕРЅР° Р”СЂР°РєРѕРЅР°", Rarity = "Legendary", Description = "+30% РѕРїС‹С‚, +15% СЂРµРїСѓС‚Р°С†РёСЏ"},
-	[6] = {Id = 6, Name = "РљСЂРёСЃС‚Р°Р»Р» РЈРґР°С‡Рё", Rarity = "Rare", Description = "РЈРІРµР»РёС‡РёРІР°РµС‚ С€Р°РЅСЃ РїРѕРёРјРєРё РґСѓС…РѕРІ"},
-	[7] = {Id = 7, Name = "РџРѕСЃРѕС… РҐСЂР°РЅРёС‚РµР»СЏ", Rarity = "Epic", Description = "+25% СѓСЂРѕРЅ РІ Р±РѕСЏС…"},
+	[1] = {Id = 1, Name = "Амулет Древнего Мастера", Rarity = "Legendary", Description = "Увеличивает опыт на 15%"},
+	[2] = {Id = 2, Name = "Кольцо Стихий", Rarity = "Epic", Description = "+10% урон всем духам"},
+	[3] = {Id = 3, Name = "Свиток Призыва", Rarity = "Rare", Description = "Позволяет призвать случайного духа"},
+	[4] = {Id = 4, Name = "Плащ Мудреца", Rarity = "Epic", Description = "+20% защита, +10% скорость"},
+	[5] = {Id = 5, Name = "Корона Дракона", Rarity = "Legendary", Description = "+30% опыт, +15% репутация"},
+	[6] = {Id = 6, Name = "Кристалл Удачи", Rarity = "Rare", Description = "Увеличивает шанс поимки духов"},
+	[7] = {Id = 7, Name = "Посох Хранителя", Rarity = "Epic", Description = "+25% урон в боях"},
 }
 
 -- ============================================
--- Р”Р°РЅРЅС‹Рµ РєРІРµСЃС‚РѕРІ
+-- Данные квестов
 -- ============================================
 
 local QuestDatabase = {
-	-- РћСЃРЅРѕРІРЅР°СЏ СЃСЋР¶РµС‚РЅР°СЏ Р»РёРЅРёСЏ
+	-- Основная сюжетная линия
 	[1] = {
 		Id = 1,
-		Name = "РџРµСЂРІС‹Рµ С€Р°РіРё",
-		Description = "РџРѕР№РјР°Р№С‚Рµ СЃРІРѕРµРіРѕ РїРµСЂРІРѕРіРѕ РґСѓС…Р° РІ РґРёРєРѕР№ РїСЂРёСЂРѕРґРµ",
+		Name = "Первые шаги",
+		Description = "Поймайте своего первого духа в дикой природе",
 		Type = "Story",
 		Level = 1,
 		Objectives = {
@@ -69,8 +69,8 @@ local QuestDatabase = {
 	},
 	[2] = {
 		Id = 2,
-		Name = "РўСЂРµРЅРёСЂРѕРІРєР°",
-		Description = "РџРѕР±РµРґРёС‚Рµ 5 РІСЂР°РіРѕРІ РЅР° С‚СЂРµРЅРёСЂРѕРІРѕС‡РЅРѕР№ РїР»РѕС‰Р°РґРєРµ",
+		Name = "Тренировка",
+		Description = "Победите 5 врагов на тренировочной площадке",
 		Type = "Story",
 		Level = 2,
 		Objectives = {
@@ -89,8 +89,8 @@ local QuestDatabase = {
 	},
 	[3] = {
 		Id = 3,
-		Name = "РљРѕР»Р»РµРєС†РёРѕРЅРµСЂ",
-		Description = "РџРѕР№РјР°Р№С‚Рµ 3 СЂР°Р·РЅС‹С… РґСѓС…РѕРІ",
+		Name = "Коллекционер",
+		Description = "Поймайте 3 разных духов",
 		Type = "Story",
 		Level = 3,
 		Objectives = {
@@ -102,15 +102,15 @@ local QuestDatabase = {
 			SilverCoins = 15,
 			GoldCoins = 0,
 			Reputation = 30,
-			UniqueItems = {{Id = 6, Quantity = 1}}, -- РљСЂРёСЃС‚Р°Р»Р» РЈРґР°С‡Рё
+			UniqueItems = {{Id = 6, Quantity = 1}}, -- Кристалл Удачи
 			Items = {{Id = 3, Quantity = 1}}
 		},
 		Prerequisites = {1}
 	},
 	[4] = {
 		Id = 4,
-		Name = "Р‘РѕРµРІРѕРµ РёСЃРїС‹С‚Р°РЅРёРµ",
-		Description = "РџРѕР±РµРґРёС‚Рµ 10 РІСЂР°РіРѕРІ РІ Р±РёС‚РІРµ",
+		Name = "Боевое испытание",
+		Description = "Победите 10 врагов в битве",
 		Type = "Story",
 		Level = 5,
 		Objectives = {
@@ -122,15 +122,15 @@ local QuestDatabase = {
 			SilverCoins = 25,
 			GoldCoins = 1,
 			Reputation = 50,
-			UniqueItems = {{Id = 2, Quantity = 1}}, -- РљРѕР»СЊС†Рѕ РЎС‚РёС…РёР№
-			Items = {{Id = 4, Quantity = 1}}
+			UniqueItems = {{Id = 2, Quantity = 1}}, -- Кольцо Стихий
+			Items = {{Id = 1, Quantity = 5}} -- ловушки (ItemCatalog)
 		},
 		Prerequisites = {2, 3}
 	},
 	[5] = {
 		Id = 5,
-		Name = "РњР°СЃС‚РµСЂ Р”СѓС…РѕРІ",
-		Description = "РџСЂРѕРєР°С‡Р°Р№С‚Рµ РґСѓС…Р° РґРѕ 10 СѓСЂРѕРІРЅСЏ",
+		Name = "Мастер Духов",
+		Description = "Прокачайте духа до 10 уровня",
 		Type = "Story",
 		Level = 8,
 		Objectives = {
@@ -142,15 +142,15 @@ local QuestDatabase = {
 			SilverCoins = 50,
 			GoldCoins = 3,
 			Reputation = 100,
-			UniqueItems = {{Id = 7, Quantity = 1}}, -- РџРѕСЃРѕС… РҐСЂР°РЅРёС‚РµР»СЏ
-			Items = {{Id = 5, Quantity = 2}}
+			UniqueItems = {{Id = 7, Quantity = 1}}, -- Посох Хранителя
+			Items = {{Id = 2, Quantity = 3}} -- зелья
 		},
 		Prerequisites = {4}
 	},
 	[6] = {
 		Id = 6,
-		Name = "Р›РµРіРµРЅРґР°СЂРЅС‹Р№ РњР°СЃС‚РµСЂ",
-		Description = "РџРѕР№РјР°Р№С‚Рµ РІСЃРµС… 5 СЂР°Р·Р»РёС‡РЅС‹С… РґСѓС…РѕРІ РІ РјРёСЂРµ",
+		Name = "Легендарный Мастер",
+		Description = "Поймайте всех 5 различных духов в мире",
 		Type = "Story",
 		Level = 10,
 		Objectives = {
@@ -162,17 +162,17 @@ local QuestDatabase = {
 			SilverCoins = 100,
 			GoldCoins = 10,
 			Reputation = 250,
-			UniqueItems = {{Id = 5, Quantity = 1}}, -- РљРѕСЂРѕРЅР° Р”СЂР°РєРѕРЅР°
-			Items = {{Id = 6, Quantity = 3}}
+			UniqueItems = {{Id = 5, Quantity = 1}}, -- Корона Дракона
+			Items = {{Id = 3, Quantity = 3}} -- свитки опыта
 		},
 		Prerequisites = {5}
 	},
 
-	-- РџРѕР±РѕС‡РЅС‹Рµ РєРІРµСЃС‚С‹
+	-- Побочные квесты
 	[101] = {
 		Id = 101,
-		Name = "РџРѕРјРѕС‰СЊ С‚РѕСЂРіРѕРІС†Сѓ",
-		Description = "РЎРѕР±РµСЂРёС‚Рµ 5 РѕРіРЅРµРЅРЅС‹С… РєСЂРёСЃС‚Р°Р»Р»РѕРІ",
+		Name = "Помощь торговцу",
+		Description = "Соберите 5 огненных кристаллов",
 		Type = "Side",
 		Level = 1,
 		Objectives = {
@@ -191,8 +191,8 @@ local QuestDatabase = {
 	},
 	[102] = {
 		Id = 102,
-		Name = "РћС…РѕС‚РЅРёРє Р·Р° СЃРѕРєСЂРѕРІРёС‰Р°РјРё",
-		Description = "РќР°Р№РґРёС‚Рµ 3 СЃРєСЂС‹С‚С‹С… СЃСѓРЅРґСѓРєР° РІ РјРёСЂРµ",
+		Name = "Охотник за сокровищами",
+		Description = "Найдите 3 скрытых сундука в мире",
 		Type = "Side",
 		Level = 3,
 		Objectives = {
@@ -204,15 +204,15 @@ local QuestDatabase = {
 			SilverCoins = 15,
 			GoldCoins = 0,
 			Reputation = 15,
-			UniqueItems = {{Id = 3, Quantity = 1}}, -- РЎРІРёС‚РѕРє РџСЂРёР·С‹РІР°
+			UniqueItems = {{Id = 3, Quantity = 1}}, -- Свиток Призыва
 			Items = {}
 		},
 		Prerequisites = {}
 	},
 	[103] = {
 		Id = 103,
-		Name = "РўСЂРµРЅРµСЂ РґСѓС…РѕРІ",
-		Description = "РџРѕР±РµРґРёС‚Рµ 20 РІСЂР°РіРѕРІ Р»СЋР±РѕРіРѕ С‚РёРїР°",
+		Name = "Тренер духов",
+		Description = "Победите 20 врагов любого типа",
 		Type = "Side",
 		Level = 4,
 		Objectives = {
@@ -224,15 +224,15 @@ local QuestDatabase = {
 			SilverCoins = 20,
 			GoldCoins = 1,
 			Reputation = 25,
-			UniqueItems = {},
-			Items = {{Id = 7, Quantity = 1}}
+			UniqueItems = {{Id = 7, Quantity = 1}}, -- Посох Хранителя (UniqueItemDatabase)
+			Items = {{Id = 2, Quantity = 3}} -- зелья в инвентарь
 		},
 		Prerequisites = {}
 	},
 	[104] = {
 		Id = 104,
-		Name = "РҐСЂР°РЅРёС‚РµР»СЊ РјРёСЂР°",
-		Description = "РџРѕР№РјР°Р№С‚Рµ 5 РґСѓС…РѕРІ РґР»СЏ Р·Р°С‰РёС‚С‹ РєРѕСЂРѕР»РµРІСЃС‚РІР°",
+		Name = "Хранитель мира",
+		Description = "Поймайте 5 духов для защиты королевства",
 		Type = "Side",
 		Level = 5,
 		Objectives = {
@@ -244,15 +244,15 @@ local QuestDatabase = {
 			SilverCoins = 30,
 			GoldCoins = 2,
 			Reputation = 50,
-			UniqueItems = {{Id = 4, Quantity = 1}}, -- РџР»Р°С‰ РњСѓРґСЂРµС†Р°
+			UniqueItems = {{Id = 4, Quantity = 1}}, -- Плащ Мудреца
 			Items = {}
 		},
 		Prerequisites = {1}
 	},
 	[105] = {
 		Id = 105,
-		Name = "Р›РµРіРµРЅРґР° Рѕ РњР°СЃС‚РµСЂРµ",
-		Description = "Р’С‹РїРѕР»РЅРёС‚Рµ РІСЃРµ РїРѕР±РѕС‡РЅС‹Рµ РєРІРµСЃС‚С‹ Рё СЃС‚Р°РЅСЊС‚Рµ Р»РµРіРµРЅРґРѕР№",
+		Name = "Легенда о Мастере",
+		Description = "Завершите побочные 101–104 и победите 50 врагов",
 		Type = "Side",
 		Level = 10,
 		Objectives = {
@@ -264,15 +264,15 @@ local QuestDatabase = {
 			SilverCoins = 100,
 			GoldCoins = 15,
 			Reputation = 500,
-			UniqueItems = {{Id = 1, Quantity = 1}}, -- РђРјСѓР»РµС‚ Р”СЂРµРІРЅРµРіРѕ РњР°СЃС‚РµСЂР°
-			Items = {}
+			UniqueItems = {{Id = 1, Quantity = 1}}, -- Амулет Древнего Мастера
+			Items = {{Id = 3, Quantity = 2}} -- свитки опыта
 		},
-		Prerequisites = {104}
+		Prerequisites = {101, 102, 103, 104}
 	},
 }
 
 -- ============================================
--- РЎРёСЃС‚РµРјР° РєРІРµСЃС‚РѕРІ РёРіСЂРѕРєР°
+-- Система квестов игрока
 -- ============================================
 
 local QuestSystem = {}
@@ -304,21 +304,21 @@ end
 
 function QuestSystem:AcceptQuest(questId)
 	local quest = QuestDatabase[questId]
-	if not quest then return false, "РљРІРµСЃС‚ РЅРµ РЅР°Р№РґРµРЅ" end
+	if not quest then return false, "Квест не найден" end
 
-	-- РџСЂРѕРІРµСЂСЏРµРј prerequisites
-	for _, prereqId in ipairs(quest.Prerequisites) do
+	-- Проверяем prerequisites
+	for _, prereqId in ipairs(quest.Prerequisites or {}) do
 		if not self.CompletedQuests[prereqId] then
-			return false, "РќРµ РІС‹РїРѕР»РЅРµРЅС‹ РїСЂРµРґРІР°СЂРёС‚РµР»СЊРЅС‹Рµ СѓСЃР»РѕРІРёСЏ"
+			return false, "Не выполнены предварительные условия"
 		end
 	end
 
-	-- РџСЂРѕРІРµСЂСЏРµРј, РЅРµ РІР·СЏС‚ Р»Рё СѓР¶Рµ РєРІРµСЃС‚
+	-- Проверяем, не взят ли уже квест
 	if self.ActiveQuests[questId] then
-		return false, "РљРІРµСЃС‚ СѓР¶Рµ РІР·СЏС‚"
+		return false, "Квест уже взят"
 	end
 
-	-- Р‘РµСЂС‘Рј РєРІРµСЃС‚
+	-- Берём квест
 	self.ActiveQuests[questId] = true
 	self.QuestProgress[questId] = {}
 
@@ -330,9 +330,63 @@ function QuestSystem:AcceptQuest(questId)
 		}
 	end
 
+	-- Зачёт уже имеющихся уровней / предметов / разных духов
+	-- CatchSpirit НЕ сидим: стартовый дух ≠ «поимка в дикой природе»
+	do
+		local playerData = nil
+		if _G.GetPlayerData then
+			playerData = _G.GetPlayerData(self.Player)
+		else
+			local ok, DataStoreManagerModule = pcall(require, script.Parent.DataStoreManager)
+			if ok and DataStoreManagerModule then
+				playerData = DataStoreManagerModule.new():GetPlayerData(self.Player.UserId)
+			end
+		end
+		if playerData then
+			local spirits = playerData.Spirits or {}
+			local uniqueIds = {}
+			local uniqueCount = 0
+			local maxSpiritLevel = 0
+			for _, spiritEntry in ipairs(spirits) do
+				local key = tostring(spiritEntry.Id)
+				if not uniqueIds[key] then
+					uniqueIds[key] = true
+					uniqueCount += 1
+				end
+				maxSpiritLevel = math.max(maxSpiritLevel, spiritEntry.Level or 1)
+			end
+			local function countInv(itemId)
+				local n = 0
+				for _, inv in ipairs(playerData.Inventory or {}) do
+					if inv.Id == itemId then
+						n += (inv.Quantity or 0)
+					end
+				end
+				return n
+			end
+			for i, objective in ipairs(quest.Objectives) do
+				local progress = self.QuestProgress[questId][i]
+				if objective.Type == "CatchDifferentSpirits" then
+					progress.CaughtIds = {}
+					for key in pairs(uniqueIds) do
+						progress.CaughtIds[key] = true
+					end
+					progress.Current = math.min(uniqueCount, progress.Target)
+				elseif objective.Type == "LevelUpSpirit" then
+					progress.Current = math.min(maxSpiritLevel, progress.Target)
+				elseif objective.Type == "CollectItem" and objective.ItemId then
+					progress.Current = math.min(countInv(objective.ItemId), progress.Target)
+				end
+			end
+			if self:AreAllObjectivesComplete(questId) then
+				self:MarkReadyToTurnIn(questId)
+			end
+		end
+	end
+
 	QuestEvent:FireClient(self.Player, "QuestAccepted", {QuestId = questId})
 
-	return true, "РљРІРµСЃС‚ РїСЂРёРЅСЏС‚!"
+	return true, "Квест принят!"
 end
 
 function QuestSystem:UpdateProgress(progressType, data)
@@ -369,11 +423,11 @@ function QuestSystem:UpdateProgress(progressType, data)
 						end
 					end
 
-					-- РџСЂРѕРІРµСЂСЏРµРј РІС‹РїРѕР»РЅРµРЅРёРµ
+					-- Проверяем выполнение
 					if self:AreAllObjectivesComplete(questId) then self:MarkReadyToTurnIn(questId)
 					end
 
-					-- РћС‚РїСЂР°РІР»СЏРµРј РѕР±РЅРѕРІР»РµРЅРёРµ
+					-- Отправляем обновление
 					QuestEvent:FireClient(self.Player, "QuestProgress", {
 						QuestId = questId,
 						ObjectiveIndex = i,
@@ -403,39 +457,99 @@ function QuestSystem:MarkReadyToTurnIn(questId)
 	if not self:AreAllObjectivesComplete(questId) then return end
 	self.ReadyToTurnIn[questId] = true
 	local quest = QuestDatabase[questId]
-	QuestEvent:FireClient(self.Player, "QuestReadyToTurnIn", {QuestId = questId, QuestName = quest and quest.Name or "РљРІРµСЃС‚"})
+	QuestEvent:FireClient(self.Player, "QuestReadyToTurnIn", {QuestId = questId, QuestName = quest and quest.Name or "Квест"})
 end
 
 function QuestSystem:TurnInQuest(questId)
-	if not self.ReadyToTurnIn[questId] then return false, "РЎРЅР°С‡Р°Р»Р° РІС‹РїРѕР»РЅРёС‚Рµ РІСЃРµ С†РµР»Рё РєРІРµСЃС‚Р°" end
-	if not self.ActiveQuests[questId] then return false, "РљРІРµСЃС‚ РЅРµ Р°РєС‚РёРІРµРЅ" end
+	if not self.ReadyToTurnIn[questId] then return false, "Сначала выполните все цели квеста" end
+	if not self.ActiveQuests[questId] then return false, "Квест не активен" end
+	local quest = QuestDatabase[questId]
+	if quest then
+		local playerData = nil
+		if _G.GetPlayerData then
+			playerData = _G.GetPlayerData(self.Player)
+		else
+			local ok, DSM = pcall(require, script.Parent.DataStoreManager)
+			if ok and DSM then
+				playerData = DSM.new():GetPlayerData(self.Player.UserId)
+			end
+		end
+		if playerData then
+			for _, objective in ipairs(quest.Objectives or {}) do
+				if objective.Type == "CollectItem" and objective.ItemId then
+					local need = objective.Count or 1
+					local have = 0
+					for _, inv in ipairs(playerData.Inventory or {}) do
+						if inv.Id == objective.ItemId then
+							have += (inv.Quantity or 0)
+						end
+					end
+					if have < need then
+						return false, "Недостаточно предметов для сдачи квеста"
+					end
+				end
+			end
+		end
+	end
 	self:CompleteQuest(questId)
-	return true, "РљРІРµСЃС‚ СЃРґР°РЅ!"
+	return true, "Квест сдан!"
 end
 
 function QuestSystem:CompleteQuest(questId)
 	local quest = QuestDatabase[questId]
 	if not quest then return end
 
-	-- Р’С‹РґР°С‘Рј РЅР°РіСЂР°РґС‹ С‡РµСЂРµР· DataStoreManager
-	local DataStoreManagerModule = require(script.Parent.DataStoreManager)
-	local dataStore = DataStoreManagerModule.new()
-	local playerData = dataStore:GetPlayerData(self.Player.UserId)
+	local playerData = nil
+	if _G.GetPlayerData then
+		playerData = _G.GetPlayerData(self.Player)
+	else
+		local DataStoreManagerModule = require(script.Parent.DataStoreManager)
+		playerData = DataStoreManagerModule.new():GetPlayerData(self.Player.UserId)
+	end
 	if playerData then
-		-- РњРѕРЅРµС‚С‹ (С‚СЂРё С‚РёРїР°)
+		playerData.Stats = playerData.Stats or {}
+		playerData.Inventory = playerData.Inventory or {}
+		playerData.UniqueItems = playerData.UniqueItems or {}
+
+		-- Списываем предметы CollectItem при сдаче
+		for _, objective in ipairs(quest.Objectives or {}) do
+			if objective.Type == "CollectItem" and objective.ItemId then
+				local need = objective.Count or 1
+				for _, invItem in ipairs(playerData.Inventory) do
+					if invItem.Id == objective.ItemId then
+						invItem.Quantity = math.max(0, (invItem.Quantity or 0) - need)
+						break
+					end
+				end
+			end
+		end
+
+		-- Монеты (три типа)
 		playerData.CopperCoins = (playerData.CopperCoins or 0) + (quest.Rewards.CopperCoins or 0)
 		playerData.SilverCoins = (playerData.SilverCoins or 0) + (quest.Rewards.SilverCoins or 0)
 		playerData.GoldCoins = (playerData.GoldCoins or 0) + (quest.Rewards.GoldCoins or 0)
 
-		-- РћРїС‹С‚ Рё СЂРµРїСѓС‚Р°С†РёСЏ
+		-- Опыт и репутация
 		playerData.Experience = (playerData.Experience or 0) + (quest.Rewards.Experience or 0)
 		playerData.Reputation = (playerData.Reputation or 0) + (quest.Rewards.Reputation or 0)
 
-		-- РЎС‚Р°С‚РёСЃС‚РёРєР°
+		local LevelingSystem = require(script.Parent.LevelingSystem)
+		local levelingSystem = LevelingSystem.new()
+		local leveledUp, _, levelRewards = levelingSystem:CheckLevelUp(playerData)
+		if leveledUp then
+			for _, reward in ipairs(levelRewards) do
+				DataEvent:FireClient(self.Player, "LevelUp", {
+					NewLevel = reward.Level,
+					BonusCoins = reward.CopperCoins or reward.Coins or 0,
+				})
+			end
+		end
+
+		-- Статистика
 		playerData.Stats.QuestsCompleted = (playerData.Stats.QuestsCompleted or 0) + 1
 		NormalizeCurrency(playerData)
 
-		-- РЈРЅРёРєР°Р»СЊРЅС‹Рµ РїСЂРµРґРјРµС‚С‹
+		-- Уникальные предметы
 		if quest.Rewards.UniqueItems then
 			for _, item in ipairs(quest.Rewards.UniqueItems) do
 				local itemInfo = UniqueItemDatabase[item.Id]
@@ -449,28 +563,28 @@ function QuestSystem:CompleteQuest(questId)
 			end
 		end
 
-		-- РћР±С‹С‡РЅС‹Рµ РїСЂРµРґРјРµС‚С‹
+		-- Обычные предметы
 		if quest.Rewards.Items then
 			for _, item in ipairs(quest.Rewards.Items) do
 				local found = false
 				for _, invItem in ipairs(playerData.Inventory) do
 					if invItem.Id == item.Id then
-						invItem.Quantity = invItem.Quantity + item.Quantity
+						invItem.Quantity = (invItem.Quantity or 0) + (item.Quantity or 1)
 						found = true
 						break
 					end
 				end
 				if not found then
-					table.insert(playerData.Inventory, {Id = item.Id, Quantity = item.Quantity})
+					table.insert(playerData.Inventory, {Id = item.Id, Quantity = item.Quantity or 1})
 				end
 			end
 		end
 
-		-- РћС‚РїСЂР°РІР»СЏРµРј РѕР±РЅРѕРІР»РµРЅРёРµ РєР»РёРµРЅС‚Сѓ
+		-- Отправляем обновление клиенту
 		DataEvent:FireClient(self.Player, "FullSync", playerData)
 	end
 
-	-- РћС‚РјРµС‡Р°РµРј РєР°Рє РІС‹РїРѕР»РЅРµРЅРЅРѕРµ
+	-- Отмечаем как выполненное
 	self.ReadyToTurnIn[questId] = nil
 	self.CompletedQuests[questId] = true
 	self.ActiveQuests[questId] = nil
@@ -482,19 +596,58 @@ function QuestSystem:CompleteQuest(questId)
 		QuestName = quest.Name
 	})
 
-	print(self.Player.Name .. " РІС‹РїРѕР»РЅРёР» РєРІРµСЃС‚: " .. quest.Name)
+	print(self.Player.Name .. " выполнил квест: " .. quest.Name)
 end
 
 function QuestSystem:GetQuestInfo(questId)
 	return QuestDatabase[questId]
 end
 
+function QuestSystem:SyncInventoryObjectives(questId)
+	local quest = QuestDatabase[questId]
+	local progress = self.QuestProgress[questId]
+	if not quest or not progress then return end
+	local playerData = _G.GetPlayerData and _G.GetPlayerData(self.Player) or nil
+	if not playerData then return end
+	local function countInv(itemId)
+		local n = 0
+		for _, inv in ipairs(playerData.Inventory or {}) do
+			if inv.Id == itemId then
+				n += (inv.Quantity or 0)
+			end
+		end
+		return n
+	end
+	for i, objective in ipairs(quest.Objectives or {}) do
+		local p = progress[i]
+		if p and objective.Type == "CollectItem" and objective.ItemId then
+			p.Current = math.min(countInv(objective.ItemId), p.Target or objective.Count or 1)
+		end
+	end
+	if self:AreAllObjectivesComplete(questId) then
+		self:MarkReadyToTurnIn(questId)
+	end
+end
+
 function QuestSystem:GetActiveQuests()
 	local quests = {}
 	for questId, _ in pairs(self.ActiveQuests) do
+		self:SyncInventoryObjectives(questId)
+		local progOut = {}
+		local srcProg = self.QuestProgress[questId] or {}
+		local quest = QuestDatabase[questId]
+		local n = quest and #(quest.Objectives or {}) or 0
+		for i = 1, n do
+			local p = srcProg[i] or {}
+			progOut[i] = {
+				Type = p.Type,
+				Current = tonumber(p.Current) or 0,
+				Target = tonumber(p.Target) or 1,
+			}
+		end
 		table.insert(quests, {
-			Quest = QuestDatabase[questId],
-			Progress = self.QuestProgress[questId],
+			Quest = quest,
+			Progress = progOut,
 			ReadyToTurnIn = self.ReadyToTurnIn[questId] or false
 		})
 	end
@@ -502,12 +655,15 @@ function QuestSystem:GetActiveQuests()
 end
 
 -- ============================================
--- РћР±СЂР°Р±РѕС‚С‡РёРєРё СЃРѕР±С‹С‚РёР№
+-- Обработчики событий
 -- ============================================
 
 local function TriggerQuestMasterReaction(reaction)
 	local qm = Workspace:FindFirstChild("QuestMaster")
-	if qm then qm:SetAttribute("Reaction", reaction) end
+	if not qm then return end
+	-- сброс, чтобы повтор той же эмоции снова сработал
+	qm:SetAttribute("Reaction", nil)
+	qm:SetAttribute("Reaction", reaction)
 end
 
 local function FaceQuestMasterToPlayer(player)
@@ -567,6 +723,7 @@ end
 local function OpenQuestUIForPlayer(player, questSystem)
 	RecentQuestMasterInteraction[player.UserId] = os.clock()
 	FaceQuestMasterToPlayer(player)
+	TriggerQuestMasterReaction("Talk")
 	QuestEvent:FireClient(player, "OpenQuestUI", {
 		Available = BuildAvailableQuests(questSystem),
 		Active = questSystem:GetActiveQuests(),
@@ -606,11 +763,16 @@ QuestEvent.OnServerEvent:Connect(function(player, action, data)
 
 	elseif action == "AcceptQuest" then
 		if not CanUseQuestMasterAction(player, 26, 10) then
-			QuestEvent:FireClient(player, "QuestResult", {Success = false, Message = "РљРІРµСЃС‚С‹ РІС‹РґР°С‘С‚ С‚РѕР»СЊРєРѕ РєРІРµСЃС‚РѕСЂ СЂСЏРґРѕРј СЃ РІР°РјРё"})
+			QuestEvent:FireClient(player, "QuestResult", {Success = false, Message = "Квесты выдаёт только квестор рядом с вами"})
 			return
 		end
-		local questId = data.QuestId
+		local questId = data and data.QuestId
+		if not questId then
+			QuestEvent:FireClient(player, "QuestResult", {Success = false, Message = "Некорректный запрос квеста"})
+			return
+		end
 		local success, message = questSystem:AcceptQuest(questId)
+		TriggerQuestMasterReaction(success and "Point" or "Fail")
 		QuestEvent:FireClient(player, "QuestResult", {Success = success, Message = message})
 
 	elseif action == "GetActiveQuests" then
@@ -619,10 +781,14 @@ QuestEvent.OnServerEvent:Connect(function(player, action, data)
 
 	elseif action == "TurnInQuest" then
 		if not CanUseQuestMasterAction(player, 26, 10) then
-			QuestEvent:FireClient(player, "QuestResult", {Success = false, Message = "РЎРґР°С‚СЊ РєРІРµСЃС‚ РјРѕР¶РЅРѕ С‚РѕР»СЊРєРѕ Сѓ РєРІРµСЃС‚РѕСЂР°"})
+			QuestEvent:FireClient(player, "QuestResult", {Success = false, Message = "Сдать квест можно только у квестора"})
 			return
 		end
-		local questId = data.QuestId
+		local questId = data and data.QuestId
+		if not questId then
+			QuestEvent:FireClient(player, "QuestResult", {Success = false, Message = "Некорректный запрос квеста"})
+			return
+		end
 		local success, message = questSystem:TurnInQuest(questId)
 		TriggerQuestMasterReaction(success and "Success" or "Fail")
 		QuestEvent:FireClient(player, "QuestResult", {Success = success, Message = message, TurnIn = true})
@@ -641,13 +807,13 @@ QuestEvent.OnServerEvent:Connect(function(player, action, data)
 end)
 
 -- ============================================
--- РРЅС‚РµРіСЂР°С†РёСЏ NPC (ProximityPrompt)
+-- Интеграция NPC (ProximityPrompt)
 -- ============================================
 
 task.spawn(function()
 	local questMaster = Workspace:WaitForChild("QuestMaster", 10)
 	if not questMaster then
-		warn("QuestMaster NPC РЅРµ РЅР°Р№РґРµРЅ РІ Workspace!")
+		warn("QuestMaster NPC не найден в Workspace!")
 		return
 	end
 
@@ -683,8 +849,8 @@ task.spawn(function()
 			prompt.Name = "QuestPrompt"
 			prompt.Parent = anchor
 		end
-		prompt.ActionText = "РџРѕРіРѕРІРѕСЂРёС‚СЊ"
-		prompt.ObjectText = "РњРёРєР° В· РљРІРµСЃС‚РѕСЂ"
+		prompt.ActionText = "Поговорить"
+		prompt.ObjectText = "Мика · Квестор"
 		prompt.Enabled = true
 		prompt.MaxActivationDistance = 18
 		prompt.RequiresLineOfSight = false
@@ -692,7 +858,7 @@ task.spawn(function()
 		if not hookedPrompts[prompt] then
 			hookedPrompts[prompt] = true
 			prompt.Triggered:Connect(openFor)
-			print("Quest Master ProximityPrompt РїРѕРґРєР»СЋС‡С‘РЅ!")
+			print("Quest Master ProximityPrompt подключён!")
 		end
 
 		local clickDetector = anchor:FindFirstChildOfClass("ClickDetector")
@@ -705,7 +871,7 @@ task.spawn(function()
 		if not hookedClicks[clickDetector] then
 			hookedClicks[clickDetector] = true
 			clickDetector.MouseClick:Connect(openFor)
-			print("Quest Master ClickDetector РїРѕРґРєР»СЋС‡С‘РЅ!")
+			print("Quest Master ClickDetector подключён!")
 		end
 	end
 
@@ -721,7 +887,7 @@ task.spawn(function()
 end)
 
 -- ============================================
--- РџСѓР±Р»РёС‡РЅР°СЏ С„СѓРЅРєС†РёСЏ РґР»СЏ РѕР±РЅРѕРІР»РµРЅРёСЏ РїСЂРѕРіСЂРµСЃСЃР°
+-- Публичная функция для обновления прогресса
 -- ============================================
 
 local function updateQuestProgress(player, progressType, data)
@@ -731,18 +897,18 @@ local function updateQuestProgress(player, progressType, data)
 	end
 end
 
--- Р­РєСЃРїРѕСЂС‚РёСЂСѓРµРј РґР»СЏ РґСЂСѓРіРёС… СЃРєСЂРёРїС‚РѕРІ
+-- Экспортируем для других скриптов
 _G.UpdateQuestProgress = updateQuestProgress
 
 -- ============================================
--- РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ
+-- Инициализация
 -- ============================================
 
 Players.PlayerAdded:Connect(function(player)
 	GetOrCreateQuestSystem(player)
 end)
 
--- РћР±СЂР°Р±РѕС‚РєР° РёРіСЂРѕРєРѕРІ СѓР¶Рµ РІ РёРіСЂРµ
+-- Обработка игроков уже в игре
 for _, player in ipairs(Players:GetPlayers()) do
 	GetOrCreateQuestSystem(player)
 end
@@ -752,5 +918,4 @@ Players.PlayerRemoving:Connect(function(player)
 	RecentQuestMasterInteraction[player.UserId] = nil
 end)
 
-print("Realm of Spirits - Quest System Р·Р°РіСЂСѓР¶РµРЅ!")
-
+print("Realm of Spirits - Quest System загружен!")

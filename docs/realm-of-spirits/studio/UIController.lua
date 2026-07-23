@@ -37,11 +37,13 @@ local SpiritIcons = {
 	[3] = {Color = Color3.fromRGB(100, 50, 150), Emoji = "🌑"},
 	[4] = {Color = Color3.fromRGB(200, 200, 100), Emoji = "⚡"},
 	[5] = {Color = Color3.fromRGB(255, 255, 200), Emoji = "✨"},
+	[6] = {Color = Color3.fromRGB(25, 40, 85), Emoji = "🐟"},
 	[101] = {Color = Color3.fromRGB(255, 120, 50), Emoji = "🔥"},
 	[102] = {Color = Color3.fromRGB(100, 200, 255), Emoji = "❄️"},
 	[103] = {Color = Color3.fromRGB(100, 50, 150), Emoji = "🌑"},
 	[104] = {Color = Color3.fromRGB(200, 200, 100), Emoji = "⚡"},
 	[105] = {Color = Color3.fromRGB(255, 255, 200), Emoji = "✨"},
+	[106] = {Color = Color3.fromRGB(25, 40, 85), Emoji = "🌊"},
 }
 
 -- ============================================

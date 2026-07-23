@@ -36,7 +36,7 @@
 - Cosmetics и materials — да; будущие pay-locked exclusives — по отдельному whitelist.
 
 ### 6. PvP / гильдии
-- **Не стартуем**, пока fair-combat KR = 0 нарушений и P0 core gate закрыт (`GOALS` P2).
+- **PvP Arena duel slice allowed** after Social PASS; rules: no Robux power, potions disabled in duel, reward copper-only, same skill formula both sides.
 
 ---
 

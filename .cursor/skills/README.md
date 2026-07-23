@@ -6,6 +6,7 @@ These skills teach the agent how to work efficiently on this repo.
 |--------|------|------|
 | `realm-orchestrator/` | realm-orchestrator | Default entry / routing |
 | `realm-studio-mcp/` | realm-studio-mcp | Studio MCP edits |
+| `realm-mesh-from-prompt/` | realm-mesh-from-prompt | Blender → Open Cloud → Studio insert |
 | `realm-session-checkpoint/` | realm-session-checkpoint | Pause / save / resume |
 | `realm-battle-pipeline/` | realm-battle-pipeline | Combat catalogs + orchestrator |
 

@@ -294,6 +294,238 @@ local function SetupQuestMaster()
 	end
 end
 
+local function BuildMistPond()
+	local existing = workspace:FindFirstChild("MistPond")
+	if existing then
+		existing:Destroy()
+	end
+	local pathOld = workspace:FindFirstChild("MistPondPath")
+	if pathOld then
+		pathOld:Destroy()
+	end
+
+	local cfg = ZoneConfig.Zones and ZoneConfig.Zones.MistPond
+	local center = (cfg and cfg.Center) or ZoneConfig.MistPondCenter or Vector3.new(105, 1, 125)
+	local size = (cfg and cfg.Size) or Vector3.new(70, 18, 55)
+	-- Stepping-stone approach from Combat north edge (no text signs)
+	local pathStart = Vector3.new(center.X, 0, 88)
+	local pathEnd = Vector3.new(center.X + 4, 0, center.Z - 24)
+
+	local function part(props)
+		local p = Instance.new("Part")
+		for k, v in pairs(props) do
+			p[k] = v
+		end
+		p.Anchored = true
+		if props.CanCollide == nil then
+			p.CanCollide = false
+		end
+		return p
+	end
+
+	local model = Instance.new("Model")
+	model.Name = "MistPond"
+
+	local zone = part({
+		Name = "MistPondZone",
+		Size = size,
+		CFrame = CFrame.new(center),
+		Transparency = 1,
+		CanQuery = true,
+	})
+	zone:SetAttribute("ZoneType", "MistPond")
+	zone.Parent = model
+
+	-- Organic-ish water bowl (layered, natural glass — not neon)
+	local waterDeep = part({
+		Name = "PondWaterDeep",
+		Size = Vector3.new(44, 1.6, 32),
+		Position = Vector3.new(center.X - 2, 0.55, center.Z + 1),
+		Material = Enum.Material.Glass,
+		Color = Color3.fromRGB(25, 70, 95),
+		Transparency = 0.25,
+	})
+	waterDeep.Reflectance = 0.15
+	waterDeep.Parent = model
+
+	local water = part({
+		Name = "PondWater",
+		Size = Vector3.new(48, 1.1, 36),
+		Position = Vector3.new(center.X, 1.05, center.Z),
+		Material = Enum.Material.Glass,
+		Color = Color3.fromRGB(45, 120, 130),
+		Transparency = 0.4,
+	})
+	water.Reflectance = 0.35
+	water.Parent = model
+	local waterLight = Instance.new("PointLight")
+	waterLight.Brightness = 0.55
+	waterLight.Range = 22
+	waterLight.Color = Color3.fromRGB(140, 190, 200)
+	waterLight.Parent = water
+
+	-- Sandy beach ring (Japanese pond shore)
+	local sandOuter = part({
+		Name = "SandBank",
+		Size = Vector3.new(64, 0.85, 52),
+		Position = Vector3.new(center.X, 0.35, center.Z),
+		Material = Enum.Material.Sand,
+		Color = Color3.fromRGB(210, 190, 150),
+		CanCollide = true,
+	})
+	sandOuter.Parent = model
+
+	local sandInner = part({
+		Name = "SandShore",
+		Size = Vector3.new(54, 0.55, 42),
+		Position = Vector3.new(center.X + 1, 0.7, center.Z - 1),
+		Material = Enum.Material.Sand,
+		Color = Color3.fromRGB(225, 205, 165),
+		CanCollide = true,
+	})
+	sandInner.Parent = model
+
+	-- Wider beach where spirit spawns
+	local beach = part({
+		Name = "PondBeach",
+		Size = Vector3.new(20, 0.7, 14),
+		Position = Vector3.new(center.X + 18, 0.85, center.Z - 10),
+		Material = Enum.Material.Sand,
+		Color = Color3.fromRGB(230, 210, 170),
+		CanCollide = true,
+	})
+	beach.Parent = model
+
+	-- Irregular rocks around the pond
+	local rockSpecs = {
+		{ Vector3.new(-22, 1.2, -8), Vector3.new(5, 3.2, 4) },
+		{ Vector3.new(-18, 0.9, 12), Vector3.new(4, 2.4, 5) },
+		{ Vector3.new(20, 1.0, 14), Vector3.new(4.5, 2.8, 3.5) },
+		{ Vector3.new(16, 0.8, -16), Vector3.new(3.5, 2.0, 4) },
+		{ Vector3.new(-6, 0.7, -20), Vector3.new(6, 1.8, 3) },
+		{ Vector3.new(8, 1.1, 18), Vector3.new(3, 2.6, 3) },
+	}
+	for i, spec in ipairs(rockSpecs) do
+		local rock = part({
+			Name = "Rock_" .. i,
+			Size = spec[2],
+			Position = center + spec[1],
+			Material = Enum.Material.Slate,
+			Color = Color3.fromRGB(95 + (i % 3) * 12, 95, 90),
+			CanCollide = true,
+		})
+		rock.Orientation = Vector3.new((i * 17) % 20, i * 40, (i * 11) % 15)
+		rock.Parent = model
+	end
+
+	-- Stone lantern (ishidōrō) — landmark without text
+	local lanternBase = part({
+		Name = "LanternBase",
+		Size = Vector3.new(2.2, 1.2, 2.2),
+		Position = Vector3.new(center.X - 20, 0.9, center.Z - 14),
+		Material = Enum.Material.Limestone,
+		Color = Color3.fromRGB(160, 155, 140),
+		CanCollide = true,
+	})
+	lanternBase.Parent = model
+	local lanternPole = part({
+		Name = "LanternPole",
+		Size = Vector3.new(1.0, 4.5, 1.0),
+		Position = lanternBase.Position + Vector3.new(0, 2.8, 0),
+		Material = Enum.Material.Limestone,
+		Color = Color3.fromRGB(150, 145, 130),
+		CanCollide = true,
+	})
+	lanternPole.Parent = model
+	local lanternHouse = part({
+		Name = "LanternHouse",
+		Size = Vector3.new(2.4, 2.0, 2.4),
+		Position = lanternPole.Position + Vector3.new(0, 3.0, 0),
+		Material = Enum.Material.Limestone,
+		Color = Color3.fromRGB(140, 135, 120),
+		CanCollide = true,
+	})
+	lanternHouse.Parent = model
+	local lanternGlow = part({
+		Name = "LanternGlow",
+		Size = Vector3.new(1.4, 1.2, 1.4),
+		Position = lanternHouse.Position,
+		Material = Enum.Material.Neon,
+		Color = Color3.fromRGB(255, 210, 140),
+		Transparency = 0.35,
+	})
+	lanternGlow.Parent = model
+	local lanternLight = Instance.new("PointLight")
+	lanternLight.Brightness = 1.2
+	lanternLight.Range = 28
+	lanternLight.Color = Color3.fromRGB(255, 200, 130)
+	lanternLight.Parent = lanternGlow
+	local lanternRoof = part({
+		Name = "LanternRoof",
+		Size = Vector3.new(3.2, 0.5, 3.2),
+		Position = lanternHouse.Position + Vector3.new(0, 1.3, 0),
+		Material = Enum.Material.Slate,
+		Color = Color3.fromRGB(70, 65, 60),
+		CanCollide = true,
+	})
+	lanternRoof.Parent = model
+
+	-- Soft mist over water
+	for i = 1, 4 do
+		local mist = part({
+			Name = "Mist_" .. i,
+			Shape = Enum.PartType.Ball,
+			Size = Vector3.new(12 + i * 2, 3.5, 12 + i * 2),
+			Position = Vector3.new(
+				center.X + math.cos(i * 1.4) * 12,
+				3.2,
+				center.Z + math.sin(i * 1.4) * 10
+			),
+			Material = Enum.Material.ForceField,
+			Color = Color3.fromRGB(200, 215, 220),
+			Transparency = 0.72,
+		})
+		mist.Parent = model
+	end
+
+	-- Natural stepping stones Combat → shore (sand/stone, no labels)
+	local pathFolder = Instance.new("Model")
+	pathFolder.Name = "MistPondPath"
+	local steps = 9
+	for i = 0, steps do
+		local t = i / steps
+		local wobble = math.sin(i * 1.3) * 2.5
+		local pos = pathStart:Lerp(pathEnd, t) + Vector3.new(wobble, 0.4, 0)
+		local stone = part({
+			Name = "StepStone_" .. i,
+			Size = Vector3.new(3.2 + (i % 3) * 0.4, 0.55, 2.6 + (i % 2) * 0.5),
+			Position = pos,
+			Material = Enum.Material.Slate,
+			Color = Color3.fromRGB(110 + (i % 4) * 8, 105, 95),
+			CanCollide = true,
+		})
+		stone.Orientation = Vector3.new(0, i * 18, 0)
+		stone.Parent = pathFolder
+		-- thin sand between stones
+		if i < steps then
+			local mid = pos:Lerp(pathStart:Lerp(pathEnd, (i + 1) / steps) + Vector3.new(math.sin((i + 1) * 1.3) * 2.5, 0.4, 0), 0.5)
+			local sand = part({
+				Name = "PathSand_" .. i,
+				Size = Vector3.new(5.5, 0.25, 4),
+				Position = Vector3.new(mid.X, 0.2, mid.Z),
+				Material = Enum.Material.Sand,
+				Color = Color3.fromRGB(215, 195, 155),
+				CanCollide = true,
+			})
+			sand.Parent = pathFolder
+		end
+	end
+	pathFolder.Parent = workspace
+
+	model.Parent = workspace
+	print("Realm of Spirits - MistPond built (Japanese sand pond, no text signs)")
+end
+
 local function CreateWorld()
 	if not workspace:FindFirstChild("Baseplate") then
 		local baseplate = Instance.new("Part")
@@ -331,6 +563,7 @@ local function CreateWorld()
 	end
 
 	OtakuHavenBuilder.Build()
+	BuildMistPond()
 	SetupSpawn()
 	SetupQuestMaster()
 end

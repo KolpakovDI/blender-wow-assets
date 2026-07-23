@@ -26,6 +26,7 @@ Entry skill for all Realm of Spirits agent work.
 |-------------|--------------|
 | Session start / “что дальше” / resume | This skill + `NEXT-SESSION.md` |
 | Edit place via Studio MCP | Read [realm-studio-mcp](../realm-studio-mcp/SKILL.md) |
+| Mesh / model from text prompt → Studio | Read [realm-mesh-from-prompt](../realm-mesh-from-prompt/SKILL.md) |
 | Save / pause / checkpoint | Read [realm-session-checkpoint](../realm-session-checkpoint/SKILL.md) |
 | Skills / effects / battle orchestrator / GameManager combat | Read [realm-battle-pipeline](../realm-battle-pipeline/SKILL.md) |
 | Changelog / GDD / docs only | `.cursor/rules/realm-of-spirits.mdc` |

@@ -1,0 +1,8 @@
+# Local secrets / exports (never commit real keys)
+.env
+.env.*
+!.env.example
+docs/realm-of-spirits/assets/meshes/*.fbx
+docs/realm-of-spirits/assets/meshes/*.glb
+docs/realm-of-spirits/assets/meshes/*.gltf
+docs/realm-of-spirits/assets/meshes/ENV.local

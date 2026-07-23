@@ -72,6 +72,8 @@ local MESSAGES = {
 	Safe = "Otaku Haven — Safe Zone",
 	Exit = "Выход в боевую зону: Акихабара",
 	Combat = "Акихабара — Combat Zone",
+	Akihabara = "Акихабара — Combat Zone",
+	MistPond = "Туманный пруд — зона Водного Карпа",
 }
 
 local SLIPPER_COLOR = Color3.fromRGB(255, 170, 200)

@@ -17,6 +17,7 @@ Git holds docs + Cursor infra + tooling; the `.rbxl` is **not** in git.
 |-------|---------|
 | `realm-orchestrator` | Routing, priorities, session rules |
 | `realm-studio-mcp` | Roblox Studio MCP edit/rebuild/export |
+| `realm-mesh-from-prompt` | Blender → Open Cloud FBX upload → Studio `insert_asset` |
 | `realm-session-checkpoint` | Pause / save / resume docs + optional commit |
 | `realm-battle-pipeline` | SkillCatalog → Orchestrator → battle UI |
 

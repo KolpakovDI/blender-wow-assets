@@ -11,6 +11,8 @@ ZoneConfig.Zones = {
 	Exit = {Center = Vector3.new(-25, 1, 62), Size = Vector3.new(14, 10, 6)},
 	-- Combat восточнее Safe (Safe X до ~25)
 	Combat = {Center = Vector3.new(105, 1, 45), Size = Vector3.new(90, 20, 90)},
+	-- Новая PvE-карманная зона: севернее Akihabara Combat
+	MistPond = {Center = Vector3.new(105, 1, 125), Size = Vector3.new(70, 18, 55)},
 }
 
 ZoneConfig.CounterPosition = Vector3.new(-30, 0, 0)
@@ -19,6 +21,7 @@ ZoneConfig.QuestMasterPosition = Vector3.new(-12, 0, -38)
 ZoneConfig.QuestMasterHeightOffset = 0.25
 ZoneConfig.SpawnPosition = Vector3.new(-25, 1, -45)
 ZoneConfig.BattleArenaPosition = Vector3.new(236, 0, 40)
+ZoneConfig.MistPondCenter = Vector3.new(105, 0, 125)
 
 ZoneConfig.SpiritSpawnPositions = {
 	[1] = Vector3.new(75, 0, 40),
@@ -26,6 +29,7 @@ ZoneConfig.SpiritSpawnPositions = {
 	[3] = Vector3.new(85, 0, 55),
 	[4] = Vector3.new(88, 0, 52),
 	[5] = Vector3.new(100, 0, 25),
+	[6] = Vector3.new(105, 1.5, 125),
 }
 
 function ZoneConfig.GetSpiritSpawnPositions()
@@ -37,6 +41,7 @@ ZoneConfig.Music = {
 	Genkan = {SoundId = "1848354536", Volume = 0.28},
 	Exit = {SoundId = "9047104571", Volume = 0.34},
 	Combat = {SoundId = "9047105584", Volume = 0.40},
+	MistPond = {SoundId = "9047105584", Volume = 0.36},
 }
 
 ZoneConfig.GachaRobuxProductId = 0

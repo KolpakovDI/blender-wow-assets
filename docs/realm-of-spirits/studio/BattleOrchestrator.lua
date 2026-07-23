@@ -151,6 +151,124 @@ function BattleOrchestrator.ExecutePlayerSkill(battle, skillIndex, opts)
 	}
 end
 
+--- Fair PvP skill for either side (same formula; no PvE early-game nerf).
+--- side: "Player" | "Enemy". opts: { DamageMultiplier = number, Now = number }
+function BattleOrchestrator.ExecuteFairSkill(battle, side, skillIndex, opts)
+	opts = opts or {}
+	local now = opts.Now or os.clock()
+	local ok, reason, ability = BattleOrchestrator.CanUseSkill(battle, side, skillIndex, now)
+	if not ok then
+		if reason == "Stun" then
+			EffectCatalog.Step(battle.PlayerEffects)
+			EffectCatalog.Step(battle.EnemyEffects)
+			return { Ok = false, Kind = "Stun", Message = "Оглушение — ход пропущен", Ability = ability }
+		end
+		return { Ok = false, Kind = "Blocked", Message = reason or "Навык недоступен", Ability = ability }
+	end
+
+	spendAndCooldown(battle, side, skillIndex, ability, now)
+
+	local attackerSpirit = (side == "Player") and battle.PlayerSpirit or battle.EnemySpirit
+	local attackerInfo = (side == "Player") and battle.SpiritInfo or battle.EnemyInfo
+	if not attackerSpirit then
+		attackerSpirit = { Id = (attackerInfo and attackerInfo.Id) or 1, Level = 1 }
+	end
+
+	if ability.Type == "Heal" then
+		local heal = math.max(1, math.floor((ability.HealAmount or 20) + ((attackerSpirit.Level or 1) * 1.5)))
+		if side == "Player" then
+			battle.PlayerHP = math.min(battle.PlayerMaxHP, battle.PlayerHP + heal)
+			local effectText = EffectCatalog.Apply(ability.Effect, battle.PlayerEffects, battle.EnemyEffects)
+			EffectCatalog.Step(battle.PlayerEffects)
+			EffectCatalog.Step(battle.EnemyEffects)
+			battle.Turn = (battle.Turn or 1) + 1
+			local msg = "Восстановлено " .. heal .. " HP! (" .. ability.Name .. ")"
+			if effectText ~= "" then msg = msg .. " • " .. effectText end
+			return { Ok = true, Kind = "Heal", Message = msg, Ability = ability, Ended = false, Side = side }
+		else
+			battle.EnemyHP = math.min(battle.EnemyMaxHP, battle.EnemyHP + heal)
+			local effectText = EffectCatalog.Apply(ability.Effect, battle.EnemyEffects, battle.PlayerEffects)
+			EffectCatalog.Step(battle.PlayerEffects)
+			EffectCatalog.Step(battle.EnemyEffects)
+			battle.Turn = (battle.Turn or 1) + 1
+			local msg = "Соперник восстановил " .. heal .. " HP! (" .. ability.Name .. ")"
+			if effectText ~= "" then msg = msg .. " • " .. effectText end
+			return { Ok = true, Kind = "Heal", Message = msg, Ability = ability, Ended = false, Side = side }
+		end
+	end
+
+	local spiritAtk = 10
+	do
+		local info = SpiritDatabase.Get(attackerSpirit.Id)
+		if info and info.BaseStats then
+			spiritAtk = info.BaseStats.Attack or 10
+		end
+	end
+	local damage = (ability.Damage or 15)
+		+ ((attackerSpirit.Level or 1) * 3)
+		+ math.floor(spiritAtk * 0.55)
+		+ math.random(0, 6)
+	if opts.DamageMultiplier then
+		damage = math.floor(damage * opts.DamageMultiplier)
+	end
+
+	local effectText
+	local burnDamage
+	if side == "Player" then
+		damage = EffectCatalog.ComputeDamage(damage, battle.PlayerEffects, battle.EnemyEffects)
+		battle.EnemyHP = math.max(0, battle.EnemyHP - damage)
+		effectText = EffectCatalog.Apply(ability.Effect, battle.PlayerEffects, battle.EnemyEffects)
+		battle.EnemyHP, burnDamage = EffectCatalog.ApplyBurnTick(battle.EnemyHP, battle.EnemyEffects)
+	else
+		damage = EffectCatalog.ComputeDamage(damage, battle.EnemyEffects, battle.PlayerEffects)
+		battle.PlayerHP = math.max(0, battle.PlayerHP - damage)
+		effectText = EffectCatalog.Apply(ability.Effect, battle.EnemyEffects, battle.PlayerEffects)
+		battle.PlayerHP, burnDamage = EffectCatalog.ApplyBurnTick(battle.PlayerHP, battle.PlayerEffects)
+	end
+	EffectCatalog.Step(battle.PlayerEffects)
+	EffectCatalog.Step(battle.EnemyEffects)
+
+	local winner = nil
+	if battle.EnemyHP <= 0 then
+		winner = "Player"
+	elseif battle.PlayerHP <= 0 then
+		winner = "Enemy"
+	end
+
+	local actor = (side == "Player") and "Вы" or (battle.EnemyInfo and battle.EnemyInfo.Name or "Соперник")
+	local msg = actor .. ": " .. ability.Name .. "! -" .. damage .. " HP"
+	if effectText and effectText ~= "" then msg = msg .. " • " .. effectText end
+	if burnDamage and burnDamage > 0 then msg = msg .. " • Горение: -" .. burnDamage .. " HP" end
+
+	if winner then
+		return {
+			Ok = true,
+			Kind = "Attack",
+			Message = msg,
+			Ability = ability,
+			Damage = damage,
+			BurnDamage = burnDamage,
+			EffectText = effectText,
+			Ended = true,
+			Winner = winner,
+			Side = side,
+		}
+	end
+
+	battle.Turn = (battle.Turn or 1) + 1
+	return {
+		Ok = true,
+		Kind = "Attack",
+		Message = msg,
+		Ability = ability,
+		Damage = damage,
+		BurnDamage = burnDamage,
+		EffectText = effectText,
+		Ended = false,
+		Side = side,
+	}
+end
+
 --- Execute an enemy skill against the player.
 function BattleOrchestrator.ExecuteEnemySkill(battle, skillIndex, opts)
 	opts = opts or {}

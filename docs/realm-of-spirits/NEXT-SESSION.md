@@ -1,32 +1,46 @@
 # NEXT SESSION
 
-**Статус:** P1 Social **in progress** — fair-combat policy + gacha fix + P2P server MVP.
+**Статус:** Checkpoint 2026-07-23 evening. **PvP slice PASS**. **MistPond + Водный Карп** в Studio (Swim + хвост); нужен **Play QA** плавания. Tourbillon **paused**.
 
-Дата якоря: 2026-07-18
-
-## Цели (locked)
-
-См. [`GOALS.md`](./GOALS.md), [`FAIR-COMBAT.md`](./FAIR-COMBAT.md), GDD §9.
-
-| Done | P0 Core/Hub · P1 Identity · Explore A/B/C · fair-combat policy · gacha cosmetics-only · PlayerTrade server |
-| Now | **P1 Social UI** — клиентский Trade Request (1 слот) + clarity toast «только косметика» |
-| Later | Flex equip в Safe · trade play-тест 2 игрока · P2 Scale |
+Дата якоря: 2026-07-23 → продолжение 2026-07-24
 
 ## Старт сессии (порядок жёсткий)
 
-1. **Ctrl+S** place (`PlayerTradeSystem`, `OtakuHavenService`, `ItemCatalog`)
-2. Клиент: `PlayerTradeHud` / prompt рядом с игроком в Safe → Request / Offer / Ready
-3. Play-тест 2 клиента (или Local Server 2 players) — обмен 1 предмета
-4. UI гачи: явный текст «только косметика» в результате (сервер уже шлёт Message)
-5. Не начинать PvP
+1. Place SoT: `C:\Mimo\RealmOfSpirits\RealmOfSpirits second.rbxl` — **Ctrl+S** если не сохранял
+2. Studio MCP `user-Roblox_Studio` (если error → Restart MCP)
+3. Этот файл
+4. **Play QA: карп плавает в пруду + машет хвостом** (ниже)
 
-## Сделано 2026-07-18 (Social kickoff)
+## Product progress
 
-- `FAIR-COMBAT.md` — политика locked
-- Gacha: убраны ловушки/зелья из пула (FAIL→PASS)
-- `PlayerTradeSystem` — Remote `PlayerTrade`, 1 слот, Safe+distance
-- `ItemCatalog.CombatUtility` flags
+| Тема | Статус |
+|------|--------|
+| P0–P1 Core / Haven / Social | **DONE** |
+| P2 PvP vertical slice | **DONE** (2p PASS) |
+| P2 MistPond + Water Carp #6 | **CODE IN STUDIO** — Play QA pending |
+
+## Точный next step (игра)
+
+1. Ctrl+S → Play
+2. Haven → Akihabara Combat → **север** по каменным ступеням
+3. Японский пруд (песок, стекло-вода, фонарь) — **без** текстовых табличек
+4. Один **Водный Карп** в воде: плавает в пределах пруда, хвост машет
+5. Бой / ловля; синие водные кристаллы
+6. Нет артефактов preview/procedural рядом с прудом
+
+После PASS → следующий дух/зона или polish карпа (светлый реф = эво #106).
+
+## Закрыто в этой сессии
+
+- PvP: rematch/origin, Haven challenge zone, PlayerInteract Обмен|Дуэль
+- MistPond японский берег; refs → SpiritTemplate6
+- Swim + tail anim; cleanup artifacts
+- Allow-rule: не спрашивать Allow в чате
 
 ## Studio SoT
 
-Place: `C:\Mimo\RealmOfSpirits\RealmOfSpirits second.rbxl` — **Ctrl+S**.
+`C:\Mimo\RealmOfSpirits\RealmOfSpirits second.rbxl` (не в git). **Ctrl+S.**
+
+Ключевые модули: `SpiritAnimation`, `SpiritDatabase`, `ZoneConfig`, `WorldSpawner`, `GameManager` (Swim wander), `PvPDuel*`, `PlayerInteractController`, `SpiritTemplate6`
+
+Quality: `python scripts/quality_gate.py`

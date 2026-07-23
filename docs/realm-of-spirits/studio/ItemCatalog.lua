@@ -11,6 +11,7 @@ ItemCatalog.ById = {
 	[103] = {Id = 103, Name = "Теневой кристалл", Category = "Material", Element = "Dark", SellPrice = 10, Description = "Материал эволюции тёмных духов", CombatUtility = false},
 	[104] = {Id = 104, Name = "Грозовой кристалл", Category = "Material", Element = "Lightning", SellPrice = 12, Description = "Материал эволюции грозовых духов", CombatUtility = false},
 	[105] = {Id = 105, Name = "Световой кристалл", Category = "Material", Element = "Light", SellPrice = 15, Description = "Материал эволюции световых духов", CombatUtility = false},
+	[106] = {Id = 106, Name = "Водный кристалл", Category = "Material", Element = "Water", SellPrice = 9, Description = "Материал эволюции водных духов", CombatUtility = false},
 }
 
 ItemCatalog.ShopIds = {1, 2, 3}

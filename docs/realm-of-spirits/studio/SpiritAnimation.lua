@@ -1,4 +1,4 @@
--- SpiritAnimation - ground walk + flying hover with wing flap
+-- SpiritAnimation - ground walk + flying hover + swim (tail wag)
 local RunService = game:GetService("RunService")
 
 local SpiritAnimation = {}
@@ -8,6 +8,7 @@ local PLAYER_HEIGHT = 5.0
 local MIN_FLY_HOVER = 2.0
 local MAX_FLY_HOVER = 4.2
 local FLYING_SPIRIT_IDS = { [2] = true, [102] = true, [104] = true }
+local SWIM_SPIRIT_IDS = { [6] = true, [106] = true }
 
 function SpiritAnimation.GetMovementType(spiritInfo)
 	if spiritInfo then
@@ -16,6 +17,9 @@ function SpiritAnimation.GetMovementType(spiritInfo)
 		end
 		if spiritInfo.Id and FLYING_SPIRIT_IDS[spiritInfo.Id] then
 			return "Fly"
+		end
+		if spiritInfo.Id and SWIM_SPIRIT_IDS[spiritInfo.Id] then
+			return "Swim"
 		end
 	end
 	return "Walk"
@@ -58,6 +62,22 @@ local function applyLegs(data, elapsed, moving)
 	end
 end
 
+local function applyTail(data, elapsed)
+	if not data.tailParts or #data.tailParts == 0 then
+		return
+	end
+	local body = data.body
+	-- continuous swim: stronger wag while moving
+	local amp = data.moving and math.rad(22) or math.rad(12)
+	local wag = math.sin(elapsed * (data.moving and 11 or 7)) * amp
+	local roll = math.sin(elapsed * 5.5) * math.rad(4)
+	for _, entry in ipairs(data.tailParts) do
+		if entry.part and entry.part.Parent then
+			entry.part.CFrame = body.CFrame * entry.baseLocal * CFrame.Angles(roll * 0.35, wag, 0)
+		end
+	end
+end
+
 function SpiritAnimation.ApplyFrame(spirit)
 	local data = SpiritAnimData[spirit]
 	if not data or not data.body or not data.body.Parent then
@@ -66,6 +86,8 @@ function SpiritAnimation.ApplyFrame(spirit)
 	local elapsed = os.clock() - (data.startTime or os.clock())
 	if data.movementType == "Fly" then
 		applyWings(data, elapsed)
+	elseif data.movementType == "Swim" then
+		applyTail(data, elapsed)
 	else
 		applyLegs(data, elapsed, data.moving)
 	end
@@ -92,6 +114,7 @@ function SpiritAnimation.Setup(spirit, spiritInfo, getGroundPosition)
 		body = bodyGeom,
 		wings = nil,
 		legs = nil,
+		tailParts = {},
 		moving = false,
 		startTime = os.clock(),
 		conn = nil,
@@ -115,6 +138,18 @@ function SpiritAnimation.Setup(spirit, spiritInfo, getGroundPosition)
 		}
 	end
 
+	for _, desc in ipairs(spirit:GetDescendants()) do
+		if desc:IsA("BasePart") then
+			local n = desc.Name
+			if n:find("Tail") or n:find("Lobe") or n:find("Web") then
+				table.insert(data.tailParts, {
+					part = desc,
+					baseLocal = bodyGeom.CFrame:ToObjectSpace(desc.CFrame),
+				})
+			end
+		end
+	end
+
 	SpiritAnimData[spirit] = data
 
 	if movementType == "Fly" and getGroundPosition then
@@ -122,6 +157,18 @@ function SpiritAnimation.Setup(spirit, spiritInfo, getGroundPosition)
 		local ground = getGroundPosition(p.X, p.Z, { spirit })
 		local hover = SpiritAnimation.ComputeHoverHeight(spirit, ground.Y)
 		spirit:SetAttribute("HoverHeight", hover)
+	end
+
+	if movementType == "Swim" then
+		local water = workspace:FindFirstChild("MistPond") and workspace.MistPond:FindFirstChild("PondWater")
+		local waterY = (water and water.Position.Y + water.Size.Y * 0.15) or 1.4
+		spirit:SetAttribute("SwimWaterY", waterY)
+		local center = water and Vector3.new(water.Position.X, 0, water.Position.Z)
+			or Vector3.new(105, 0, 125)
+		local halfX = water and (water.Size.X * 0.35) or 14
+		local halfZ = water and (water.Size.Z * 0.35) or 10
+		spirit:SetAttribute("SwimCenter", center)
+		spirit:SetAttribute("SwimRadius", math.min(halfX, halfZ))
 	end
 end
 
@@ -136,6 +183,13 @@ function SpiritAnimation.ResetPose(spirit)
 	end
 	if data.legs then
 		data.legs.part.CFrame = body.CFrame * data.legs.baseLocal
+	end
+	if data.tailParts then
+		for _, entry in ipairs(data.tailParts) do
+			if entry.part and entry.part.Parent then
+				entry.part.CFrame = body.CFrame * entry.baseLocal
+			end
+		end
 	end
 end
 
@@ -175,6 +229,25 @@ function SpiritAnimation.Place(spirit, targetPos, placeOnGround, getGroundPositi
 		hoverY = math.clamp(hoverY, MIN_FLY_HOVER, SpiritAnimation.ComputeHoverHeight(spirit, ground.Y))
 		local rotation = spirit:GetPivot() - spirit:GetPivot().Position
 		spirit:PivotTo(CFrame.new(targetPos.X, ground.Y + hoverY, targetPos.Z) * rotation)
+	elseif movementType == "Swim" then
+		local waterY = spirit:GetAttribute("SwimWaterY") or targetPos.Y
+		local center = spirit:GetAttribute("SwimCenter")
+		local radius = spirit:GetAttribute("SwimRadius") or 12
+		local x, z = targetPos.X, targetPos.Z
+		if typeof(center) == "Vector3" then
+			local flat = Vector3.new(x - center.X, 0, z - center.Z)
+			if flat.Magnitude > radius then
+				flat = flat.Unit * radius
+				x = center.X + flat.X
+				z = center.Z + flat.Z
+			end
+		end
+		local look = spirit:GetPivot().LookVector
+		local flatLook = Vector3.new(look.X, 0, look.Z)
+		if flatLook.Magnitude < 0.05 then
+			flatLook = Vector3.new(0, 0, -1)
+		end
+		spirit:PivotTo(CFrame.lookAt(Vector3.new(x, waterY, z), Vector3.new(x, waterY, z) + flatLook.Unit))
 	else
 		placeOnGround(spirit, targetPos)
 	end
@@ -198,6 +271,10 @@ function SpiritAnimation.MoveStep(spirit, startCF, targetXZ, alpha, placeOnGroun
 		local hover = spirit:GetAttribute("HoverHeight") or SpiritAnimation.ComputeHoverHeight(spirit, ground.Y)
 		local bob = math.sin(os.clock() * 8) * 0.1
 		spirit:PivotTo(CFrame.new(flatPos.X, ground.Y + hover + bob, flatPos.Z) * rotation)
+	elseif movementType == "Swim" then
+		local waterY = spirit:GetAttribute("SwimWaterY") or startPos.Y
+		local bob = math.sin(os.clock() * 6) * 0.08
+		spirit:PivotTo(CFrame.new(flatPos.X, waterY + bob, flatPos.Z) * rotation)
 	else
 		spirit:PivotTo(CFrame.new(flatPos.X, startPos.Y, flatPos.Z) * rotation)
 		placeOnGround(spirit, flatPos)

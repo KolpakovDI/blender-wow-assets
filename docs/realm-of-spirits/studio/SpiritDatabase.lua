@@ -45,11 +45,20 @@ SpiritDatabase.Spirits = {
 		SkillIds = {41, 42},
 		CatchRate = 0.01,
 	},
+	[6] = {
+		MovementType = "Swim",
+		Id = 6, Name = "Водный Карп", Element = "Water", Rarity = "Uncommon",
+		Color = Color3.fromRGB(25, 40, 85), Size = 3.2,
+		BaseStats = {HP = 100, Attack = 15, Defense = 14, Speed = 14},
+		SkillIds = {51, 52},
+		CatchRate = 0.4,
+	},
 	[101] = {Id = 101, Name = "Огненный Тигр", Element = "Fire", Rarity = "Rare", BaseStats = {HP = 150, Attack = 25, Defense = 15, Speed = 18}, SkillIds = {1, 2, 3}, CatchRate = 0.1},
 	[102] = {MovementType = "Fly", Id = 102, Name = "Ледяной Феникс", Element = "Ice", Rarity = "Rare", BaseStats = {HP = 120, Attack = 22, Defense = 12, Speed = 28}, SkillIds = {11, 12, 13}, CatchRate = 0.08},
 	[103] = {Id = 103, Name = "Теневой Волк", Element = "Dark", Rarity = "Epic", BaseStats = {HP = 180, Attack = 30, Defense = 18, Speed = 22}, SkillIds = {21, 22, 23}, CatchRate = 0.05},
 	[104] = {MovementType = "Fly", Id = 104, Name = "Грозовой Левиафан", Element = "Lightning", Rarity = "Legendary", BaseStats = {HP = 220, Attack = 35, Defense = 22, Speed = 30}, SkillIds = {31, 32, 33}, CatchRate = 0.02},
 	[105] = {Id = 105, Name = "Световой Альфа", Element = "Light", Rarity = "Legendary", BaseStats = {HP = 280, Attack = 40, Defense = 28, Speed = 25}, SkillIds = {41, 42, 43}, CatchRate = 0.01},
+	[106] = {Id = 106, Name = "Цунами-Карп", Element = "Water", Rarity = "Rare", Color = Color3.fromRGB(30, 100, 200), Size = 4.5, BaseStats = {HP = 160, Attack = 24, Defense = 20, Speed = 16}, SkillIds = {51, 52, 53}, CatchRate = 0.08},
 }
 
 for _, spirit in pairs(SpiritDatabase.Spirits) do
@@ -85,6 +94,7 @@ SpiritDatabase.EvolutionRules = {
 	[3] = {EvolvedId = 103, RequiredLevel = 15, RequiredItems = {{Id = 103, Quantity = 5}}, RequiredBattles = 20},
 	[4] = {EvolvedId = 104, RequiredLevel = 18, RequiredItems = {{Id = 104, Quantity = 5}}, RequiredBattles = 25},
 	[5] = {EvolvedId = 105, RequiredLevel = 20, RequiredItems = {{Id = 105, Quantity = 5}}, RequiredBattles = 30},
+	[6] = {EvolvedId = 106, RequiredLevel = 12, RequiredItems = {{Id = 106, Quantity = 5}}, RequiredBattles = 12},
 }
 
 function SpiritDatabase.Get(id)

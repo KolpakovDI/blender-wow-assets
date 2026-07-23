@@ -17,31 +17,40 @@ local listFrame
 local emptyLabel
 local rowPool = {}
 
-local function objectiveLabel(obj, progress)
+local function getProgressEntry(progress, index)
+	if type(progress) ~= "table" then
+		return nil
+	end
+	return progress[index] or progress[tostring(index)]
+end
+
+local function objectiveName(obj)
 	local objType = obj and obj.Type or ""
-	local target = (progress and progress.Target) or obj.Count or obj.TargetLevel or 1
-	local current = (progress and progress.Current) or 0
-	local name
 	if objType == "CatchSpirit" then
-		name = "Поймать духов"
+		return "Поймать духов"
 	elseif objType == "DefeatEnemies" then
-		name = "Победить врагов"
+		return "Победить врагов"
 	elseif objType == "CatchDifferentSpirits" then
-		name = "Разные духи"
+		return "Разные духи"
 	elseif objType == "CollectItem" then
 		local item = obj.ItemId and ItemCatalog.ById and ItemCatalog.ById[obj.ItemId]
-		name = item and ("Собрать: " .. (item.Name or "предмет")) or "Собрать предметы"
+		if item and item.Name then
+			return item.Name
+		end
+		local def = ItemCatalog.Get and ItemCatalog.Get(obj.ItemId)
+		return (def and def.Name) or "Собрать предметы"
 	elseif objType == "LevelUpSpirit" then
-		name = "Уровень духа"
+		return "Уровень духа"
 	elseif objType == "FindChests" then
-		name = "Найти сундуки"
-	else
-		name = objType ~= "" and objType or "Цель"
+		return "Найти сундуки"
 	end
-	if target and ((tonumber(target) or 0) > 0) then
-		return string.format("%s  %d/%d", name, math.floor(current), math.floor(target))
-	end
-	return name
+	return objType ~= "" and objType or "Цель"
+end
+
+local function objectiveCounts(obj, progress)
+	local target = (progress and tonumber(progress.Target)) or obj.Count or obj.TargetLevel or 1
+	local current = (progress and tonumber(progress.Current)) or 0
+	return math.floor(current), math.floor(tonumber(target) or 1)
 end
 
 local function clearRows()
@@ -118,18 +127,37 @@ local function buildRow(parent, entry, y)
 		stub.Parent = row
 	else
 		for i, obj in ipairs(objectives) do
+			local p = getProgressEntry(progress, i)
+			local cur, tgt = objectiveCounts(obj, p)
+			local done = cur >= tgt
+
 			local line = Instance.new("TextLabel")
-			line.Size = UDim2.new(1, -32, 0, 14)
+			line.Name = "ObjName"
+			line.Size = UDim2.new(1, -72, 0, 14)
 			line.Position = UDim2.new(0, 28, 0, lineY)
 			line.BackgroundTransparency = 1
-			line.Text = "· " .. objectiveLabel(obj, progress[i])
-			line.TextColor3 = TEXT_COLOR
+			line.Text = "· " .. objectiveName(obj)
+			line.TextColor3 = done and EMERALD or TEXT_COLOR
 			line.Font = Enum.Font.Gotham
 			line.TextSize = 11
 			line.TextXAlignment = Enum.TextXAlignment.Left
 			line.TextTruncate = Enum.TextTruncate.AtEnd
 			line.ZIndex = 15
 			line.Parent = row
+
+			local count = Instance.new("TextLabel")
+			count.Name = "ObjCount"
+			count.Size = UDim2.fromOffset(40, 14)
+			count.Position = UDim2.new(1, -44, 0, lineY)
+			count.BackgroundTransparency = 1
+			count.Text = string.format("%d/%d", cur, tgt)
+			count.TextColor3 = done and EMERALD or GOLD
+			count.Font = Enum.Font.GothamBold
+			count.TextSize = 11
+			count.TextXAlignment = Enum.TextXAlignment.Right
+			count.ZIndex = 16
+			count.Parent = row
+
 			lineY += 15
 		end
 	end
@@ -167,9 +195,9 @@ end
 
 function QuestTrackerHud.init(screenGui, opts)
 	opts = opts or {}
-	local width = opts.Width or 236
-	local height = opts.Height or 160
-	local pos = opts.Position or UDim2.new(1, -(width + 12), 0, 258)
+	local width = opts.Width or 200
+	local height = opts.Height or 140
+	local pos = opts.Position or UDim2.new(1, -(width + 12), 0, 268)
 
 	local existing = screenGui:FindFirstChild("QuestTrackerFrame")
 	if existing then existing:Destroy() end

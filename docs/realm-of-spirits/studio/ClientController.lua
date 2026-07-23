@@ -377,31 +377,165 @@ local function exitNormalMode()
 	selectSpirit(nil)
 end
 
-local function playPlayerAttackAnimation()
-	if isPlayerAttackAnimating then return end
-	local char = player.Character or character
-	if not char then return end
-	local root = char:FindFirstChild("HumanoidRootPart")
-	if not root then return end
+local function computeBladeRestC0(char)
+	local hand = char and (char:FindFirstChild("RightHand") or char:FindFirstChild("Right Arm"))
+	if not hand then
+		return CFrame.new(0, -0.1, 0) * CFrame.Angles(math.rad(90), math.rad(90), 0)
+	end
+	local lower = char:FindFirstChild("RightLowerArm")
+	local grip = hand:FindFirstChild("RightGripAttachment")
 
-	isPlayerAttackAnimating = true
-	local origin = root.CFrame
-	local forward = Vector3.new(origin.LookVector.X, 0, origin.LookVector.Z)
-	if forward.Magnitude < 0.05 then
-		forward = Vector3.new(0, 0, -1)
-	else
-		forward = forward.Unit
+	local bladeWorld
+	if lower then
+		local axis = hand.Position - lower.Position
+		if axis.Magnitude > 0.05 then
+			bladeWorld = axis.Unit
+		end
+	end
+	if not bladeWorld then
+		bladeWorld = -hand.CFrame.UpVector
 	end
 
-	local attackCF = CFrame.lookAt(origin.Position + forward * 1.1, origin.Position + forward * 3)
-	local outTween = TweenService:Create(root, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {CFrame = attackCF})
-	local backTween = TweenService:Create(root, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {CFrame = origin})
+	local localZ = hand.CFrame:VectorToObjectSpace(bladeWorld)
+	if localZ.Magnitude < 0.05 then
+		localZ = Vector3.new(0, -1, 0)
+	else
+		localZ = localZ.Unit
+	end
 
-	outTween:Play()
-	outTween.Completed:Wait()
-	backTween:Play()
-	backTween.Completed:Wait()
-	isPlayerAttackAnimating = false
+	local thumbWorld = hand.CFrame.RightVector
+	local localDown = hand.CFrame:VectorToObjectSpace(Vector3.new(0, -1, 0))
+	local localX = localDown:Cross(localZ)
+	if localX.Magnitude < 0.2 then
+		localX = hand.CFrame:VectorToObjectSpace(thumbWorld):Cross(localZ)
+	end
+	if localX.Magnitude < 0.05 then
+		localX = Vector3.new(1, 0, 0)
+	else
+		localX = localX.Unit
+	end
+	local localY = localZ:Cross(localX).Unit
+	localX = localY:Cross(localZ).Unit
+
+	local pos = grip and grip.Position or Vector3.new(0, -0.08, 0)
+	pos = pos + Vector3.new(0, 0.02, 0.02)
+	return CFrame.fromMatrix(pos, localX, localY, localZ)
+end
+
+local function waitForBladeModel(char, timeoutSec)
+	timeoutSec = timeoutSec or 0.7
+	local t0 = os.clock()
+	while os.clock() - t0 < timeoutSec do
+		local model = char:FindFirstChild("RealmBlade")
+		if model and model:IsA("Model") then
+			local handle = model:FindFirstChild("Handle")
+			local motor = handle and handle:FindFirstChild("BladeMotor")
+			if motor and motor:IsA("Motor6D") then
+				return model, motor
+			end
+		end
+		task.wait()
+	end
+	return nil, nil
+end
+
+local function playSlashAnimation(char, humanoid)
+	if not humanoid then
+		return nil
+	end
+	local animator = humanoid:FindFirstChildOfClass("Animator")
+	if not animator then
+		animator = Instance.new("Animator")
+		animator.Parent = humanoid
+	end
+	local anim = Instance.new("Animation")
+	if char:FindFirstChild("UpperTorso") then
+		anim.AnimationId = "rbxassetid://522635514"
+	else
+		anim.AnimationId = "rbxassetid://941992724"
+	end
+	local ok, track = pcall(function()
+		return animator:LoadAnimation(anim)
+	end)
+	if ok and track then
+		track.Priority = Enum.AnimationPriority.Action4
+		track:Play(0.05, 1, 1.2)
+		return track
+	end
+	return nil
+end
+
+local function tweenMotorC0(motor, goalC0, duration)
+	local info = TweenInfo.new(duration, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+	local tw = TweenService:Create(motor, info, { C0 = goalC0 })
+	tw:Play()
+	return tw
+end
+
+-- Выхватить меч → лицом к врагу → slash-анимация + взмах BladeMotor + выпад
+local function playPlayerAttackAnimation(data)
+	data = data or {}
+	if isPlayerAttackAnimating then
+		return
+	end
+	local char = player.Character or character
+	if not char then
+		return
+	end
+	local root = char:FindFirstChild("HumanoidRootPart")
+	local humanoid = char:FindFirstChildOfClass("Humanoid")
+	if not root then
+		return
+	end
+
+	task.spawn(function()
+		isPlayerAttackAnimating = true
+
+		local targetPos = data.TargetPosition
+		local forward = Vector3.new(root.CFrame.LookVector.X, 0, root.CFrame.LookVector.Z)
+		if typeof(targetPos) == "Vector3" then
+			local flat = Vector3.new(targetPos.X - root.Position.X, 0, targetPos.Z - root.Position.Z)
+			if flat.Magnitude > 0.05 then
+				forward = flat.Unit
+			end
+		elseif forward.Magnitude < 0.05 then
+			forward = Vector3.new(0, 0, -1)
+		else
+			forward = forward.Unit
+		end
+
+		root.CFrame = CFrame.lookAt(root.Position, root.Position + forward)
+
+		local restC0 = computeBladeRestC0(char)
+		local windupC0 = restC0 * CFrame.Angles(math.rad(35), math.rad(-15), math.rad(110))
+		local slashC0 = restC0 * CFrame.Angles(math.rad(-110), math.rad(30), math.rad(-55))
+		local _, motor = waitForBladeModel(char, 0.8)
+		if motor then
+			motor.C0 = restC0
+		end
+
+		playSlashAnimation(char, humanoid)
+
+		local origin = root.CFrame
+		local lungeCF = CFrame.lookAt(origin.Position + forward * 2.0, origin.Position + forward * 6)
+		local outTween = TweenService:Create(root, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { CFrame = lungeCF })
+		local backTween = TweenService:Create(root, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { CFrame = origin })
+		outTween:Play()
+
+		if motor then
+			local windup = tweenMotorC0(motor, windupC0, 0.1)
+			windup.Completed:Wait()
+			local slash = tweenMotorC0(motor, slashC0, 0.11)
+			slash.Completed:Wait()
+			tweenMotorC0(motor, restC0, 0.14)
+		else
+			task.wait(0.25)
+		end
+
+		backTween:Play()
+		backTween.Completed:Wait()
+		isPlayerAttackAnimating = false
+	end)
 end
 
 function StartBattle(spirit)
@@ -457,7 +591,7 @@ BattleEvent.OnClientEvent:Connect(function(action, data)
 		end
 
 	elseif action == "PlayPlayerAttack" then
-		playPlayerAttackAnimation()
+		playPlayerAttackAnimation(data)
 	end
 end)
 -- ============================================

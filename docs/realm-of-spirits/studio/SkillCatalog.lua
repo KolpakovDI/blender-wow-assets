@@ -18,6 +18,9 @@ SkillCatalog.ById = {
 	[41] = {Id = 41, Name = "Световой луч", Element = "Light", Type = "Attack", Damage = 30, Cost = 16, Cooldown = 3},
 	[42] = {Id = 42, Name = "Божественная благодать", Element = "Light", Type = "Heal", HealAmount = 55, Cost = 36, Cooldown = 7, Effect = {Type = "BuffAttack", Value = 0.2, Duration = 2}},
 	[43] = {Id = 43, Name = "Световой шторм", Element = "Light", Type = "Attack", Damage = 62, Cost = 42, Cooldown = 9, Effect = {Type = "BuffAttack", Value = 0.25, Duration = 2}},
+	[51] = {Id = 51, Name = "Водная струя", Element = "Water", Type = "Attack", Damage = 25, Cost = 7, Cooldown = 1.5},
+	[52] = {Id = 52, Name = "Приливной удар", Element = "Water", Type = "Attack", Damage = 38, Cost = 18, Cooldown = 4, Effect = {Type = "DebuffDefense", Value = 0.2, Duration = 2}},
+	[53] = {Id = 53, Name = "Цунами", Element = "Water", Type = "Attack", Damage = 50, Cost = 34, Cooldown = 7, Effect = {Type = "DebuffDefense", Value = 0.25, Duration = 3}},
 }
 
 SkillCatalog.ByName = {}
@@ -32,11 +35,13 @@ SkillCatalog.SpiritSkills = {
 	[3] = {21, 22},
 	[4] = {31, 32},
 	[5] = {41, 42},
+	[6] = {51, 52},
 	[101] = {1, 2, 3},
 	[102] = {11, 12, 13},
 	[103] = {21, 22, 23},
 	[104] = {31, 32, 33},
 	[105] = {41, 42, 43},
+	[106] = {51, 52, 53},
 }
 
 function SkillCatalog.Get(idOrName)

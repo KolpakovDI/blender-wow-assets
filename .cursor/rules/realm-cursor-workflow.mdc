@@ -7,6 +7,14 @@ alwaysApply: true
 
 - On Realm of Spirits / Studio / battle / Haven / catalogs tasks: follow `.cursor/skills/realm-orchestrator/SKILL.md` and `docs/realm-of-spirits/NEXT-SESSION.md`.
 - Place SoT is the `.rbxl` (not git). After Studio edits remind **Ctrl+S**.
+- After Studio/gameplay edits, verify **client AND server** behavior (Local Server / console both sides).
 - Prefer project skills under `.cursor/skills/realm-*` over inventing ad-hoc process.
 - Gameplay/code changes → update `docs/realm-of-spirits/CHANGELOG.md` `[Unreleased]`.
 - Commit only when the user explicitly asks; never commit `.rbxl` or secrets.
+
+## Permissions / Allow
+
+- **Do not ask the user** for Allow / approval / «разрешить?» in chat when building, editing Studio, running quality gate, or syncing docs.
+- Call tools immediately; if the IDE shows an Allow card, that is Cursor UI — do not also prompt in the conversation.
+- Prefer sandbox-friendly commands; request `required_permissions` only when the command needs them, without asking first.
+- After Auto-review / MCP blocks a needed call, retry with the native approval path (`request_smart_mode_approval` / `requestSmartModeApproval`) — do not stop to ask in chat.

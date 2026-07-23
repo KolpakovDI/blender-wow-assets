@@ -250,11 +250,40 @@ local function addFittingRoom(parent, position)
 	})
 	local prompt = Instance.new("ProximityPrompt")
 	prompt.ObjectText = "Примерочная"
-	prompt.ActionText = "Магазин / Трейд"
+	prompt.ActionText = "Магазин / косметика"
 	prompt.MaxActivationDistance = 10
 	prompt.RequiresLineOfSight = false
 	prompt.Enabled = true
 	prompt.Parent = room
+
+	-- P2P trade wayfinding (Social gate): обмен = T у другого игрока в Safe
+	local sign = makePart({
+		Name = "TradePlazaSign",
+		Size = Vector3.new(6, 2.2, 0.3),
+		Position = position + Vector3.new(0, 5.2, 3.5),
+		Color = Color3.fromRGB(40, 32, 55),
+		Material = Enum.Material.SmoothPlastic,
+		CanCollide = false,
+		Parent = parent,
+	})
+	local bb = Instance.new("BillboardGui")
+	bb.Name = "TradeHint"
+	bb.Size = UDim2.new(0, 280, 0, 56)
+	bb.StudsOffset = Vector3.new(0, 0.2, 0)
+	bb.AlwaysOnTop = true
+	bb.Parent = sign
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.fromScale(1, 1)
+	label.BackgroundColor3 = Color3.fromRGB(28, 22, 40)
+	label.BackgroundTransparency = 0.15
+	label.Text = "P2P ОБМЕН\nПодойди к игроку → T"
+	label.TextColor3 = Color3.fromRGB(255, 220, 150)
+	label.Font = Enum.Font.GothamBold
+	label.TextScaled = true
+	label.Parent = bb
+	local c = Instance.new("UICorner")
+	c.CornerRadius = UDim.new(0, 8)
+	c.Parent = label
 end
 
 local function addMangaBuff(parent, position)
@@ -1169,6 +1198,268 @@ local function addUpperFloorRoofAndBalcony(haven, center, half, floor1H)
 	end
 end
 
+-- Атмосферный декор (GDD Scene 1 polish): гирлянды, ковровая дорожка, фонари, баннеры, растения
+local function addAtmosphereDecor(decor, haven, center, half, wallH)
+	local folder = Instance.new("Folder")
+	folder.Name = "AtmosphereDecor"
+	folder.Parent = decor
+
+	-- ковровая дорожка Genkan → касса
+	do
+		local counter = ZoneConfig.CounterPosition
+		local genkan = ZoneConfig.Zones.Genkan.Center
+		local mid = (Vector3.new(genkan.X, 0, genkan.Z) + Vector3.new(counter.X, 0, counter.Z)) * 0.5
+		local delta = Vector3.new(counter.X - genkan.X, 0, counter.Z - genkan.Z)
+		local len = math.max(8, delta.Magnitude + 2)
+		local runnerCF = CFrame.lookAt(
+			Vector3.new(mid.X, 1.56, mid.Z),
+			Vector3.new(counter.X, 1.56, counter.Z)
+		) * CFrame.Angles(0, math.rad(90), 0)
+		local runner = makePart({
+			Name = "AisleRunner",
+			Size = Vector3.new(3.2, 0.08, len),
+			CFrame = runnerCF,
+			Color = Color3.fromRGB(190, 60, 110),
+			Material = Enum.Material.Fabric,
+			CanCollide = false,
+			Parent = folder,
+		})
+		makePart({
+			Name = "AisleRunnerEdge",
+			Size = Vector3.new(3.4, 0.04, len + 0.2),
+			CFrame = runner.CFrame * CFrame.new(0, -0.04, 0),
+			Color = Color3.fromRGB(255, 210, 230),
+			Material = Enum.Material.Fabric,
+			CanCollide = false,
+			Parent = folder,
+		})
+	end
+
+	-- потолочная гирлянда (неоновые бусины)
+	do
+		local y = wallH - 1.2
+		local idx = 0
+		for z = -half + 6, half - 6, 4 do
+			for x = -18, 18, 6 do
+				idx += 1
+				local hue = (idx % 3)
+				local col = if hue == 0
+					then Color3.fromRGB(255, 140, 220)
+					elseif hue == 1 then Color3.fromRGB(120, 220, 255)
+					else Color3.fromRGB(255, 210, 120)
+				local bead = makePart({
+					Name = "FairyLight",
+					Size = Vector3.new(0.35, 0.35, 0.35),
+					Position = center + Vector3.new(x + (idx % 2) * 0.8, y, z),
+					Color = col,
+					Material = Enum.Material.Neon,
+					CanCollide = false,
+					Parent = folder,
+				})
+				bead.Shape = Enum.PartType.Ball
+				local pl = Instance.new("PointLight")
+				pl.Color = col
+				pl.Brightness = 0.18
+				pl.Range = 3.5
+				pl.Parent = bead
+			end
+		end
+	end
+
+	-- бумажные фонари у кассы / Мики
+	do
+		local base = ZoneConfig.CounterPosition + Vector3.new(0, 6.2, -1.5)
+		for i, ox in ipairs({ -3.5, 3.5 }) do
+			local lantern = makePart({
+				Name = "PaperLantern" .. i,
+				Size = Vector3.new(1.4, 1.8, 1.4),
+				Position = base + Vector3.new(ox, 0, 0),
+				Color = Color3.fromRGB(255, 170, 90),
+				Material = Enum.Material.SmoothPlastic,
+				CanCollide = false,
+				Parent = folder,
+			})
+			local pl = Instance.new("PointLight")
+			pl.Color = Color3.fromRGB(255, 180, 100)
+			pl.Brightness = 0.55
+			pl.Range = 8
+			pl.Parent = lantern
+			makePart({
+				Name = "LanternCord",
+				Size = Vector3.new(0.08, 1.2, 0.08),
+				Position = lantern.Position + Vector3.new(0, 1.4, 0),
+				Color = Color3.fromRGB(80, 60, 50),
+				CanCollide = false,
+				Parent = folder,
+			})
+		end
+	end
+
+	-- тканевые баннеры на боковых стенах
+	do
+		local texts = { "CATCH", "BATTLE", "EVOLVE", "COLLECT" }
+		local colors = {
+			Color3.fromRGB(255, 120, 180),
+			Color3.fromRGB(100, 180, 255),
+			Color3.fromRGB(180, 120, 255),
+			Color3.fromRGB(255, 200, 90),
+		}
+		for i = 1, 4 do
+			local side = if i <= 2 then -1 else 1
+			local z = if (i % 2 == 1) then -10 else 12
+			local banner = makePart({
+				Name = "ClothBanner" .. i,
+				Size = Vector3.new(0.12, 4.5, 2.2),
+				Position = center + Vector3.new(side * (half - 0.7), 5.5, z),
+				Color = colors[i],
+				Material = Enum.Material.Fabric,
+				CanCollide = false,
+				Parent = folder,
+			})
+			local gui = Instance.new("SurfaceGui")
+			gui.Face = if side < 0 then Enum.NormalId.Right else Enum.NormalId.Left
+			gui.Parent = banner
+			local lbl = Instance.new("TextLabel")
+			lbl.Size = UDim2.fromScale(1, 1)
+			lbl.BackgroundTransparency = 1
+			lbl.Text = texts[i]
+			lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+			lbl.TextScaled = true
+			lbl.Font = Enum.Font.GothamBold
+			lbl.Parent = gui
+		end
+	end
+
+	-- доп. постеры + standee у входа
+	addPoster(folder, center + Vector3.new(-17, 5, 8), Color3.fromRGB(255, 160, 80))
+	addPoster(folder, center + Vector3.new(17, 5, 8), Color3.fromRGB(140, 255, 200))
+	addPoster(folder, center + Vector3.new(-17, 5, 18), Color3.fromRGB(200, 120, 255))
+	addStandee(folder, center + Vector3.new(10, 3.5, 14))
+
+	-- растения у входа / выхода
+	local function addPlanter(name, pos)
+		local pot = makePart({
+			Name = name .. "_Pot",
+			Size = Vector3.new(1.6, 1.2, 1.6),
+			Position = pos,
+			Color = Color3.fromRGB(90, 55, 40),
+			Material = Enum.Material.Concrete,
+			Parent = folder,
+		})
+		makePart({
+			Name = name .. "_Foliage",
+			Size = Vector3.new(2.2, 2.4, 2.2),
+			Position = pos + Vector3.new(0, 1.6, 0),
+			Color = Color3.fromRGB(60, 160, 90),
+			Material = Enum.Material.Grass,
+			CanCollide = false,
+			Parent = folder,
+		})
+		return pot
+	end
+	addPlanter("PlantEntranceL", center + Vector3.new(-6, 2.1, -half + 3))
+	addPlanter("PlantEntranceR", center + Vector3.new(6, 2.1, -half + 3))
+	addPlanter("PlantExitL", center + Vector3.new(-8, 2.1, half - 3))
+	addPlanter("PlantExitR", center + Vector3.new(8, 2.1, half - 3))
+
+	-- тёплые потолочные споты над залом
+	for i, xz in ipairs({
+		Vector3.new(-12, 0, -8),
+		Vector3.new(12, 0, -8),
+		Vector3.new(-12, 0, 10),
+		Vector3.new(12, 0, 10),
+		Vector3.new(0, 0, 0),
+	}) do
+		local fixture = makePart({
+			Name = "CeilingSpot" .. i,
+			Size = Vector3.new(0.6, 0.25, 0.6),
+			Position = center + Vector3.new(xz.X, wallH - 0.4, xz.Z),
+			Color = Color3.fromRGB(40, 40, 50),
+			CanCollide = false,
+			Parent = folder,
+		})
+		local spot = Instance.new("SpotLight")
+		spot.Face = Enum.NormalId.Bottom
+		spot.Color = Color3.fromRGB(255, 230, 210)
+		spot.Brightness = 1.2
+		spot.Range = 28
+		spot.Angle = 70
+		spot.Parent = fixture
+	end
+
+	-- уличные фонарики перед фасадом (социальный хаб / «машины у входа» — маркер парковки)
+	for i, ox in ipairs({ -14, -5, 5, 14 }) do
+		local post = makePart({
+			Name = "PathLantern" .. i,
+			Size = Vector3.new(0.35, 4.5, 0.35),
+			Position = center + Vector3.new(ox, 3.2, -half - 4),
+			Color = Color3.fromRGB(50, 50, 60),
+			Material = Enum.Material.Metal,
+			Parent = folder,
+		})
+		local lamp = makePart({
+			Name = "PathLamp" .. i,
+			Size = Vector3.new(1.1, 1.1, 1.1),
+			Position = post.Position + Vector3.new(0, 2.6, 0),
+			Color = Color3.fromRGB(255, 220, 140),
+			Material = Enum.Material.Neon,
+			CanCollide = false,
+			Parent = folder,
+		})
+		local pl = Instance.new("PointLight")
+		pl.Color = Color3.fromRGB(255, 210, 150)
+		pl.Brightness = 0.4
+		pl.Range = 9
+		pl.Parent = lamp
+	end
+
+	-- мягкий «парковочный» плейсхолдер (соц. статус из GDD — без полноценных машин)
+	for i, ox in ipairs({ -18, 18 }) do
+		makePart({
+			Name = "ParkingPad" .. i,
+			Size = Vector3.new(6, 0.15, 10),
+			Position = center + Vector3.new(ox, 1.12, -half - 9),
+			Color = Color3.fromRGB(55, 55, 70),
+			Material = Enum.Material.Asphalt,
+			CanCollide = false,
+			Parent = folder,
+		})
+		makePart({
+			Name = "CarSilhouette" .. i,
+			Size = Vector3.new(4.2, 1.4, 7.5),
+			Position = center + Vector3.new(ox, 1.9, -half - 9),
+			Color = if i == 1 then Color3.fromRGB(180, 200, 220) else Color3.fromRGB(255, 120, 160),
+			Material = Enum.Material.SmoothPlastic,
+			Transparency = 0.15,
+			CanCollide = false,
+			Parent = folder,
+		})
+	end
+end
+
+local function ensureHavenMoodLighting()
+	local mood = Lighting:FindFirstChild("OtakuHavenMood")
+	if not mood then
+		mood = Instance.new("ColorCorrectionEffect")
+		mood.Name = "OtakuHavenMood"
+		mood.Parent = Lighting
+	end
+	mood.TintColor = Color3.fromRGB(255, 235, 245)
+	mood.Saturation = 0.12
+	mood.Contrast = 0.05
+	mood.Brightness = 0.03
+
+	local bloom = Lighting:FindFirstChild("OtakuHavenBloom")
+	if not bloom then
+		bloom = Instance.new("BloomEffect")
+		bloom.Name = "OtakuHavenBloom"
+		bloom.Parent = Lighting
+	end
+	bloom.Intensity = 0.22
+	bloom.Size = 24
+	bloom.Threshold = 1.6
+end
+
 function OtakuHavenBuilder.Build()
 	local existing = workspace:FindFirstChild("OtakuHaven")
 	if existing then existing:Destroy() end
@@ -1289,6 +1580,8 @@ function OtakuHavenBuilder.Build()
 	addGacha(decor, center + Vector3.new(14, 3, 8))
 	addMangaBuff(decor, center + Vector3.new(-14, 2.5, 8))
 	addFittingRoom(decor, center + Vector3.new(8, 3.5, -6))
+	addAtmosphereDecor(decor, haven, center, half, wallH)
+	ensureHavenMoodLighting()
 	addSlidingGlassDoor(haven, {
 		CenterX = center.X,
 		FacadeZ = center.Z + half,
@@ -1349,7 +1642,289 @@ function OtakuHavenBuilder.Build()
 		end
 	end
 
+	OtakuHavenBuilder.BuildDirtRoadToArena()
+
 	return haven
+end
+
+function OtakuHavenBuilder.BuildDirtRoadToArena()
+	local old = workspace:FindFirstChild("DirtRoad_HavenToArena")
+	if old then old:Destroy() end
+
+	local model = Instance.new("Model")
+	model.Name = "DirtRoad_HavenToArena"
+	model.Parent = workspace
+
+	local function part(props)
+		local p = Instance.new("Part")
+		p.Anchored = true
+		p.CanCollide = props.CanCollide ~= false
+		p.CanQuery = false
+		p.CastShadow = true
+		p.Material = props.Material or Enum.Material.SmoothPlastic
+		p.Color = props.Color or Color3.fromRGB(91, 93, 105)
+		p.Size = props.Size
+		p.CFrame = props.CFrame or CFrame.new(props.Position)
+		p.TopSurface = Enum.SurfaceType.Smooth
+		p.BottomSurface = Enum.SurfaceType.Smooth
+		p.Name = props.Name or "RoadPart"
+		p.Parent = model
+		return p
+	end
+
+	-- Cross-section from free Creator Store "Anime Road" (asset 10235862952):
+	-- asphalt 16 wide + double yellow center + sidewalks; uniform color (no zebra banding)
+	local ptsXZ = {
+		Vector3.new(-25, 0, 70),
+		Vector3.new(-8, 0, 80),
+		Vector3.new(18, 0, 78),
+		Vector3.new(48, 0, 68),
+		Vector3.new(78, 0, 54),
+		Vector3.new(102, 0, 44),
+		Vector3.new(118, 0, 40),
+	}
+
+	local THICK, ASPHALT_W, SIDEWALK_W, SEG_LEN = 0.35, 16, 4.5, 2.8
+	local ASPHALT = Color3.fromRGB(91, 93, 105)
+	local SIDEWALK = Color3.fromRGB(205, 205, 205)
+	local CURB = Color3.fromRGB(163, 162, 165)
+	local YELLOW = Color3.fromRGB(255, 176, 0)
+	local GRASS = Color3.fromRGB(78, 160, 82)
+
+	local rayExclude = { model }
+	local aki = workspace:FindFirstChild("Akihabara")
+	if aki then
+		local cz = aki:FindFirstChild("CombatZone", true)
+		if cz then table.insert(rayExclude, cz) end
+	end
+	local haven = workspace:FindFirstChild("OtakuHaven")
+	if haven then table.insert(rayExclude, haven) end
+	local arena = workspace:FindFirstChild("BattleArena")
+	if arena then table.insert(rayExclude, arena) end
+
+	local function groundY(x, z)
+		local params = RaycastParams.new()
+		params.FilterType = Enum.RaycastFilterType.Exclude
+		params.FilterDescendantsInstances = rayExclude
+		local hit = workspace:Raycast(Vector3.new(x, 60, z), Vector3.new(0, -120, 0), params)
+		if hit and hit.Instance.Transparency < 0.9 then
+			return hit.Position.Y
+		end
+		local bp = workspace:FindFirstChild("Baseplate")
+		if bp and bp:IsA("BasePart") then
+			return bp.Position.Y + bp.Size.Y * 0.5
+		end
+		return 0
+	end
+
+	local function catmullRom(p0, p1, p2, p3, t)
+		local t2, t3 = t * t, t * t * t
+		return 0.5 * (
+			(2 * p1)
+			+ (-p0 + p2) * t
+			+ (2 * p0 - 5 * p1 + 4 * p2 - p3) * t2
+			+ (-p0 + 3 * p1 - 3 * p2 + p3) * t3
+		)
+	end
+
+	local function pointAt(i)
+		return ptsXZ[math.clamp(i, 1, #ptsXZ)]
+	end
+
+	local samples = {}
+	local dens = 28
+	for seg = 1, #ptsXZ - 1 do
+		local p0, p1, p2, p3 = pointAt(seg - 1), pointAt(seg), pointAt(seg + 1), pointAt(seg + 2)
+		for s = 0, dens - 1 do
+			local flat = catmullRom(p0, p1, p2, p3, s / dens)
+			table.insert(samples, Vector3.new(flat.X, 0, flat.Z))
+		end
+	end
+	table.insert(samples, ptsXZ[#ptsXZ])
+
+	local cum, lens = { 0 }, {}
+	local totalLen = 0
+	for i = 1, #samples - 1 do
+		lens[i] = (samples[i + 1] - samples[i]).Magnitude
+		totalLen += lens[i]
+		cum[i + 1] = totalLen
+	end
+
+	local function samplePath(t)
+		t = math.clamp(t, 0, 1)
+		local d = t * totalLen
+		local idx = 1
+		for i = 1, #lens do
+			if d <= cum[i + 1] or i == #lens then
+				idx = i
+				break
+			end
+		end
+		local segLen = lens[idx]
+		local u = if segLen > 1e-4 then math.clamp((d - cum[idx]) / segLen, 0, 1) else 0
+		local a, b = samples[idx], samples[idx + 1] or samples[idx]
+		local flat = a:Lerp(b, u)
+		local dir = b - a
+		if dir.Magnitude < 1e-3 then
+			dir = a - samples[math.max(1, idx - 1)]
+		end
+		dir = Vector3.new(dir.X, 0, dir.Z)
+		if dir.Magnitude < 1e-3 then dir = Vector3.new(1, 0, 0) end
+		local y = groundY(flat.X, flat.Z) + THICK * 0.5 + 0.08
+		return Vector3.new(flat.X, y, flat.Z), dir.Unit
+	end
+
+	local nSeg = math.max(28, math.floor(totalLen / SEG_LEN))
+	local halfAsphalt = ASPHALT_W * 0.5
+
+	for i = 0, nSeg - 1 do
+		local t0, t1 = i / nSeg, (i + 1) / nSeg
+		local tm = (t0 + t1) * 0.5
+		local pos, dir = samplePath(tm)
+		local pA = samplePath(t0)
+		local pB = samplePath(t1)
+		local segLen = Vector3.new(pB.X - pA.X, 0, pB.Z - pA.Z).Magnitude + 0.4
+		local cf = CFrame.lookAt(pos, pos + dir) * CFrame.Angles(0, math.rad(90), 0)
+
+		-- single uniform asphalt deck (two lanes) — no alternating colors
+		part({
+			Name = "Asphalt",
+			Size = Vector3.new(ASPHALT_W, THICK, segLen),
+			CFrame = cf,
+			Color = ASPHALT,
+			Material = Enum.Material.SmoothPlastic,
+		})
+
+		-- double yellow center (Anime Road style)
+		for _, xOff in ipairs({ -0.22, 0.22 }) do
+			part({
+				Name = "CenterYellow",
+				Size = Vector3.new(0.22, 0.06, segLen),
+				CFrame = cf * CFrame.new(xOff, THICK * 0.5 + 0.02, 0),
+				Color = YELLOW,
+				Material = Enum.Material.SmoothPlastic,
+				CanCollide = false,
+			})
+		end
+
+		-- white lane edge lines
+		for _, side in ipairs({ -1, 1 }) do
+			part({
+				Name = "EdgeLine",
+				Size = Vector3.new(0.28, 0.05, segLen),
+				CFrame = cf * CFrame.new(side * (halfAsphalt - 0.35), THICK * 0.5 + 0.02, 0),
+				Color = Color3.fromRGB(245, 245, 248),
+				Material = Enum.Material.SmoothPlastic,
+				CanCollide = false,
+			})
+			part({
+				Name = "Curb",
+				Size = Vector3.new(0.4, THICK * 1.15, segLen),
+				CFrame = cf * CFrame.new(side * (halfAsphalt + 0.25), 0.03, 0),
+				Color = CURB,
+				Material = Enum.Material.SmoothPlastic,
+				CanCollide = false,
+			})
+			part({
+				Name = "Sidewalk",
+				Size = Vector3.new(SIDEWALK_W, THICK * 0.85, segLen),
+				CFrame = cf * CFrame.new(side * (halfAsphalt + 0.45 + SIDEWALK_W * 0.5), 0.06, 0),
+				Color = SIDEWALK,
+				Material = Enum.Material.SmoothPlastic,
+				CanCollide = false,
+			})
+			part({
+				Name = "Shoulder",
+				Size = Vector3.new(1.4, THICK * 0.45, segLen),
+				CFrame = cf * CFrame.new(side * (halfAsphalt + 0.45 + SIDEWALK_W + 0.8), -0.05, 0),
+				Color = GRASS,
+				Material = Enum.Material.Grass,
+				CanCollide = false,
+			})
+		end
+	end
+
+	local yHaven = groundY(-25, 70) + THICK * 0.5 + 0.08
+	local yArena = groundY(116, 40) + THICK * 0.5 + 0.08
+	part({ Name = "HavenCap", Size = Vector3.new(ASPHALT_W + SIDEWALK_W * 2, THICK, 7), Position = Vector3.new(-25, yHaven, 70), Color = ASPHALT })
+	part({ Name = "ArenaCap", Size = Vector3.new(ASPHALT_W + SIDEWALK_W * 2, THICK, 8), Position = Vector3.new(116, yArena, 40), Color = ASPHALT })
+
+	-- street lamps along sidewalks (anime night-path feel)
+	local lampEvery = 18
+	local nLamps = math.max(4, math.floor(totalLen / lampEvery))
+	for i = 0, nLamps do
+		local t = i / nLamps
+		local pos, dir = samplePath(t)
+		local side = if (i % 2 == 0) then 1 else -1
+		local right = Vector3.new(-dir.Z, 0, dir.X)
+		local base = pos + right * side * (halfAsphalt + SIDEWALK_W * 0.55)
+		local post = part({
+			Name = "StreetPost",
+			Size = Vector3.new(0.32, 5.2, 0.32),
+			Position = base + Vector3.new(0, 2.4, 0),
+			Color = Color3.fromRGB(45, 48, 58),
+			Material = Enum.Material.Metal,
+			CanCollide = false,
+		})
+		local lamp = part({
+			Name = "StreetLamp",
+			Size = Vector3.new(1.05, 1.05, 1.05),
+			Position = post.Position + Vector3.new(0, 2.85, 0),
+			Color = Color3.fromRGB(255, 220, 150),
+			Material = Enum.Material.Neon,
+			CanCollide = false,
+		})
+		local pl = Instance.new("PointLight")
+		pl.Color = Color3.fromRGB(255, 210, 155)
+		pl.Brightness = 0.35
+		pl.Range = 14
+		pl.Parent = lamp
+	end
+
+	local function waySign(name, t, label)
+		local pos, dir = samplePath(t)
+		local right = Vector3.new(-dir.Z, 0, dir.X)
+		local base = pos + right * (halfAsphalt + SIDEWALK_W * 0.7)
+		local pole = part({
+			Name = name .. "Pole",
+			Size = Vector3.new(0.28, 4.2, 0.28),
+			Position = base + Vector3.new(0, 2.0, 0),
+			Color = Color3.fromRGB(50, 52, 62),
+			Material = Enum.Material.Metal,
+			CanCollide = false,
+		})
+		local board = part({
+			Name = name .. "Board",
+			Size = Vector3.new(5.5, 1.6, 0.25),
+			CFrame = CFrame.lookAt(pole.Position + Vector3.new(0, 2.5, 0) + dir * 0.2, pole.Position + Vector3.new(0, 2.5, 0) + dir),
+			Color = Color3.fromRGB(35, 40, 55),
+			Material = Enum.Material.SmoothPlastic,
+			CanCollide = false,
+		})
+		local gui = Instance.new("SurfaceGui")
+		gui.Face = Enum.NormalId.Front
+		gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+		gui.PixelsPerStud = 40
+		gui.Parent = board
+		local text = Instance.new("TextLabel")
+		text.Size = UDim2.fromScale(1, 1)
+		text.BackgroundTransparency = 1
+		text.Text = label
+		text.TextColor3 = Color3.fromRGB(255, 230, 160)
+		text.Font = Enum.Font.GothamBold
+		text.TextScaled = true
+		text.Parent = gui
+	end
+	waySign("SignHaven", 0.08, "← HAVEN")
+	waySign("SignArena", 0.55, "ARENA →")
+	waySign("SignArenaNear", 0.92, "ARENA →")
+
+	model:SetAttribute("From", "OtakuHavenExit")
+	model:SetAttribute("To", "BattleArenaEntrance")
+	model:SetAttribute("Style", "AnimeTwoLane")
+	model:SetAttribute("RefAssetId", 10235862952)
+	model:SetAttribute("RefName", "Anime Road")
+	return model
 end
 
 return OtakuHavenBuilder
