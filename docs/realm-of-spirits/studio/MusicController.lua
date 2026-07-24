@@ -123,12 +123,20 @@ for zoneName, track in pairs(tracks) do
 end
 
 -- ZoneDetail keys (Genkan/Exit/Safe/Spawn) map to ZoneConfig.Music tracks when present
+local HABITAT_MUSIC_KEYS = {
+	MistPond = true,
+	FrostRidge = true,
+	ShadowHollow = true,
+	StormSpire = true,
+	DawnMeadow = true,
+}
+
 local function resolveZoneKey(zoneType, detail)
 	local key = detail or zoneType
-	if key == "MistPond" and tracks.MistPond then
-		return "MistPond"
+	if HABITAT_MUSIC_KEYS[key] and tracks[key] then
+		return key
 	end
-	if key == "Akihabara" or (zoneType == "Combat" and key ~= "MistPond") then
+	if key == "Akihabara" or (zoneType == "Combat" and not HABITAT_MUSIC_KEYS[key]) then
 		return "Combat"
 	end
 	if tracks[key] then

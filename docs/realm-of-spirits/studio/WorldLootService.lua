@@ -186,20 +186,29 @@ local function spawnChest(position, index)
 end
 
 local crystalSpots = {
-	Vector3.new(40, 2, 20),
-	Vector3.new(55, 2, 50),
-	Vector3.new(90, 2, 15),
-	Vector3.new(85, 2, 55),
-	Vector3.new(100, 2, 40),
-	Vector3.new(60, 2, 70),
-	Vector3.new(45, 2, 40),
+	-- EmberCourt / Fire (#1)
+	{ Pos = Vector3.new(62, 2, 24), ItemId = 101, Label = "Огненный кристалл", Color = Color3.fromRGB(255, 90, 40), LightColor = Color3.fromRGB(255, 120, 50) },
+	{ Pos = Vector3.new(78, 2, 36), ItemId = 101, Label = "Огненный кристалл", Color = Color3.fromRGB(255, 90, 40), LightColor = Color3.fromRGB(255, 120, 50) },
+	-- FrostRidge / Ice (#2)
+	{ Pos = Vector3.new(12, 2, 152), ItemId = 102, Label = "Ледяной кристалл", Color = Color3.fromRGB(120, 200, 255), LightColor = Color3.fromRGB(180, 230, 255) },
+	{ Pos = Vector3.new(28, 2, 168), ItemId = 102, Label = "Ледяной кристалл", Color = Color3.fromRGB(120, 200, 255), LightColor = Color3.fromRGB(180, 230, 255) },
+	-- ShadowHollow / Dark (#3)
+	{ Pos = Vector3.new(148, 2, -88), ItemId = 103, Label = "Теневой кристалл", Color = Color3.fromRGB(120, 60, 180), LightColor = Color3.fromRGB(160, 100, 220) },
+	{ Pos = Vector3.new(162, 2, -72), ItemId = 103, Label = "Теневой кристалл", Color = Color3.fromRGB(120, 60, 180), LightColor = Color3.fromRGB(160, 100, 220) },
+	-- StormSpire / Lightning (#4)
+	{ Pos = Vector3.new(222, 2, 168), ItemId = 104, Label = "Грозовой кристалл", Color = Color3.fromRGB(230, 220, 80), LightColor = Color3.fromRGB(255, 250, 140) },
+	{ Pos = Vector3.new(238, 2, 182), ItemId = 104, Label = "Грозовой кристалл", Color = Color3.fromRGB(230, 220, 80), LightColor = Color3.fromRGB(255, 250, 140) },
+	-- DawnMeadow / Light (#5)
+	{ Pos = Vector3.new(332, 2, 212), ItemId = 105, Label = "Световой кристалл", Color = Color3.fromRGB(255, 245, 180), LightColor = Color3.fromRGB(255, 255, 220) },
+	{ Pos = Vector3.new(348, 2, 228), ItemId = 105, Label = "Световой кристалл", Color = Color3.fromRGB(255, 245, 180), LightColor = Color3.fromRGB(255, 255, 220) },
 }
 
 local chestSpots = {
-	Vector3.new(35, 1.2, 60),
-	Vector3.new(95, 1.2, 70),
-	Vector3.new(110, 1.2, 25),
-	Vector3.new(50, 1.2, 10),
+	Vector3.new(55, 1.2, 40),
+	Vector3.new(30, 1.2, 150),
+	Vector3.new(165, 1.2, -70),
+	Vector3.new(240, 1.2, 170),
+	Vector3.new(345, 1.2, 215),
 }
 
 local waterCrystalSpots = {
@@ -208,8 +217,13 @@ local waterCrystalSpots = {
 	Vector3.new(100, 2, 135),
 }
 
-for i, pos in ipairs(crystalSpots) do
-	spawnCrystal(pos, i)
+for i, spot in ipairs(crystalSpots) do
+	spawnCrystal(spot.Pos, i, {
+		ItemId = spot.ItemId,
+		Label = spot.Label,
+		Color = spot.Color,
+		LightColor = spot.LightColor,
+	})
 end
 for i, pos in ipairs(waterCrystalSpots) do
 	spawnCrystal(pos, 100 + i, {
@@ -224,7 +238,7 @@ for i, pos in ipairs(chestSpots) do
 end
 
 print(
-	"Realm of Spirits - WorldLootService loaded! fire=",
+	"Realm of Spirits - WorldLootService loaded! crystals=",
 	#crystalSpots,
 	"water=",
 	#waterCrystalSpots,

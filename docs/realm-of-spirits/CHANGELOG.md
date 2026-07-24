@@ -7,6 +7,8 @@
 ## [Unreleased]
 
 ### Added
+- **Путь Охотника** quest chain 201–206 (`Type=Hunt`, `CatchSpecificSpirit` by HuntOrder): XP/coins/reputation + habitat trophies (UniqueItems 8–13) + element crystals; wire GameManager catch → progress; QuestUI/HUD/Client markers
+- Spirit habitats spread across map for future hunt-quest chain: `SpiritHabitats` + `ZoneConfig.SpiritHabitats` (HuntOrder 1–6); pockets FrostRidge / ShadowHollow / StormSpire / DawnMeadow (+ MistPond); crystals by element near each; baseplate 800
 - MistPond PvE pocket (north of Akihabara Combat): ZoneConfig/ZoneSystem/Music/WorldSpawner/WorldLoot; water spirit **Водный Карп** (id 6) + **Цунами-Карп** (106); water skills 51–53; item 106; SpiritTemplate6; workspace MistPond built in Edit
 - MistPond wayfinding: neon water + 28-stud beacon + AlwaysOnTop billboard; path from Combat north with «ПРУД ↑»; gate sign; spawn on shore
 - MistPond visual: Japanese sand-shore pond (glass water, rocks, ishidōrō lantern); stepping stones from Combat; removed text signs/billboards/neon beacon
@@ -19,6 +21,8 @@
 - `PlayerInteractController`: единый UI у игрока — кнопки **Обмен** / **Дуэль** рядом, описание снизу; T/Y; ProximityPrompt у Trade/Duel отключены; trade range 22
 
 ### Fixed
+- Spirit ground place: raycast ignores `BattleArena` dome (RoofRing) so habitats outside Combat don’t spawn on arena roof
+- MistPond Water Carp **Play QA PASS** (2026-07-24): Swim wander в пруду, хвост машет (4 parts), без console errors / preview artifacts
 - P2 PvP vertical slice **PASS** (Local Server 2p, 2026-07-23): Haven challenge, interact UI Обмен/Дуэль, rematch/origin return
 - Studio PvPDuelSystem was missing spirit visuals/freeze vs docs mirror — full Source sync (setupDuelVisuals, freeze, rematch, origin return)
 - PvP duel rematch/challenge range 80 studs (pads ~56 apart); spirit duel visuals between pads; freeze players on pads during duel; `DuelEnd` + battle `End` clears client `inDuel`

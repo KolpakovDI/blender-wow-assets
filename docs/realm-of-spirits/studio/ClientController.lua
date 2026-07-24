@@ -102,6 +102,10 @@ local function isSpiritQuestRelevant(spiritId)
 				if current < target then
 					if objective.Type == "CatchSpirit" then
 						return true, "catch"
+					elseif objective.Type == "CatchSpecificSpirit" then
+						if tonumber(objective.SpiritId) == tonumber(spiritId) then
+							return true, "catch_hunt"
+						end
 					elseif objective.Type == "DefeatEnemies" then
 						return true, "defeat"
 					elseif objective.Type == "CatchDifferentSpirits" then

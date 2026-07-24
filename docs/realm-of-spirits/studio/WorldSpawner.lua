@@ -526,15 +526,128 @@ local function BuildMistPond()
 	print("Realm of Spirits - MistPond built (Japanese sand pond, no text signs)")
 end
 
+-- Карманы обитания духов (кроме MistPond — у него своя сцена)
+local function BuildSpiritHabitats()
+	local existing = workspace:FindFirstChild("SpiritHabitats")
+	if existing then
+		existing:Destroy()
+	end
+
+	local folder = Instance.new("Folder")
+	folder.Name = "SpiritHabitats"
+
+	local function part(props)
+		local p = Instance.new("Part")
+		for k, v in pairs(props) do
+			p[k] = v
+		end
+		p.Anchored = true
+		if props.CanCollide == nil then
+			p.CanCollide = false
+		end
+		return p
+	end
+
+	local habitats = {
+		{
+			Key = "FrostRidge",
+			Accent = Color3.fromRGB(160, 210, 255),
+			Ground = Color3.fromRGB(200, 220, 235),
+			Material = Enum.Material.Glacier,
+		},
+		{
+			Key = "ShadowHollow",
+			Accent = Color3.fromRGB(90, 50, 130),
+			Ground = Color3.fromRGB(45, 35, 55),
+			Material = Enum.Material.Asphalt,
+		},
+		{
+			Key = "StormSpire",
+			Accent = Color3.fromRGB(240, 230, 90),
+			Ground = Color3.fromRGB(70, 70, 80),
+			Material = Enum.Material.Basalt,
+		},
+		{
+			Key = "DawnMeadow",
+			Accent = Color3.fromRGB(255, 245, 180),
+			Ground = Color3.fromRGB(120, 170, 90),
+			Material = Enum.Material.Grass,
+		},
+	}
+
+	for _, h in ipairs(habitats) do
+		local cfg = ZoneConfig.Zones and ZoneConfig.Zones[h.Key]
+		if cfg then
+			local model = Instance.new("Model")
+			model.Name = h.Key
+
+			local zone = part({
+				Name = h.Key .. "Zone",
+				Size = cfg.Size,
+				CFrame = CFrame.new(cfg.Center),
+				Transparency = 1,
+				CanQuery = true,
+			})
+			zone:SetAttribute("ZoneType", h.Key)
+			zone.Parent = model
+
+			local pad = part({
+				Name = "HabitatPad",
+				Size = Vector3.new(28, 0.6, 28),
+				Position = Vector3.new(cfg.Center.X, 0.35, cfg.Center.Z),
+				Material = h.Material,
+				Color = h.Ground,
+				CanCollide = true,
+			})
+			pad.Parent = model
+
+			local ring = part({
+				Name = "HabitatRing",
+				Size = Vector3.new(22, 0.25, 22),
+				Position = Vector3.new(cfg.Center.X, 0.72, cfg.Center.Z),
+				Material = Enum.Material.Neon,
+				Color = h.Accent,
+				Transparency = 0.35,
+			})
+			ring.Parent = model
+
+			local marker = part({
+				Name = "HabitatMarker",
+				Size = Vector3.new(2.2, 8, 2.2),
+				Position = Vector3.new(cfg.Center.X + 10, 4.2, cfg.Center.Z + 10),
+				Material = Enum.Material.Neon,
+				Color = h.Accent,
+				Transparency = 0.15,
+			})
+			marker.Parent = model
+			local light = Instance.new("PointLight")
+			light.Color = h.Accent
+			light.Brightness = 1.2
+			light.Range = 28
+			light.Parent = marker
+
+			model.Parent = folder
+		end
+	end
+
+	folder.Parent = workspace
+	print("Realm of Spirits - SpiritHabitats built (FrostRidge/ShadowHollow/StormSpire/DawnMeadow)")
+end
+
 local function CreateWorld()
 	if not workspace:FindFirstChild("Baseplate") then
 		local baseplate = Instance.new("Part")
 		baseplate.Name = "Baseplate"
-		baseplate.Size = Vector3.new(500, 1, 500)
+		baseplate.Size = Vector3.new(800, 1, 800)
 		baseplate.Position = Vector3.new(0, 0, 0)
 		baseplate.Anchored = true
 		baseplate.BrickColor = BrickColor.new("Dark green")
 		baseplate.Parent = workspace
+	else
+		local baseplate = workspace.Baseplate
+		if baseplate:IsA("BasePart") and (baseplate.Size.X < 800 or baseplate.Size.Z < 800) then
+			baseplate.Size = Vector3.new(800, 1, 800)
+		end
 	end
 
 	-- PlayerHouse убран: не несёт геймплейной нагрузки
@@ -564,6 +677,7 @@ local function CreateWorld()
 
 	OtakuHavenBuilder.Build()
 	BuildMistPond()
+	BuildSpiritHabitats()
 	SetupSpawn()
 	SetupQuestMaster()
 end

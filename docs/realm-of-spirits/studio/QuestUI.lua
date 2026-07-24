@@ -518,6 +518,8 @@ local function showQuestDetail(quest, isActive, progress, readyToTurnIn)
 
 			local objText = obj.Type or "Objective"
 			if obj.Type == "CatchSpirit" then objText = "Поймать духов: " .. obj.Count
+			elseif obj.Type == "CatchSpecificSpirit" then
+				objText = "Поймать: " .. (obj.SpiritName or ("дух #" .. tostring(obj.SpiritId or "?")))
 			elseif obj.Type == "DefeatEnemies" then objText = "Победить врагов: " .. obj.Count
 			elseif obj.Type == "CatchDifferentSpirits" then objText = "Поймать разных духов: " .. obj.Count
 			elseif obj.Type == "CollectItem" then objText = "Собрать огненные кристаллы: " .. obj.Count

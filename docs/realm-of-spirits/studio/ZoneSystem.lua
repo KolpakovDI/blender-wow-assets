@@ -21,6 +21,10 @@ local DETAIL_PRIORITY = {
 	Combat = 40,
 	Akihabara = 40,
 	MistPond = 45,
+	FrostRidge = 45,
+	ShadowHollow = 45,
+	StormSpire = 45,
+	DawnMeadow = 45,
 	Exit = 30,
 	Genkan = 20,
 	Safe = 10,
@@ -43,7 +47,9 @@ local function classifyDetail(detail)
 	if detail == "Genkan" or detail == "Safe" or detail == "Exit" or detail == "Spawn" then
 		return "Safe", detail
 	end
-	if detail == "Combat" or detail == "Akihabara" or detail == "MistPond" then
+	if detail == "Combat" or detail == "Akihabara" or detail == "MistPond"
+		or detail == "FrostRidge" or detail == "ShadowHollow"
+		or detail == "StormSpire" or detail == "DawnMeadow" then
 		if detail == "Combat" then
 			return "Combat", "Akihabara"
 		end

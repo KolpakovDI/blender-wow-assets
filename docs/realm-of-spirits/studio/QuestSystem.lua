@@ -39,6 +39,13 @@ local UniqueItemDatabase = {
 	[5] = {Id = 5, Name = "Корона Дракона", Rarity = "Legendary", Description = "+30% опыт, +15% репутация"},
 	[6] = {Id = 6, Name = "Кристалл Удачи", Rarity = "Rare", Description = "Увеличивает шанс поимки духов"},
 	[7] = {Id = 7, Name = "Посох Хранителя", Rarity = "Epic", Description = "+25% урон в боях"},
+	-- Трофеи Пути Охотника (habitats)
+	[8] = {Id = 8, Name = "Знак Угольного Двора", Rarity = "Uncommon", Description = "Трофей: Огненный Кот. +5% урон огнём"},
+	[9] = {Id = 9, Name = "Перо Морозного Хребта", Rarity = "Uncommon", Description = "Трофей: Ледяная Птица. +5% скорость"},
+	[10] = {Id = 10, Name = "Чешуя Туманного Пруда", Rarity = "Rare", Description = "Трофей: Водный Карп. +5% защита"},
+	[11] = {Id = 11, Name = "Клык Теневой Лощины", Rarity = "Rare", Description = "Трофей: Теневой Пёс. +8% крит"},
+	[12] = {Id = 12, Name = "Искра Грозового Шпиля", Rarity = "Epic", Description = "Трофей: Грозовой Дракон. +10% урон"},
+	[13] = {Id = 13, Name = "Корона Рассвета", Rarity = "Legendary", Description = "Трофей: Световой Единорог. +20% опыт, +10% репутация"},
 }
 
 -- ============================================
@@ -150,11 +157,11 @@ local QuestDatabase = {
 	[6] = {
 		Id = 6,
 		Name = "Легендарный Мастер",
-		Description = "Поймайте всех 5 различных духов в мире",
+		Description = "Поймайте всех 6 различных духов в мире",
 		Type = "Story",
 		Level = 10,
 		Objectives = {
-			{Type = "CatchDifferentSpirits", Count = 5}
+			{Type = "CatchDifferentSpirits", Count = 6}
 		},
 		Rewards = {
 			Experience = 1500,
@@ -269,6 +276,130 @@ local QuestDatabase = {
 		},
 		Prerequisites = {101, 102, 103, 104}
 	},
+
+	-- ============================================
+	-- Путь Охотника: ловить духов по HuntOrder (ZoneConfig.SpiritHabitats)
+	-- ============================================
+	[201] = {
+		Id = 201,
+		Name = "Путь Охотника I: Огонь",
+		Description = "Поймайте Огненного Кота у Угольного двора (Акихабара, восток от Haven)",
+		Type = "Hunt",
+		Level = 1,
+		Objectives = {
+			{Type = "CatchSpecificSpirit", SpiritId = 1, Count = 1, SpiritName = "Огненный Кот"}
+		},
+		Rewards = {
+			Experience = 120,
+			CopperCoins = 80,
+			SilverCoins = 5,
+			GoldCoins = 0,
+			Reputation = 15,
+			UniqueItems = {{Id = 8, Quantity = 1}},
+			Items = {{Id = 101, Quantity = 2}, {Id = 1, Quantity = 2}}
+		},
+		Prerequisites = {}
+	},
+	[202] = {
+		Id = 202,
+		Name = "Путь Охотника II: Лёд",
+		Description = "Поймайте Ледяную Птицу на Морозном хребте (северо-запад, у пруда)",
+		Type = "Hunt",
+		Level = 2,
+		Objectives = {
+			{Type = "CatchSpecificSpirit", SpiritId = 2, Count = 1, SpiritName = "Ледяная Птица"}
+		},
+		Rewards = {
+			Experience = 180,
+			CopperCoins = 100,
+			SilverCoins = 8,
+			GoldCoins = 0,
+			Reputation = 20,
+			UniqueItems = {{Id = 9, Quantity = 1}},
+			Items = {{Id = 102, Quantity = 2}, {Id = 1, Quantity = 2}}
+		},
+		Prerequisites = {201}
+	},
+	[203] = {
+		Id = 203,
+		Name = "Путь Охотника III: Вода",
+		Description = "Поймайте Водного Карпа в Туманном пруду (север от Combat по камням)",
+		Type = "Hunt",
+		Level = 3,
+		Objectives = {
+			{Type = "CatchSpecificSpirit", SpiritId = 6, Count = 1, SpiritName = "Водный Карп"}
+		},
+		Rewards = {
+			Experience = 220,
+			CopperCoins = 120,
+			SilverCoins = 12,
+			GoldCoins = 0,
+			Reputation = 25,
+			UniqueItems = {{Id = 10, Quantity = 1}},
+			Items = {{Id = 106, Quantity = 3}, {Id = 2, Quantity = 2}}
+		},
+		Prerequisites = {202}
+	},
+	[204] = {
+		Id = 204,
+		Name = "Путь Охотника IV: Тень",
+		Description = "Поймайте Теневого Пса в Теневой лощине (юг от арены)",
+		Type = "Hunt",
+		Level = 4,
+		Objectives = {
+			{Type = "CatchSpecificSpirit", SpiritId = 3, Count = 1, SpiritName = "Теневой Пёс"}
+		},
+		Rewards = {
+			Experience = 320,
+			CopperCoins = 160,
+			SilverCoins = 18,
+			GoldCoins = 1,
+			Reputation = 35,
+			UniqueItems = {{Id = 11, Quantity = 1}},
+			Items = {{Id = 103, Quantity = 3}, {Id = 1, Quantity = 3}}
+		},
+		Prerequisites = {203}
+	},
+	[205] = {
+		Id = 205,
+		Name = "Путь Охотника V: Гроза",
+		Description = "Поймайте Грозового Дракона у Грозового шпиля (север от арены)",
+		Type = "Hunt",
+		Level = 6,
+		Objectives = {
+			{Type = "CatchSpecificSpirit", SpiritId = 4, Count = 1, SpiritName = "Грозовой Дракон"}
+		},
+		Rewards = {
+			Experience = 450,
+			CopperCoins = 220,
+			SilverCoins = 30,
+			GoldCoins = 2,
+			Reputation = 50,
+			UniqueItems = {{Id = 12, Quantity = 1}},
+			Items = {{Id = 104, Quantity = 3}, {Id = 2, Quantity = 3}}
+		},
+		Prerequisites = {204}
+	},
+	[206] = {
+		Id = 206,
+		Name = "Путь Охотника VI: Свет",
+		Description = "Поймайте Светового Единорога на Лугу рассвета (далеко на северо-востоке)",
+		Type = "Hunt",
+		Level = 8,
+		Objectives = {
+			{Type = "CatchSpecificSpirit", SpiritId = 5, Count = 1, SpiritName = "Световой Единорог"}
+		},
+		Rewards = {
+			Experience = 800,
+			CopperCoins = 350,
+			SilverCoins = 50,
+			GoldCoins = 5,
+			Reputation = 100,
+			UniqueItems = {{Id = 13, Quantity = 1}},
+			Items = {{Id = 105, Quantity = 5}, {Id = 3, Quantity = 2}}
+		},
+		Prerequisites = {205}
+	},
 }
 
 -- ============================================
@@ -372,6 +503,14 @@ function QuestSystem:AcceptQuest(questId)
 						progress.CaughtIds[key] = true
 					end
 					progress.Current = math.min(uniqueCount, progress.Target)
+				elseif objective.Type == "CatchSpecificSpirit" and objective.SpiritId then
+					local want = tonumber(objective.SpiritId)
+					for _, spiritEntry in ipairs(spirits) do
+						if tonumber(spiritEntry.Id) == want then
+							progress.Current = progress.Target
+							break
+						end
+					end
 				elseif objective.Type == "LevelUpSpirit" then
 					progress.Current = math.min(maxSpiritLevel, progress.Target)
 				elseif objective.Type == "CollectItem" and objective.ItemId then
@@ -399,6 +538,11 @@ function QuestSystem:UpdateProgress(progressType, data)
 
 					if progressType == "CatchSpirit" then
 						progress.Current = progress.Current + 1
+					elseif progressType == "CatchSpecificSpirit" then
+						if data and data.SpiritId and objective.SpiritId
+							and tonumber(data.SpiritId) == tonumber(objective.SpiritId) then
+							progress.Current = math.min((progress.Current or 0) + 1, progress.Target or 1)
+						end
 					elseif progressType == "DefeatEnemies" then
 						progress.Current = progress.Current + 1
 					elseif progressType == "CatchDifferentSpirits" then

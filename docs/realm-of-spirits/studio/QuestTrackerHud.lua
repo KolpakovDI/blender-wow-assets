@@ -28,6 +28,8 @@ local function objectiveName(obj)
 	local objType = obj and obj.Type or ""
 	if objType == "CatchSpirit" then
 		return "Поймать духов"
+	elseif objType == "CatchSpecificSpirit" then
+		return (obj.SpiritName and ("Поймать: " .. obj.SpiritName)) or "Поймать духа"
 	elseif objType == "DefeatEnemies" then
 		return "Победить врагов"
 	elseif objType == "CatchDifferentSpirits" then

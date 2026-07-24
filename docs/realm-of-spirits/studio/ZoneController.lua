@@ -73,7 +73,19 @@ local MESSAGES = {
 	Exit = "Выход в боевую зону: Акихабара",
 	Combat = "Акихабара — Combat Zone",
 	Akihabara = "Акихабара — Combat Zone",
-	MistPond = "Туманный пруд — зона Водного Карпа",
+	MistPond = "Туманный пруд — Водный Карп",
+	FrostRidge = "Морозный хребет — Ледяная Птица",
+	ShadowHollow = "Теневая лощина — Теневой Пёс",
+	StormSpire = "Грозовой шпиль — Грозовой Дракон",
+	DawnMeadow = "Луг рассвета — Световой Единорог",
+}
+
+local HABITAT_BANNERS = {
+	MistPond = {Title = "Туманный пруд", Color = Color3.fromRGB(80, 160, 220)},
+	FrostRidge = {Title = "Морозный хребет", Color = Color3.fromRGB(140, 210, 255)},
+	ShadowHollow = {Title = "Теневая лощина", Color = Color3.fromRGB(140, 90, 200)},
+	StormSpire = {Title = "Грозовой шпиль", Color = Color3.fromRGB(230, 220, 100)},
+	DawnMeadow = {Title = "Луг рассвета", Color = Color3.fromRGB(255, 240, 180)},
 }
 
 local SLIPPER_COLOR = Color3.fromRGB(255, 170, 200)
@@ -273,8 +285,14 @@ zoneChanged.OnClientEvent:Connect(function(zoneType, detail)
 
 	if zoneType == "Combat" then
 		setIndoorFootwear(false)
-		showBanner("Акихабара", Color3.fromRGB(255, 180, 80))
-		showToast("Музыка: Lo-Fi → J-Rock", 3)
+		local habitat = HABITAT_BANNERS[detail]
+		if habitat then
+			showBanner(habitat.Title, habitat.Color)
+			showToast(MESSAGES[detail] or "Зона духа", 3)
+		else
+			showBanner("Акихабара", Color3.fromRGB(255, 180, 80))
+			showToast("Музыка: Lo-Fi → J-Rock", 3)
+		end
 	elseif zoneType == "Safe" then
 		if detail == "Genkan" then
 			showBanner("Otaku Haven", Color3.fromRGB(255, 180, 220))
