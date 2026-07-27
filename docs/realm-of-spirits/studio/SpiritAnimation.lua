@@ -164,7 +164,7 @@ function SpiritAnimation.Setup(spirit, spiritInfo, getGroundPosition)
 		local waterY = (water and water.Position.Y + water.Size.Y * 0.15) or 1.4
 		spirit:SetAttribute("SwimWaterY", waterY)
 		local center = water and Vector3.new(water.Position.X, 0, water.Position.Z)
-			or Vector3.new(105, 0, 125)
+			or Vector3.new(30, 0, -880)
 		local halfX = water and (water.Size.X * 0.35) or 14
 		local halfZ = water and (water.Size.Z * 0.35) or 10
 		spirit:SetAttribute("SwimCenter", center)
@@ -261,10 +261,8 @@ function SpiritAnimation.MoveStep(spirit, startCF, targetXZ, alpha, placeOnGroun
 	local flatPos = startPos:Lerp(endPos, alpha)
 	local moveDir = Vector3.new(endPos.X - startPos.X, 0, endPos.Z - startPos.Z)
 
-	local rotation = startCF - startCF.Position
-	if moveDir.Magnitude > 0.05 then
-		rotation = CFrame.lookAt(Vector3.zero, moveDir.Unit)
-	end
+	local look = if moveDir.Magnitude > 0.05 then moveDir.Unit else Vector3.new(0, 0, -1)
+	local rotation = CFrame.lookAt(Vector3.zero, look, Vector3.yAxis)
 
 	if movementType == "Fly" then
 		local ground = getGroundPosition(flatPos.X, flatPos.Z, { spirit })

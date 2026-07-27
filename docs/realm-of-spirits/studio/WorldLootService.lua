@@ -106,9 +106,12 @@ local function spawnCrystal(position, index, opts)
 	local taken = {}
 	prompt.Triggered:Connect(function(player)
 		if taken[player.UserId] then return end
-		local data = getPlayerData(player)
-		if not data then return end
 		taken[player.UserId] = true
+		local data = getPlayerData(player)
+		if not data then
+			taken[player.UserId] = nil
+			return
+		end
 		local id = part:GetAttribute("ItemId") or itemId
 		giveItem(data, id, 1)
 		if _G.UpdateQuestProgress then
@@ -172,9 +175,12 @@ local function spawnChest(position, index)
 	local looted = {}
 	prompt.Triggered:Connect(function(player)
 		if looted[player.UserId] then return end
-		local data = getPlayerData(player)
-		if not data then return end
 		looted[player.UserId] = true
+		local data = getPlayerData(player)
+		if not data then
+			looted[player.UserId] = nil
+			return
+		end
 		data.CopperCoins = (data.CopperCoins or 0) + 25
 		if _G.UpdateQuestProgress then
 			_G.UpdateQuestProgress(player, "FindChests", { Count = 1 })
@@ -201,6 +207,21 @@ local crystalSpots = {
 	-- DawnMeadow / Light (#5)
 	{ Pos = Vector3.new(332, 2, 212), ItemId = 105, Label = "Световой кристалл", Color = Color3.fromRGB(255, 245, 180), LightColor = Color3.fromRGB(255, 255, 220) },
 	{ Pos = Vector3.new(348, 2, 228), ItemId = 105, Label = "Световой кристалл", Color = Color3.fromRGB(255, 245, 180), LightColor = Color3.fromRGB(255, 255, 220) },
+	-- StoneBasin / Earth (#7)
+	{ Pos = Vector3.new(-88, 2, -128), ItemId = 107, Label = "Земляной кристалл", Color = Color3.fromRGB(160, 120, 70), LightColor = Color3.fromRGB(200, 160, 100) },
+	{ Pos = Vector3.new(-72, 2, -112), ItemId = 107, Label = "Земляной кристалл", Color = Color3.fromRGB(160, 120, 70), LightColor = Color3.fromRGB(200, 160, 100) },
+	-- AshGarden / Fire ash (#8)
+	{ Pos = Vector3.new(168, 2, 42), ItemId = 108, Label = "Пепельный кристалл", Color = Color3.fromRGB(255, 90, 40), LightColor = Color3.fromRGB(255, 140, 60) },
+	{ Pos = Vector3.new(182, 2, 58), ItemId = 108, Label = "Пепельный кристалл", Color = Color3.fromRGB(255, 90, 40), LightColor = Color3.fromRGB(255, 140, 60) },
+	-- Moonwell / Moon (#11)
+	{ Pos = Vector3.new(-228, 2, -168), ItemId = 111, Label = "Лунный кристалл", Color = Color3.fromRGB(180, 195, 255), LightColor = Color3.fromRGB(200, 210, 255) },
+	{ Pos = Vector3.new(-212, 2, -152), ItemId = 111, Label = "Лунный кристалл", Color = Color3.fromRGB(180, 195, 255), LightColor = Color3.fromRGB(200, 210, 255) },
+	-- VenomHollow / Poison (#12)
+	{ Pos = Vector3.new(272, 2, -168), ItemId = 112, Label = "Ядовитый кристалл", Color = Color3.fromRGB(90, 180, 60), LightColor = Color3.fromRGB(120, 210, 80) },
+	{ Pos = Vector3.new(288, 2, -152), ItemId = 112, Label = "Ядовитый кристалл", Color = Color3.fromRGB(90, 180, 60), LightColor = Color3.fromRGB(120, 210, 80) },
+	-- SandDunes / Sand (#13)
+	{ Pos = Vector3.new(352, 2, -48), ItemId = 113, Label = "Песчаный кристалл", Color = Color3.fromRGB(210, 170, 90), LightColor = Color3.fromRGB(240, 210, 130) },
+	{ Pos = Vector3.new(368, 2, -32), ItemId = 113, Label = "Песчаный кристалл", Color = Color3.fromRGB(210, 170, 90), LightColor = Color3.fromRGB(240, 210, 130) },
 }
 
 local chestSpots = {
@@ -209,12 +230,13 @@ local chestSpots = {
 	Vector3.new(165, 1.2, -70),
 	Vector3.new(240, 1.2, 170),
 	Vector3.new(345, 1.2, 215),
+	Vector3.new(-75, 1.2, -115),
 }
 
 local waterCrystalSpots = {
-	Vector3.new(95, 2, 118),
-	Vector3.new(115, 2, 128),
-	Vector3.new(100, 2, 135),
+	Vector3.new(10, 2, -860),
+	Vector3.new(45, 2, -900),
+	Vector3.new(25, 2, -840),
 }
 
 for i, spot in ipairs(crystalSpots) do

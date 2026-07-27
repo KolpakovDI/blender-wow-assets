@@ -365,11 +365,22 @@ MarketplaceService.ProcessReceipt = function(receiptInfo)
 	if not playerData then
 		return Enum.ProductPurchaseDecision.NotProcessedYet
 	end
-	if getFomoSecondsLeft() <= 0 then
-		notify(player, "Toast", { Text = "Сезон гачи закончился" })
+	playerData.ProcessedReceipts = playerData.ProcessedReceipts or {}
+	local purchaseId = tostring(receiptInfo.PurchaseId or "")
+	if purchaseId ~= "" and playerData.ProcessedReceipts[purchaseId] then
 		return Enum.ProductPurchaseDecision.PurchaseGranted
 	end
+	-- Never PurchaseGranted without a reward (Robux loss). Renew FOMO window like coin gacha.
+	if getFomoSecondsLeft() <= 0 then
+		gachaSeasonEnd = os.time() + GACHA_FOMO_DURATION
+	end
 	local reward = grantGachaReward(player, playerData)
+	if not reward then
+		return Enum.ProductPurchaseDecision.NotProcessedYet
+	end
+	if purchaseId ~= "" then
+		playerData.ProcessedReceipts[purchaseId] = true
+	end
 	deliverGachaResult(player, playerData, reward, "Robux")
 	return Enum.ProductPurchaseDecision.PurchaseGranted
 end
@@ -462,6 +473,65 @@ havenEvent.OnServerEvent:Connect(function(player, action, payload)
 		notify(player, "OpenWardrobe", wardrobePayload(playerData))
 	elseif action == "EquipCosmetic" then
 		onEquipCosmetic(player, payload)
+	elseif action == "RequestSeason" then
+		local playerData = getPlayerData(player)
+		if not playerData then return end
+		local ok, SeasonLiveOps = pcall(function()
+			return require(script.Parent.SeasonLiveOps)
+		end)
+		if not ok or not SeasonLiveOps then
+			notify(player, "Toast", { Text = "Сезон недоступен" })
+			return
+		end
+		SeasonLiveOps.Ensure(playerData)
+		notify(player, "SeasonState", {
+			Season = SeasonLiveOps.Current,
+			TokenName = SeasonLiveOps.TokenName,
+			EventTokens = playerData.EventTokens,
+			EventShop = SeasonLiveOps.EventShop,
+			BattlePass = SeasonLiveOps.BattlePass,
+			SeasonPass = playerData.SeasonPass,
+		})
+	elseif action == "BuySeasonOffer" then
+		if not isInSafeZone(player) then
+			notify(player, "Toast", { Text = "Сезонный магазин только в Haven" })
+			return
+		end
+		local playerData = getPlayerData(player)
+		if not playerData then return end
+		local ok, SeasonLiveOps = pcall(function()
+			return require(script.Parent.SeasonLiveOps)
+		end)
+		if not ok or not SeasonLiveOps then
+			notify(player, "Toast", { Text = "Сезон недоступен" })
+			return
+		end
+		local success, message = SeasonLiveOps.BuyEventShop(playerData, payload.OfferId)
+		notify(player, "SeasonBuyResult", { Ok = success, Message = message, EventTokens = playerData.EventTokens })
+		if success then
+			local dataEvent = RealmFolder:FindFirstChild("DataSync")
+			if dataEvent then
+				dataEvent:FireClient(player, "FullSync", playerData)
+			end
+		end
+	elseif action == "ClaimSeasonPass" then
+		local playerData = getPlayerData(player)
+		if not playerData then return end
+		local ok, SeasonLiveOps = pcall(function()
+			return require(script.Parent.SeasonLiveOps)
+		end)
+		if not ok or not SeasonLiveOps then
+			notify(player, "Toast", { Text = "Сезон недоступен" })
+			return
+		end
+		local success, message = SeasonLiveOps.ClaimPassLevel(playerData, tonumber(payload.LevelIndex))
+		notify(player, "SeasonClaimResult", { Ok = success, Message = message, SeasonPass = playerData.SeasonPass })
+		if success then
+			local dataEvent = RealmFolder:FindFirstChild("DataSync")
+			if dataEvent then
+				dataEvent:FireClient(player, "FullSync", playerData)
+			end
+		end
 	end
 end)
 

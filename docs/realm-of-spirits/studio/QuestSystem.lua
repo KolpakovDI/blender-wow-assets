@@ -42,10 +42,17 @@ local UniqueItemDatabase = {
 	-- Трофеи Пути Охотника (habitats)
 	[8] = {Id = 8, Name = "Знак Угольного Двора", Rarity = "Uncommon", Description = "Трофей: Огненный Кот. +5% урон огнём"},
 	[9] = {Id = 9, Name = "Перо Морозного Хребта", Rarity = "Uncommon", Description = "Трофей: Ледяная Птица. +5% скорость"},
-	[10] = {Id = 10, Name = "Чешуя Туманного Пруда", Rarity = "Rare", Description = "Трофей: Водный Карп. +5% защита"},
+	[10] = {Id = 10, Name = "Чешуя Прибрежного Моря", Rarity = "Rare", Description = "Трофей: Водный Карп. +5% защита"},
 	[11] = {Id = 11, Name = "Клык Теневой Лощины", Rarity = "Rare", Description = "Трофей: Теневой Пёс. +8% крит"},
 	[12] = {Id = 12, Name = "Искра Грозового Шпиля", Rarity = "Epic", Description = "Трофей: Грозовой Дракон. +10% урон"},
 	[13] = {Id = 13, Name = "Корона Рассвета", Rarity = "Legendary", Description = "Трофей: Световой Единорог. +20% опыт, +10% репутация"},
+	[14] = {Id = 14, Name = "Осколок Каменного Бассейна", Rarity = "Rare", Description = "Трофей: Каменный Голем. +8% защита"},
+	[15] = {Id = 15, Name = "Уголёк Пепельного Сада", Rarity = "Rare", Description = "Трофей: Пепельный Саламандр. +8% урон огнём"},
+	[16] = {Id = 16, Name = "Перо Ветряного Утёса", Rarity = "Rare", Description = "Трофей: Ветряной Лис. +8% скорость"},
+	[17] = {Id = 17, Name = "Лист Моховой Поляны", Rarity = "Rare", Description = "Трофей: Моховой Олень. +8% защита"},
+	[18] = {Id = 18, Name = "Осколок Лунного Колодца", Rarity = "Rare", Description = "Трофей: Лунный Кролик. +8% MP"},
+	[19] = {Id = 19, Name = "Клык Ядовитого Ущелья", Rarity = "Rare", Description = "Трофей: Ядовитая Гадюка. +8% урон ядом"},
+	[20] = {Id = 20, Name = "Клешня Песчаных Дюн", Rarity = "Rare", Description = "Трофей: Пустынный Скорпион. +8% урон песком"},
 }
 
 -- ============================================
@@ -323,7 +330,7 @@ local QuestDatabase = {
 	[203] = {
 		Id = 203,
 		Name = "Путь Охотника III: Вода",
-		Description = "Поймайте Водного Карпа в Туманном пруду (север от Combat по камням)",
+		Description = "Поймайте Водного Карпа в Прибрежном море (юг, за пальмами)",
 		Type = "Hunt",
 		Level = 3,
 		Objectives = {
@@ -400,6 +407,190 @@ local QuestDatabase = {
 		},
 		Prerequisites = {205}
 	},
+	[207] = {
+		Id = 207,
+		Name = "Путь Охотника VII: Земля",
+		Description = "Поймайте Каменного Голема в Каменном бассейне (юго-запад от Haven)",
+		Type = "Hunt",
+		Level = 5,
+		Objectives = {
+			{Type = "CatchSpecificSpirit", SpiritId = 7, Count = 1, SpiritName = "Каменный Голем"}
+		},
+		Rewards = {
+			Experience = 380,
+			CopperCoins = 180,
+			SilverCoins = 22,
+			GoldCoins = 1,
+			Reputation = 40,
+			UniqueItems = {{Id = 14, Quantity = 1}},
+			Items = {{Id = 107, Quantity = 3}, {Id = 1, Quantity = 3}}
+		},
+		Prerequisites = {206}
+	},
+	[208] = {
+		Id = 208,
+		Name = "Путь Охотника VIII: Пепел",
+		Description = "Поймайте Пепельного Саламандра в Пепельном саду (восток от Combat)",
+		Type = "Hunt",
+		Level = 5,
+		Objectives = {
+			{Type = "CatchSpecificSpirit", SpiritId = 8, Count = 1, SpiritName = "Пепельный Саламандр"}
+		},
+		Rewards = {
+			Experience = 400,
+			CopperCoins = 190,
+			SilverCoins = 24,
+			GoldCoins = 1,
+			Reputation = 42,
+			UniqueItems = {{Id = 15, Quantity = 1}},
+			Items = {{Id = 108, Quantity = 3}, {Id = 1, Quantity = 3}}
+		},
+		Prerequisites = {207}
+	},
+	[209] = {
+		Id = 209,
+		Name = "Путь Охотника IX: Ветер",
+		Description = "Поймайте Ветряного Лиса на Ветряном утёсе (западнее Морозного хребта)",
+		Type = "Hunt",
+		Level = 5,
+		Objectives = {
+			{Type = "CatchSpecificSpirit", SpiritId = 9, Count = 1, SpiritName = "Ветряной Лис"}
+		},
+		Rewards = {
+			Experience = 420,
+			CopperCoins = 200,
+			SilverCoins = 26,
+			GoldCoins = 1,
+			Reputation = 44,
+			UniqueItems = {{Id = 16, Quantity = 1}},
+			Items = {{Id = 109, Quantity = 3}, {Id = 1, Quantity = 3}}
+		},
+		Prerequisites = {208}
+	},
+	[210] = {
+		Id = 210,
+		Name = "Путь Охотника X: Природа",
+		Description = "Поймайте Мохового Оленя на Моховой поляне (юг от ShadowHollow)",
+		Type = "Hunt",
+		Level = 5,
+		Objectives = {
+			{Type = "CatchSpecificSpirit", SpiritId = 10, Count = 1, SpiritName = "Моховой Олень"}
+		},
+		Rewards = {
+			Experience = 440,
+			CopperCoins = 210,
+			SilverCoins = 28,
+			GoldCoins = 1,
+			Reputation = 46,
+			UniqueItems = {{Id = 17, Quantity = 1}},
+			Items = {{Id = 110, Quantity = 3}, {Id = 1, Quantity = 3}}
+		},
+		Prerequisites = {209}
+	},
+	[211] = {
+		Id = 211,
+		Name = "Путь Охотника XI: Луна",
+		Description = "Поймайте Лунного Кролика у Лунного колодца (запад от StoneBasin)",
+		Type = "Hunt",
+		Level = 5,
+		Objectives = {
+			{Type = "CatchSpecificSpirit", SpiritId = 11, Count = 1, SpiritName = "Лунный Кролик"}
+		},
+		Rewards = {
+			Experience = 460,
+			CopperCoins = 220,
+			SilverCoins = 30,
+			GoldCoins = 1,
+			Reputation = 48,
+			UniqueItems = {{Id = 18, Quantity = 1}},
+			Items = {{Id = 111, Quantity = 3}, {Id = 1, Quantity = 3}}
+		},
+		Prerequisites = {210}
+	},
+	[212] = {
+		Id = 212,
+		Name = "Путь Охотника XII: Яд",
+		Description = "Поймайте Ядовитую Гадюку в Ядовитом ущелье (восток от Moonwell)",
+		Type = "Hunt",
+		Level = 5,
+		Objectives = {
+			{Type = "CatchSpecificSpirit", SpiritId = 12, Count = 1, SpiritName = "Ядовитая Гадюка"}
+		},
+		Rewards = {
+			Experience = 480,
+			CopperCoins = 230,
+			SilverCoins = 32,
+			GoldCoins = 1,
+			Reputation = 50,
+			UniqueItems = {{Id = 19, Quantity = 1}},
+			Items = {{Id = 112, Quantity = 3}, {Id = 1, Quantity = 3}}
+		},
+		Prerequisites = {211}
+	},
+	[213] = {
+		Id = 213,
+		Name = "Путь Охотника XIII: Песок",
+		Description = "Поймайте Пустынного Скорпиона в Песчаных дюнах (восток от VenomHollow)",
+		Type = "Hunt",
+		Level = 5,
+		Objectives = {
+			{Type = "CatchSpecificSpirit", SpiritId = 13, Count = 1, SpiritName = "Пустынный Скорпион"}
+		},
+		Rewards = {
+			Experience = 500,
+			CopperCoins = 240,
+			SilverCoins = 34,
+			GoldCoins = 1,
+			Reputation = 52,
+			UniqueItems = {{Id = 20, Quantity = 1}},
+			Items = {{Id = 113, Quantity = 3}, {Id = 1, Quantity = 3}}
+		},
+		Prerequisites = {212}
+	},
+	-- Spirit Resonance dailies (repeatable side — no hard prereq)
+	[301] = {
+		Id = 301,
+		Name = "Уход за духом",
+		Description = "Поухаживайте за активным духом в Otaku Haven (Spirit Resonance · Bond)",
+		Type = "Side",
+		Level = 1,
+		Objectives = {
+			{Type = "CareSpirit", Count = 1}
+		},
+		Rewards = {
+			Experience = 40,
+			CopperCoins = 30,
+			SilverCoins = 2,
+			GoldCoins = 0,
+			Reputation = 5,
+			UniqueItems = {},
+			-- P2: do not print Bond fuel every day (30% chance)
+			Items = {},
+			ItemsChance = {{Id = 4, Quantity = 1, Chance = 0.3}},
+		},
+		Prerequisites = {}
+	},
+	[302] = {
+		Id = 302,
+		Name = "Закалка духа",
+		Description = "Проведите одну тренировку Temper (Attack / Defense / Spirit)",
+		Type = "Side",
+		Level = 2,
+		Objectives = {
+			{Type = "TemperSpirit", Count = 1}
+		},
+		Rewards = {
+			Experience = 60,
+			CopperCoins = 40,
+			SilverCoins = 4,
+			GoldCoins = 0,
+			Reputation = 8,
+			UniqueItems = {},
+			-- Stone is buy-capped; daily reward keeps 1 stone but no free print of extra fuel
+			Items = {{Id = 5, Quantity = 1}},
+		},
+		Prerequisites = {301}
+	},
 }
 
 -- ============================================
@@ -433,15 +624,30 @@ function QuestSystem.new(player)
 	return self
 end
 
+local function hasQuestFlag(map, questId)
+	if not map then return false end
+	local id = tonumber(questId) or questId
+	if map[id] then return true end
+	if type(id) == "number" and map[tostring(id)] then return true end
+	if type(questId) == "string" and map[questId] then return true end
+	return false
+end
+
 function QuestSystem:AcceptQuest(questId)
+	questId = tonumber(questId) or questId
 	local quest = QuestDatabase[questId]
 	if not quest then return false, "Квест не найден" end
 
 	-- Проверяем prerequisites
 	for _, prereqId in ipairs(quest.Prerequisites or {}) do
-		if not self.CompletedQuests[prereqId] then
+		if not hasQuestFlag(self.CompletedQuests, prereqId) then
 			return false, "Не выполнены предварительные условия"
 		end
+	end
+
+	-- Проверяем, не выполнен ли уже квест
+	if hasQuestFlag(self.CompletedQuests, questId) then
+		return false, "Квест уже выполнен"
 	end
 
 	-- Проверяем, не взят ли уже квест
@@ -503,14 +709,7 @@ function QuestSystem:AcceptQuest(questId)
 						progress.CaughtIds[key] = true
 					end
 					progress.Current = math.min(uniqueCount, progress.Target)
-				elseif objective.Type == "CatchSpecificSpirit" and objective.SpiritId then
-					local want = tonumber(objective.SpiritId)
-					for _, spiritEntry in ipairs(spirits) do
-						if tonumber(spiritEntry.Id) == want then
-							progress.Current = progress.Target
-							break
-						end
-					end
+				-- CatchSpecificSpirit НЕ сидим: уже имеющийся дух ≠ поимка в зоне охоты
 				elseif objective.Type == "LevelUpSpirit" then
 					progress.Current = math.min(maxSpiritLevel, progress.Target)
 				elseif objective.Type == "CollectItem" and objective.ItemId then
@@ -565,6 +764,8 @@ function QuestSystem:UpdateProgress(progressType, data)
 						if data and data.ItemId == objective.ItemId then
 							progress.Current = progress.Current + (data.Count or 1)
 						end
+					elseif progressType == "CareSpirit" or progressType == "TemperSpirit" then
+						progress.Current = math.min((progress.Current or 0) + (data and data.Count or 1), progress.Target or 1)
 					end
 
 					-- Проверяем выполнение
@@ -605,6 +806,7 @@ function QuestSystem:MarkReadyToTurnIn(questId)
 end
 
 function QuestSystem:TurnInQuest(questId)
+	questId = tonumber(questId) or questId
 	if not self.ReadyToTurnIn[questId] then return false, "Сначала выполните все цели квеста" end
 	if not self.ActiveQuests[questId] then return false, "Квест не активен" end
 	local quest = QuestDatabase[questId]
@@ -707,20 +909,46 @@ function QuestSystem:CompleteQuest(questId)
 			end
 		end
 
+		local function grantItem(item)
+			local found = false
+			for _, invItem in ipairs(playerData.Inventory) do
+				if invItem.Id == item.Id then
+					invItem.Quantity = (invItem.Quantity or 0) + (item.Quantity or 1)
+					found = true
+					break
+				end
+			end
+			if not found then
+				table.insert(playerData.Inventory, {Id = item.Id, Quantity = item.Quantity or 1})
+			end
+		end
+
 		-- Обычные предметы
 		if quest.Rewards.Items then
 			for _, item in ipairs(quest.Rewards.Items) do
-				local found = false
-				for _, invItem in ipairs(playerData.Inventory) do
-					if invItem.Id == item.Id then
-						invItem.Quantity = (invItem.Quantity or 0) + (item.Quantity or 1)
-						found = true
-						break
-					end
+				grantItem(item)
+			end
+		end
+
+		-- Шанс предмета (P2 Care treat etc.)
+		if quest.Rewards.ItemsChance then
+			for _, item in ipairs(quest.Rewards.ItemsChance) do
+				local chance = tonumber(item.Chance) or 0
+				if math.random() <= chance then
+					grantItem(item)
 				end
-				if not found then
-					table.insert(playerData.Inventory, {Id = item.Id, Quantity = item.Quantity or 1})
-				end
+			end
+		end
+
+		-- P3: season tokens / pass XP from resonance dailies
+		local okLive, SeasonLiveOps = pcall(function()
+			return require(script.Parent.SeasonLiveOps)
+		end)
+		if okLive and SeasonLiveOps then
+			if questId == 301 and SeasonLiveOps.OnDailyCare then
+				SeasonLiveOps.OnDailyCare(playerData)
+			elseif questId == 302 and SeasonLiveOps.OnDailyTemper then
+				SeasonLiveOps.OnDailyTemper(playerData)
 			end
 		end
 
@@ -831,10 +1059,10 @@ end
 local function BuildAvailableQuests(questSystem)
 	local availableQuests = {}
 	for questId, quest in pairs(QuestDatabase) do
-		if not questSystem.ActiveQuests[questId] and not questSystem.CompletedQuests[questId] then
+		if not hasQuestFlag(questSystem.ActiveQuests, questId) and not hasQuestFlag(questSystem.CompletedQuests, questId) then
 			local canTake = true
 			for _, prereqId in ipairs(quest.Prerequisites or {}) do
-				if not questSystem.CompletedQuests[prereqId] then
+				if not hasQuestFlag(questSystem.CompletedQuests, prereqId) then
 					canTake = false
 					break
 				end
@@ -845,7 +1073,19 @@ local function BuildAvailableQuests(questSystem)
 		end
 	end
 	-- Стабильный порядок: уровень → Id (иначе pairs() прячет побочные ниже скролла)
+	-- Резонанс 301–303 сверху, затем уровень → Id
 	table.sort(availableQuests, function(a, b)
+		local function prio(q)
+			local id = tonumber(q.Id) or 0
+			if id >= 301 and id <= 303 then
+				return id - 301 -- 0,1,2
+			end
+			return 100 + (tonumber(q.Level) or 1)
+		end
+		local pa, pb = prio(a), prio(b)
+		if pa ~= pb then
+			return pa < pb
+		end
 		local la = tonumber(a.Level) or 1
 		local lb = tonumber(b.Level) or 1
 		if la ~= lb then
@@ -910,7 +1150,7 @@ QuestEvent.OnServerEvent:Connect(function(player, action, data)
 			QuestEvent:FireClient(player, "QuestResult", {Success = false, Message = "Квесты выдаёт только квестор рядом с вами"})
 			return
 		end
-		local questId = data and data.QuestId
+		local questId = data and tonumber(data.QuestId)
 		if not questId then
 			QuestEvent:FireClient(player, "QuestResult", {Success = false, Message = "Некорректный запрос квеста"})
 			return
@@ -928,7 +1168,7 @@ QuestEvent.OnServerEvent:Connect(function(player, action, data)
 			QuestEvent:FireClient(player, "QuestResult", {Success = false, Message = "Сдать квест можно только у квестора"})
 			return
 		end
-		local questId = data and data.QuestId
+		local questId = data and tonumber(data.QuestId)
 		if not questId then
 			QuestEvent:FireClient(player, "QuestResult", {Success = false, Message = "Некорректный запрос квеста"})
 			return
@@ -937,8 +1177,16 @@ QuestEvent.OnServerEvent:Connect(function(player, action, data)
 		TriggerQuestMasterReaction(success and "Success" or "Fail")
 		QuestEvent:FireClient(player, "QuestResult", {Success = success, Message = message, TurnIn = true})
 		if success then
+			local available = BuildAvailableQuests(questSystem)
+			QuestEvent:FireClient(player, "QuestList", {Quests = available})
 			QuestEvent:FireClient(player, "ActiveQuests", {Quests = questSystem:GetActiveQuests()})
 			QuestEvent:FireClient(player, "CompletedQuests", {Quests = BuildCompletedQuests(questSystem)})
+			QuestEvent:FireClient(player, "OpenQuestUI", {
+				Available = available,
+				Active = questSystem:GetActiveQuests(),
+				Completed = BuildCompletedQuests(questSystem),
+				PreferredTab = "Available",
+			})
 		end
 
 	elseif action == "GetCompletedQuests" then
@@ -985,7 +1233,28 @@ task.spawn(function()
 			anchor.Massless = true
 			anchor.Parent = questMaster
 		end
-		anchor.CFrame = questMaster:GetPivot() * CFrame.new(0, 2.5, 0)
+		local maxY, sumX, sumZ, n = -math.huge, 0, 0, 0
+		for _, d in ipairs(questMaster:GetDescendants()) do
+			if d:IsA("BasePart") and d.Name ~= "QuestInteractAnchor" and d.Transparency < 1 then
+				local cf, sz = d.CFrame, d.Size
+				local hy = math.abs(cf.UpVector.Y) * sz.Y * 0.5
+					+ math.abs(cf.RightVector.Y) * sz.X * 0.5
+					+ math.abs(cf.LookVector.Y) * sz.Z * 0.5
+				maxY = math.max(maxY, cf.Position.Y + hy)
+				sumX += cf.Position.X
+				sumZ += cf.Position.Z
+				n += 1
+			end
+		end
+		local ax, headTop, az
+		if n == 0 then
+			local cf, sz = questMaster:GetBoundingBox()
+			ax, headTop, az = cf.Position.X, cf.Position.Y + sz.Y * 0.5, cf.Position.Z
+		else
+			ax, headTop, az = sumX / n, maxY, sumZ / n
+		end
+		anchor.Size = Vector3.new(1.2, 1.2, 1.2)
+		anchor.CFrame = CFrame.new(ax, headTop + 0.85, az)
 
 		local prompt = anchor:FindFirstChild("QuestPrompt")
 		if not prompt then
@@ -999,6 +1268,10 @@ task.spawn(function()
 		prompt.MaxActivationDistance = 18
 		prompt.RequiresLineOfSight = false
 		prompt.KeyboardKeyCode = Enum.KeyCode.E
+		prompt.Style = Enum.ProximityPromptStyle.Default
+		prompt.UIOffset = Vector2.new(0, 0)
+		local hint = anchor:FindFirstChild("TalkHint")
+		if hint then hint:Destroy() end
 		if not hookedPrompts[prompt] then
 			hookedPrompts[prompt] = true
 			prompt.Triggered:Connect(openFor)

@@ -733,8 +733,8 @@ startDuel = function(challenger, target, savedOrigins)
 	local originA = savedOrigins.A or (hrpA and hrpA.CFrame)
 	local originB = savedOrigins.B or (hrpB and hrpB.CFrame)
 
-	local spiritA = dataA.Spirits[1]
-	local spiritB = dataB.Spirits[1]
+	local spiritA = dataA.Spirits[tonumber(dataA.ActiveSpiritIndex) or 1] or dataA.Spirits[1]
+	local spiritB = dataB.Spirits[tonumber(dataB.ActiveSpiritIndex) or 1] or dataB.Spirits[1]
 	local infoA = SpiritDatabase.Get(spiritA.Id)
 	local infoB = SpiritDatabase.Get(spiritB.Id)
 	if not infoA or not infoB then

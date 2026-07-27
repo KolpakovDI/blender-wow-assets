@@ -4,6 +4,39 @@ local realmFolder = ReplicatedStorage:WaitForChild("RealmOfSpirits")
 local SkillCatalog = require(realmFolder:WaitForChild("SkillCatalog"))
 local EffectCatalog = require(realmFolder:WaitForChild("EffectCatalog"))
 local SpiritDatabase = require(realmFolder:WaitForChild("SpiritDatabase"))
+local SpiritResonance = require(realmFolder:WaitForChild("SpiritResonance"))
+
+local function applyTemperDamage(damage, attackerSpirit, defenderSpirit, battle)
+	damage = math.max(1, math.floor(tonumber(damage) or 1))
+	if attackerSpirit then
+		local b = SpiritResonance.GetTemperStatBonus(attackerSpirit)
+		damage = damage + math.floor(tonumber(b.Attack) or 0)
+	end
+	if defenderSpirit then
+		local b = SpiritResonance.GetTemperStatBonus(defenderSpirit)
+		damage = math.max(1, damage - math.floor(tonumber(b.Defense) or 0))
+	end
+	if battle then
+		local atkPct = tonumber(battle.DexAttackPct) or 0
+		local defPct = tonumber(battle.DexDefensePct) or 0
+		if atkPct > 0 and attackerSpirit and battle.PlayerSpirit and attackerSpirit == battle.PlayerSpirit then
+			damage = math.max(1, math.floor(damage * (1 + atkPct)))
+		end
+		if defPct > 0 and defenderSpirit and battle.PlayerSpirit and defenderSpirit == battle.PlayerSpirit then
+			damage = math.max(1, math.floor(damage * (1 - defPct)))
+		end
+	end
+	return damage
+end
+
+local function applyTemperHeal(heal, spirit)
+	heal = math.max(1, math.floor(tonumber(heal) or 1))
+	if spirit then
+		local b = SpiritResonance.GetTemperStatBonus(spirit)
+		heal = heal + math.floor((tonumber(b.Spirit) or 0) * 0.5)
+	end
+	return heal
+end
 
 local BattleOrchestrator = {}
 

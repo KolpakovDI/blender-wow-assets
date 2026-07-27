@@ -18,7 +18,10 @@ def check_game_manager() -> list[str]:
         ]
     )
     if text is None:
-        return []
+        return [
+            "GameManager mirror missing: docs/realm-of-spirits/studio/GameManager.lua "
+            "(export from Studio SoT)"
+        ]
 
     issues: list[str] = []
     required = [
@@ -33,6 +36,8 @@ def check_game_manager() -> list[str]:
         "StepTimedEffects",
         "ComputeDamage",
         "ApplyBurnTick",
+        "ActiveSpiritIndex",
+        "CycleActiveSpirit",
     ]
     for token in required:
         if token not in text:

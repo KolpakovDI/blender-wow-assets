@@ -147,7 +147,7 @@ def main() -> int:
                     issues.append(f"spirit[{spirit_id}] SkillId {sid} not in SkillCatalog")
 
         movement_m = re.search(r'MovementType\s*=\s*"([^"]+)"', block)
-		if movement_m and movement_m.group(1) not in {"Walk", "Fly", "Swim"}:
+        if movement_m and movement_m.group(1) not in {"Walk", "Fly", "Swim"}:
             issues.append(f"spirit[{spirit_id}] invalid MovementType={movement_m.group(1)}")
 
     if issues:

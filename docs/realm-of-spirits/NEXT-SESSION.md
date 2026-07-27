@@ -1,47 +1,32 @@
 # NEXT SESSION
 
-**Статус:** Checkpoint 2026-07-24 evening. Habitats + Путь Охотника 201–206 в Studio. **Play QA hunt** pending. PvP/MistPond PASS.
+**Статус:** 2026-07-27 evening — Hunt **213 Sand** MCP PASS. Checkpoint; завтра — **daily board (идея → дизайн)**.
 
-Дата якоря: 2026-07-24 → продолжение вечером / следующий день
+Дата якоря: 2026-07-27
 
 ## Старт сессии (порядок жёсткий)
 
-1. Place SoT: `C:\Mimo\RealmOfSpirits\RealmOfSpirits second.rbxl` — **Ctrl+S** если не сохранял
-2. Studio MCP `user-Roblox_Studio` (если error → Restart MCP)
-3. Этот файл
-4. **Play QA: Путь Охотника** (ниже)
+1. **Ctrl+S** place, если ещё не сохраняли после Hunt 213 (`SpiritTemplate13`/`113` + каталоги)
+2. **Daily board (идея)** — выбрать scope и зафиксировать дизайн:
+   - A: только док `DAILY-BOARD.md` (без кода)
+   - B: lite Studio (4 слота + UI + reset дня + soft Pass XP/жетоны)
+   - UI: Мика / PASS / activity bar
+   - База: Card Heroes chat 2026-07-27 (лист дня 4–6, бонус 6/6, без P2W)
+3. Опционально: Play Hunt 213 после 212; Hunt **214** — после daily-board решения
 
 ## Product progress
 
 | Тема | Статус |
 |------|--------|
-| P0–P1 Core / Haven / Social | **DONE** |
-| P2 PvP vertical slice | **DONE** (2p PASS) |
-| P2 MistPond + Water Carp #6 | **DONE** (Play QA PASS) |
-| Spirit habitats spread | **DONE** (min ~99 studs) |
-| Hunt quest chain 201–206 | **CODE IN STUDIO** — Play QA pending |
+| Hunt 213 Sand (#13 / SandDunes / q213) | **MCP smoke PASS** · нужен Ctrl+S place |
+| Quest 301–303 Resonance | PASS (игрок / MCP) |
+| ShowcasePlaza / Phase 4 SeasonLiveOps | Studio OK |
+| Daily board lite | **идея** · завтра разбор |
 
-## Точный next step (игра)
+## Studio SoT (Hunt 213 — что в place)
 
-1. Ctrl+S → Play
-2. Мика → **Путь Охотника I: Огонь**
-3. Акихабара → поймать Огненного Кота → сдать → Знак Угольного Двора + медь/XP
-4. Цепочка 202→206 (Корона Рассвета на финале)
+Place: `C:\\Mimo\\RealmOfSpirits\\RealmOfSpirits second.rbxl` — **Ctrl+S.**
 
-После PASS → polish эво #106 (светлый реф) или доработка hunt UX.
+Модули: `SpiritDatabase`, `SkillCatalog`, `ItemCatalog`, `ZoneConfig`, `ZoneSystem`, `ZoneController`, `MusicController`, `WorldSpawner`, `WorldLootService`, `QuestSystem`; templates `SpiritTemplate13` / `SpiritTemplate113` в `ReplicatedStorage.SpiritTemplates`.
 
-## Закрыто 2026-07-24
-
-- Духи разнесены: Combat / FrostRidge / MistPond / ShadowHollow / StormSpire / DawnMeadow
-- `ZoneConfig.SpiritHabitats` HuntOrder; WorldSpawner `BuildSpiritHabitats`; loot по стихиям
-- GameManager: raycast ignore BattleArena dome
-- QuestSystem: Hunt 201–206, `CatchSpecificSpirit`, UniqueItems 8–13
-- UI: QuestUI / QuestTrackerHud / ClientController `catch_hunt`
-
-## Studio SoT
-
-`C:\Mimo\RealmOfSpirits\RealmOfSpirits second.rbxl` (не в git). **Ctrl+S.**
-
-Ключевые модули: `ZoneConfig`, `WorldSpawner`, `WorldLootService`, `ZoneSystem`, `ZoneController`, `MusicController`, `GameManager`, `QuestSystem`, `QuestUI`, `QuestTrackerHud`, `ClientController`
-
-Quality: `python scripts/quality_gate.py`
+Зеркала git: `docs/realm-of-spirits/studio/*` + `CHANGELOG` `[Unreleased]`.

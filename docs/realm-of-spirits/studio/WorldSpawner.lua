@@ -86,6 +86,16 @@ local function GetQuestMasterExtents(model)
 			end
 		end
 	end
+	-- AI mesh Mika: measure visible MeshParts only (ignore QuestInteractAnchor)
+	if footBottom == math.huge or headTop == -math.huge then
+		for _, desc in ipairs(model:GetDescendants()) do
+			if desc:IsA("MeshPart") or (desc:IsA("BasePart") and desc.Name ~= "QuestInteractAnchor" and desc.Transparency < 1) then
+				local minY, maxY = GetPartWorldMinMaxY(desc)
+				if minY < footBottom then footBottom = minY end
+				if maxY > headTop then headTop = maxY end
+			end
+		end
+	end
 	if footBottom == math.huge or headTop == -math.huge then
 		local boxCf, boxSize = model:GetBoundingBox()
 		footBottom = boxCf.Position.Y - boxSize.Y * 0.5
@@ -186,7 +196,6 @@ local function EnsureQuestMasterInteract(model)
 	if not anchor then
 		anchor = Instance.new("Part")
 		anchor.Name = "QuestInteractAnchor"
-		anchor.Size = Vector3.new(2.5, 5, 2.5)
 		anchor.Transparency = 1
 		anchor.Anchored = true
 		anchor.CanCollide = false
@@ -195,8 +204,31 @@ local function EnsureQuestMasterInteract(model)
 		anchor.Massless = true
 		anchor.Parent = model
 	end
-	local pivot = model:GetPivot()
-	anchor.CFrame = pivot * CFrame.new(0, 2.5, 0)
+	local maxY, sumX, sumZ, n = -math.huge, 0, 0, 0
+	for _, d in ipairs(model:GetDescendants()) do
+		if d:IsA("BasePart") and d.Name ~= "QuestInteractAnchor" and d.Transparency < 1 then
+			local cf, sz = d.CFrame, d.Size
+			local hy = math.abs(cf.UpVector.Y) * sz.Y * 0.5
+				+ math.abs(cf.RightVector.Y) * sz.X * 0.5
+				+ math.abs(cf.LookVector.Y) * sz.Z * 0.5
+			maxY = math.max(maxY, cf.Position.Y + hy)
+			sumX += cf.Position.X
+			sumZ += cf.Position.Z
+			n += 1
+		end
+	end
+	local ax, headTop, az
+	if n == 0 then
+		local cf, sz = model:GetBoundingBox()
+		ax, headTop, az = cf.Position.X, cf.Position.Y + sz.Y * 0.5, cf.Position.Z
+	else
+		ax, headTop, az = sumX / n, maxY, sumZ / n
+	end
+	anchor.Size = Vector3.new(1.2, 1.2, 1.2)
+	anchor.CFrame = CFrame.new(ax, headTop + 0.85, az)
+
+	local hint = anchor:FindFirstChild("TalkHint")
+	if hint then hint:Destroy() end
 
 	for _, desc in ipairs(model:GetDescendants()) do
 		if desc:IsA("ProximityPrompt") and not desc:IsDescendantOf(anchor) then
@@ -216,6 +248,8 @@ local function EnsureQuestMasterInteract(model)
 	prompt.MaxActivationDistance = 18
 	prompt.RequiresLineOfSight = false
 	prompt.KeyboardKeyCode = Enum.KeyCode.E
+	prompt.Style = Enum.ProximityPromptStyle.Default
+	prompt.UIOffset = Vector2.new(0, 0)
 
 	local click = anchor:FindFirstChildOfClass("ClickDetector")
 	if not click then
@@ -251,12 +285,21 @@ end
 
 
 local function SetupSpawn()
-	local spawn = workspace:FindFirstChild("SpawnLocation")
-	if spawn then
-		local pos = ZoneConfig.SpawnPosition
-		spawn.Position = Vector3.new(pos.X, pos.Y, pos.Z)
-		spawn.Neutral = true
+	local spawn = workspace:FindFirstChild("SpawnLocation") or workspace:FindFirstChildOfClass("SpawnLocation")
+	if not spawn then
+		spawn = Instance.new("SpawnLocation")
+		spawn.Name = "SpawnLocation"
+		spawn.Parent = workspace
 	end
+	local pos = ZoneConfig.SpawnPosition
+	spawn.Size = Vector3.new(6, 1, 6)
+	spawn.Anchored = true
+	spawn.CanCollide = true
+	spawn.Neutral = true
+	spawn.Duration = 0
+	spawn.Transparency = 1
+	-- Y = pad center so top sits ~1 stud above ground
+	spawn.Position = Vector3.new(pos.X, pos.Y + spawn.Size.Y * 0.5, pos.Z)
 end
 
 local function SetupQuestMaster()
@@ -305,11 +348,8 @@ local function BuildMistPond()
 	end
 
 	local cfg = ZoneConfig.Zones and ZoneConfig.Zones.MistPond
-	local center = (cfg and cfg.Center) or ZoneConfig.MistPondCenter or Vector3.new(105, 1, 125)
-	local size = (cfg and cfg.Size) or Vector3.new(70, 18, 55)
-	-- Stepping-stone approach from Combat north edge (no text signs)
-	local pathStart = Vector3.new(center.X, 0, 88)
-	local pathEnd = Vector3.new(center.X + 4, 0, center.Z - 24)
+	local center = (cfg and cfg.Center) or ZoneConfig.MistPondCenter or Vector3.new(30, 2, -880)
+	local size = (cfg and cfg.Size) or Vector3.new(120, 24, 100)
 
 	local function part(props)
 		local p = Instance.new("Part")
@@ -336,74 +376,51 @@ local function BuildMistPond()
 	zone:SetAttribute("ZoneType", "MistPond")
 	zone.Parent = model
 
-	-- Organic-ish water bowl (layered, natural glass — not neon)
-	local waterDeep = part({
-		Name = "PondWaterDeep",
-		Size = Vector3.new(44, 1.6, 32),
-		Position = Vector3.new(center.X - 2, 0.55, center.Z + 1),
-		Material = Enum.Material.Glass,
-		Color = Color3.fromRGB(25, 70, 95),
-		Transparency = 0.25,
-	})
-	waterDeep.Reflectance = 0.15
-	waterDeep.Parent = model
-
+	-- Swim volume for Water Carp (SpiritAnimation PondWater bounds) — coastal sea
 	local water = part({
 		Name = "PondWater",
-		Size = Vector3.new(48, 1.1, 36),
-		Position = Vector3.new(center.X, 1.05, center.Z),
-		Material = Enum.Material.Glass,
-		Color = Color3.fromRGB(45, 120, 130),
-		Transparency = 0.4,
+		Size = Vector3.new(95, 2.2, 75),
+		Position = Vector3.new(center.X, 1.35, center.Z),
+		Material = Enum.Material.SmoothPlastic,
+		Color = Color3.fromRGB(40, 190, 205),
+		Transparency = 0.65,
+		Reflectance = 0.25,
+		CanCollide = false,
 	})
-	water.Reflectance = 0.35
 	water.Parent = model
 	local waterLight = Instance.new("PointLight")
-	waterLight.Brightness = 0.55
-	waterLight.Range = 22
-	waterLight.Color = Color3.fromRGB(140, 190, 200)
+	waterLight.Brightness = 0.4
+	waterLight.Range = 36
+	waterLight.Color = Color3.fromRGB(120, 210, 220)
 	waterLight.Parent = water
 
-	-- Sandy beach ring (Japanese pond shore)
-	local sandOuter = part({
-		Name = "SandBank",
-		Size = Vector3.new(64, 0.85, 52),
-		Position = Vector3.new(center.X, 0.35, center.Z),
+	local waterDeep = part({
+		Name = "PondWaterDeep",
+		Size = Vector3.new(70, 1.6, 55),
+		Position = Vector3.new(center.X + 8, 0.9, center.Z - 12),
+		Material = Enum.Material.SmoothPlastic,
+		Color = Color3.fromRGB(25, 130, 170),
+		Transparency = 0.7,
+		CanCollide = false,
+	})
+	waterDeep.Parent = model
+
+	local islet = part({
+		Name = "SeaIslet",
+		Size = Vector3.new(28, 1.2, 16),
+		Position = Vector3.new(center.X - 25, 0.7, center.Z + 40),
 		Material = Enum.Material.Sand,
-		Color = Color3.fromRGB(210, 190, 150),
+		Color = Color3.fromRGB(230, 200, 140),
 		CanCollide = true,
 	})
-	sandOuter.Parent = model
+	islet.Parent = model
 
-	local sandInner = part({
-		Name = "SandShore",
-		Size = Vector3.new(54, 0.55, 42),
-		Position = Vector3.new(center.X + 1, 0.7, center.Z - 1),
-		Material = Enum.Material.Sand,
-		Color = Color3.fromRGB(225, 205, 165),
-		CanCollide = true,
-	})
-	sandInner.Parent = model
-
-	-- Wider beach where spirit spawns
-	local beach = part({
-		Name = "PondBeach",
-		Size = Vector3.new(20, 0.7, 14),
-		Position = Vector3.new(center.X + 18, 0.85, center.Z - 10),
-		Material = Enum.Material.Sand,
-		Color = Color3.fromRGB(230, 210, 170),
-		CanCollide = true,
-	})
-	beach.Parent = model
-
-	-- Irregular rocks around the pond
 	local rockSpecs = {
-		{ Vector3.new(-22, 1.2, -8), Vector3.new(5, 3.2, 4) },
-		{ Vector3.new(-18, 0.9, 12), Vector3.new(4, 2.4, 5) },
-		{ Vector3.new(20, 1.0, 14), Vector3.new(4.5, 2.8, 3.5) },
-		{ Vector3.new(16, 0.8, -16), Vector3.new(3.5, 2.0, 4) },
-		{ Vector3.new(-6, 0.7, -20), Vector3.new(6, 1.8, 3) },
-		{ Vector3.new(8, 1.1, 18), Vector3.new(3, 2.6, 3) },
+		{ Vector3.new(-30, 1.0, 35), Vector3.new(6, 3.5, 5) },
+		{ Vector3.new(-18, 0.8, 42), Vector3.new(4, 2.5, 4) },
+		{ Vector3.new(35, 1.1, -20), Vector3.new(5, 3.0, 4.5) },
+		{ Vector3.new(20, 0.9, 30), Vector3.new(3.5, 2.2, 3.5) },
+		{ Vector3.new(-40, 0.7, -10), Vector3.new(4.5, 2.0, 5) },
 	}
 	for i, spec in ipairs(rockSpecs) do
 		local rock = part({
@@ -418,114 +435,26 @@ local function BuildMistPond()
 		rock.Parent = model
 	end
 
-	-- Stone lantern (ishidōrō) — landmark without text
-	local lanternBase = part({
-		Name = "LanternBase",
-		Size = Vector3.new(2.2, 1.2, 2.2),
-		Position = Vector3.new(center.X - 20, 0.9, center.Z - 14),
-		Material = Enum.Material.Limestone,
-		Color = Color3.fromRGB(160, 155, 140),
-		CanCollide = true,
-	})
-	lanternBase.Parent = model
-	local lanternPole = part({
-		Name = "LanternPole",
-		Size = Vector3.new(1.0, 4.5, 1.0),
-		Position = lanternBase.Position + Vector3.new(0, 2.8, 0),
-		Material = Enum.Material.Limestone,
-		Color = Color3.fromRGB(150, 145, 130),
-		CanCollide = true,
-	})
-	lanternPole.Parent = model
-	local lanternHouse = part({
-		Name = "LanternHouse",
-		Size = Vector3.new(2.4, 2.0, 2.4),
-		Position = lanternPole.Position + Vector3.new(0, 3.0, 0),
-		Material = Enum.Material.Limestone,
-		Color = Color3.fromRGB(140, 135, 120),
-		CanCollide = true,
-	})
-	lanternHouse.Parent = model
-	local lanternGlow = part({
-		Name = "LanternGlow",
-		Size = Vector3.new(1.4, 1.2, 1.4),
-		Position = lanternHouse.Position,
-		Material = Enum.Material.Neon,
-		Color = Color3.fromRGB(255, 210, 140),
-		Transparency = 0.35,
-	})
-	lanternGlow.Parent = model
-	local lanternLight = Instance.new("PointLight")
-	lanternLight.Brightness = 1.2
-	lanternLight.Range = 28
-	lanternLight.Color = Color3.fromRGB(255, 200, 130)
-	lanternLight.Parent = lanternGlow
-	local lanternRoof = part({
-		Name = "LanternRoof",
-		Size = Vector3.new(3.2, 0.5, 3.2),
-		Position = lanternHouse.Position + Vector3.new(0, 1.3, 0),
-		Material = Enum.Material.Slate,
-		Color = Color3.fromRGB(70, 65, 60),
-		CanCollide = true,
-	})
-	lanternRoof.Parent = model
-
-	-- Soft mist over water
-	for i = 1, 4 do
+	for i = 1, 3 do
 		local mist = part({
 			Name = "Mist_" .. i,
 			Shape = Enum.PartType.Ball,
-			Size = Vector3.new(12 + i * 2, 3.5, 12 + i * 2),
+			Size = Vector3.new(18 + i * 4, 4, 18 + i * 4),
 			Position = Vector3.new(
-				center.X + math.cos(i * 1.4) * 12,
-				3.2,
-				center.Z + math.sin(i * 1.4) * 10
+				center.X + math.cos(i * 1.7) * 20,
+				3.5,
+				center.Z + math.sin(i * 1.7) * 16
 			),
 			Material = Enum.Material.ForceField,
-			Color = Color3.fromRGB(200, 215, 220),
-			Transparency = 0.72,
+			Color = Color3.fromRGB(180, 220, 230),
+			Transparency = 0.78,
 		})
 		mist.Parent = model
 	end
 
-	-- Natural stepping stones Combat → shore (sand/stone, no labels)
-	local pathFolder = Instance.new("Model")
-	pathFolder.Name = "MistPondPath"
-	local steps = 9
-	for i = 0, steps do
-		local t = i / steps
-		local wobble = math.sin(i * 1.3) * 2.5
-		local pos = pathStart:Lerp(pathEnd, t) + Vector3.new(wobble, 0.4, 0)
-		local stone = part({
-			Name = "StepStone_" .. i,
-			Size = Vector3.new(3.2 + (i % 3) * 0.4, 0.55, 2.6 + (i % 2) * 0.5),
-			Position = pos,
-			Material = Enum.Material.Slate,
-			Color = Color3.fromRGB(110 + (i % 4) * 8, 105, 95),
-			CanCollide = true,
-		})
-		stone.Orientation = Vector3.new(0, i * 18, 0)
-		stone.Parent = pathFolder
-		-- thin sand between stones
-		if i < steps then
-			local mid = pos:Lerp(pathStart:Lerp(pathEnd, (i + 1) / steps) + Vector3.new(math.sin((i + 1) * 1.3) * 2.5, 0.4, 0), 0.5)
-			local sand = part({
-				Name = "PathSand_" .. i,
-				Size = Vector3.new(5.5, 0.25, 4),
-				Position = Vector3.new(mid.X, 0.2, mid.Z),
-				Material = Enum.Material.Sand,
-				Color = Color3.fromRGB(215, 195, 155),
-				CanCollide = true,
-			})
-			sand.Parent = pathFolder
-		end
-	end
-	pathFolder.Parent = workspace
-
 	model.Parent = workspace
-	print("Realm of Spirits - MistPond built (Japanese sand pond, no text signs)")
+	print("Realm of Spirits - MistPond built (coastal sea habitat for Water Carp)")
 end
-
 -- Карманы обитания духов (кроме MistPond — у него своя сцена)
 local function BuildSpiritHabitats()
 	local existing = workspace:FindFirstChild("SpiritHabitats")
@@ -572,6 +501,36 @@ local function BuildSpiritHabitats()
 			Accent = Color3.fromRGB(255, 245, 180),
 			Ground = Color3.fromRGB(120, 170, 90),
 			Material = Enum.Material.Grass,
+		},
+		{
+			Key = "StoneBasin",
+			Accent = Color3.fromRGB(180, 140, 90),
+			Ground = Color3.fromRGB(110, 90, 65),
+			Material = Enum.Material.Slate,
+		},
+		{
+			Key = "AshGarden",
+			Accent = Color3.fromRGB(255, 100, 40),
+			Ground = Color3.fromRGB(90, 45, 30),
+			Material = Enum.Material.Basalt,
+		},
+		{
+			Key = "Moonwell",
+			Accent = Color3.fromRGB(180, 195, 255),
+			Ground = Color3.fromRGB(70, 75, 95),
+			Material = Enum.Material.Slate,
+		},
+		{
+			Key = "VenomHollow",
+			Accent = Color3.fromRGB(90, 180, 60),
+			Ground = Color3.fromRGB(45, 65, 35),
+			Material = Enum.Material.LeafyGrass,
+		},
+		{
+			Key = "SandDunes",
+			Accent = Color3.fromRGB(210, 170, 90),
+			Ground = Color3.fromRGB(190, 155, 85),
+			Material = Enum.Material.Sand,
 		},
 	}
 
@@ -631,23 +590,40 @@ local function BuildSpiritHabitats()
 	end
 
 	folder.Parent = workspace
-	print("Realm of Spirits - SpiritHabitats built (FrostRidge/ShadowHollow/StormSpire/DawnMeadow)")
+	print("Realm of Spirits - SpiritHabitats built (…/StoneBasin/AshGarden)")
 end
 
 local function CreateWorld()
-	if not workspace:FindFirstChild("Baseplate") then
+	-- Single ground Baseplate (top Y=0); destroy elevated duplicates
+	local mainBp, bestArea = nil, -1
+	for _, d in ipairs(workspace:GetChildren()) do
+		if d.Name == "Baseplate" and d:IsA("BasePart") then
+			local area = d.Size.X * d.Size.Z
+			if area > bestArea then
+				mainBp = d
+				bestArea = area
+			end
+		end
+	end
+	for _, d in ipairs(workspace:GetChildren()) do
+		if d.Name == "Baseplate" and d:IsA("BasePart") and d ~= mainBp then
+			d:Destroy()
+		end
+	end
+	if not mainBp then
 		local baseplate = Instance.new("Part")
 		baseplate.Name = "Baseplate"
-		baseplate.Size = Vector3.new(800, 1, 800)
-		baseplate.Position = Vector3.new(0, 0, 0)
+		baseplate.Size = Vector3.new(2048, 1, 2048)
+		baseplate.Position = Vector3.new(0, -0.5, 0)
 		baseplate.Anchored = true
 		baseplate.BrickColor = BrickColor.new("Dark green")
 		baseplate.Parent = workspace
+		mainBp = baseplate
 	else
-		local baseplate = workspace.Baseplate
-		if baseplate:IsA("BasePart") and (baseplate.Size.X < 800 or baseplate.Size.Z < 800) then
-			baseplate.Size = Vector3.new(800, 1, 800)
+		if mainBp.Size.X < 800 or mainBp.Size.Z < 800 then
+			mainBp.Size = Vector3.new(math.max(mainBp.Size.X, 800), 1, math.max(mainBp.Size.Z, 800))
 		end
+		mainBp.Position = Vector3.new(mainBp.Position.X, -mainBp.Size.Y * 0.5, mainBp.Position.Z)
 	end
 
 	-- PlayerHouse убран: не несёт геймплейной нагрузки

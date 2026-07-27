@@ -7,8 +7,93 @@
 ## [Unreleased]
 
 ### Added
+- **Hunt 213 / Sand**: дух **#13** Пустынный Скорпион → эво **#113** Песчаный Император; стихия `Sand`; зона **SandDunes** `(360,-40)`; skills 114–116; кристалл Item **113**; трофей UniqueItem **20**; квест **213** (prereq 212)
+- **Spirit Resonance Phase 4**: seasonal form (`SeasonalFormId`, shop/BP), Activity Pass UI (`PASS`), crystal pity (10 misses → гарант на бой/сундук) — `SeasonLiveOps`
+- **Spirit Resonance Phase 3**: Dex UI (`DEX` на activity bar), Dex passives в бою (`DexAttackPct`/`DexDefensePct`), Haven `ResonanceShowcaseService` (витрина южнее Мики) — см. `SPIRIT-RESONANCE-PLAN.md`
+- **Spirit Resonance Phase 2**: Temper picker (Attack/Defense/Spirit), пьедестал `ResonanceTemperService`, `BattleOrchestrator` Temper atk/def/heal bonuses, weekly quest **303** — см. `SPIRIT-RESONANCE-PLAN.md`
+- **Spirit Resonance Phase 1**: `ResonanceCareService` пьедестал «Уход» у Мики + VFX; `ResonanceActivityBar`; `QuestTrackerHud` wired + auto-accept quest 301; CareSpirit priority в трекере — см. `SPIRIT-RESONANCE-PLAN.md`
+- **Spirit Resonance Phase 0 → Studio**: `SpiritResonance` module, `ResonanceEvent`, Care/Temper UI, battle XP share, RequiredBond evo gate, quest progress CareSpirit/TemperSpirit — см. `SPIRIT-RESONANCE-PLAN.md`
+
+### Fixed
+- **ShowcasePlaza**: LoS=false, prompt на Base, ClickDetector; `showcaseSet` напрямую (не только `_G`)
+- **Квест 301 Care pedestal**: подтверждён игроком PASS 2026-07-27 (корень — мёртвый saved prompt)
+- **Temper pedestal**: тот же live-build (один Ready, ClickDetector, LoS=false) + UIController `TemperPrompt` → OpenTemperPicker; Temper quest push через `UpdateQuestProgressBF`
+- **Квест 301 пьедестал (корень)**: в `.rbxl` лежал сохранённый pedestal с ProximityPrompt **без Triggered** (connections не сериализуются) — E молчал; UI кнопка жила. Удалён из Workspace; скрипт строит живой pedestal при Play + ClickDetector; убран rebuild-loop
+
+### Changed
+- **Resonance 301–303**: цепочка Care→Temper→weekly MCP smoke PASS 2026-07-27; Phase 4 pity/tokens unit OK
+- **Квест 301 пьедестал**: E → `RequestPedestalCare` в **UIController** (тот же `FireServer("Care")`, что кнопка) + server BF backup; `ResonanceCarePedestalClient` в Play не клонировался — обход через UIController; MCP: FireClient → 1/1 Ready PASS 2026-07-27
+- **Квест 301 пьедестал**: E на сервере зовёт `DoResonanceCareBF` (не только клиент); MCP smoke 301→Ready→turn-in→302 PASS 2026-07-27
+- **Квест 301 пьедестал vs UI Уход** (попытка): пьедестал → `RequestPedestalCare` → `ResonanceCarePedestalClient` → тот же `FireServer("Care")`, что кнопка UI; `FromPedestal` пушит CareSpirit — **на Play у игрока пьедестал всё ещё FAIL**; UI Уход — PASS (см. `NEXT-SESSION.md`)
+- **Квест 301 шаги 3–4 (пьедестал → сдача)**: `ResonanceCareService` больше не дублировал Source (старый промпт на Bowl + LoS); Care идёт через `DoResonanceCareBF`; прогресс квеста через `UpdateQuestProgressBF`; промпт на Base, LoS=false, dist=12; `GetActiveQuests` tonumber + ReadyToTurnIn dual-key — smoke MCP OK, Play pedestal FAIL
+- **Квест 301 с пьедестала Уход**: `UpdateProgress` для CareSpirit (битый `end` у CollectItem), tonumber ключей квеста, `GetOrCreateQuestSystem` в `_G.UpdateQuestProgress` + сразу `ActiveQuests`; повторный E / уход уже сегодня всё равно засчитывает цель; при взятии 301 если Care уже был — цель сразу 1/1
+- **Пьедестал Уход/Закалка «не качает»**: после успеха UI мержит Bond/Temper в `PlayerData` и обновляет карточку духа; в «Состоянии» видны бонусы закалки; Temper без выбранного духа больше не молчит; Care с пьедестала пробует лакомство, если бесплатный уход уже был
+- **Квест 302 после 301**: после сдачи UI не обновлял «Доступные» — теперь `GetQuests` + `OpenQuestUI` на вкладку Available; `tonumber(QuestId)` + `hasQuestFlag` для prereq
+- **Пьедесталы у Мики**: Care/Temper отодвинуты (~26 studs, offset ±22/+14), `MaxActivationDistance=8`, LoS — больше не срабатывают при разговоре с Микой
+- **Уход/Закалка «ничего не происходит»**: кнопки берут активного духа по умолчанию + уведомление; пьедестал Care идёт через `_G.RoS_DoResonanceCare` (те же данные, что GameManager)
+- **Квест 301 у Мики**: убран auto-accept при входе (квест пропадал из «Доступные»); резонанс 301–303 сортируются сверху списка у Мики
+- **Catch trap FX**: спавн ловушки при поимке — fallback на ServerStorage + procedural neon «ЛОВУШКА», видимость частей, pcall place/Clear; больше не пропадает молча
+- **DataStoreManager**: восстановлен повреждённый Source (syntax error L47 ломал весь GameManager) — NormalizeCurrency/NormalizeSpirits + корректный стартовый дух с Bond/Temper; UpdateData тоже нормализует spirits
+- **UIController**: при повторном клоне StarterGui уничтожает старый `RealmOfSpiritsUI` (больше не два HUD)
+- **ArenaPortalService**: лог wire только один раз (без спама в Output)
+
+### Known issues
+- _(пусто)_ — квест 301 pedestal: server `DoResonanceCareBF` на Triggered; MCP smoke 301→care→turn-in→302 PASS 2026-07-27 (нужен Play-подтверждение у игрока)
+
+### Changed
+- **PASS UX**: золотая кнопка «Сезон · N жетонов» в **левом нижнем** углу; в панели — «Как получить жетоны»; счётчик обновляется сразу после боя/FullSync
+- **Care pedestal feedback**: при Уходе — карточка прогресса BondXp (полоска), список ачивок (Уход дня / Bond↑ / квест), пульсация activity bar и QuestTracker
+- **Spawn void (пустое небо)**: `CharacterAutoLoads=true` + retry `LoadCharacter` + `PivotTo` на SpawnLocation Haven `(-25,1.5,18)` — персонаж больше не зависает камерой в skybox
+- **Spawn/Lighting**: убраны дубли Sky/Atmosphere (Coast Haze) — фикс магента-заливки; Spawn на полу Haven; телепорт на SpawnLocation при CharacterAdded
+- **Spawn**: `SpawnPosition` / SpawnLocation перенесены в **Genkan** `(-25, 1, -6)` — больше не у Мики снаружи (`Z=-45`)
+- **Economy rollout P0–P3**: unit smoke PASS в Studio (shop cap, gold sinks, battle copper scaling, quests 301/302 + ItemsChance, SeasonLiveOps) — см. `ECONOMY-ROLLOUT.md`
+- **Economy P0–P3**: temper stone 200c + cap 3/day; XP scroll 80c/+120; crystals unsellable; gold sinks 201–203; Care treat 30%; battle copper 30→20 by level; `SeasonLiveOps` tokens/BP soft-only — см. `ECONOMY-BALANCE.md`
+- **Мика QuestUI**: панель квестов — `BillboardGui` над головой (не перекрывает образ); камера на корпус; убран tween 700×500
+- **Мика QuestUI**: панель в ScreenGui с clamp в viewport (не уезжает за край); при нехватке места сверху — справа от Мики; X всегда доступен; Esc закрывает
+- **Мика interact**: стандартный ProximityPrompt (`Default`) снова виден; якорь **над головой** (по mesh AABB, без Custom/TalkHint)
+- **Lighting**: приглушено солнце — Brightness 2.6→**1.35**, Exposure **-0.35**, bloom/sun rays/coast glare слабее (`ensureHavenMoodLighting`)
+- **Ground level pass**: удалён второй Baseplate (top Y=1); DirtRoad/Haven Floor/City plaza-sidewalk-alley на Y=0; trails pinned; TourbillonCar на землю; билдеры больше не поднимают pads на 1.05/1.08
+- **Мика (QuestMaster)**: mesh regen v4 — face по `mika-face-pink-bob.png` (pastel pink bob, dark pink eyes) + pink/black cyber suit; `(-12,-38)`, prompt сохранён
+
+### Added
+- **Otaku Haven CityDistrict** (v2): enterable shop shells (doorway + floor/walls/ceiling + interior props), shops set back behind sidewalks (not on paths); Akihabara-style kanban/noren/striped awnings/chochin/spill light; alleys keep walk lane clear; `OtakuCityDistrict` + `OtakuHavenBuilder.Build()`; Spawn/Mika/zones/road unchanged
+- **CityDistrict shop scale**: doorway clear **8 studs** (R15), width ~6.7; shells ~16×12×14 (was ~11×7.5)
+- **CityDistrict v3**: townhouses (pitched roof, porch, 2F windows) instead of bus-stop shells; doors flipped to **outer** sides; houses on road flanks (not on arena path); **PlayerGarage** (~30×16×24) west of south plaza with 4 car bays
+- **PlayerGarage**: отодвинут на **50 studs** дальше от Haven (`center.X - 98`)
+- **PlayerGarage**: коробка — глухие левая/правая (перпендикулярны стеклу) + стеклянные передняя/задняя с раздвижными дверями; ориентация по FaceDir
+- **CityDistrict houses v6**: вдоль Transition-дороги к морю; дверь на **E** (ProximityPrompt); окна — проёмы со стеклом Transparency 0.88 (видно изнутри)
+- **CityDistrict houses**: фасад и стены — единая кирпичная коробка (одна толщина/цвет/плоскость; углы сходятся)
+- **CityDistrict houses**: ориентация коробки — Front ∥ Back, Sides ⊥ (задняя стена больше не как боковая)
+- **CityDistrict houses**: fix client Play — `frontAt` был left-handed CFrame (det=-1), после старта Look сбрасывался в -Z; теперь `wallAt` right-handed
+- **CityDistrict houses**: крыша — скат вдоль FaceDir; окна — проёмы + тонкая рамка (без чёрной пластины); дверь — только косяки, виден интерьер
+- **CityDistrict houses**: анти-z-fight (стекло/рамка разведены, косяки в проёме, пол выше фундамента); стены/дверь SmoothPlastic; окна плотнее (`winT` 0.55→**0.28**)
+- **CityDistrict houses**: таблички — `wallAt` всегда с Up вверх (текст больше не вверх ногами)
+- **CityDistrict houses**: дверь после upright-`wallAt` — створка по мировому `right` (`xSign`), снова в проёме
+- **CityDistrict houses**: полотно двери ≈ проём (5.4×7.9); пальмы Transition/coast у домов убраны
+
+
+- **VenomHollow / #12 Ядовитая Гадюка** (Poison): зона `(280,-160)`, skills 111–113, evo **#112 Василиск-Гидра**, item 112, hunt **212** + trophy 19, SpiritTemplate12/112, trail; ElementChart Poison
+- **Moonwell / #11 Лунный Кролик** (Moon): зона `(-220,-160)`, skills 101–103, evo **#111 Цукуёми-Страж**, item 111, hunt **211** + trophy 18, SpiritTemplate11/111, trail + billboard; ElementChart Moon
+- **MossGlade / #10 Моховой Олень** (Nature): зона `(50,-200)`, skills 91–93, evo **#110 Древний Энт**, item 110, hunt **210** + trophy 17, SpiritTemplate10/110, trail + billboard; ElementChart Nature
+- **GaleCliff / #9 Ветряной Лис** (Wind): зона `(-140,180)`, skills 81–83, evo **#109 Буревой Кицунэ**, item 109, hunt **209** + trophy 16, SpiritTemplate9/109, trail + billboard; ElementChart Wind
+- **ForceCatchBF** (Studio MCP QA): grant catch + `CatchSpecificSpirit` progress без RNG / interaction lock
+- **AshGarden / #8 Пепельный Саламандр**: зона `(175,50)`, skills 71–73, evo **#108 Инферно-Дракон**, item 108, hunt **208** + trophy 15, SpiritTemplate8/108, trail + billboard
+- **SpiritTemplate107** (Горный Титан): AI mesh + preview @ StoneBasin; UI icon ⛰️; Scale ~5.2
+- **CoastWave** (`StarterPlayerScripts`): лёгкий bob пены/воды CoastalShowcase
+- **CoastalShowcase**: береговая линия сглажена; пальмы убраны из воды; пена прибоя накатывается/откатывается на **±3 studs** (`CoastWave`)
+- **CoastalShowcase**: песок/wet без щелей (перекрытие полос); прибой явный — накат ~5.5 studs, растяжение пены, wet/water в такт (`CoastWave`)
+- **CoastalShowcase**: пальмы убраны из воды/прибоя; Transition Ground — плавный градиент трава → сухая → песок (цвет/материал/стык с пляжем)
+- **StoneBasinTrail** + billboard «Каменный бассейн» — wayfinding от Haven к Earth habitat
+- **EditPreviews** folder: SpiritPreview6/7/107 убраны с корня Workspace
+- **Earth #7 Каменный Голем**: StoneBasin `(-80,-120)`, skills 61–63, evo #107 Горный Титан, item 107, hunt 207 + trophy 14, SpiritTemplate7 + habitat; ZoneSystem/Controller/Music wired
+- **PalmSway** (`StarterPlayerScripts`): листья пальм CoastalShowcase покачиваются от «ветра» (RenderStepped)
+- **CoastalShowcase**: anti z-fighting на пляже — без X-overlap песка, слои Y (sand/wet/path/water), transition под песком на берегу, Reflectance воды снижен
+- **MistPond / Водный Карп**: зона и spawn перенесены в **Прибрежное море** у CoastalShowcase `(30, 2, -880)`; старый пруд у Combat убран; hunt 203 / кристаллы 106 / Swim bounds обновлены
+- **CoastalShowcase** (workspace): anime coastal strip **1000 studs** south of map (`Z≈-750`); approach from Haven: **sand/palms first → shore → sea**; Terrain Water for swimming + turquoise visual overlay; ~73 low-poly palms + rocks; modular `PalmTree_Modular`; warm cartoon Lighting; ViewPad among palms @ `(0, 0.6, -680)`; **Baseplate 2048**; плавный `Transition`: city fringe → meadow → dry grass → dunes → beach (S-curve path cobble→sand, hills, bushes→palms, trailhead у спавна)
+- **SpiritTrap**: только как предмет рюкзака (Id=1); шаблон `SpiritTemplates.SpiritTrapTemplate`. По кнопке **Ловить** сервер ставит ловушку **под духа** и играет анимацию поимки (struggle → втягивание); успех/провал; превью в мире убрано
 - **Путь Охотника** quest chain 201–206 (`Type=Hunt`, `CatchSpecificSpirit` by HuntOrder): XP/coins/reputation + habitat trophies (UniqueItems 8–13) + element crystals; wire GameManager catch → progress; QuestUI/HUD/Client markers
 - Spirit habitats spread across map for future hunt-quest chain: `SpiritHabitats` + `ZoneConfig.SpiritHabitats` (HuntOrder 1–6); pockets FrostRidge / ShadowHollow / StormSpire / DawnMeadow (+ MistPond); crystals by element near each; baseplate 800
+- **SpiritTemplate106** (Цунами-Карп): светлый pearl koi по `ref_water_carp_light.png` — AI mesh + scale ~4.5; preview у MistPond; RS/SS templates; polish pass (re-gen Studio mesh)
 - MistPond PvE pocket (north of Akihabara Combat): ZoneConfig/ZoneSystem/Music/WorldSpawner/WorldLoot; water spirit **Водный Карп** (id 6) + **Цунами-Карп** (106); water skills 51–53; item 106; SpiritTemplate6; workspace MistPond built in Edit
 - MistPond wayfinding: neon water + 28-stud beacon + AlwaysOnTop billboard; path from Combat north with «ПРУД ↑»; gate sign; spawn on shore
 - MistPond visual: Japanese sand-shore pond (glass water, rocks, ishidōrō lantern); stepping stones from Combat; removed text signs/billboards/neon beacon
@@ -21,8 +106,53 @@
 - `PlayerInteractController`: единый UI у игрока — кнопки **Обмен** / **Дуэль** рядом, описание снизу; T/Y; ProximityPrompt у Trade/Duel отключены; trade range 22
 
 ### Fixed
+- **fullSyncCooldown**: объявление рядом с `activeBattles` (PlayerRemoving больше не падает на nil)
+- **RequestFullSync**: cooldown 1.5s (anti-spam)
+- **SetActiveSpirit / Evolve**: `math.floor` индекс
+- **DataStore**: `ProcessedReceipts = {}` в default data
+- **WorldLoot**: claim-флаг до getPlayerData (anti race)
+- **NPC Trade GetShop/Buy/Sell**: только Safe/Haven или ≤45 studs у `ShopEntrance` (Model → BasePart)
+- **GetPlayerDataBF**: `IsStudio()` only (как остальные QA BF)
+- **Tourbillon DoorToggle**: HRP ≤22 studs от chassis
+- **CatchSpirit**: обязательна world-модель + `ValidateSpiritTarget`; иначе Error+FullSync (закрыт remote-farm без instanceId)
+- **NPC Trade Buy/Sell**: `quantity` clamp 1–99 (`tonumber`/`floor`)
+- **ProcessReceipt**: идемпотентность по `PurchaseId` (`ProcessedReceipts`)
+- **Battle Start**: цель только через TargetInstanceId + range (убран FindSpiritModel fallback)
+- **ArenaPortal**: нет портала или далеко → return (не телепорт)
+- **Catch Error/Fail**: клиент `RequestFullSync`; сервер handler на DataSync
+- **PvP**: бой на `ActiveSpiritIndex` (не всегда Spirits[1])
+- **QA BF**: ForceCatchBF / PrepareEvoBF / EvolveSpiritBF → `IsStudio()` only
+- **Robux ProcessReceipt**: конец FOMO-сезона больше не делает `PurchaseGranted` без награды — окно продлевается (как coin gacha), иначе `NotProcessedYet`
+- **Активный дух**: `ActiveSpiritIndex` в DataStore; бой берёт серверный индекс (не клиентский spoof); **Q** → `CycleActiveSpirit`; attrs `ActiveSpiritIndex`/`ActiveSpiritName`
+- **CoastWave**: poll + fallback по именам Foam_/Water_ (больше не `loaded 0`)
+- **DisplayOrder**: RealmOfSpiritsUI=100, ZoneUI=150, QuestUI=200 (поверх = Haven/trade/duel)
+- **Docs**: экспорт `GameManager.lua` + `DataStoreManager`; `battle_sanity_check` fail если нет GameManager
+- **AI-меши (голем/олень/лис и др.)**: при wander падали на бок — `CreateSpiritModel` якорит все BasePart (`Anchored` + `CanCollide=false` как у классических шаблонов); `SpiritAnimation.MoveStep` всегда `lookAt(..., Vector3.yAxis)`
+- **PalmSway**: fronds **770** (было 0) — pivot без Frond_, poll до стабильной репликации CoastalShowcase
+- **Catch polish**: `EnsureModelPrimaryPart` для AI-мешей; unlock снова включает wander; 5s safety unlock Dying/InteractionLocked; клиент не таргетит locked духов
+- Habitat trails: ярче neon Path_/TrailPost (GaleCliff/MossGlade/Ash/Stone)
+- **Путь Охотника X** Play QA **PASS** (2026-07-26): accept → catch #10 → turn-in; UniqueItem 17 + 3×110
+- **Evo #10→#110** Play QA **PASS** (2026-07-26): Древний Энт; SkillIds 91–93
+- Hunt **210** Prerequisites восстановлены `{209}` после temp-clear для QA
+- **Путь Охотника IX** Play QA **PASS** (2026-07-26): accept → catch #9 → turn-in; UniqueItem 16 + 3×109
+- **Evo #9→#109** Play QA **PASS** (2026-07-26): Буревой Кицунэ; SkillIds 81–83
+- Hunt **209** Prerequisites восстановлены `{208}` после temp-clear для QA
+- **Путь Охотника VIII** Play QA **PASS** (2026-07-26): accept → catch #8 → turn-in; UniqueItem 15 + 3×108
+- **PrepareEvoBF**: выставляет `Stats.EnemiesDefeated` (EvolutionSystem считает глобальные победы, не `spirit.EnemiesDefeated`)
+- Hunt **208** Prerequisites восстановлены `{207}` после temp-clear для QA
+- **Evo #7→#107 / #8→#108** Play QA **PASS** (2026-07-26): PrepareEvoBF + EvolveSpiritBF → Горный Титан / Инферно-Дракон
+- **Путь Охотника VII** Play QA **PASS** (2026-07-25): accept → catch Каменный Голем (StoneBasin) → turn-in; UniqueItem 14 + 3× item 107
+- **BattleArena вход/выход**: `ProximityPrompt.Triggered` из Builder.Build не сохранялся в place — `WirePortals` + `ArenaPortalService`; RemoteEvent `ArenaPortal` по E; Touched/Click; `PivotTo`; портал крупнее + billboard `[E]`
+- Мика (QuestMaster): больше не лежит на боку — убран `CFrame.lookAt` (ломал procedural риг); upright по AABB + yaw-only + pin к земле; baseplate top = Y0; WorldSpawner + QuestMasterBehavior
+- Hunt `CatchSpecificSpirit`: не сидится из уже имеющихся духов (стартовый кот ≠ поимка в зоне) — иначе 201 сразу ReadyToTurnIn
 - Spirit ground place: raycast ignores `BattleArena` dome (RoofRing) so habitats outside Combat don’t spawn on arena roof
 - MistPond Water Carp **Play QA PASS** (2026-07-24): Swim wander в пруду, хвост машет (4 parts), без console errors / preview artifacts
+- **Evo QA #6→#106 PASS** (2026-07-25): L12 + 5× водный кристалл + 12 battles → Цунами-Карп; SkillIds 51–53; unlocked «Цунами»; SpiritTemplate106
+- **AcceptQuest**: отказ если квест уже в `CompletedQuests` («Квест уже выполнен»)
+- **Путь Охотника I–VI** Play QA **PASS** (2026-07-25 non-stop): 201→206; UniqueItems 8–13; Level 6 / Rep~245
+- **Путь Охотника III** Play QA **PASS** (2026-07-25): accept → catch Водный Карп (MistPond) → turn-in; unlocks 204
+- **Путь Охотника II** Play QA **PASS** (2026-07-25): accept → catch Ледяная Птица (FrostRidge) → turn-in; unlocks 203
+- **Путь Охотника I** Play QA **PASS** (2026-07-24 evening): accept → catch Fire Cat → turn-in → UniqueItem 8 + XP/coins; unlocks 202
 - P2 PvP vertical slice **PASS** (Local Server 2p, 2026-07-23): Haven challenge, interact UI Обмен/Дуэль, rematch/origin return
 - Studio PvPDuelSystem was missing spirit visuals/freeze vs docs mirror — full Source sync (setupDuelVisuals, freeze, rematch, origin return)
 - PvP duel rematch/challenge range 80 studs (pads ~56 apart); spirit duel visuals between pads; freeze players on pads during duel; `DuelEnd` + battle `End` clears client `inDuel`

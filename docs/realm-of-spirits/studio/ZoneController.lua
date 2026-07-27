@@ -14,6 +14,7 @@ local prepHintShown = false
 local gui = Instance.new("ScreenGui")
 gui.Name = "ZoneUI"
 gui.ResetOnSpawn = false
+gui.DisplayOrder = 150
 gui.Parent = player:WaitForChild("PlayerGui")
 
 local banner = Instance.new("TextLabel")
@@ -73,19 +74,29 @@ local MESSAGES = {
 	Exit = "Выход в боевую зону: Акихабара",
 	Combat = "Акихабара — Combat Zone",
 	Akihabara = "Акихабара — Combat Zone",
-	MistPond = "Туманный пруд — Водный Карп",
+	MistPond = "Прибрежное море — Водный Карп",
 	FrostRidge = "Морозный хребет — Ледяная Птица",
 	ShadowHollow = "Теневая лощина — Теневой Пёс",
 	StormSpire = "Грозовой шпиль — Грозовой Дракон",
 	DawnMeadow = "Луг рассвета — Световой Единорог",
+	StoneBasin = "Каменный бассейн — Каменный Голем",
+	AshGarden = "Пепельный сад — Пепельный Саламандр",
+	Moonwell = "Лунный колодец — Лунный Кролик",
+	VenomHollow = "Ядовитое ущелье — Ядовитая Гадюка",
+	SandDunes = "Песчаные дюны — Пустынный Скорпион",
 }
 
 local HABITAT_BANNERS = {
-	MistPond = {Title = "Туманный пруд", Color = Color3.fromRGB(80, 160, 220)},
+	MistPond = {Title = "Прибрежное море", Color = Color3.fromRGB(80, 160, 220)},
 	FrostRidge = {Title = "Морозный хребет", Color = Color3.fromRGB(140, 210, 255)},
 	ShadowHollow = {Title = "Теневая лощина", Color = Color3.fromRGB(140, 90, 200)},
 	StormSpire = {Title = "Грозовой шпиль", Color = Color3.fromRGB(230, 220, 100)},
 	DawnMeadow = {Title = "Луг рассвета", Color = Color3.fromRGB(255, 240, 180)},
+	StoneBasin = {Title = "Каменный бассейн", Color = Color3.fromRGB(180, 140, 90)},
+	AshGarden = {Title = "Пепельный сад", Color = Color3.fromRGB(255, 100, 40)},
+	Moonwell = {Title = "Лунный колодец", Color = Color3.fromRGB(180, 195, 255)},
+	VenomHollow = {Title = "Ядовитое ущелье", Color = Color3.fromRGB(90, 180, 60)},
+	SandDunes = {Title = "Песчаные дюны", Color = Color3.fromRGB(210, 170, 90)},
 }
 
 local SLIPPER_COLOR = Color3.fromRGB(255, 170, 200)

@@ -220,7 +220,7 @@ local function getSpiritModelFromInstance(inst)
 	local folder = getSpiritsFolder()
 	if not folder then return nil end
 	local model = inst:FindFirstAncestorOfClass("Model")
-	if model and model.Parent == folder and not model:GetAttribute("Dying") then
+	if model and model.Parent == folder and not model:GetAttribute("Dying") and not model:GetAttribute("InteractionLocked") then
 		return model
 	end
 	return nil
@@ -242,7 +242,7 @@ local function getSpiritFromRay(screenPoint)
 
 	local include = {}
 	for _, spirit in ipairs(folder:GetChildren()) do
-		if spirit:IsA("Model") and not spirit:GetAttribute("Dying") then
+		if spirit:IsA("Model") and not spirit:GetAttribute("Dying") and not spirit:GetAttribute("InteractionLocked") then
 			for _, desc in ipairs(spirit:GetDescendants()) do
 				if desc:IsA("BasePart") and desc.CanQuery then
 					table.insert(include, desc)
@@ -268,7 +268,7 @@ local function getSpiritFromScreenProximity(screenPoint, maxPixels)
 	local px, py = screenPoint.X - inset.X, screenPoint.Y - inset.Y
 	local best, bestDist = nil, maxPixels or 100
 	for _, model in ipairs(folder:GetChildren()) do
-		if model:IsA("Model") and not model:GetAttribute("Dying") then
+		if model:IsA("Model") and not model:GetAttribute("Dying") and not model:GetAttribute("InteractionLocked") then
 			local pos, onScreen = camera:WorldToViewportPoint(getSpiritPosition(model))
 			if onScreen and pos.Z > 0 then
 				local dx, dy = pos.X - px, pos.Y - py
@@ -288,8 +288,17 @@ local function pickSpiritAtMouse()
 	return getSpiritFromRay(pos) or getSpiritFromScreenProximity(pos, 90)
 end
 
+local function nearArenaEnterPortal()
+	local root = character and character:FindFirstChild("HumanoidRootPart")
+	if not root then return false end
+	local arena = workspace:FindFirstChild("BattleArena")
+	local portal = arena and arena:FindFirstChild("EntrancePortal", true)
+	if not portal or not portal:IsA("BasePart") then return false end
+	return (root.Position - portal.Position).Magnitude <= 20
+end
+
 local function getTargetSpirit()
-	if selectedSpirit and selectedSpirit.Parent and not selectedSpirit:GetAttribute("Dying") then
+	if selectedSpirit and selectedSpirit.Parent and not selectedSpirit:GetAttribute("Dying") and not selectedSpirit:GetAttribute("InteractionLocked") then
 		if isWithinRange(selectedSpirit) then return selectedSpirit end
 	end
 	return nil
@@ -307,6 +316,7 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
 
 	-- E - Поймать выбранного духа
 	if input.KeyCode == Enum.KeyCode.E then
+		if nearArenaEnterPortal() then return end
 		local target = getTargetSpirit()
 		if target then TryCatchSpirit(target) end
 	end
@@ -332,6 +342,25 @@ end)
 -- Система ловли духов
 -- ============================================
 
+local function getNearestCatchableSpirit()
+	local folder = getSpiritsFolder()
+	if not folder then return nil end
+	local root = character and character:FindFirstChild("HumanoidRootPart")
+	if not root then return nil end
+	local best, bestDist = nil, MAX_TARGET_DISTANCE
+	for _, child in ipairs(folder:GetChildren()) do
+		if child:IsA("Model") and not child:GetAttribute("Dying") and not child:GetAttribute("InteractionLocked") and child:FindFirstChild("SpiritId") then
+			local pos = child:GetPivot().Position
+			local dist = (Vector3.new(pos.X, root.Position.Y, pos.Z) - root.Position).Magnitude
+			if dist <= bestDist then
+				bestDist = dist
+				best = child
+			end
+		end
+	end
+	return best
+end
+
 function TryCatchSpirit(spirit)
 	if not spirit or isInBattle then return end
 	if (_G.GetTrapCount and _G.GetTrapCount() or 0) <= 0 then
@@ -352,9 +381,13 @@ function TryCatchSpirit(spirit)
 	catchRequestId = catchRequestId + 1
 	local requestId = catchRequestId
 
+	if _G.ConsumeLocalTrap then _G.ConsumeLocalTrap() end
+	setTargetHint("Бросаем ловушку...")
+
+	-- Сервер ставит ловушку под духа и играет анимацию поимки
 	CatchSpiritEvent:FireServer(spiritId.Value, instanceId)
 
-	task.delay(3, function()
+	task.delay(4.5, function()
 		if isCatchPending and catchRequestId == requestId then
 			isInBattle = false
 			isCatchPending = false
@@ -369,8 +402,10 @@ end
 -- ============================================
 
 local function GetPlayerSpiritId()
-	-- В реальной игре здесь бы читался активный дух игрока
-	-- Пока по умолчанию возвращаем 1 (Огненный Кот)
+	local idx = tonumber(player:GetAttribute("ActiveSpiritIndex"))
+	if idx and idx >= 1 then
+		return idx
+	end
 	return 1
 end
 
@@ -603,8 +638,10 @@ end)
 local currentSpiritIndex = 1
 
 function CycleSpirits()
-	-- Здесь будет логика смены активного духа
-	print("Смена духа...")
+	if isInBattle or isCatchPending then
+		return
+	end
+	EvolveSpiritEvent:FireServer("CycleActiveSpirit", {})
 end
 
 -- ============================================
@@ -715,6 +752,14 @@ EvolveSpiritEvent.OnClientEvent:Connect(function(action, data)
 		-- Передаём список духов в UI через атрибут
 		local p = Players.LocalPlayer
 		p:SetAttribute("SpiritListData", game:GetService("HttpService"):JSONEncode(data))
+
+	elseif action == "ActiveSpiritChanged" then
+		if data and data.Success ~= false then
+			local name = (data.Spirit and data.Spirit.Name) or data.Name or "Дух"
+			local idx = data.Index or player:GetAttribute("ActiveSpiritIndex") or 1
+			setTargetHint("Активный дух: " .. name .. "  [" .. tostring(idx) .. "]  ·  Q — сменить")
+			print("[Дух] Активный: " .. name)
+		end
 	end
 end)
 
@@ -754,8 +799,15 @@ player:GetAttributeChangedSignal("BattleRequest"):Connect(function()
 end)
 
 player:GetAttributeChangedSignal("CatchRequest"):Connect(function()
-	local target = getTargetSpirit()
-	if target then TryCatchSpirit(target) end
+	local target = getTargetSpirit() or getNearestCatchableSpirit()
+	if target then
+		if selectedSpirit ~= target then
+			selectSpirit(target)
+		end
+		TryCatchSpirit(target)
+	else
+		setTargetHint("Нет духа рядом для поимки")
+	end
 end)
 
 CatchSpiritEvent.OnClientEvent:Connect(function(success, spiritName)
@@ -784,15 +836,26 @@ DataEvent.OnClientEvent:Connect(function(action, data)
 		for _, s in ipairs(data.Spirits or {}) do
 			caughtSpiritTypeIds[s.Id] = true
 		end
+		if data.ActiveSpiritIndex then
+			player:SetAttribute("ActiveSpiritIndex", data.ActiveSpiritIndex)
+		end
+		local spirits = data.Spirits or {}
+		local idx = tonumber(data.ActiveSpiritIndex) or 1
+		if spirits[idx] and spirits[idx].Name then
+			player:SetAttribute("ActiveSpiritName", spirits[idx].Name)
+		end
 		refreshAllQuestMarkers()
 	elseif action == "SpiritCaught" then
 		exitNormalMode()
 		QuestEvent:FireServer("GetActiveQuests", {})
 	elseif action == "CatchFailed" then
 		exitNormalMode()
+		DataEvent:FireServer("RequestFullSync", {})
 	elseif action == "Error" then
 		exitNormalMode()
-		setTargetHint("")
+		setTargetHint(data and data.Message or "")
+		-- Restore traps / inventory after failed optimistic consume
+		DataEvent:FireServer("RequestFullSync", {})
 	end
 end)
 

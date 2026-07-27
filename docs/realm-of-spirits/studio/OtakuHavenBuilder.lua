@@ -1413,7 +1413,7 @@ local function addAtmosphereDecor(decor, haven, center, half, wallH)
 		pl.Parent = lamp
 	end
 
-	-- мягкий «парковочный» плейсхолдер (соц. статус из GDD — без полноценных машин)
+	-- мягкий «парковочный» плейсхолдер (соц. статус) — детальные машины в CityDistrict
 	for i, ox in ipairs({ -18, 18 }) do
 		makePart({
 			Name = "ParkingPad" .. i,
@@ -1424,30 +1424,40 @@ local function addAtmosphereDecor(decor, haven, center, half, wallH)
 			CanCollide = false,
 			Parent = folder,
 		})
-		makePart({
-			Name = "CarSilhouette" .. i,
-			Size = Vector3.new(4.2, 1.4, 7.5),
-			Position = center + Vector3.new(ox, 1.9, -half - 9),
-			Color = if i == 1 then Color3.fromRGB(180, 200, 220) else Color3.fromRGB(255, 120, 160),
-			Material = Enum.Material.SmoothPlastic,
-			Transparency = 0.15,
-			CanCollide = false,
-			Parent = folder,
-		})
 	end
 end
 
 local function ensureHavenMoodLighting()
+	-- Prevent opaque magenta/fog: only one Sky + one Atmosphere
+	for _, c in ipairs(Lighting:GetChildren()) do
+		if c:IsA("Atmosphere") and c.Name ~= "OtakuHavenAtmosphere" then
+			c:Destroy()
+		elseif c:IsA("Sky") and c.Name ~= "Sky" then
+			c:Destroy()
+		end
+	end
+	for _, name in ipairs({ "CoastColor", "CoastBloom", "CoastSunRays", "CoastAtmosphere", "CoastSky" }) do
+		local e = Lighting:FindFirstChild(name)
+		if e then
+			if e:IsA("Atmosphere") or e:IsA("Sky") then
+				e:Destroy()
+			elseif e:IsA("PostEffect") then
+				e.Enabled = false
+			end
+		end
+	end
+
 	local mood = Lighting:FindFirstChild("OtakuHavenMood")
 	if not mood then
 		mood = Instance.new("ColorCorrectionEffect")
 		mood.Name = "OtakuHavenMood"
 		mood.Parent = Lighting
 	end
-	mood.TintColor = Color3.fromRGB(255, 235, 245)
-	mood.Saturation = 0.12
-	mood.Contrast = 0.05
-	mood.Brightness = 0.03
+	mood.TintColor = Color3.fromRGB(255, 245, 250)
+	mood.Saturation = 0.05
+	mood.Contrast = 0.02
+	mood.Brightness = 0
+	mood.Enabled = true
 
 	local bloom = Lighting:FindFirstChild("OtakuHavenBloom")
 	if not bloom then
@@ -1455,9 +1465,42 @@ local function ensureHavenMoodLighting()
 		bloom.Name = "OtakuHavenBloom"
 		bloom.Parent = Lighting
 	end
-	bloom.Intensity = 0.22
+	bloom.Intensity = 0.12
 	bloom.Size = 24
-	bloom.Threshold = 1.6
+	bloom.Threshold = 2.0
+
+	Lighting.Brightness = 2
+	Lighting.ExposureCompensation = 0
+	Lighting.EnvironmentDiffuseScale = 0.5
+	Lighting.EnvironmentSpecularScale = 0.3
+	Lighting.OutdoorAmbient = Color3.fromRGB(140, 135, 150)
+	Lighting.Ambient = Color3.fromRGB(120, 115, 130)
+	Lighting.FogEnd = 100000
+
+	local atmosphere = Lighting:FindFirstChild("OtakuHavenAtmosphere")
+	if not atmosphere then
+		atmosphere = Instance.new("Atmosphere")
+		atmosphere.Name = "OtakuHavenAtmosphere"
+		atmosphere.Parent = Lighting
+	end
+	atmosphere.Density = 0.22
+	atmosphere.Offset = 0.1
+	atmosphere.Color = Color3.fromRGB(200, 190, 210)
+	atmosphere.Decay = Color3.fromRGB(120, 100, 140)
+	atmosphere.Glare = 0.08
+	atmosphere.Haze = 0.4
+
+	local globalBloom = Lighting:FindFirstChild("Bloom")
+	if globalBloom and globalBloom:IsA("BloomEffect") then
+		globalBloom.Intensity = 0.25
+		globalBloom.Size = 18
+		globalBloom.Threshold = 2.2
+	end
+	local sun = Lighting:FindFirstChild("SunRays")
+	if sun and sun:IsA("SunRaysEffect") then
+		sun.Intensity = 0.01
+		sun.Spread = 0.1
+	end
 end
 
 function OtakuHavenBuilder.Build()
@@ -1477,7 +1520,7 @@ function OtakuHavenBuilder.Build()
 	decor.Parent = haven
 
 	local center = ZoneConfig.HavenCenter
-	local floorY = 1.0
+	local floorY = 0.5
 	local floorSize = 76
 	local half = floorSize / 2
 	local wallH, wallT = 11, 1
@@ -1536,7 +1579,7 @@ function OtakuHavenBuilder.Build()
 		Parent = haven,
 	})
 
-	addGenkanMat(decor, Vector3.new(ZoneConfig.Zones.Genkan.Center.X, 1.55, ZoneConfig.Zones.Genkan.Center.Z))
+	addGenkanMat(decor, Vector3.new(ZoneConfig.Zones.Genkan.Center.X, 1.05, ZoneConfig.Zones.Genkan.Center.Z))
 
 	local bell = makePart({
 		Name = "EntranceBell",
@@ -1644,6 +1687,15 @@ function OtakuHavenBuilder.Build()
 
 	OtakuHavenBuilder.BuildDirtRoadToArena()
 
+	local buildCity = require(script.Parent:WaitForChild("OtakuCityDistrict"))({
+		makePart = makePart,
+		addPoster = addPoster,
+		addStandee = addStandee,
+		addLEDDisplay = addLEDDisplay,
+		ZoneConfig = ZoneConfig,
+	})
+	buildCity(haven, center, half)
+
 	return haven
 end
 
@@ -1703,18 +1755,25 @@ function OtakuHavenBuilder.BuildDirtRoadToArena()
 	if arena then table.insert(rayExclude, arena) end
 
 	local function groundY(x, z)
+		local bestBp, bestArea = nil, -1
+		for _, d in ipairs(workspace:GetChildren()) do
+			if d.Name == "Baseplate" and d:IsA("BasePart") then
+				local area = d.Size.X * d.Size.Z
+				if area > bestArea then
+					bestBp = d
+					bestArea = area
+				end
+			end
+		end
+		local baseTop = if bestBp then bestBp.Position.Y + bestBp.Size.Y * 0.5 else 0
 		local params = RaycastParams.new()
 		params.FilterType = Enum.RaycastFilterType.Exclude
 		params.FilterDescendantsInstances = rayExclude
 		local hit = workspace:Raycast(Vector3.new(x, 60, z), Vector3.new(0, -120, 0), params)
-		if hit and hit.Instance.Transparency < 0.9 then
+		if hit and hit.Instance.Transparency < 0.9 and hit.Position.Y <= baseTop + 0.2 then
 			return hit.Position.Y
 		end
-		local bp = workspace:FindFirstChild("Baseplate")
-		if bp and bp:IsA("BasePart") then
-			return bp.Position.Y + bp.Size.Y * 0.5
-		end
-		return 0
+		return baseTop
 	end
 
 	local function catmullRom(p0, p1, p2, p3, t)
@@ -1770,7 +1829,7 @@ function OtakuHavenBuilder.BuildDirtRoadToArena()
 		end
 		dir = Vector3.new(dir.X, 0, dir.Z)
 		if dir.Magnitude < 1e-3 then dir = Vector3.new(1, 0, 0) end
-		local y = groundY(flat.X, flat.Z) + THICK * 0.5 + 0.08
+		local y = groundY(flat.X, flat.Z) + THICK * 0.5
 		return Vector3.new(flat.X, y, flat.Z), dir.Unit
 	end
 
@@ -1844,8 +1903,8 @@ function OtakuHavenBuilder.BuildDirtRoadToArena()
 		end
 	end
 
-	local yHaven = groundY(-25, 70) + THICK * 0.5 + 0.08
-	local yArena = groundY(116, 40) + THICK * 0.5 + 0.08
+	local yHaven = groundY(-25, 70) + THICK * 0.5
+	local yArena = groundY(116, 40) + THICK * 0.5
 	part({ Name = "HavenCap", Size = Vector3.new(ASPHALT_W + SIDEWALK_W * 2, THICK, 7), Position = Vector3.new(-25, yHaven, 70), Color = ASPHALT })
 	part({ Name = "ArenaCap", Size = Vector3.new(ASPHALT_W + SIDEWALK_W * 2, THICK, 8), Position = Vector3.new(116, yArena, 40), Color = ASPHALT })
 

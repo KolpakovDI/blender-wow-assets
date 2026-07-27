@@ -129,6 +129,13 @@ local HABITAT_MUSIC_KEYS = {
 	ShadowHollow = true,
 	StormSpire = true,
 	DawnMeadow = true,
+	StoneBasin = true,
+	AshGarden = true,
+	GaleCliff = true,
+	MossGlade = true,
+	Moonwell = true,
+	VenomHollow = true,
+	SandDunes = true,
 }
 
 local function resolveZoneKey(zoneType, detail)

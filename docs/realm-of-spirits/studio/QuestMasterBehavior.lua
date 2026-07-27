@@ -1,4 +1,4 @@
-﻿local Players = game:GetService("Players")
+local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local questMaster = script.Parent
 
@@ -73,16 +73,6 @@ end
 ensureLive2D()
 showEmotion("Idle", 0.1)
 
-local function buildQuestMasterCFrame(pos, faceDir)
-	local dir = Vector3.new(faceDir.X, 0, faceDir.Z)
-	if dir.Magnitude < 0.01 then
-		dir = Vector3.new(1, 0, 0)
-	else
-		dir = dir.Unit
-	end
-	return CFrame.lookAt(pos, pos + dir, Vector3.yAxis)
-end
-
 local function getFaceDir()
 	local attr = questMaster:GetAttribute("FaceDir")
 	if typeof(attr) == "Vector3" then
@@ -97,28 +87,110 @@ local function setFaceDir(dir)
 	questMaster:SetAttribute("FaceDir", flat.Unit)
 end
 
+-- Procedural Mika: CFrame.lookAt кладёт риг на бок. Upright = max AABB axis → Y, затем yaw.
+local function makeBodyUpright()
+	local function aabb()
+		local minV = Vector3.new(math.huge, math.huge, math.huge)
+		local maxV = Vector3.new(-math.huge, -math.huge, -math.huge)
+		for _, desc in ipairs(questMaster:GetDescendants()) do
+			if desc:IsA("BasePart") and desc.Name ~= "QuestInteractAnchor" then
+				local cf = desc.CFrame
+				local half = desc.Size * 0.5
+				for _, ox in ipairs({-half.X, half.X}) do
+					for _, oy in ipairs({-half.Y, half.Y}) do
+						for _, oz in ipairs({-half.Z, half.Z}) do
+							local w = cf:PointToWorldSpace(Vector3.new(ox, oy, oz))
+							minV = Vector3.new(math.min(minV.X, w.X), math.min(minV.Y, w.Y), math.min(minV.Z, w.Z))
+							maxV = Vector3.new(math.max(maxV.X, w.X), math.max(maxV.Y, w.Y), math.max(maxV.Z, w.Z))
+						end
+					end
+				end
+			end
+		end
+		return minV, maxV
+	end
+	for _ = 1, 4 do
+		local minV, maxV = aabb()
+		if minV.X > maxV.X then return end
+		local span = maxV - minV
+		local center = (minV + maxV) * 0.5
+		if span.Y >= span.X * 1.08 and span.Y >= span.Z * 1.08 then
+			return
+		end
+		local pivot = questMaster:GetPivot()
+		local cand
+		if span.X >= span.Z and span.X >= span.Y then
+			cand = { CFrame.Angles(0, 0, math.rad(-90)), CFrame.Angles(0, 0, math.rad(90)) }
+		elseif span.Z >= span.X and span.Z >= span.Y then
+			cand = { CFrame.Angles(math.rad(-90), 0, 0), CFrame.Angles(math.rad(90), 0, 0) }
+		else
+			questMaster:PivotTo(CFrame.new(center) * CFrame.Angles(math.pi, 0, 0) * CFrame.new(-center) * pivot)
+			continue
+		end
+		local best, bestSy = nil, -1
+		for _, r in ipairs(cand) do
+			questMaster:PivotTo(CFrame.new(center) * r * CFrame.new(-center) * pivot)
+			local mn, mx = aabb()
+			local sy = (mx - mn).Y
+			if sy > bestSy then
+				bestSy = sy
+				best = r
+			end
+			questMaster:PivotTo(pivot)
+		end
+		questMaster:PivotTo(CFrame.new(center) * (best or cand[1]) * CFrame.new(-center) * pivot)
+	end
+end
+
+local function yawToFace(faceDir)
+	local flat = Vector3.new(faceDir.X, 0, faceDir.Z)
+	if flat.Magnitude < 0.01 then
+		flat = Vector3.new(1, 0, 0)
+	else
+		flat = flat.Unit
+	end
+	local pivot = questMaster:GetPivot()
+	local look = Vector3.new(pivot.LookVector.X, 0, pivot.LookVector.Z)
+	local eye = questMaster:FindFirstChild("LeftEye", true)
+	if eye then
+		local el = Vector3.new(eye.CFrame.LookVector.X, 0, eye.CFrame.LookVector.Z)
+		if el.Magnitude > 0.01 then look = el end
+	end
+	if look.Magnitude < 0.01 then
+		look = Vector3.new(0, 0, -1)
+	else
+		look = look.Unit
+	end
+	local angNow = math.atan2(look.X, look.Z)
+	local angWant = math.atan2(flat.X, flat.Z)
+	local delta = angWant - angNow
+	local pos = Vector3.new(pivot.Position.X, pivot.Position.Y, pivot.Position.Z)
+	local rot = pivot - pivot.Position
+	questMaster:PivotTo(CFrame.new(pos) * CFrame.Angles(0, delta, 0) * rot)
+end
+
 local function pinFeetToGround()
 	local groundY = questMaster:GetAttribute("FootGroundY")
 	if typeof(groundY) ~= "number" then
-		groundY = 1.05
+		local bp = workspace:FindFirstChild("Baseplate")
+		groundY = bp and (bp.Position.Y + bp.Size.Y * 0.5 + 0.02) or 0.02
 	end
-	local footBottom = math.huge
+	local minY = math.huge
 	for _, desc in ipairs(questMaster:GetDescendants()) do
-		if desc:IsA("BasePart") and desc.Name == "BootFoot" then
+		if desc:IsA("BasePart") and desc.Name ~= "QuestInteractAnchor" then
 			local cf = desc.CFrame
 			local half = desc.Size * 0.5
 			for _, ox in ipairs({-half.X, half.X}) do
 				for _, oy in ipairs({-half.Y, half.Y}) do
 					for _, oz in ipairs({-half.Z, half.Z}) do
-						local y = cf:PointToWorldSpace(Vector3.new(ox, oy, oz)).Y
-						if y < footBottom then footBottom = y end
+						minY = math.min(minY, cf:PointToWorldSpace(Vector3.new(ox, oy, oz)).Y)
 					end
 				end
 			end
 		end
 	end
-	if footBottom < math.huge then
-		local delta = groundY - footBottom
+	if minY < math.huge then
+		local delta = groundY - minY
 		if math.abs(delta) > 0.001 then
 			questMaster:PivotTo(questMaster:GetPivot() + Vector3.new(0, delta, 0))
 		end
@@ -127,8 +199,9 @@ end
 
 local function applyPose(faceDir)
 	questMaster.PrimaryPart = nil
-	local pos = questMaster:GetPivot().Position
-	questMaster:PivotTo(buildQuestMasterCFrame(Vector3.new(pos.X, pos.Y, pos.Z), faceDir or getFaceDir()))
+	makeBodyUpright()
+	yawToFace(faceDir or getFaceDir())
+	makeBodyUpright()
 	pinFeetToGround()
 	basePivot = questMaster:GetPivot()
 end
@@ -204,7 +277,6 @@ local function ensurePrompt()
 	if not anchor then
 		anchor = Instance.new("Part")
 		anchor.Name = "QuestInteractAnchor"
-		anchor.Size = Vector3.new(2.5, 5, 2.5)
 		anchor.Transparency = 1
 		anchor.Anchored = true
 		anchor.CanCollide = false
@@ -213,8 +285,31 @@ local function ensurePrompt()
 		anchor.Massless = true
 		anchor.Parent = questMaster
 	end
-	local pivot = questMaster:GetPivot()
-	anchor.CFrame = pivot * CFrame.new(0, 2.5, 0)
+	local maxY, sumX, sumZ, n = -math.huge, 0, 0, 0
+	for _, d in ipairs(questMaster:GetDescendants()) do
+		if d:IsA("BasePart") and d.Name ~= "QuestInteractAnchor" and d.Transparency < 1 then
+			local cf, sz = d.CFrame, d.Size
+			local hy = math.abs(cf.UpVector.Y) * sz.Y * 0.5
+				+ math.abs(cf.RightVector.Y) * sz.X * 0.5
+				+ math.abs(cf.LookVector.Y) * sz.Z * 0.5
+			maxY = math.max(maxY, cf.Position.Y + hy)
+			sumX += cf.Position.X
+			sumZ += cf.Position.Z
+			n += 1
+		end
+	end
+	local ax, headTop, az
+	if n == 0 then
+		local cf, sz = questMaster:GetBoundingBox()
+		ax, headTop, az = cf.Position.X, cf.Position.Y + sz.Y * 0.5, cf.Position.Z
+	else
+		ax, headTop, az = sumX / n, maxY, sumZ / n
+	end
+	anchor.Size = Vector3.new(1.2, 1.2, 1.2)
+	anchor.CFrame = CFrame.new(ax, headTop + 0.85, az)
+
+	local hint = anchor:FindFirstChild("TalkHint")
+	if hint then hint:Destroy() end
 
 	local prompt = anchor:FindFirstChild("QuestPrompt")
 	if not prompt then
@@ -227,6 +322,8 @@ local function ensurePrompt()
 	prompt.MaxActivationDistance = 18
 	prompt.RequiresLineOfSight = false
 	prompt.KeyboardKeyCode = Enum.KeyCode.E
+	prompt.Style = Enum.ProximityPromptStyle.Default
+	prompt.UIOffset = Vector2.new(0, 0)
 	prompt.Enabled = true
 	return prompt
 end

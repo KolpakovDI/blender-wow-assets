@@ -20,9 +20,14 @@ local EvolutionEvent = realmFolder:WaitForChild("EvolveSpirit")
 local LevelingEvent = realmFolder:WaitForChild("Leveling")
 local RankEvent = realmFolder:WaitForChild("Rank")
 local TradeEvent = realmFolder:WaitForChild("Trade")
+local ResonanceEvent = realmFolder:WaitForChild("ResonanceEvent")
+local QuestEvent = realmFolder:WaitForChild("Quest")
 
 local SpiritDatabaseModule = require(realmFolder:WaitForChild("SpiritDatabase"))
+local ItemCatalog = require(realmFolder:WaitForChild("ItemCatalog"))
+local SpiritResonance = require(realmFolder:WaitForChild("SpiritResonance"))
 local WoWUITheme = require(realmFolder:WaitForChild("WoWUITheme"))
+local QuestTrackerHud = require(realmFolder:WaitForChild("QuestTrackerHud"))
 local function GetSpiritInfo(id)
 	return SpiritDatabaseModule.GetDisplay(id) or SpiritDatabaseModule.Get(id)
 end
@@ -38,12 +43,16 @@ local SpiritIcons = {
 	[4] = {Color = Color3.fromRGB(200, 200, 100), Emoji = "⚡"},
 	[5] = {Color = Color3.fromRGB(255, 255, 200), Emoji = "✨"},
 	[6] = {Color = Color3.fromRGB(25, 40, 85), Emoji = "🐟"},
+	[7] = {Color = Color3.fromRGB(140, 110, 70), Emoji = "🪨"},
+	[8] = {Color = Color3.fromRGB(220, 90, 40), Emoji = "🦎"},
 	[101] = {Color = Color3.fromRGB(255, 120, 50), Emoji = "🔥"},
 	[102] = {Color = Color3.fromRGB(100, 200, 255), Emoji = "❄️"},
 	[103] = {Color = Color3.fromRGB(100, 50, 150), Emoji = "🌑"},
 	[104] = {Color = Color3.fromRGB(200, 200, 100), Emoji = "⚡"},
 	[105] = {Color = Color3.fromRGB(255, 255, 200), Emoji = "✨"},
 	[106] = {Color = Color3.fromRGB(25, 40, 85), Emoji = "🌊"},
+	[107] = {Color = Color3.fromRGB(160, 130, 80), Emoji = "⛰️"},
+	[108] = {Color = Color3.fromRGB(255, 80, 30), Emoji = "🔥"},
 }
 
 -- ============================================
@@ -59,9 +68,14 @@ local hasDataBeenLoaded = false
 -- ============================================
 
 local function CreateScreenGui()
+	local old = playerGui:FindFirstChild("RealmOfSpiritsUI")
+	if old then
+		old:Destroy()
+	end
 	local screenGui = Instance.new("ScreenGui")
 	screenGui.Name = "RealmOfSpiritsUI"
 	screenGui.ResetOnSpawn = false
+	screenGui.DisplayOrder = 100
 	screenGui.Parent = playerGui
 
 	return screenGui
@@ -145,6 +159,217 @@ end
 -- ============================================
 
 local screenGui = CreateScreenGui()
+
+-- Phase 1: daily Resonance activity bar + quest tracker
+local activityBar = Instance.new("Frame")
+activityBar.Name = "ResonanceActivityBar"
+activityBar.Size = UDim2.fromOffset(210, 28)
+activityBar.Position = UDim2.new(0.5, -105, 0, 8)
+activityBar.BackgroundColor3 = Color3.fromRGB(22, 16, 32)
+activityBar.BackgroundTransparency = 0.15
+activityBar.BorderSizePixel = 0
+activityBar.ZIndex = 20
+activityBar.Parent = screenGui
+do
+	local c = Instance.new("UICorner")
+	c.CornerRadius = UDim.new(0, 8)
+	c.Parent = activityBar
+	local s = Instance.new("UIStroke")
+	s.Color = Color3.fromRGB(180, 140, 70)
+	s.Thickness = 1
+	s.Transparency = 0.3
+	s.Parent = activityBar
+end
+local activityLabel = Instance.new("TextLabel")
+activityLabel.Name = "ActivityLabel"
+activityLabel.Size = UDim2.new(1, -10, 1, 0)
+activityLabel.Position = UDim2.new(0, 5, 0, 0)
+activityLabel.BackgroundTransparency = 1
+activityLabel.Font = Enum.Font.GothamBold
+activityLabel.TextSize = 13
+activityLabel.TextXAlignment = Enum.TextXAlignment.Center
+activityLabel.TextColor3 = Color3.fromRGB(255, 230, 170)
+activityLabel.Text = "Сегодня: Уход ○  Закалка ○"
+activityLabel.ZIndex = 21
+activityLabel.Parent = activityBar
+
+local function RefreshActivityBar(snapshot)
+	local daily = (snapshot and snapshot.ResonanceDaily) or (PlayerData and PlayerData.ResonanceDaily) or {}
+	local care = daily.Care and "✓" or "○"
+	local temper = daily.Temper and "✓" or "○"
+	activityLabel.Text = string.format("Сегодня: Уход %s  Закалка %s", care, temper)
+	activityLabel.TextColor3 = (daily.Care and daily.Temper)
+		and Color3.fromRGB(120, 255, 180)
+		or Color3.fromRGB(255, 230, 170)
+end
+
+local function PulseFrame(frame, color, times)
+	if not frame then return end
+	times = times or 3
+	local stroke = frame:FindFirstChildOfClass("UIStroke")
+	if not stroke then
+		stroke = Instance.new("UIStroke")
+		stroke.Thickness = 2
+		stroke.Parent = frame
+	end
+	local base = stroke.Color
+	local baseT = stroke.Transparency
+	task.spawn(function()
+		for _ = 1, times do
+			stroke.Color = color or Color3.fromRGB(255, 220, 100)
+			stroke.Transparency = 0
+			stroke.Thickness = 3
+			task.wait(0.18)
+			stroke.Transparency = 0.45
+			stroke.Thickness = 1.5
+			task.wait(0.18)
+		end
+		stroke.Color = base
+		stroke.Transparency = baseT
+		stroke.Thickness = 1
+	end)
+end
+
+local careRewardCard
+local function ShowCareRewardFeedback(payload)
+	payload = payload or {}
+	local progress = payload.Progress or {}
+	local achievements = payload.Achievements or {}
+
+	if careRewardCard then
+		careRewardCard:Destroy()
+		careRewardCard = nil
+	end
+
+	local card = Instance.new("Frame")
+	card.Name = "CareRewardCard"
+	card.Size = UDim2.fromOffset(320, 168)
+	card.Position = UDim2.new(0.5, -160, 0.28, 0)
+	card.BackgroundColor3 = Color3.fromRGB(24, 16, 36)
+	card.BackgroundTransparency = 0.05
+	card.BorderSizePixel = 0
+	card.ZIndex = 80
+	card.Parent = screenGui
+	careRewardCard = card
+	do
+		local c = Instance.new("UICorner")
+		c.CornerRadius = UDim.new(0, 12)
+		c.Parent = card
+		local s = Instance.new("UIStroke")
+		s.Color = Color3.fromRGB(255, 200, 90)
+		s.Thickness = 2
+		s.Parent = card
+	end
+
+	local title = Instance.new("TextLabel")
+	title.Size = UDim2.new(1, -20, 0, 28)
+	title.Position = UDim2.new(0, 10, 0, 8)
+	title.BackgroundTransparency = 1
+	title.Font = Enum.Font.GothamBlack
+	title.TextSize = 20
+	title.TextColor3 = Color3.fromRGB(255, 230, 150)
+	title.TextXAlignment = Enum.TextXAlignment.Left
+	title.Text = payload.FromPedestal and "✦ Уход у пьедестала" or "✦ Уход выполнен"
+	title.ZIndex = 81
+	title.Parent = card
+
+	local bond = tonumber(progress.Bond) or 0
+	local bondXp = tonumber(progress.BondXp) or 0
+	local bondNeed = math.max(1, tonumber(progress.BondNeed) or 30)
+	local xpGained = tonumber(progress.XpGained) or SpiritResonance.CARE_BOND_XP
+
+	local progLabel = Instance.new("TextLabel")
+	progLabel.Size = UDim2.new(1, -20, 0, 18)
+	progLabel.Position = UDim2.new(0, 10, 0, 40)
+	progLabel.BackgroundTransparency = 1
+	progLabel.Font = Enum.Font.GothamBold
+	progLabel.TextSize = 13
+	progLabel.TextColor3 = Color3.fromRGB(230, 220, 200)
+	progLabel.TextXAlignment = Enum.TextXAlignment.Left
+	progLabel.Text = string.format("Резонанс Bond %d  ·  +%d XP  (%d/%d)", bond, xpGained, bondXp, bondNeed)
+	progLabel.ZIndex = 81
+	progLabel.Parent = card
+
+	local barBg = Instance.new("Frame")
+	barBg.Size = UDim2.new(1, -20, 0, 12)
+	barBg.Position = UDim2.new(0, 10, 0, 62)
+	barBg.BackgroundColor3 = Color3.fromRGB(40, 30, 50)
+	barBg.BorderSizePixel = 0
+	barBg.ZIndex = 81
+	barBg.Parent = card
+	do
+		local c = Instance.new("UICorner")
+		c.CornerRadius = UDim.new(1, 0)
+		c.Parent = barBg
+	end
+	local barFill = Instance.new("Frame")
+	barFill.Name = "Fill"
+	barFill.Size = UDim2.new(0, 0, 1, 0)
+	barFill.BackgroundColor3 = Color3.fromRGB(255, 190, 80)
+	barFill.BorderSizePixel = 0
+	barFill.ZIndex = 82
+	barFill.Parent = barBg
+	do
+		local c = Instance.new("UICorner")
+		c.CornerRadius = UDim.new(1, 0)
+		c.Parent = barFill
+	end
+	local ratio = math.clamp(bondXp / bondNeed, 0, 1)
+	TweenService:Create(barFill, TweenInfo.new(0.55, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		Size = UDim2.new(ratio, 0, 1, 0),
+	}):Play()
+
+	local y = 82
+	for i, ach in ipairs(achievements) do
+		if i > 3 then break end
+		local row = Instance.new("TextLabel")
+		row.Size = UDim2.new(1, -20, 0, 20)
+		row.Position = UDim2.new(0, 10, 0, y)
+		row.BackgroundTransparency = 1
+		row.Font = Enum.Font.Gotham
+		row.TextSize = 13
+		row.TextColor3 = Color3.fromRGB(160, 255, 190)
+		row.TextXAlignment = Enum.TextXAlignment.Left
+		row.Text = string.format("★ %s — %s", tostring(ach.Title or ""), tostring(ach.Detail or ""))
+		row.ZIndex = 81
+		row.Parent = card
+		y += 20
+	end
+
+	PulseFrame(activityBar, Color3.fromRGB(120, 255, 160), 4)
+	local tracker = screenGui:FindFirstChild("QuestTrackerFrame")
+	PulseFrame(tracker, Color3.fromRGB(255, 210, 80), 4)
+
+	task.delay(4.2, function()
+		if careRewardCard == card then
+			card:Destroy()
+			careRewardCard = nil
+		end
+	end)
+end
+
+local function PlayCareClientVfx()
+	local char = player.Character
+	local hrp = char and char:FindFirstChild("HumanoidRootPart")
+	if not hrp then return end
+	local att = Instance.new("Attachment")
+	att.Parent = hrp
+	local pe = Instance.new("ParticleEmitter")
+	pe.Color = ColorSequence.new(Color3.fromRGB(255, 210, 120))
+	pe.Size = NumberSequence.new(0.5, 0)
+	pe.Lifetime = NumberRange.new(0.6, 1)
+	pe.Speed = NumberRange.new(1, 4)
+	pe.SpreadAngle = Vector2.new(180, 180)
+	pe.Rate = 0
+	pe.Parent = att
+	pe:Emit(18)
+	game:GetService("Debris"):AddItem(att, 1.1)
+end
+
+pcall(function()
+	QuestTrackerHud.init(screenGui, { Width = 210, Height = 150, Position = UDim2.new(1, -222, 0, 268) })
+	QuestTrackerHud.bind(QuestEvent)
+end)
 
 -- Фон экрана
 local mainFrame = CreateFrame(screenGui, "MainFrame", 
@@ -758,8 +983,8 @@ end
 -- ============================================
 
 local spiritDetailFrame = CreateFrame(screenGui, "SpiritDetailFrame",
-	UDim2.new(0.5, -200, 0.5, -185),
-	UDim2.new(0, 400, 0, 370),
+	UDim2.new(0.5, -200, 0.5, -210),
+	UDim2.new(0, 400, 0, 420),
 	Color3.fromRGB(30, 30, 40)
 )
 spiritDetailFrame.Visible = false
@@ -820,16 +1045,40 @@ local detailSpiritSkills = CreateTextLabel(spiritDetailFrame, "DetailSpiritSkill
 -- Кнопка эволюции (активна если достаточно прокачаны скилы)
 local evolveButtonEnabled = false
 local detailEvolveButton = CreateTextButton(spiritDetailFrame, "DetailEvolveButton",
-	UDim2.new(0.5, -100, 0, 260),
-	UDim2.new(0, 200, 0, 45),
+	UDim2.new(0.5, -100, 0, 250),
+	UDim2.new(0, 200, 0, 36),
 	"ЭВОЛЮЦИЯ",
 	Color3.fromRGB(80, 80, 80),
 	"🧬"
 )
 
+local detailResonanceLabel = CreateTextLabel(spiritDetailFrame, "DetailResonance",
+	UDim2.new(0, 10, 0, 220),
+	UDim2.new(0.9, 0, 0, 28),
+	"Резонанс: Bond 0 | Temper —",
+	Color3.fromRGB(180, 220, 255),
+	13
+)
+
+local detailCareButton = CreateTextButton(spiritDetailFrame, "DetailCareButton",
+	UDim2.new(0.5, -185, 0, 290),
+	UDim2.new(0, 170, 0, 34),
+	"УХОД",
+	Color3.fromRGB(70, 140, 90),
+	"💚"
+)
+
+local detailTemperButton = CreateTextButton(spiritDetailFrame, "DetailTemperButton",
+	UDim2.new(0.5, 15, 0, 290),
+	UDim2.new(0, 170, 0, 34),
+	"ЗАКАЛКА",
+	Color3.fromRGB(70, 100, 160),
+	"⚔"
+)
+
 -- Кнопка закрытия
 local detailCloseButton = CreateTextButton(spiritDetailFrame, "DetailCloseButton",
-	UDim2.new(0.5, -60, 0, 320),
+	UDim2.new(0.5, -60, 0, 340),
 	UDim2.new(0, 120, 0, 35),
 	"Закрыть",
 	Color3.fromRGB(100, 100, 100),
@@ -861,6 +1110,17 @@ OpenSpiritDetail = function(index)
 	detailSpiritStatus.Text = string.format(
 		"Состояние:\nHP: %d | Атака: %d\nЗащита: %d | Скорость: %d",
 		hp, attack, defense, speed
+	)
+
+	local bond = spirit.Bond or 0
+	local bondXp = spirit.BondXp or 0
+	local bondNeed = SpiritResonance.BondXpToNext(bond)
+	local tp = spirit.TemperPoints or {}
+	detailResonanceLabel.Text = string.format(
+		"Резонанс: Bond %d (%d/%d) | Temper A%d/D%d/S%d | Stam %d",
+		bond, bondXp, bondNeed,
+		tp.Attack or 0, tp.Defense or 0, tp.Spirit or 0,
+		PlayerData.SpiritStamina or 100
 	)
 
 	-- Навыки (зависят от уровня духа)
@@ -1244,13 +1504,26 @@ local function FormatCopperPrice(copperAmount)
 	return table.concat(parts, " ")
 end
 
+local function FormatShopPrice(item)
+	local goldPrice = tonumber(item and item.GoldPrice) or 0
+	if goldPrice > 0 then
+		return tostring(goldPrice) .. "🥇"
+	end
+	return FormatCopperPrice(item and item.Price or 0)
+end
+
+local function ItemDef(itemId)
+	return ItemCatalog.Get(itemId) or (SpiritDatabaseModule.ShopItems and SpiritDatabaseModule.ShopItems[itemId])
+end
+
 local function RefreshTradeInventory()
 	ClearTradeButtons(inventoryListFrame, inventoryItemButtons)
 	local y = 30
 	for _, item in ipairs(PlayerData.Inventory or {}) do
-		local shopItem = SpiritDatabaseModule.ShopItems[item.Id]
-		local itemName = shopItem and shopItem.Name or ("Предмет #" .. item.Id)
-		local sellPriceText = shopItem and FormatCopperPrice(shopItem.SellPrice or 0) or FormatCopperPrice(0)
+		local def = ItemDef(item.Id)
+		local itemName = (def and def.Name) or ("Предмет #" .. item.Id)
+		local canSell = ItemCatalog.CanSell(item.Id)
+		local sellPriceText = canSell and FormatCopperPrice(def.SellPrice or 0) or "—"
 		local btn = CreateTextButton(inventoryListFrame, "InvItem" .. item.Id,
 			UDim2.new(0, 5, 0, y),
 			UDim2.new(1, -10, 0, 45),
@@ -1265,7 +1538,9 @@ local function RefreshTradeInventory()
 			Color3.fromRGB(180, 100, 70),
 			nil
 		)
-		sellBtn.Text = "Продать\n" .. sellPriceText
+		sellBtn.Text = canSell and ("Продать\n" .. sellPriceText) or "Нельзя"
+		sellBtn.Active = canSell
+		sellBtn.AutoButtonColor = canSell
 		local useBtn = CreateTextButton(btn, "UseBtn",
 			UDim2.new(1, -150, 0, 5),
 			UDim2.new(0, 70, 0, 35),
@@ -1273,13 +1548,19 @@ local function RefreshTradeInventory()
 			Color3.fromRGB(100, 180, 100),
 			nil
 		)
-		if item.Id ~= 3 then useBtn.Visible = false end
+		if item.Id ~= 3 and item.Id ~= 203 then useBtn.Visible = false end
+		if item.Id == 203 then useBtn.Text = "Имя" end
 		local itemId = item.Id
 		sellBtn.MouseButton1Click:Connect(function()
+			if not ItemCatalog.CanSell(itemId) then return end
 			TradeEvent:FireServer("Sell", {ItemId = itemId, Quantity = 1})
 		end)
 		useBtn.MouseButton1Click:Connect(function()
-			TradeEvent:FireServer("UseItem", {ItemId = itemId})
+			if itemId == 203 then
+				TradeEvent:FireServer("RenameSpirit", {SpiritIndex = PlayerData.ActiveSpiritIndex or 1, Name = "Дух"})
+			else
+				TradeEvent:FireServer("UseItem", {ItemId = itemId})
+			end
 		end)
 		table.insert(inventoryItemButtons, btn)
 		y = y + 50
@@ -1293,7 +1574,7 @@ local function RefreshShopList(items)
 		local btn = CreateTextButton(shopListFrame, "ShopItem" .. item.Id,
 			UDim2.new(0, 5, 0, y),
 			UDim2.new(1, -10, 0, 45),
-			item.Name .. " — " .. FormatCopperPrice(item.Price),
+			item.Name .. " — " .. FormatShopPrice(item),
 			Color3.fromRGB(70, 130, 180),
 			nil
 		)
@@ -1459,8 +1740,36 @@ local function UpdateRank(_rankName, _rankTitle, _rankColor)
 	-- ранг доступен через кнопку «Ранг»
 end
 
-local function UpdateTraps(_trapCount)
-	-- ловушки видны в инвентаре магазина
+local currentTrapCount = 0
+
+local function UpdateTraps(trapCount)
+	currentTrapCount = math.max(0, tonumber(trapCount) or 0)
+	if catchButton then
+		catchButton.AutoButtonColor = currentTrapCount > 0
+		catchButton.BackgroundColor3 = currentTrapCount > 0
+			and Color3.fromRGB(70, 180, 70)
+			or Color3.fromRGB(80, 80, 90)
+	end
+end
+
+_G.GetTrapCount = function()
+	return currentTrapCount
+end
+
+_G.ConsumeLocalTrap = function()
+	if currentTrapCount > 0 then
+		UpdateTraps(currentTrapCount - 1)
+	end
+end
+
+_G.ShowNoTrapMessage = function()
+	if ShowNotification then
+		ShowNotification("Нет ловушек! Купите в магазине Otaku Haven.", 3)
+	end
+end
+
+_G.UpdateCatchAvailability = function()
+	UpdateTraps(currentTrapCount)
 end
 
 ShowNotification = function(text, duration)
@@ -1574,23 +1883,31 @@ end
 -- ============================================
 
 catchButton.MouseButton1Click:Connect(function()
-	local tween = TweenService:Create(catchButton, 
-		TweenInfo.new(0.1, Enum.EasingStyle.Quad), 
+	if currentTrapCount <= 0 then
+		if _G.ShowNoTrapMessage then _G.ShowNoTrapMessage() end
+		UpdateHint("Нет ловушек")
+		return
+	end
+
+	local tween = TweenService:Create(catchButton,
+		TweenInfo.new(0.1, Enum.EasingStyle.Quad),
 		{BackgroundColor3 = Color3.fromRGB(100, 220, 100)}
 	)
 	tween:Play()
 
 	task.wait(0.1)
 
-	local tween2 = TweenService:Create(catchButton, 
-		TweenInfo.new(0.1, Enum.EasingStyle.Quad), 
-		{BackgroundColor3 = Color3.fromRGB(70, 180, 70)}
+	local tween2 = TweenService:Create(catchButton,
+		TweenInfo.new(0.1, Enum.EasingStyle.Quad),
+		{BackgroundColor3 = currentTrapCount > 1
+			and Color3.fromRGB(70, 180, 70)
+			or Color3.fromRGB(80, 80, 90)}
 	)
 	tween2:Play()
 
-	-- Сигналим ClientController о запросе на ловлю
+	-- Сигналим ClientController: бросок SpiritTrap
 	player:SetAttribute("CatchRequest", os.clock())
-	UpdateHint("Попытка поймать духа...")
+	UpdateHint("Бросаем ловушку...")
 end)
 
 battleButton.MouseButton1Click:Connect(function()
@@ -1667,6 +1984,50 @@ detailEvolveButton.MouseButton1Click:Connect(function()
 	end
 end)
 
+detailCareButton.MouseButton1Click:Connect(function()
+	if not selectedSpiritIndex then return end
+	ResonanceEvent:FireServer("Care", {SpiritIndex = selectedSpiritIndex, UseTreat = false})
+end)
+
+detailTemperButton.MouseButton1Click:Connect(function()
+	if not selectedSpiritIndex then return end
+	ResonanceEvent:FireServer("Temper", {SpiritIndex = selectedSpiritIndex, Focus = "Attack"})
+end)
+
+ResonanceEvent.OnClientEvent:Connect(function(action, data)
+	if action == "CareSuccess" or action == "TemperSuccess" then
+		ShowNotification((data and data.Message) or "Готово")
+		if action == "CareSuccess" then
+			PlayCareClientVfx()
+			ShowCareRewardFeedback(data)
+		end
+		if data and data.Snapshot then
+			RefreshActivityBar(data.Snapshot)
+		end
+		ResonanceEvent:FireServer("GetState", {})
+		pcall(function()
+			QuestEvent:FireServer("GetActiveQuests", {})
+		end)
+	elseif action == "CareFailed" or action == "TemperFailed" then
+		ShowNotification((data and data.Reason) or "Не удалось")
+	elseif action == "State" and data then
+		RefreshActivityBar(data)
+		if data.Spirits and selectedSpiritIndex and PlayerData and PlayerData.Spirits then
+			local snap = data.Spirits[selectedSpiritIndex]
+			if snap and detailResonanceLabel then
+				detailResonanceLabel.Text = string.format(
+					"Резонанс: Bond %d (%d/%d) | Temper A%d/D%d/S%d | Stam %d",
+					snap.Bond or 0, snap.BondXp or 0, snap.BondNeed or 0,
+					(snap.TemperPoints and snap.TemperPoints.Attack) or 0,
+					(snap.TemperPoints and snap.TemperPoints.Defense) or 0,
+					(snap.TemperPoints and snap.TemperPoints.Spirit) or 0,
+					data.SpiritStamina or 0
+				)
+			end
+		end
+	end
+end)
+
 detailCloseButton.MouseButton1Click:Connect(function()
 	spiritDetailFrame.Visible = false
 end)
@@ -1709,6 +2070,7 @@ DataEvent.OnClientEvent:Connect(function(action, data)
 	if action == "FullSync" then
 		-- Полная синхронизация данных
 		PlayerData = data
+		RefreshActivityBar(data)
 		UpdateLevel(data.Level)
 		UpdateExp(data.Experience, data.Level * 100)
 		UpdateCoins(data.CopperCoins, data.SilverCoins, data.GoldCoins)

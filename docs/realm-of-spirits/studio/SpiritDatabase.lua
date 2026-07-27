@@ -53,12 +53,75 @@ SpiritDatabase.Spirits = {
 		SkillIds = {51, 52},
 		CatchRate = 0.4,
 	},
+	[7] = {
+		MovementType = "Walk",
+		Id = 7, Name = "Каменный Голем", Element = "Earth", Rarity = "Uncommon",
+		Color = Color3.fromRGB(140, 110, 70), Size = 3.8,
+		BaseStats = {HP = 130, Attack = 16, Defense = 20, Speed = 9},
+		SkillIds = {61, 62},
+		CatchRate = 0.38,
+	},
+	[8] = {
+		MovementType = "Walk",
+		Id = 8, Name = "Пепельный Саламандр", Element = "Fire", Rarity = "Uncommon",
+		Color = Color3.fromRGB(220, 90, 40), Size = 3.4,
+		BaseStats = {HP = 105, Attack = 19, Defense = 12, Speed = 15},
+		SkillIds = {71, 72},
+		CatchRate = 0.42,
+	},
+	[9] = {
+		MovementType = "Walk",
+		Id = 9, Name = "Ветряной Лис", Element = "Wind", Rarity = "Uncommon",
+		Color = Color3.fromRGB(120, 200, 180), Size = 3.2,
+		BaseStats = {HP = 95, Attack = 18, Defense = 10, Speed = 20},
+		SkillIds = {81, 82},
+		CatchRate = 0.40,
+	},
+	[10] = {
+		MovementType = "Walk",
+		Id = 10, Name = "Моховой Олень", Element = "Nature", Rarity = "Uncommon",
+		Color = Color3.fromRGB(80, 160, 70), Size = 3.5,
+		BaseStats = {HP = 115, Attack = 17, Defense = 14, Speed = 14},
+		SkillIds = {91, 92},
+		CatchRate = 0.40,
+	},
+	[11] = {
+		MovementType = "Walk",
+		Id = 11, Name = "Лунный Кролик", Element = "Moon", Rarity = "Uncommon",
+		Color = Color3.fromRGB(200, 210, 255), Size = 3.2,
+		BaseStats = {HP = 100, Attack = 18, Defense = 11, Speed = 19},
+		SkillIds = {101, 102},
+		CatchRate = 0.40,
+	},
+	[12] = {
+		MovementType = "Walk",
+		Id = 12, Name = "Ядовитая Гадюка", Element = "Poison", Rarity = "Uncommon",
+		Color = Color3.fromRGB(90, 180, 60), Size = 3.3,
+		BaseStats = {HP = 98, Attack = 19, Defense = 12, Speed = 17},
+		SkillIds = {111, 112},
+		CatchRate = 0.39,
+	},
+	[13] = {
+		MovementType = "Walk",
+		Id = 13, Name = "Пустынный Скорпион", Element = "Sand", Rarity = "Uncommon",
+		Color = Color3.fromRGB(210, 170, 90), Size = 3.4,
+		BaseStats = {HP = 105, Attack = 20, Defense = 14, Speed = 15},
+		SkillIds = {114, 115},
+		CatchRate = 0.37,
+	},
 	[101] = {Id = 101, Name = "Огненный Тигр", Element = "Fire", Rarity = "Rare", BaseStats = {HP = 150, Attack = 25, Defense = 15, Speed = 18}, SkillIds = {1, 2, 3}, CatchRate = 0.1},
 	[102] = {MovementType = "Fly", Id = 102, Name = "Ледяной Феникс", Element = "Ice", Rarity = "Rare", BaseStats = {HP = 120, Attack = 22, Defense = 12, Speed = 28}, SkillIds = {11, 12, 13}, CatchRate = 0.08},
 	[103] = {Id = 103, Name = "Теневой Волк", Element = "Dark", Rarity = "Epic", BaseStats = {HP = 180, Attack = 30, Defense = 18, Speed = 22}, SkillIds = {21, 22, 23}, CatchRate = 0.05},
 	[104] = {MovementType = "Fly", Id = 104, Name = "Грозовой Левиафан", Element = "Lightning", Rarity = "Legendary", BaseStats = {HP = 220, Attack = 35, Defense = 22, Speed = 30}, SkillIds = {31, 32, 33}, CatchRate = 0.02},
 	[105] = {Id = 105, Name = "Световой Альфа", Element = "Light", Rarity = "Legendary", BaseStats = {HP = 280, Attack = 40, Defense = 28, Speed = 25}, SkillIds = {41, 42, 43}, CatchRate = 0.01},
 	[106] = {Id = 106, Name = "Цунами-Карп", Element = "Water", Rarity = "Rare", Color = Color3.fromRGB(30, 100, 200), Size = 4.5, BaseStats = {HP = 160, Attack = 24, Defense = 20, Speed = 16}, SkillIds = {51, 52, 53}, CatchRate = 0.08},
+	[107] = {MovementType = "Walk", Id = 107, Name = "Горный Титан", Element = "Earth", Rarity = "Rare", Color = Color3.fromRGB(160, 130, 80), Size = 5.2, BaseStats = {HP = 200, Attack = 26, Defense = 28, Speed = 11}, SkillIds = {61, 62, 63}, CatchRate = 0.07},
+	[108] = {MovementType = "Walk", Id = 108, Name = "Инферно-Дракон", Element = "Fire", Rarity = "Rare", Color = Color3.fromRGB(255, 80, 30), Size = 5.0, BaseStats = {HP = 170, Attack = 28, Defense = 18, Speed = 17}, SkillIds = {71, 72, 73}, CatchRate = 0.07},
+	[109] = {MovementType = "Walk", Id = 109, Name = "Буревой Кицунэ", Element = "Wind", Rarity = "Rare", Color = Color3.fromRGB(90, 220, 200), Size = 4.8, BaseStats = {HP = 155, Attack = 27, Defense = 14, Speed = 24}, SkillIds = {81, 82, 83}, CatchRate = 0.07},
+	[110] = {MovementType = "Walk", Id = 110, Name = "Древний Энт", Element = "Nature", Rarity = "Rare", Color = Color3.fromRGB(60, 130, 55), Size = 5.4, BaseStats = {HP = 190, Attack = 24, Defense = 26, Speed = 12}, SkillIds = {91, 92, 93}, CatchRate = 0.07},
+	[111] = {MovementType = "Walk", Id = 111, Name = "Цукуёми-Страж", Element = "Moon", Rarity = "Rare", Color = Color3.fromRGB(160, 175, 255), Size = 5.0, BaseStats = {HP = 165, Attack = 27, Defense = 16, Speed = 22}, SkillIds = {101, 102, 103}, CatchRate = 0.07},
+	[112] = {MovementType = "Walk", Id = 112, Name = "Василиск-Гидра", Element = "Poison", Rarity = "Rare", Color = Color3.fromRGB(70, 150, 45), Size = 5.2, BaseStats = {HP = 175, Attack = 28, Defense = 18, Speed = 16}, SkillIds = {111, 112, 113}, CatchRate = 0.07},
+	[113] = {MovementType = "Walk", Id = 113, Name = "Песчаный Император", Element = "Sand", Rarity = "Rare", Color = Color3.fromRGB(190, 150, 70), Size = 5.3, BaseStats = {HP = 185, Attack = 29, Defense = 20, Speed = 15}, SkillIds = {114, 115, 116}, CatchRate = 0.07},
 }
 
 for _, spirit in pairs(SpiritDatabase.Spirits) do
@@ -80,6 +143,11 @@ SpiritDatabase.ElementChart = {
 	Light = {Strong = {"Dark"}, Weak = {"Dark"}},
 	Water = {Strong = {"Fire", "Earth"}, Weak = {"Lightning", "Ice"}},
 	Earth = {Strong = {"Lightning", "Fire"}, Weak = {"Water", "Ice"}},
+	Wind = {Strong = {"Earth", "Lightning"}, Weak = {"Ice", "Fire"}},
+	Nature = {Strong = {"Water", "Earth"}, Weak = {"Fire", "Ice"}},
+	Moon = {Strong = {"Dark", "Light"}, Weak = {"Lightning", "Fire"}},
+	Poison = {Strong = {"Nature", "Water"}, Weak = {"Fire", "Earth"}},
+	Sand = {Strong = {"Fire", "Lightning"}, Weak = {"Water", "Nature"}},
 }
 
 -- Only purchasable shop rows (not evolution materials)
@@ -89,12 +157,20 @@ for _, shopId in ipairs(ItemCatalog.ShopIds) do
 end
 
 SpiritDatabase.EvolutionRules = {
-	[1] = {EvolvedId = 101, RequiredLevel = 10, RequiredItems = {{Id = 101, Quantity = 5}}, RequiredBattles = 10},
-	[2] = {EvolvedId = 102, RequiredLevel = 12, RequiredItems = {{Id = 102, Quantity = 5}}, RequiredBattles = 15},
-	[3] = {EvolvedId = 103, RequiredLevel = 15, RequiredItems = {{Id = 103, Quantity = 5}}, RequiredBattles = 20},
-	[4] = {EvolvedId = 104, RequiredLevel = 18, RequiredItems = {{Id = 104, Quantity = 5}}, RequiredBattles = 25},
-	[5] = {EvolvedId = 105, RequiredLevel = 20, RequiredItems = {{Id = 105, Quantity = 5}}, RequiredBattles = 30},
-	[6] = {EvolvedId = 106, RequiredLevel = 12, RequiredItems = {{Id = 106, Quantity = 5}}, RequiredBattles = 12},
+	-- RequiredBond: Spirit Resonance track B (Haven care)
+	[1] = {EvolvedId = 101, RequiredLevel = 10, RequiredBond = 3, RequiredItems = {{Id = 101, Quantity = 5}}, RequiredBattles = 10},
+	[2] = {EvolvedId = 102, RequiredLevel = 12, RequiredBond = 3, RequiredItems = {{Id = 102, Quantity = 5}}, RequiredBattles = 15},
+	[3] = {EvolvedId = 103, RequiredLevel = 15, RequiredBond = 3, RequiredItems = {{Id = 103, Quantity = 5}}, RequiredBattles = 20},
+	[4] = {EvolvedId = 104, RequiredLevel = 18, RequiredBond = 4, RequiredItems = {{Id = 104, Quantity = 5}}, RequiredBattles = 25},
+	[5] = {EvolvedId = 105, RequiredLevel = 20, RequiredBond = 4, RequiredItems = {{Id = 105, Quantity = 5}}, RequiredBattles = 30},
+	[6] = {EvolvedId = 106, RequiredLevel = 12, RequiredBond = 3, RequiredItems = {{Id = 106, Quantity = 5}}, RequiredBattles = 12},
+	[7] = {EvolvedId = 107, RequiredLevel = 14, RequiredBond = 3, RequiredItems = {{Id = 107, Quantity = 5}}, RequiredBattles = 14},
+	[8] = {EvolvedId = 108, RequiredLevel = 13, RequiredBond = 3, RequiredItems = {{Id = 108, Quantity = 5}}, RequiredBattles = 13},
+	[9] = {EvolvedId = 109, RequiredLevel = 13, RequiredBond = 3, RequiredItems = {{Id = 109, Quantity = 5}}, RequiredBattles = 13},
+	[10] = {EvolvedId = 110, RequiredLevel = 14, RequiredBond = 3, RequiredItems = {{Id = 110, Quantity = 5}}, RequiredBattles = 14},
+	[11] = {EvolvedId = 111, RequiredLevel = 14, RequiredBond = 3, RequiredItems = {{Id = 111, Quantity = 5}}, RequiredBattles = 14},
+	[12] = {EvolvedId = 112, RequiredLevel = 14, RequiredBond = 3, RequiredItems = {{Id = 112, Quantity = 5}}, RequiredBattles = 14},
+	[13] = {EvolvedId = 113, RequiredLevel = 14, RequiredBond = 3, RequiredItems = {{Id = 113, Quantity = 5}}, RequiredBattles = 14},
 }
 
 function SpiritDatabase.Get(id)

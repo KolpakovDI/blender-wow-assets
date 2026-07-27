@@ -43,6 +43,10 @@ local function objectiveName(obj)
 		return (def and def.Name) or "Собрать предметы"
 	elseif objType == "LevelUpSpirit" then
 		return "Уровень духа"
+	elseif objType == "CareSpirit" then
+		return "Уход за духом"
+	elseif objType == "TemperSpirit" then
+		return "Закалка духа"
 	elseif objType == "FindChests" then
 		return "Найти сундуки"
 	end
@@ -181,6 +185,22 @@ function QuestTrackerHud.refresh(quests)
 	emptyLabel.Visible = false
 	emptyLabel.ZIndex = 1
 	table.sort(quests, function(a, b)
+		local function careIncomplete(entry)
+			local objs = entry.Quest and entry.Quest.Objectives or {}
+			local prog = entry.Progress or {}
+			for i, obj in ipairs(objs) do
+				if obj.Type == "CareSpirit" then
+					local p = prog[i] or prog[tostring(i)] or {}
+					local cur = tonumber(p.Current) or 0
+					local tgt = tonumber(p.Target) or obj.Count or 1
+					if cur < tgt then return true end
+				end
+			end
+			return false
+		end
+		local ac = careIncomplete(a) and 1 or 0
+		local bc = careIncomplete(b) and 1 or 0
+		if ac ~= bc then return ac > bc end
 		local ar = a.ReadyToTurnIn and 1 or 0
 		local br = b.ReadyToTurnIn and 1 or 0
 		if ar ~= br then return ar > br end
