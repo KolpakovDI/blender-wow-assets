@@ -1,32 +1,27 @@
 # NEXT SESSION
 
-**Статус:** 2026-07-27 evening — Hunt **213 Sand** MCP PASS. Checkpoint; завтра — **daily board (идея → дизайн)**.
+**Статус:** 2026-07-28 — **Daily Board дизайн DONE** (`DAILY-BOARD.md`, scope A). Hunt 213 MCP PASS.
 
-Дата якоря: 2026-07-27
+Дата якоря: 2026-07-28
 
 ## Старт сессии (порядок жёсткий)
 
-1. **Ctrl+S** place, если ещё не сохраняли после Hunt 213 (`SpiritTemplate13`/`113` + каталоги)
-2. **Daily board (идея)** — выбрать scope и зафиксировать дизайн:
-   - A: только док `DAILY-BOARD.md` (без кода)
-   - B: lite Studio (4 слота + UI + reset дня + soft Pass XP/жетоны)
-   - UI: Мика / PASS / activity bar
-   - База: Card Heroes chat 2026-07-27 (лист дня 4–6, бонус 6/6, без P2W)
-3. Опционально: Play Hunt 213 после 212; Hunt **214** — после daily-board решения
+1. **Ctrl+S** place, если после Hunt 213 ещё не сохраняли (`SpiritTemplate13`/`113`)
+2. Выбрать следующий продукт:
+   - **Daily Board lite (B)** — по чеклисту в `DAILY-BOARD.md` (DataStore → hooks → SeasonLiveOps ×2 → activity bar)
+   - **Hunt 214** — следующий дух/зона
+3. Опционально: Play Hunt 213 после 212
 
 ## Product progress
 
 | Тема | Статус |
 |------|--------|
-| Hunt 213 Sand (#13 / SandDunes / q213) | **MCP smoke PASS** · нужен Ctrl+S place |
-| Quest 301–303 Resonance | PASS (игрок / MCP) |
-| ShowcasePlaza / Phase 4 SeasonLiveOps | Studio OK |
-| Daily board lite | **идея** · завтра разбор |
+| Daily Board дизайн (scope A) | **DONE** · [`DAILY-BOARD.md`](DAILY-BOARD.md) |
+| Daily Board lite (scope B) | не начат |
+| Hunt 213 Sand | **MCP smoke PASS** · Ctrl+S place |
+| Quest 301–303 Resonance | PASS |
+| ShowcasePlaza / Phase 4 | Studio OK |
 
-## Studio SoT (Hunt 213 — что в place)
+## Studio SoT
 
-Place: `C:\\Mimo\\RealmOfSpirits\\RealmOfSpirits second.rbxl` — **Ctrl+S.**
-
-Модули: `SpiritDatabase`, `SkillCatalog`, `ItemCatalog`, `ZoneConfig`, `ZoneSystem`, `ZoneController`, `MusicController`, `WorldSpawner`, `WorldLootService`, `QuestSystem`; templates `SpiritTemplate13` / `SpiritTemplate113` в `ReplicatedStorage.SpiritTemplates`.
-
-Зеркала git: `docs/realm-of-spirits/studio/*` + `CHANGELOG` `[Unreleased]`.
+`C:\\Mimo\\RealmOfSpirits\\RealmOfSpirits second.rbxl` — **Ctrl+S.**
