@@ -426,6 +426,31 @@ local function addMangaBuff(parent, position)
 	return model
 end
 
+local function addWayfindPad(parent, name, position, label, color)
+	local mat = makePart({
+		Name = name,
+		Size = Vector3.new(3.4, 0.12, 3.4),
+		Position = position,
+		Color = color or Color3.fromRGB(255, 180, 220),
+		Material = Enum.Material.Neon,
+		CanCollide = false,
+		CanQuery = false,
+		Parent = parent,
+	})
+	local matGui = Instance.new("SurfaceGui")
+	matGui.Face = Enum.NormalId.Top
+	matGui.Parent = mat
+	local matLbl = Instance.new("TextLabel")
+	matLbl.Size = UDim2.fromScale(1, 1)
+	matLbl.BackgroundTransparency = 1
+	matLbl.Text = label
+	matLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+	matLbl.TextScaled = true
+	matLbl.Font = Enum.Font.GothamBold
+	matLbl.Parent = matGui
+	return mat
+end
+
 
 local function addSlidingGlassDoor(parent, opts)
 	local centerX = opts.CenterX
@@ -1623,6 +1648,14 @@ function OtakuHavenBuilder.Build()
 	addGacha(decor, center + Vector3.new(14, 3, 8))
 	addMangaBuff(decor, center + Vector3.new(-14, 2.5, 8))
 	addFittingRoom(decor, center + Vector3.new(8, 3.5, -6))
+	-- Onboarding wayfind (P0 Hub): Mika → Manga → Exit
+	do
+		local qm = ZoneConfig.QuestMasterPosition or Vector3.new(-12, 0, -38)
+		local exitZ = (ZoneConfig.Zones and ZoneConfig.Zones.Exit and ZoneConfig.Zones.Exit.Center.Z) or (center.Z + half - 4)
+		addWayfindPad(decor, "WayMika", Vector3.new(qm.X - 4, 1.08, math.min(qm.Z + 12, center.Z - 8)), "МИКА →", Color3.fromRGB(255, 160, 200))
+		addWayfindPad(decor, "WayManga", Vector3.new(center.X - 6, 1.08, center.Z + 4), "МАНГА →", Color3.fromRGB(160, 80, 220))
+		addWayfindPad(decor, "WayExit", Vector3.new(center.X, 1.08, exitZ - 8), "EXIT →", Color3.fromRGB(255, 200, 100))
+	end
 	addAtmosphereDecor(decor, haven, center, half, wallH)
 	ensureHavenMoodLighting()
 	addSlidingGlassDoor(haven, {

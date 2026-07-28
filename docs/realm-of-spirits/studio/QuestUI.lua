@@ -290,16 +290,16 @@ titleLabel.Parent = questPanel
 
 local dialogueLabel = Instance.new("TextLabel")
 dialogueLabel.Name = "MikaDialogue"
-dialogueLabel.Size = UDim2.new(1, -20, 0, 28)
+dialogueLabel.Size = UDim2.new(1, -20, 0, 52)
 dialogueLabel.Position = UDim2.new(0, 10, 0, 30)
 dialogueLabel.BackgroundColor3 = Color3.fromRGB(45, 35, 70)
 dialogueLabel.BackgroundTransparency = 0.2
 dialogueLabel.TextColor3 = COLORS.Text
 dialogueLabel.TextWrapped = true
-dialogueLabel.TextSize = 12
+dialogueLabel.TextSize = 11
 dialogueLabel.Font = Enum.Font.Gotham
 dialogueLabel.TextXAlignment = Enum.TextXAlignment.Left
-dialogueLabel.Text = "Мика: Добро пожаловать в Otaku Haven! Тебе как раз нужна помощь героя..."
+dialogueLabel.Text = "Мика: Добро пожаловать в Otaku Haven! О боже, ты выглядишь как настоящий герой! Мне как раз нужна помощь..."
 dialogueLabel.Parent = questPanel
 local dlgCorner = Instance.new("UICorner")
 dlgCorner.CornerRadius = UDim.new(0, 8)
@@ -566,6 +566,16 @@ end
 
 local function showQuestDetail(quest, isActive, progress, readyToTurnIn)
 	clearDetail()
+
+	if tonumber(quest.Id) == 7 then
+		dialogueLabel.Text = "Мика: Хулиганы из банды Shadow разгромили склад в Сеуле и украли партию редкой манги! Верни коробку у выхода в Akihabara — награжу билетом и монетами!"
+	elseif tonumber(quest.Id) == 1 then
+		dialogueLabel.Text = "Мика: Манга спасена! Теперь выйди в Акихабару и поймай первого дикого духа — это твои Первые шаги!"
+	elseif readyToTurnIn then
+		dialogueLabel.Text = "Мика: Ого, ты уже всё сделал? Давай сдадим квест!"
+	elseif isActive then
+		dialogueLabel.Text = "Мика: Удачи с заданием! Я буду ждать у стойки."
+	end
 
 	-- Название
 	local nameLbl = Instance.new("TextLabel")
@@ -931,9 +941,32 @@ QuestEvent.OnClientEvent:Connect(function(action, data)
 		if readyCount > 0 then
 			dialogueLabel.Text = "Мика: Ого, ты уже всё сделал? Давай сдадим квест!"
 		elseif #(data.Active or {}) > 0 then
-			dialogueLabel.Text = "Мика: Удачи с заданием! Я буду ждать у стойки."
+			local activeId = data.Active[1] and data.Active[1].Quest and data.Active[1].Quest.Id
+			if tonumber(activeId) == 7 then
+				dialogueLabel.Text = "Мика: Банда Shadow разгромила склад в Сеуле и украли партию редкой манги! Верни коробку — я щедро награжу!"
+			elseif tonumber(activeId) == 1 then
+				dialogueLabel.Text = "Мика: Через Exit в Акихабару — поймай первого дикого духа!"
+			else
+				dialogueLabel.Text = "Мика: Удачи с заданием! Я буду ждать у стойки."
+			end
 		else
-			dialogueLabel.Text = "Мика: Добро пожаловать в Otaku Haven! О боже, ты выглядишь как настоящий герой!"
+			local hasManga = false
+			for _, q in ipairs(data.Available or {}) do
+				if tonumber(q.Id) == 7 then hasManga = true break end
+			end
+			if hasManga then
+				dialogueLabel.Text = "Мика: Добро пожаловать в Otaku Haven! О боже, ты герой? Хулиганы Shadow украли нашу мангу — помоги вернуть!"
+			else
+				local hasFirst = false
+				for _, q in ipairs(data.Available or {}) do
+					if tonumber(q.Id) == 1 then hasFirst = true break end
+				end
+				if hasFirst then
+					dialogueLabel.Text = "Мика: Манга на месте! Готов к Первым шагам? Выйди в Акихабару и поймай духа!"
+				else
+					dialogueLabel.Text = "Мика: Добро пожаловать в Otaku Haven! О боже, ты выглядишь как настоящий герой!"
+				end
+			end
 		end
 		currentQuestData.Available = data.Available or {}
 		currentQuestData.Active = data.Active or {}

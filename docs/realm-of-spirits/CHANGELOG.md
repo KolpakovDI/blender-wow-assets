@@ -7,6 +7,13 @@
 ## [Unreleased]
 
 ### Added
+- **Haven onboarding polish (P0 Hub)**: напольные wayfind `WayMika` / `WayManga` / `WayExit` в `OtakuHavenBuilder`; rebuild Haven + Мика на `QuestMasterPosition`; Play smoke — manga buff, gacha copper+FOMO, fitting wardrobe (prompts Enabled); BGM Safe→Genkan→Exit→Combat PASS
+- **Side QA 101–105**: MCP Play smoke **PASS** (CollectItem/FindChests/Defeat/Catch → Легенда 105)
+- **Story QA 1–6**: MCP Play smoke **PASS** (7→1→…→6 accept/progress/turn-in); копирайт квеста 1 (Exit→Akihabara); реплики Мики на 1/7; Exit сцена 4 — toast + снятие тапочек PASS
+- **Genkan footwear fix**: sync тапочек по `CurrentZone`/`ZoneDetail` (гонка ZoneChanged); Safe/Spawn тоже indoor; welcome-колокольчик + toast; MCP client smoke 6 parts PASS
+- **Сценарий Haven · квест 7 «Украденная манга»**: GDD сцена 2 — CollectItem **120**, награда 500c + UniqueItem **22** Секретный билет; сюжет **[1]** теперь prereq `{7}`; loot у Exit; диалог Мики (Shadow/Сеул); MCP Play smoke PASS
+- **Evo QA #14→#114**: MCP Play smoke PASS — L14 + Bond 3 + 5×114 + 14 wins → Железный Колосс (кристаллы списаны)
+- **Hunt 214 / Metal**: дух **#14** Стальной Жук → эво **#114** Железный Колосс; стихия `Metal`; зона **IronWastes** `(450,200)`; skills 117–119; кристалл Item **114**; трофей UniqueItem **21**; квест **214** (prereq 213)
 - **Daily Board lite**: 4 слота (Care/Temper/Battle/Loot), `DailyBoard` + activity bar `N/4`, `BonusNextDay` ×2 soft tokens/Pass XP — см. [`DAILY-BOARD.md`](DAILY-BOARD.md)
 - **Hunt 213 / Sand**: дух **#13** Пустынный Скорпион → эво **#113** Песчаный Император; стихия `Sand`; зона **SandDunes** `(360,-40)`; skills 114–116; кристалл Item **113**; трофей UniqueItem **20**; квест **213** (prereq 212)
 - **Spirit Resonance Phase 4**: seasonal form (`SeasonalFormId`, shop/BP), Activity Pass UI (`PASS`), crystal pity (10 misses → гарант на бой/сундук) — `SeasonLiveOps`
@@ -16,6 +23,8 @@
 - **Spirit Resonance Phase 0 → Studio**: `SpiritResonance` module, `ResonanceEvent`, Care/Temper UI, battle XP share, RequiredBond evo gate, quest progress CareSpirit/TemperSpirit — см. `SPIRIT-RESONANCE-PLAN.md`
 
 ### Fixed
+- **Daily Board Care/Temper soft**: `MarkDailySlot` → `OnDailyCare`/`OnDailyTemper` при первом claim (раньше только CatchOrChest + квесты 301/302); без double-grant на сдаче квеста; MCP smoke 4/4 + `BonusNextDay` ×2 + PASS snapshot PASS
+- **MusicController BGM**: `ZoneMusic` больше не в `PlayerGui` (Roblox снимал Folder) — папка в `SoundService`; кроссфейд Safe/Genkan/Exit/Combat снова слышен
 - **ShowcasePlaza**: LoS=false, prompt на Base, ClickDetector; `showcaseSet` напрямую (не только `_G`)
 - **Квест 301 Care pedestal**: подтверждён игроком PASS 2026-07-27 (корень — мёртвый saved prompt)
 - **Temper pedestal**: тот же live-build (один Ready, ClickDetector, LoS=false) + UIController `TemperPrompt` → OpenTemperPicker; Temper quest push через `UpdateQuestProgressBF`

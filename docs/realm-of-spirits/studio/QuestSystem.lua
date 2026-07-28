@@ -53,6 +53,8 @@ local UniqueItemDatabase = {
 	[18] = {Id = 18, Name = "Осколок Лунного Колодца", Rarity = "Rare", Description = "Трофей: Лунный Кролик. +8% MP"},
 	[19] = {Id = 19, Name = "Клык Ядовитого Ущелья", Rarity = "Rare", Description = "Трофей: Ядовитая Гадюка. +8% урон ядом"},
 	[20] = {Id = 20, Name = "Клешня Песчаных Дюн", Rarity = "Rare", Description = "Трофей: Пустынный Скорпион. +8% урон песком"},
+	[21] = {Id = 21, Name = "Панцирь Железных Пустошей", Rarity = "Rare", Description = "Трофей: Стальной Жук. +8% урон металлом"},
+	[22] = {Id = 22, Name = "Секретный билет", Rarity = "Rare", Description = "Награда Мики: особый билет Otaku Haven"},
 }
 
 -- ============================================
@@ -64,7 +66,7 @@ local QuestDatabase = {
 	[1] = {
 		Id = 1,
 		Name = "Первые шаги",
-		Description = "Поймайте своего первого духа в дикой природе",
+		Description = "Выйдите через Exit в Акихабару и поймайте своего первого дикого духа (ловушка в инвентаре)",
 		Type = "Story",
 		Level = 1,
 		Objectives = {
@@ -79,7 +81,7 @@ local QuestDatabase = {
 			UniqueItems = {},
 			Items = {{Id = 1, Quantity = 3}}
 		},
-		Prerequisites = {}
+		Prerequisites = {7}
 	},
 	[2] = {
 		Id = 2,
@@ -180,6 +182,26 @@ local QuestDatabase = {
 			Items = {{Id = 3, Quantity = 3}} -- свитки опыта
 		},
 		Prerequisites = {5}
+	},
+	[7] = {
+		Id = 7,
+		Name = "Украденная манга",
+		Description = "Верните коробку редкой манги, украденную бандой Shadow у склада Мики",
+		Type = "Story",
+		Level = 1,
+		Objectives = {
+			{Type = "CollectItem", ItemId = 120, Count = 1}
+		},
+		Rewards = {
+			Experience = 80,
+			CopperCoins = 500,
+			SilverCoins = 0,
+			GoldCoins = 0,
+			Reputation = 15,
+			UniqueItems = {{Id = 22, Quantity = 1}},
+			Items = {}
+		},
+		Prerequisites = {}
 	},
 
 	-- Побочные квесты
@@ -546,6 +568,26 @@ local QuestDatabase = {
 			Items = {{Id = 113, Quantity = 3}, {Id = 1, Quantity = 3}}
 		},
 		Prerequisites = {212}
+	},
+	[214] = {
+		Id = 214,
+		Name = "Путь Охотника XIV: Металл",
+		Description = "Поймайте Стального Жука в Железных пустошах (восток от DawnMeadow)",
+		Type = "Hunt",
+		Level = 5,
+		Objectives = {
+			{Type = "CatchSpecificSpirit", SpiritId = 14, Count = 1, SpiritName = "Стальной Жук"}
+		},
+		Rewards = {
+			Experience = 520,
+			CopperCoins = 250,
+			SilverCoins = 36,
+			GoldCoins = 1,
+			Reputation = 54,
+			UniqueItems = {{Id = 21, Quantity = 1}},
+			Items = {{Id = 114, Quantity = 3}, {Id = 1, Quantity = 3}}
+		},
+		Prerequisites = {213}
 	},
 	-- Spirit Resonance dailies (repeatable side — no hard prereq)
 	[301] = {
@@ -940,17 +982,7 @@ function QuestSystem:CompleteQuest(questId)
 			end
 		end
 
-		-- P3: season tokens / pass XP from resonance dailies
-		local okLive, SeasonLiveOps = pcall(function()
-			return require(script.Parent.SeasonLiveOps)
-		end)
-		if okLive and SeasonLiveOps then
-			if questId == 301 and SeasonLiveOps.OnDailyCare then
-				SeasonLiveOps.OnDailyCare(playerData)
-			elseif questId == 302 and SeasonLiveOps.OnDailyTemper then
-				SeasonLiveOps.OnDailyTemper(playerData)
-			end
-		end
+		-- P3: season Care/Temper soft now via SpiritResonance.MarkDailySlot (not quest turn-in)
 
 		-- Отправляем обновление клиенту
 		DataEvent:FireClient(self.Player, "FullSync", playerData)

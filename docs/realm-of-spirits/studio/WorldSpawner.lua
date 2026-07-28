@@ -532,6 +532,12 @@ local function BuildSpiritHabitats()
 			Ground = Color3.fromRGB(190, 155, 85),
 			Material = Enum.Material.Sand,
 		},
+		{
+			Key = "IronWastes",
+			Accent = Color3.fromRGB(140, 155, 175),
+			Ground = Color3.fromRGB(100, 110, 125),
+			Material = Enum.Material.Basalt,
+		},
 	}
 
 	for _, h in ipairs(habitats) do

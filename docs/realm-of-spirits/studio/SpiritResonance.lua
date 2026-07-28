@@ -86,18 +86,22 @@ function SpiritResonance.MarkDailySlot(playerData, slotKey)
 	board.ClaimedSlots = board.ClaimedSlots or {}
 	if not board.ClaimedSlots[slotKey] then
 		board.ClaimedSlots[slotKey] = true
-		-- Care/Temper soft: OnDailyCare/Temper; BattleWin: OnBattleWin; CatchOrChest: board drip
-		if slotKey == "CatchOrChest" then
-			local okLive, SeasonLiveOps = pcall(function()
-				return require(script.Parent.SeasonLiveOps)
+		-- Soft drip once per slot/day. BattleWin: OnBattleWin already in GameManager — do not double-grant.
+		local okLive, SeasonLiveOps = pcall(function()
+			return require(script.Parent.SeasonLiveOps)
+		end)
+		if not okLive then
+			okLive, SeasonLiveOps = pcall(function()
+				local sss = game:GetService("ServerScriptService")
+				return require(sss.RealmOfSpirits.SeasonLiveOps)
 			end)
-			if not okLive then
-				okLive, SeasonLiveOps = pcall(function()
-					local sss = game:GetService("ServerScriptService")
-					return require(sss.RealmOfSpirits.SeasonLiveOps)
-				end)
-			end
-			if okLive and SeasonLiveOps and SeasonLiveOps.OnDailyBoardSlot then
+		end
+		if okLive and SeasonLiveOps then
+			if slotKey == "Care" and SeasonLiveOps.OnDailyCare then
+				SeasonLiveOps.OnDailyCare(playerData)
+			elseif slotKey == "Temper" and SeasonLiveOps.OnDailyTemper then
+				SeasonLiveOps.OnDailyTemper(playerData)
+			elseif slotKey == "CatchOrChest" and SeasonLiveOps.OnDailyBoardSlot then
 				SeasonLiveOps.OnDailyBoardSlot(playerData, slotKey)
 			end
 		end

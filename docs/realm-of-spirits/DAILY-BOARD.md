@@ -26,10 +26,12 @@
 
 | Слот | Soft |
 |------|------|
-| Care / Temper | `OnDailyCare` / `OnDailyTemper` × `TokenMult` (2 если BonusNextDay) |
-| BattleWin | `OnBattleWin` × mult |
+| Care / Temper | `MarkDailySlot` → `OnDailyCare` / `OnDailyTemper` × `TokenMult` (2 если BonusNextDay) |
+| BattleWin | `OnBattleWin` (GameManager) × mult — не дублировать в Mark |
 | CatchOrChest | `OnDailyBoardSlot` 1 token + 5 PassXP × mult |
 | 4/4 → завтра | `BonusNextDay` на rollover `DayKey` |
+
+Soft Care/Temper начисляются при **слоте дня** (`MarkDailySlot`), не при сдаче квестов 301/302.
 
 ## Данные
 

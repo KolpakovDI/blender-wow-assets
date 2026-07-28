@@ -1,6 +1,7 @@
 -- MusicController
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local SoundService = game:GetService("SoundService")
 local TweenService = game:GetService("TweenService")
 
 local player = Players.LocalPlayer
@@ -11,9 +12,15 @@ local ZoneConfig = require(RealmFolder:WaitForChild("ZoneConfig"))
 local FADE = TweenInfo.new(1.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 local DEFAULT_ZONE_KEY = "Safe"
 
-local musicFolder = Instance.new("Folder")
-musicFolder.Name = "ZoneMusic"
-musicFolder.Parent = player:WaitForChild("PlayerGui")
+-- PlayerGui strips non-GUI children; keep BGM under SoundService
+local musicFolder = SoundService:FindFirstChild("ZoneMusic")
+if musicFolder then
+	musicFolder:ClearAllChildren()
+else
+	musicFolder = Instance.new("Folder")
+	musicFolder.Name = "ZoneMusic"
+	musicFolder.Parent = SoundService
+end
 
 local function normalizeSoundId(raw)
 	if type(raw) ~= "string" then
@@ -136,6 +143,7 @@ local HABITAT_MUSIC_KEYS = {
 	Moonwell = true,
 	VenomHollow = true,
 	SandDunes = true,
+	IronWastes = true,
 }
 
 local function resolveZoneKey(zoneType, detail)

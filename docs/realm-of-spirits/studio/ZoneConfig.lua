@@ -31,6 +31,8 @@ ZoneConfig.Zones = {
 	VenomHollow = {Center = Vector3.new(280, 1, -160), Size = Vector3.new(55, 22, 50)},
 	-- Sand (#13 Пустынный Скорпион)
 	SandDunes = {Center = Vector3.new(360, 1, -40), Size = Vector3.new(55, 22, 50)},
+	-- Metal (#14 Стальной Жук)
+	IronWastes = {Center = Vector3.new(450, 1, 200), Size = Vector3.new(55, 22, 50)},
 }
 
 ZoneConfig.CounterPosition = Vector3.new(-30, 0, 0)
@@ -57,6 +59,7 @@ ZoneConfig.SpiritSpawnPositions = {
 	[11] = Vector3.new(-220, 0, -160), -- Moonwell / Moon
 	[12] = Vector3.new(280, 0, -160), -- VenomHollow / Poison
 	[13] = Vector3.new(360, 0, -40), -- SandDunes / Sand
+	[14] = Vector3.new(450, 0, 200), -- IronWastes / Metal
 }
 
 -- Метаданные для будущей цепочки «ловить по очереди»
@@ -74,6 +77,7 @@ ZoneConfig.SpiritHabitats = {
 	[11] = {ZoneKey = "Moonwell", Label = "Лунный колодец", HuntOrder = 11, Element = "Moon"},
 	[12] = {ZoneKey = "VenomHollow", Label = "Ядовитое ущелье", HuntOrder = 12, Element = "Poison"},
 	[13] = {ZoneKey = "SandDunes", Label = "Песчаные дюны", HuntOrder = 13, Element = "Sand"},
+	[14] = {ZoneKey = "IronWastes", Label = "Железные пустоши", HuntOrder = 14, Element = "Metal"},
 }
 
 function ZoneConfig.GetSpiritSpawnPositions()
@@ -101,6 +105,7 @@ ZoneConfig.Music = {
 	Moonwell = {SoundId = "9047105584", Volume = 0.36},
 	VenomHollow = {SoundId = "9047105584", Volume = 0.35},
 	SandDunes = {SoundId = "9047105584", Volume = 0.35},
+	IronWastes = {SoundId = "9047105584", Volume = 0.36},
 }
 
 ZoneConfig.GachaRobuxProductId = 0

@@ -81,9 +81,12 @@ local MESSAGES = {
 	DawnMeadow = "Луг рассвета — Световой Единорог",
 	StoneBasin = "Каменный бассейн — Каменный Голем",
 	AshGarden = "Пепельный сад — Пепельный Саламандр",
+	GaleCliff = "Ветряной утёс — Ветряной Лис",
+	MossGlade = "Моховая поляна — Моховой Олень",
 	Moonwell = "Лунный колодец — Лунный Кролик",
 	VenomHollow = "Ядовитое ущелье — Ядовитая Гадюка",
 	SandDunes = "Песчаные дюны — Пустынный Скорпион",
+	IronWastes = "Железные пустоши — Стальной Жук",
 }
 
 local HABITAT_BANNERS = {
@@ -94,9 +97,12 @@ local HABITAT_BANNERS = {
 	DawnMeadow = {Title = "Луг рассвета", Color = Color3.fromRGB(255, 240, 180)},
 	StoneBasin = {Title = "Каменный бассейн", Color = Color3.fromRGB(180, 140, 90)},
 	AshGarden = {Title = "Пепельный сад", Color = Color3.fromRGB(255, 100, 40)},
+	GaleCliff = {Title = "Ветряной утёс", Color = Color3.fromRGB(120, 200, 180)},
+	MossGlade = {Title = "Моховая поляна", Color = Color3.fromRGB(80, 160, 70)},
 	Moonwell = {Title = "Лунный колодец", Color = Color3.fromRGB(180, 195, 255)},
 	VenomHollow = {Title = "Ядовитое ущелье", Color = Color3.fromRGB(90, 180, 60)},
 	SandDunes = {Title = "Песчаные дюны", Color = Color3.fromRGB(210, 170, 90)},
+	IronWastes = {Title = "Железные пустоши", Color = Color3.fromRGB(140, 155, 175)},
 }
 
 local SLIPPER_COLOR = Color3.fromRGB(255, 170, 200)
@@ -237,21 +243,64 @@ local function setIndoorFootwear(enabled)
 	end
 end
 
-player.CharacterAdded:Connect(function(character)
-	task.wait(0.3)
+local function shouldWearSlippers(zone, detail)
+	if zone == "Combat" then
+		return false
+	end
+	if detail == "Exit" then
+		return false
+	end
+	-- Spawn в Haven тоже indoor (спавн в Genkan/Safe)
+	if zone == "Safe" then
+		return true
+	end
+	if detail == "Genkan" or detail == "Safe" or detail == "Spawn" then
+		return true
+	end
+	return false
+end
+
+local havenBellWelcomed = false
+local function syncFootwearFromZone(_ringBellIfEnter)
+	local character = player.Character
+	if not character then
+		return
+	end
 	local zone = player:GetAttribute("CurrentZone")
 	local detail = player:GetAttribute("ZoneDetail")
-	if zone == "Safe" and detail ~= "Exit" and detail ~= "Spawn" then
+	local want = shouldWearSlippers(zone, detail)
+	local has = character:FindFirstChild("GenkanSlippers") ~= nil
+	if want and not has then
 		applySlippers(character)
-	elseif detail == "Genkan" then
-		applySlippers(character)
+	elseif want and has then
+		wearingSlippers = true
+	elseif not want and has then
+		clearSlippers(character)
+		havenBellWelcomed = false
 	end
+end
+
+player.CharacterAdded:Connect(function(character)
+	task.wait(0.35)
+	syncFootwearFromZone(false)
+	task.delay(1, function()
+		if player.Character == character then
+			syncFootwearFromZone(false)
+		end
+	end)
+end)
+
+player:GetAttributeChangedSignal("CurrentZone"):Connect(function()
+	syncFootwearFromZone(false)
+end)
+player:GetAttributeChangedSignal("ZoneDetail"):Connect(function()
+	syncFootwearFromZone(false)
 end)
 
 local bellSound = Instance.new("Sound")
 bellSound.Name = "EntranceBellLocal"
 bellSound.SoundId = "rbxasset://sounds/electronicpingshort.wav"
-bellSound.Volume = 1
+bellSound.Volume = 1.5
 bellSound.RollOffMaxDistance = 1000
 bellSound.Parent = gui
 
@@ -295,7 +344,7 @@ zoneChanged.OnClientEvent:Connect(function(zoneType, detail)
 	end
 
 	if zoneType == "Combat" then
-		setIndoorFootwear(false)
+		syncFootwearFromZone(false)
 		local habitat = HABITAT_BANNERS[detail]
 		if habitat then
 			showBanner(habitat.Title, habitat.Color)
@@ -307,17 +356,20 @@ zoneChanged.OnClientEvent:Connect(function(zoneType, detail)
 	elseif zoneType == "Safe" then
 		if detail == "Genkan" then
 			showBanner("Otaku Haven", Color3.fromRGB(255, 180, 220))
-			setIndoorFootwear(true)
-			ringEntranceBell(false)
+			syncFootwearFromZone(false)
+			if not havenBellWelcomed then
+				havenBellWelcomed = true
+				ringEntranceBell(true)
+			end
 			showToast("Колокольчик — иррасшаймасе!  ·  " .. MESSAGES.Genkan, 3)
 		elseif detail == "Exit" then
-			setIndoorFootwear(false)
+			syncFootwearFromZone(false)
 			showBanner(MESSAGES.Exit, Color3.fromRGB(255, 200, 120))
 			showToast("Впереди боевая зона — проверь мангу и инвентарь", 3)
-		elseif detail == "Safe" then
+		elseif detail == "Safe" or detail == "Spawn" then
 			showBanner("Otaku Haven", Color3.fromRGB(255, 180, 220))
-			setIndoorFootwear(true)
-			if not prepHintShown then
+			syncFootwearFromZone(false)
+			if not prepHintShown and detail == "Safe" then
 				prepHintShown = true
 				showToast("Подготовка: манга «Путь Меча» (+урон) или примерочная", 4)
 			end
@@ -342,10 +394,10 @@ task.spawn(function()
 			snd = Instance.new("Sound")
 			snd.Name = "BellSound"
 			snd.SoundId = "rbxasset://sounds/electronicpingshort.wav"
-			snd.Volume = 1
+			snd.Volume = 1.5
 			snd.Parent = bell
 		end
-		snd.Volume = 1
+		snd.Volume = 1.5
 	end
 
 	-- триггер колокольчика = объём генкана (не хардкод world pos)
@@ -396,6 +448,19 @@ task.spawn(function()
 			end)
 		end
 	end
+end)
+
+task.defer(function()
+	task.wait(0.5)
+	syncFootwearFromZone(false)
+	local zone = player:GetAttribute("CurrentZone")
+	local detail = player:GetAttribute("ZoneDetail")
+	if shouldWearSlippers(zone, detail) and not havenBellWelcomed then
+		havenBellWelcomed = true
+		ringEntranceBell(true)
+	end
+	task.wait(1.5)
+	syncFootwearFromZone(false)
 end)
 
 print("Realm of Spirits - ZoneController loaded!")

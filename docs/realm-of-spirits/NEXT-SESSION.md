@@ -1,26 +1,31 @@
 # NEXT SESSION
 
-**Статус:** 2026-07-28 — **Daily Board lite** Studio + MCP smoke PASS (4/4 + BonusNextDay ×2).
+**Статус:** 2026-07-28 — Season / Daily Board polish **PASS** (Care/Temper soft + 4/4 BonusNextDay ×2 + PASS snapshot). Дальше: Hunt **215**.
 
 Дата якоря: 2026-07-28
 
 ## Старт сессии (порядок жёсткий)
 
-1. **Ctrl+S** place (Daily Board + Hunt 213 templates если ещё не)
-2. Optional Play: закрыть 4 слота вручную → завтра `· Бонус` на activity bar
-3. Дальше: **Hunt 214** или weekly rule lite (out of scope Daily Board)
+1. **Ctrl+S** place
+2. Hunt **215** (или другой приоритет по запросу)
+3. Опционально: ручной Play — уход/закалка → activity bar N/4 → PASS жетоны
 
 ## Product progress
 
 | Тема | Статус |
 |------|--------|
-| Daily Board lite (scope B) | **MCP smoke PASS** |
-| Daily Board дизайн (A) | DONE |
-| Hunt 213 Sand | MCP PASS · Ctrl+S |
-| Resonance 301–303 | PASS |
+| Story 7 + 1–6 + Exit | PASS |
+| Side 101–105 | PASS |
+| Haven polish | PASS |
+| Season / Daily Board | **PASS** |
+| Hunt 215 | next |
 
 ## Studio SoT
 
 `C:\\Mimo\\RealmOfSpirits\\RealmOfSpirits second.rbxl` — **Ctrl+S.**
 
-Модули Daily Board: `SpiritResonance`, `SeasonLiveOps`, `DataStoreManager`, `GameManager`, `WorldLootService`, `UIController`.
+Modules touched this checkpoint (Studio + git mirrors):
+- `ReplicatedStorage.RealmOfSpirits.SpiritResonance` — Daily Board Care/Temper soft
+- `ServerScriptService.RealmOfSpirits.QuestSystem` — no double soft on 301/302
+- `ServerScriptService.RealmOfSpirits.OtakuHavenBuilder` — wayfind pads
+- `StarterPlayer.StarterPlayerScripts.MusicController` — ZoneMusic → SoundService

@@ -42,6 +42,9 @@ SkillCatalog.ById = {
 	[114] = {Id = 114, Name = "Удар клешней", Element = "Sand", Type = "Attack", Damage = 26, Cost = 8, Cooldown = 1.6},
 	[115] = {Id = 115, Name = "Песчаная буря", Element = "Sand", Type = "Attack", Damage = 38, Cost = 18, Cooldown = 4.1, Effect = {Type = "DebuffAttack", Value = 0.22, Duration = 2}},
 	[116] = {Id = 116, Name = "Удар дюны", Element = "Sand", Type = "Attack", Damage = 52, Cost = 34, Cooldown = 7.1, Effect = {Type = "DebuffDefense", Value = 0.25, Duration = 3}},
+	[117] = {Id = 117, Name = "Стальной панцирь", Element = "Metal", Type = "Attack", Damage = 27, Cost = 8, Cooldown = 1.7},
+	[118] = {Id = 118, Name = "Магнитный удар", Element = "Metal", Type = "Attack", Damage = 39, Cost = 18, Cooldown = 4.2, Effect = {Type = "DebuffDefense", Value = 0.22, Duration = 2}},
+	[119] = {Id = 119, Name = "Кувалда колосса", Element = "Metal", Type = "Attack", Damage = 54, Cost = 35, Cooldown = 7.2, Effect = {Type = "Stun", Duration = 1}},
 }
 
 SkillCatalog.ByName = {}
@@ -77,6 +80,8 @@ SkillCatalog.SpiritSkills = {
 	[112] = {111, 112, 113},
 	[13] = {114, 115},
 	[113] = {114, 115, 116},
+	[14] = {117, 118},
+	[114] = {117, 118, 119},
 }
 
 function SkillCatalog.Get(idOrName)
