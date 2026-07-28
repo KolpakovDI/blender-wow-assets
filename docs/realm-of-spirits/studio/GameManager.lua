@@ -773,6 +773,9 @@ local function EndBattle(player, winner, battle)
 			if okLive and SeasonLiveOps and SeasonLiveOps.OnBattleWin then
 				SeasonLiveOps.OnBattleWin(playerData)
 			end
+			if SpiritResonance and SpiritResonance.MarkDailySlot then
+				SpiritResonance.MarkDailySlot(playerData, "BattleWin")
+			end
 		end
 		playerData.Stats.EnemiesDefeated = playerData.Stats.EnemiesDefeated + 1
 
@@ -1504,6 +1507,9 @@ CatchSpiritEvent.OnServerEvent:Connect(function(player, spiritId, instanceId)
 			_G.UpdateQuestProgress(player, "CatchSpirit")
 			_G.UpdateQuestProgress(player, "CatchDifferentSpirits", {SpiritId = spiritId})
 			_G.UpdateQuestProgress(player, "CatchSpecificSpirit", {SpiritId = spiritId})
+		end
+		if SpiritResonance and SpiritResonance.MarkDailySlot then
+			SpiritResonance.MarkDailySlot(data, "CatchOrChest")
 		end
 
 		PlaySpiritCatchAnimation(spiritModel, catchTrap, true, afterCatchVisual)

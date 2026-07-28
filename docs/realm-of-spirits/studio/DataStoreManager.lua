@@ -41,6 +41,19 @@ local function NormalizeSpirits(data)
 	if type(data.ResonanceDaily) ~= "table" then
 		data.ResonanceDaily = { Date = "", Care = false, Temper = false }
 	end
+	if type(data.DailyBoard) ~= "table" then
+		data.DailyBoard = {
+			DayKey = "",
+			Care = false,
+			Temper = false,
+			BattleWin = false,
+			CatchOrChest = false,
+			BonusNextDay = false,
+			ClaimedSlots = {},
+		}
+	elseif type(data.DailyBoard.ClaimedSlots) ~= "table" then
+		data.DailyBoard.ClaimedSlots = {}
+	end
 	if type(data.ShopDaily) ~= "table" then
 		data.ShopDaily = { Date = "", Counts = {} }
 	end
@@ -158,6 +171,15 @@ function DataStoreManager:GetDefaultData()
 		ActiveSpiritIndex = 1,
 		SpiritStamina = 100,
 		ResonanceDaily = { Date = "", Care = false, Temper = false },
+		DailyBoard = {
+			DayKey = "",
+			Care = false,
+			Temper = false,
+			BattleWin = false,
+			CatchOrChest = false,
+			BonusNextDay = false,
+			ClaimedSlots = {},
+		},
 		ShopDaily = { Date = "", Counts = {} },
 		ShowcaseSlots = 0,
 		Showcase = {},

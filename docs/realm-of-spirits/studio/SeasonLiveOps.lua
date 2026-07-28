@@ -51,6 +51,15 @@ function SeasonLiveOps.Ensure(playerData)
 	playerData.CrystalPity.Misses = math.max(0, math.floor(tonumber(playerData.CrystalPity.Misses) or 0))
 end
 
+function SeasonLiveOps.TokenMult(playerData)
+	SeasonLiveOps.Ensure(playerData)
+	local board = playerData and playerData.DailyBoard
+	if type(board) == "table" and board.BonusNextDay then
+		return 2
+	end
+	return 1
+end
+
 function SeasonLiveOps.GrantTokens(playerData, amount, reason)
 	SeasonLiveOps.Ensure(playerData)
 	amount = math.max(0, math.floor(tonumber(amount) or 0))
@@ -214,18 +223,31 @@ function SeasonLiveOps.ClaimPassLevel(playerData, levelIndex)
 end
 
 function SeasonLiveOps.OnDailyCare(playerData)
-	SeasonLiveOps.GrantTokens(playerData, 2, "Care")
-	SeasonLiveOps.AddPassXp(playerData, 15)
+	local m = SeasonLiveOps.TokenMult(playerData)
+	SeasonLiveOps.GrantTokens(playerData, 2 * m, "Care")
+	SeasonLiveOps.AddPassXp(playerData, 15 * m)
 end
 
 function SeasonLiveOps.OnDailyTemper(playerData)
-	SeasonLiveOps.GrantTokens(playerData, 3, "Temper")
-	SeasonLiveOps.AddPassXp(playerData, 20)
+	local m = SeasonLiveOps.TokenMult(playerData)
+	SeasonLiveOps.GrantTokens(playerData, 3 * m, "Temper")
+	SeasonLiveOps.AddPassXp(playerData, 20 * m)
 end
 
 function SeasonLiveOps.OnBattleWin(playerData)
-	SeasonLiveOps.GrantTokens(playerData, 1, "Battle")
-	SeasonLiveOps.AddPassXp(playerData, 5)
+	local m = SeasonLiveOps.TokenMult(playerData)
+	SeasonLiveOps.GrantTokens(playerData, 1 * m, "Battle")
+	SeasonLiveOps.AddPassXp(playerData, 5 * m)
+end
+
+-- CatchOrChest board-slot drip (Care/Temper/Battle use their own hooks)
+function SeasonLiveOps.OnDailyBoardSlot(playerData, slotKey)
+	if slotKey ~= "CatchOrChest" then
+		return
+	end
+	local m = SeasonLiveOps.TokenMult(playerData)
+	SeasonLiveOps.GrantTokens(playerData, 1 * m, "DailyBoard")
+	SeasonLiveOps.AddPassXp(playerData, 5 * m)
 end
 
 function SeasonLiveOps.GetBondXpMultiplier(playerData)

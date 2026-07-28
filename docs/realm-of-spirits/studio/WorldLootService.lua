@@ -185,6 +185,14 @@ local function spawnChest(position, index)
 		if _G.UpdateQuestProgress then
 			_G.UpdateQuestProgress(player, "FindChests", { Count = 1 })
 		end
+		do
+			local okSR, SR = pcall(function()
+				return require(game:GetService("ReplicatedStorage").RealmOfSpirits.SpiritResonance)
+			end)
+			if okSR and SR and SR.MarkDailySlot then
+				SR.MarkDailySlot(data, "CatchOrChest")
+			end
+		end
 		DataEvent:FireClient(player, "FullSync", data)
 		HavenEvent:FireClient(player, "Toast", { Text = "Сундук: +25 меди" })
 		lid.CFrame = lid.CFrame * CFrame.Angles(math.rad(-35), 0, 0)

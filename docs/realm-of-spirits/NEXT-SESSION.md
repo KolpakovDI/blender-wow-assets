@@ -1,27 +1,26 @@
 # NEXT SESSION
 
-**Статус:** 2026-07-28 — **Daily Board дизайн DONE** (`DAILY-BOARD.md`, scope A). Hunt 213 MCP PASS.
+**Статус:** 2026-07-28 — **Daily Board lite** Studio + MCP smoke PASS (4/4 + BonusNextDay ×2).
 
 Дата якоря: 2026-07-28
 
 ## Старт сессии (порядок жёсткий)
 
-1. **Ctrl+S** place, если после Hunt 213 ещё не сохраняли (`SpiritTemplate13`/`113`)
-2. Выбрать следующий продукт:
-   - **Daily Board lite (B)** — по чеклисту в `DAILY-BOARD.md` (DataStore → hooks → SeasonLiveOps ×2 → activity bar)
-   - **Hunt 214** — следующий дух/зона
-3. Опционально: Play Hunt 213 после 212
+1. **Ctrl+S** place (Daily Board + Hunt 213 templates если ещё не)
+2. Optional Play: закрыть 4 слота вручную → завтра `· Бонус` на activity bar
+3. Дальше: **Hunt 214** или weekly rule lite (out of scope Daily Board)
 
 ## Product progress
 
 | Тема | Статус |
 |------|--------|
-| Daily Board дизайн (scope A) | **DONE** · [`DAILY-BOARD.md`](DAILY-BOARD.md) |
-| Daily Board lite (scope B) | не начат |
-| Hunt 213 Sand | **MCP smoke PASS** · Ctrl+S place |
-| Quest 301–303 Resonance | PASS |
-| ShowcasePlaza / Phase 4 | Studio OK |
+| Daily Board lite (scope B) | **MCP smoke PASS** |
+| Daily Board дизайн (A) | DONE |
+| Hunt 213 Sand | MCP PASS · Ctrl+S |
+| Resonance 301–303 | PASS |
 
 ## Studio SoT
 
 `C:\\Mimo\\RealmOfSpirits\\RealmOfSpirits second.rbxl` — **Ctrl+S.**
+
+Модули Daily Board: `SpiritResonance`, `SeasonLiveOps`, `DataStoreManager`, `GameManager`, `WorldLootService`, `UIController`.

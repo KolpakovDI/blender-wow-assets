@@ -18,6 +18,93 @@ function SpiritResonance.TodayKey()
 	return os.date("!%Y-%m-%d")
 end
 
+local SLOT_KEYS = { Care = true, Temper = true, BattleWin = true, CatchOrChest = true }
+
+local function emptyDailyBoard(dayKey, bonusNextDay)
+	return {
+		DayKey = dayKey,
+		Care = false,
+		Temper = false,
+		BattleWin = false,
+		CatchOrChest = false,
+		BonusNextDay = bonusNextDay == true,
+		ClaimedSlots = {},
+	}
+end
+
+local function boardComplete(board)
+	return board
+		and board.Care
+		and board.Temper
+		and board.BattleWin
+		and board.CatchOrChest
+end
+
+function SpiritResonance.EnsureDailyBoard(data)
+	if type(data) ~= "table" then
+		return data
+	end
+	local today = SpiritResonance.TodayKey()
+	local board = data.DailyBoard
+	if type(board) ~= "table" then
+		data.DailyBoard = emptyDailyBoard(today, false)
+		return data.DailyBoard
+	end
+	if board.DayKey ~= today then
+		local bonus = boardComplete(board)
+		data.DailyBoard = emptyDailyBoard(today, bonus)
+	else
+		board.Care = board.Care == true
+		board.Temper = board.Temper == true
+		board.BattleWin = board.BattleWin == true
+		board.CatchOrChest = board.CatchOrChest == true
+		board.BonusNextDay = board.BonusNextDay == true
+		if type(board.ClaimedSlots) ~= "table" then
+			board.ClaimedSlots = {}
+		end
+	end
+	return data.DailyBoard
+end
+
+-- Returns true if slot newly marked
+function SpiritResonance.MarkDailySlot(playerData, slotKey)
+	if type(playerData) ~= "table" or not SLOT_KEYS[slotKey] then
+		return false
+	end
+	local board = SpiritResonance.EnsureDailyBoard(playerData)
+	if board[slotKey] then
+		return false
+	end
+	board[slotKey] = true
+	local today = SpiritResonance.TodayKey()
+	if type(playerData.ResonanceDaily) ~= "table" or playerData.ResonanceDaily.Date ~= today then
+		playerData.ResonanceDaily = { Date = today, Care = board.Care, Temper = board.Temper }
+	else
+		playerData.ResonanceDaily.Care = board.Care
+		playerData.ResonanceDaily.Temper = board.Temper
+	end
+	board.ClaimedSlots = board.ClaimedSlots or {}
+	if not board.ClaimedSlots[slotKey] then
+		board.ClaimedSlots[slotKey] = true
+		-- Care/Temper soft: OnDailyCare/Temper; BattleWin: OnBattleWin; CatchOrChest: board drip
+		if slotKey == "CatchOrChest" then
+			local okLive, SeasonLiveOps = pcall(function()
+				return require(script.Parent.SeasonLiveOps)
+			end)
+			if not okLive then
+				okLive, SeasonLiveOps = pcall(function()
+					local sss = game:GetService("ServerScriptService")
+					return require(sss.RealmOfSpirits.SeasonLiveOps)
+				end)
+			end
+			if okLive and SeasonLiveOps and SeasonLiveOps.OnDailyBoardSlot then
+				SeasonLiveOps.OnDailyBoardSlot(playerData, slotKey)
+			end
+		end
+	end
+	return true
+end
+
 function SpiritResonance.XpToNext(level)
 	level = math.clamp(tonumber(level) or 1, 1, 100)
 	return 40 + level * 45
@@ -54,10 +141,13 @@ function SpiritResonance.EnsurePlayer(data)
 		return data
 	end
 	data.SpiritStamina = math.clamp(tonumber(data.SpiritStamina) or SpiritResonance.STAMINA_MAX, 0, SpiritResonance.STAMINA_MAX)
+	local board = SpiritResonance.EnsureDailyBoard(data)
 	local today = SpiritResonance.TodayKey()
-	if type(data.ResonanceDaily) ~= "table" or data.ResonanceDaily.Date ~= today then
-		data.ResonanceDaily = { Date = today, Care = false, Temper = false }
-	end
+	data.ResonanceDaily = {
+		Date = today,
+		Care = board.Care == true,
+		Temper = board.Temper == true,
+	}
 	if type(data.Spirits) == "table" then
 		for _, s in ipairs(data.Spirits) do
 			SpiritResonance.EnsureSpirit(s)
@@ -191,6 +281,9 @@ function SpiritResonance.Care(playerData, spiritIndex, useTreat)
 		end
 	end
 	local ok, msg = SpiritResonance.AddBondXp(spirit, xpGain)
+	if ok then
+		SpiritResonance.MarkDailySlot(playerData, "Care")
+	end
 	return ok, msg
 end
 
@@ -220,6 +313,7 @@ function SpiritResonance.Temper(playerData, spiritIndex, focus)
 	spirit.TemperFocus = focus
 	spirit.TemperPoints[focus] = (spirit.TemperPoints[focus] or 0) + 1
 	playerData.ResonanceDaily.Temper = true
+	SpiritResonance.MarkDailySlot(playerData, "Temper")
 	local msg = "Закалка +" .. focus
 	if usedItem then
 		msg = msg .. " (камень)"
@@ -296,6 +390,7 @@ function SpiritResonance.GetClientSnapshot(playerData)
 	return {
 		SpiritStamina = playerData.SpiritStamina,
 		ResonanceDaily = playerData.ResonanceDaily,
+		DailyBoard = playerData.DailyBoard,
 		Spirits = spirits,
 	}
 end

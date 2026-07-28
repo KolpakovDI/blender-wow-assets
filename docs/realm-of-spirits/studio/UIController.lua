@@ -163,8 +163,8 @@ local screenGui = CreateScreenGui()
 -- Phase 1: daily Resonance activity bar + quest tracker
 local activityBar = Instance.new("Frame")
 activityBar.Name = "ResonanceActivityBar"
-activityBar.Size = UDim2.fromOffset(210, 28)
-activityBar.Position = UDim2.new(0.5, -105, 0, 8)
+activityBar.Size = UDim2.fromOffset(340, 28)
+activityBar.Position = UDim2.new(0.5, -170, 0, 8)
 activityBar.BackgroundColor3 = Color3.fromRGB(22, 16, 32)
 activityBar.BackgroundTransparency = 0.15
 activityBar.BorderSizePixel = 0
@@ -189,18 +189,36 @@ activityLabel.Font = Enum.Font.GothamBold
 activityLabel.TextSize = 13
 activityLabel.TextXAlignment = Enum.TextXAlignment.Center
 activityLabel.TextColor3 = Color3.fromRGB(255, 230, 170)
-activityLabel.Text = "Сегодня: Уход ○  Закалка ○"
+activityLabel.Text = "День 0/4 · Уход ○ · Закалка ○ · Бой ○ · Лут ○"
+activityLabel.TextSize = 12
 activityLabel.ZIndex = 21
 activityLabel.Parent = activityBar
 
 local function RefreshActivityBar(snapshot)
+	local board = (snapshot and snapshot.DailyBoard)
+		or (PlayerData and PlayerData.DailyBoard)
+		or {}
 	local daily = (snapshot and snapshot.ResonanceDaily) or (PlayerData and PlayerData.ResonanceDaily) or {}
-	local care = daily.Care and "✓" or "○"
-	local temper = daily.Temper and "✓" or "○"
-	activityLabel.Text = string.format("Сегодня: Уход %s  Закалка %s", care, temper)
-	activityLabel.TextColor3 = (daily.Care and daily.Temper)
+	local care = (board.Care or daily.Care) and "✓" or "○"
+	local temper = (board.Temper or daily.Temper) and "✓" or "○"
+	local battle = board.BattleWin and "✓" or "○"
+	local loot = board.CatchOrChest and "✓" or "○"
+	local n = 0
+	if care == "✓" then n += 1 end
+	if temper == "✓" then n += 1 end
+	if battle == "✓" then n += 1 end
+	if loot == "✓" then n += 1 end
+	local bonus = board.BonusNextDay and " · Бонус" or ""
+	activityLabel.Text = string.format("День %d/4 · Уход %s · Закалка %s · Бой %s · Лут %s%s", n, care, temper, battle, loot, bonus)
+	activityLabel.TextColor3 = (n >= 4)
 		and Color3.fromRGB(120, 255, 180)
-		or Color3.fromRGB(255, 230, 170)
+		or (board.BonusNextDay and Color3.fromRGB(255, 210, 120) or Color3.fromRGB(255, 230, 170))
+	if snapshot and snapshot.Dex then
+		-- Dex panel refresh when bundled in resonance snapshot (Studio)
+		pcall(function()
+			if RefreshDexPanel then RefreshDexPanel(snapshot.Dex) end
+		end)
+	end
 end
 
 local function PulseFrame(frame, color, times)

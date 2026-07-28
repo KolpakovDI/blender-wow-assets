@@ -7,7 +7,7 @@
 ## [Unreleased]
 
 ### Added
-- **Docs: Daily Board** — дизайн scope A (4 слота, activity bar, soft ×2 завтра) — [`DAILY-BOARD.md`](DAILY-BOARD.md); код не трогали
+- **Daily Board lite**: 4 слота (Care/Temper/Battle/Loot), `DailyBoard` + activity bar `N/4`, `BonusNextDay` ×2 soft tokens/Pass XP — см. [`DAILY-BOARD.md`](DAILY-BOARD.md)
 - **Hunt 213 / Sand**: дух **#13** Пустынный Скорпион → эво **#113** Песчаный Император; стихия `Sand`; зона **SandDunes** `(360,-40)`; skills 114–116; кристалл Item **113**; трофей UniqueItem **20**; квест **213** (prereq 212)
 - **Spirit Resonance Phase 4**: seasonal form (`SeasonalFormId`, shop/BP), Activity Pass UI (`PASS`), crystal pity (10 misses → гарант на бой/сундук) — `SeasonLiveOps`
 - **Spirit Resonance Phase 3**: Dex UI (`DEX` на activity bar), Dex passives в бою (`DexAttackPct`/`DexDefensePct`), Haven `ResonanceShowcaseService` (витрина южнее Мики) — см. `SPIRIT-RESONANCE-PLAN.md`
