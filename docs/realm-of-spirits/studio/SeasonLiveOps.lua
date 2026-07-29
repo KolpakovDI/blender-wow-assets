@@ -4,13 +4,15 @@ local SeasonLiveOps = {}
 SeasonLiveOps.Current = {
 	Id = "S1_Pilot",
 	Name = "Пилот сезона духов",
-	EndsAt = nil,
+	EndsAt = 1788220799, -- 2026-08-31 23:59:59 UTC
 }
 
 SeasonLiveOps.TokenName = "Жетон сезона"
 SeasonLiveOps.CRYSTAL_PITY_THRESHOLD = 10
 SeasonLiveOps.CRYSTAL_DROP_CHANCE = 0.28
-SeasonLiveOps.CRYSTAL_POOL = { 101, 102, 103, 104, 105, 107, 108, 111, 112 }
+SeasonLiveOps.CRYSTAL_POOL = {
+	101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115,
+}
 
 SeasonLiveOps.EventShop = {
 	{ Id = "trail_ember", Name = "След: Угли", CostTokens = 25, Kind = "Cosmetic", CosmeticPrefix = "Trail_Ember_" },
@@ -273,6 +275,17 @@ end
 
 function SeasonLiveOps.GetClientSnapshot(playerData)
 	SeasonLiveOps.Ensure(playerData)
+	local soft = playerData.SoftBuffs or {}
+	local bondLeft = 0
+	local exp = tonumber(soft.BondXpExpires) or 0
+	if exp > os.time() and soft.BondXpMult then
+		bondLeft = math.max(0, exp - os.time())
+	end
+	local endsAt = SeasonLiveOps.Current.EndsAt
+	local daysLeft = nil
+	if type(endsAt) == "number" and endsAt > 0 then
+		daysLeft = math.max(0, math.ceil((endsAt - os.time()) / 86400))
+	end
 	return {
 		Season = SeasonLiveOps.Current,
 		TokenName = SeasonLiveOps.TokenName,
@@ -281,6 +294,12 @@ function SeasonLiveOps.GetClientSnapshot(playerData)
 		BattlePass = SeasonLiveOps.BattlePass,
 		SeasonPass = playerData.SeasonPass,
 		CrystalPity = SeasonLiveOps.GetPitySnapshot(playerData),
+		SoftBuffs = {
+			BondXpMult = soft.BondXpMult,
+			BondXpExpires = soft.BondXpExpires,
+			BondSecondsLeft = bondLeft,
+		},
+		DaysLeft = daysLeft,
 	}
 end
 

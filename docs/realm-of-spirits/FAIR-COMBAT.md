@@ -58,5 +58,7 @@ Gacha → только cosmetics (редкость common/rare/legendary). Shop 
 ## KR (из GOALS)
 - fair combat **0** нарушений pay→combat
 - gacha clarity ≥80% (UI говорит «только косметика»)
+- trade MVP: `SimulateSwap` item↔item + item↔cosmetic unit **PASS** 2026-07-29 (`/tradetest` + 2p Play optional)
+- flex ≥30% (wardrobe equip в Safe)
 - trade MVP ≥20 обменов в тесте (после P2P slice)
 - flex ≥30% игроков с cosmetic equipped в Safe

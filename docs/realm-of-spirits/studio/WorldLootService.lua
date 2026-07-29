@@ -233,6 +233,9 @@ local crystalSpots = {
 	-- IronWastes / Metal (#14)
 	{ Pos = Vector3.new(442, 2, 188), ItemId = 114, Label = "Металлический кристалл", Color = Color3.fromRGB(140, 155, 175), LightColor = Color3.fromRGB(180, 195, 215) },
 	{ Pos = Vector3.new(458, 2, 212), ItemId = 114, Label = "Металлический кристалл", Color = Color3.fromRGB(140, 155, 175), LightColor = Color3.fromRGB(180, 195, 215) },
+	-- CrystalCaves / Crystal (#15)
+	{ Pos = Vector3.new(512, 2, 268), ItemId = 115, Label = "Кристальный кристалл", Color = Color3.fromRGB(180, 220, 255), LightColor = Color3.fromRGB(210, 240, 255) },
+	{ Pos = Vector3.new(528, 2, 292), ItemId = 115, Label = "Кристальный кристалл", Color = Color3.fromRGB(180, 220, 255), LightColor = Color3.fromRGB(210, 240, 255) },
 	-- Haven Exit / Akihabara approach — квест 7 «Украденная манга»
 	{ Pos = Vector3.new(-25, 2, 72), ItemId = 120, Label = "Коробка редкой манги", Color = Color3.fromRGB(220, 90, 120), LightColor = Color3.fromRGB(255, 140, 170) },
 	{ Pos = Vector3.new(-18, 2, 85), ItemId = 120, Label = "Коробка редкой манги", Color = Color3.fromRGB(220, 90, 120), LightColor = Color3.fromRGB(255, 140, 170) },

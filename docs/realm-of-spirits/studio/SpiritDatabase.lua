@@ -117,6 +117,14 @@ SpiritDatabase.Spirits = {
 		SkillIds = {117, 118},
 		CatchRate = 0.36,
 	},
+	[15] = {
+		MovementType = "Walk",
+		Id = 15, Name = "Хрустальный Лис", Element = "Crystal", Rarity = "Uncommon",
+		Color = Color3.fromRGB(180, 220, 255), Size = 3.4,
+		BaseStats = {HP = 108, Attack = 22, Defense = 14, Speed = 18},
+		SkillIds = {120, 121},
+		CatchRate = 0.35,
+	},
 	[101] = {Id = 101, Name = "Огненный Тигр", Element = "Fire", Rarity = "Rare", BaseStats = {HP = 150, Attack = 25, Defense = 15, Speed = 18}, SkillIds = {1, 2, 3}, CatchRate = 0.1},
 	[102] = {MovementType = "Fly", Id = 102, Name = "Ледяной Феникс", Element = "Ice", Rarity = "Rare", BaseStats = {HP = 120, Attack = 22, Defense = 12, Speed = 28}, SkillIds = {11, 12, 13}, CatchRate = 0.08},
 	[103] = {Id = 103, Name = "Теневой Волк", Element = "Dark", Rarity = "Epic", BaseStats = {HP = 180, Attack = 30, Defense = 18, Speed = 22}, SkillIds = {21, 22, 23}, CatchRate = 0.05},
@@ -131,6 +139,7 @@ SpiritDatabase.Spirits = {
 	[112] = {MovementType = "Walk", Id = 112, Name = "Василиск-Гидра", Element = "Poison", Rarity = "Rare", Color = Color3.fromRGB(70, 150, 45), Size = 5.2, BaseStats = {HP = 175, Attack = 28, Defense = 18, Speed = 16}, SkillIds = {111, 112, 113}, CatchRate = 0.07},
 	[113] = {MovementType = "Walk", Id = 113, Name = "Песчаный Император", Element = "Sand", Rarity = "Rare", Color = Color3.fromRGB(190, 150, 70), Size = 5.3, BaseStats = {HP = 185, Attack = 29, Defense = 20, Speed = 15}, SkillIds = {114, 115, 116}, CatchRate = 0.07},
 	[114] = {MovementType = "Walk", Id = 114, Name = "Железный Колосс", Element = "Metal", Rarity = "Rare", Color = Color3.fromRGB(100, 115, 135), Size = 5.5, BaseStats = {HP = 195, Attack = 30, Defense = 24, Speed = 12}, SkillIds = {117, 118, 119}, CatchRate = 0.07},
+	[115] = {MovementType = "Walk", Id = 115, Name = "Призматический Страж", Element = "Crystal", Rarity = "Rare", Color = Color3.fromRGB(140, 200, 255), Size = 5.2, BaseStats = {HP = 180, Attack = 31, Defense = 20, Speed = 20}, SkillIds = {120, 121, 122}, CatchRate = 0.07},
 }
 
 for _, spirit in pairs(SpiritDatabase.Spirits) do
@@ -144,21 +153,86 @@ for _, spirit in pairs(SpiritDatabase.Spirits) do
 	end
 end
 
-SpiritDatabase.ElementChart = {
-	Fire = {Strong = {"Ice", "Dark"}, Weak = {"Water", "Earth"}},
-	Ice = {Strong = {"Fire", "Lightning"}, Weak = {"Fire", "Lightning"}},
-	Dark = {Strong = {"Light", "Lightning"}, Weak = {"Light", "Fire"}},
-	Lightning = {Strong = {"Ice", "Water"}, Weak = {"Earth", "Dark"}},
-	Light = {Strong = {"Dark"}, Weak = {"Dark"}},
-	Water = {Strong = {"Fire", "Earth"}, Weak = {"Lightning", "Ice"}},
-	Earth = {Strong = {"Lightning", "Fire"}, Weak = {"Water", "Ice"}},
-	Wind = {Strong = {"Earth", "Lightning"}, Weak = {"Ice", "Fire"}},
-	Nature = {Strong = {"Water", "Earth"}, Weak = {"Fire", "Ice"}},
-	Moon = {Strong = {"Dark", "Light"}, Weak = {"Lightning", "Fire"}},
-	Poison = {Strong = {"Nature", "Water"}, Weak = {"Fire", "Earth"}},
-	Sand = {Strong = {"Fire", "Lightning"}, Weak = {"Water", "Nature"}},
-	Metal = {Strong = {"Nature", "Sand"}, Weak = {"Fire", "Lightning"}},
+-- Four primaries: Fire → Earth → Wind → Water → Fire. Aspect = old flavor tag.
+local PRIMARY_ASPECT = {
+	[1] = { "Fire", "Fire" },
+	[101] = { "Fire", "Fire" },
+	[8] = { "Fire", "Ash" },
+	[108] = { "Fire", "Ash" },
+	[5] = { "Fire", "Light" },
+	[105] = { "Fire", "Light" },
+	[6] = { "Water", "Water" },
+	[106] = { "Water", "Water" },
+	[2] = { "Water", "Ice" },
+	[102] = { "Water", "Ice" },
+	[11] = { "Water", "Moon" },
+	[111] = { "Water", "Moon" },
+	[7] = { "Earth", "Earth" },
+	[107] = { "Earth", "Earth" },
+	[10] = { "Earth", "Nature" },
+	[110] = { "Earth", "Nature" },
+	[13] = { "Earth", "Sand" },
+	[113] = { "Earth", "Sand" },
+	[14] = { "Earth", "Metal" },
+	[114] = { "Earth", "Metal" },
+	[15] = { "Earth", "Crystal" },
+	[115] = { "Earth", "Crystal" },
+	[12] = { "Earth", "Poison" },
+	[112] = { "Earth", "Poison" },
+	[9] = { "Wind", "Wind" },
+	[109] = { "Wind", "Wind" },
+	[4] = { "Wind", "Storm" },
+	[104] = { "Wind", "Storm" },
+	[3] = { "Wind", "Dark" },
+	[103] = { "Wind", "Dark" },
 }
+
+for id, spirit in pairs(SpiritDatabase.Spirits) do
+	local map = PRIMARY_ASPECT[id]
+	if map then
+		spirit.PrimaryElement = map[1]
+		spirit.Aspect = map[2]
+		spirit.Element = map[1] -- battle / Dex use Primary
+	else
+		spirit.PrimaryElement = spirit.Element or "Earth"
+		spirit.Aspect = spirit.Aspect or spirit.PrimaryElement
+		spirit.Element = spirit.PrimaryElement
+	end
+end
+
+-- Cycle: Fire → Earth → Wind → Water → Fire (×1.5 / ×0.7)
+SpiritDatabase.ElementChart = {
+	Fire = { Strong = { "Earth" }, Weak = { "Water" } },
+	Earth = { Strong = { "Wind" }, Weak = { "Fire" } },
+	Wind = { Strong = { "Water" }, Weak = { "Earth" } },
+	Water = { Strong = { "Fire" }, Weak = { "Wind" } },
+}
+
+SpiritDatabase.AspectLabelsRu = {
+	Fire = "Огонь",
+	Ash = "Пепел",
+	Light = "Свет",
+	Water = "Вода",
+	Ice = "Лёд",
+	Moon = "Луна",
+	Earth = "Земля",
+	Nature = "Природа",
+	Sand = "Песок",
+	Metal = "Металл",
+	Crystal = "Кристалл",
+	Poison = "Яд",
+	Wind = "Ветер",
+	Storm = "Гроза",
+	Dark = "Тень",
+}
+
+SpiritDatabase.PrimaryLabelsRu = {
+	Fire = "Огонь",
+	Earth = "Земля",
+	Wind = "Ветер",
+	Water = "Вода",
+}
+
 
 -- Only purchasable shop rows (not evolution materials)
 SpiritDatabase.ShopItems = {}
@@ -182,10 +256,81 @@ SpiritDatabase.EvolutionRules = {
 	[12] = {EvolvedId = 112, RequiredLevel = 14, RequiredBond = 3, RequiredItems = {{Id = 112, Quantity = 5}}, RequiredBattles = 14},
 	[13] = {EvolvedId = 113, RequiredLevel = 14, RequiredBond = 3, RequiredItems = {{Id = 113, Quantity = 5}}, RequiredBattles = 14},
 	[14] = {EvolvedId = 114, RequiredLevel = 14, RequiredBond = 3, RequiredItems = {{Id = 114, Quantity = 5}}, RequiredBattles = 14},
+	[15] = {EvolvedId = 115, RequiredLevel = 14, RequiredBond = 3, RequiredItems = {{Id = 115, Quantity = 5}}, RequiredBattles = 14},
 }
 
 function SpiritDatabase.Get(id)
 	return SpiritDatabase.Spirits[id]
+end
+
+function SpiritDatabase.GetPrimary(spiritOrId)
+	local spirit = type(spiritOrId) == "table" and spiritOrId or SpiritDatabase.Spirits[spiritOrId]
+	if not spirit then
+		return "Earth"
+	end
+	return spirit.PrimaryElement or spirit.Element or "Earth"
+end
+
+function SpiritDatabase.GetAspect(spiritOrId)
+	local spirit = type(spiritOrId) == "table" and spiritOrId or SpiritDatabase.Spirits[spiritOrId]
+	if not spirit then
+		return "Earth"
+	end
+	return spirit.Aspect or spirit.PrimaryElement or spirit.Element or "Earth"
+end
+
+function SpiritDatabase.FormatElementLabel(spiritOrId)
+	local primary = SpiritDatabase.GetPrimary(spiritOrId)
+	local aspect = SpiritDatabase.GetAspect(spiritOrId)
+	local pRu = SpiritDatabase.PrimaryLabelsRu[primary] or primary
+	local aRu = SpiritDatabase.AspectLabelsRu[aspect] or aspect
+	if aspect == primary or aRu == pRu then
+		return pRu
+	end
+	return string.format("%s (%s)", pRu, aRu)
+end
+
+--- Returns multiplier, tag ("Strong"|"Weak"|"Neutral"), atkEl, defEl
+function SpiritDatabase.GetElementMultiplier(attacker, defender)
+	local atkEl = SpiritDatabase.GetPrimary(attacker)
+	local defEl = SpiritDatabase.GetPrimary(defender)
+	local chart = SpiritDatabase.ElementChart[atkEl]
+	local mult, tag = 1, "Neutral"
+	if chart then
+		if table.find(chart.Strong, defEl) then
+			mult, tag = 1.5, "Strong"
+		elseif table.find(chart.Weak, defEl) then
+			mult, tag = 0.7, "Weak"
+		end
+	end
+	return mult, tag, atkEl, defEl
+end
+
+--- Short RU tag for battle log (nil when Neutral)
+function SpiritDatabase.FormatElementMatchup(attacker, defender)
+	local mult, tag, atkEl, defEl = SpiritDatabase.GetElementMultiplier(attacker, defender)
+	local aRu = SpiritDatabase.PrimaryLabelsRu[atkEl] or atkEl
+	local dRu = SpiritDatabase.PrimaryLabelsRu[defEl] or defEl
+	if tag == "Strong" then
+		return string.format("Сильно! %s → %s ×1.5", aRu, dRu), mult, tag
+	elseif tag == "Weak" then
+		return string.format("Слабо… %s → %s ×0.7", aRu, dRu), mult, tag
+	end
+	return nil, mult, tag
+end
+
+--- Battle-start agency tip: your Primary vs enemy + cycle reminder
+function SpiritDatabase.FormatElementAgencyTip(attacker, defender)
+	local mult, tag, atkEl, defEl = SpiritDatabase.GetElementMultiplier(attacker, defender)
+	local aRu = SpiritDatabase.PrimaryLabelsRu[atkEl] or atkEl
+	local dRu = SpiritDatabase.PrimaryLabelsRu[defEl] or defEl
+	local verdict = "равно"
+	if tag == "Strong" then
+		verdict = "Сильно ×1.5"
+	elseif tag == "Weak" then
+		verdict = "Слабо ×0.7"
+	end
+	return string.format("%s vs %s — %s · Огонь→Земля→Ветер→Вода→Огонь", aRu, dRu, verdict), mult, tag
 end
 
 function SpiritDatabase.GetSkillNames(spirit)
@@ -219,6 +364,9 @@ function SpiritDatabase.GetDisplay(id)
 	return {
 		Name = spirit.Name,
 		Element = spirit.Element,
+		PrimaryElement = SpiritDatabase.GetPrimary(spirit),
+		Aspect = SpiritDatabase.GetAspect(spirit),
+		ElementLabel = SpiritDatabase.FormatElementLabel(spirit),
 		Rarity = spirit.Rarity,
 	}
 end
@@ -234,18 +382,9 @@ function SpiritDatabase.GetEvolutionTarget(id)
 end
 
 function SpiritDatabase.CalculateDamage(attacker, defender, skill)
-	local element = attacker.Element
 	local damage = (skill.Damage or 10) + ((attacker.BaseStats and attacker.BaseStats.Attack or 10) * 0.5)
 	damage = damage - ((defender.BaseStats and defender.BaseStats.Defense or 0) * 0.3)
-	local elementBonus = 1
-	local chart = SpiritDatabase.ElementChart[element]
-	if chart then
-		if table.find(chart.Strong, defender.Element) then
-			elementBonus = 1.5
-		elseif table.find(chart.Weak, defender.Element) then
-			elementBonus = 0.7
-		end
-	end
+	local elementBonus = SpiritDatabase.GetElementMultiplier(attacker, defender)
 	damage = damage * elementBonus * (math.random(85, 115) / 100)
 	return math.max(1, math.floor(damage))
 end

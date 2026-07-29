@@ -28,6 +28,7 @@ ItemCatalog.ById = {
 	[112] = {Id = 112, Name = "Ядовитый кристалл", Category = "Material", Element = "Poison", SellPrice = 0, Unsellable = true, Description = "Материал эволюции ядовитых духов", CombatUtility = false},
 	[113] = {Id = 113, Name = "Песчаный кристалл", Category = "Material", Element = "Sand", SellPrice = 0, Unsellable = true, Description = "Материал эволюции песчаных духов", CombatUtility = false},
 	[114] = {Id = 114, Name = "Металлический кристалл", Category = "Material", Element = "Metal", SellPrice = 0, Unsellable = true, Description = "Материал эволюции металлических духов", CombatUtility = false},
+	[115] = {Id = 115, Name = "Кристальный кристалл", Category = "Material", Element = "Crystal", SellPrice = 0, Unsellable = true, Description = "Материал эволюции кристальных духов", CombatUtility = false},
 	[120] = {Id = 120, Name = "Коробка редкой манги", Category = "Quest", SellPrice = 0, Unsellable = true, Description = "Украденная партия манги для Мики (квест)", CombatUtility = false},
 }
 

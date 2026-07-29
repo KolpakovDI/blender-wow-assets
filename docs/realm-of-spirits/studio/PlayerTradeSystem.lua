@@ -352,6 +352,55 @@ local function tryComplete(playerA, playerB)
 	print("[PlayerTrade] complete", playerA.Name, "<->", playerB.Name, gaveA, "<->", gotA)
 end
 
+--- Studio/QA: pure data swap (no players / zone). Returns ok, reason.
+function PlayerTradeSystem.SimulateSwap(dataA, dataB, offerA, offerB)
+	if type(dataA) ~= "table" or type(dataB) ~= "table" then
+		return false, "no_data"
+	end
+	offerA = offerA or {}
+	offerB = offerB or {}
+	if not offerHasContent(offerA) or not offerHasContent(offerB) then
+		return false, "empty_offer"
+	end
+
+	local idA = tonumber(offerA.ItemId)
+	local qtyA = math.max(0, math.floor(tonumber(offerA.Quantity) or 0))
+	local idB = tonumber(offerB.ItemId)
+	local qtyB = math.max(0, math.floor(tonumber(offerB.Quantity) or 0))
+	local cosA = (type(offerA.CosmeticId) == "string" and offerA.CosmeticId ~= "") and offerA.CosmeticId or nil
+	local cosB = (type(offerB.CosmeticId) == "string" and offerB.CosmeticId ~= "") and offerB.CosmeticId or nil
+
+	local takenCosA, takenCosB
+	if cosA then
+		takenCosA = takeCosmetic(dataA, cosA)
+		if not takenCosA then return false, "missing_cosmetic_a" end
+	elseif idA and qtyA > 0 then
+		if not takeItem(dataA, idA, qtyA) then return false, "missing_item_a" end
+	else
+		return false, "empty_offer_a"
+	end
+
+	if cosB then
+		takenCosB = takeCosmetic(dataB, cosB)
+		if not takenCosB then
+			if takenCosA then giveCosmetic(dataA, takenCosA) elseif idA then giveItem(dataA, idA, qtyA) end
+			return false, "missing_cosmetic_b"
+		end
+	elseif idB and qtyB > 0 then
+		if not takeItem(dataB, idB, qtyB) then
+			if takenCosA then giveCosmetic(dataA, takenCosA) elseif idA then giveItem(dataA, idA, qtyA) end
+			return false, "missing_item_b"
+		end
+	else
+		if takenCosA then giveCosmetic(dataA, takenCosA) elseif idA then giveItem(dataA, idA, qtyA) end
+		return false, "empty_offer_b"
+	end
+
+	if takenCosA then giveCosmetic(dataB, takenCosA) elseif idA then giveItem(dataB, idA, qtyA) end
+	if takenCosB then giveCosmetic(dataA, takenCosB) elseif idB then giveItem(dataA, idB, qtyB) end
+	return true, "ok"
+end
+
 function PlayerTradeSystem.Start()
 	tradeEvent.OnServerEvent:Connect(function(player, action, payload)
 		payload = payload or {}

@@ -488,8 +488,251 @@ havenEvent.OnClientEvent:Connect(function(action, data)
 		updateWorldFomoLabel(data.SecondsLeft or 0)
 	end
 end)
+
+-- Activity Pass / Season dock (Studio SoT mirror)
+local PlayersSvc = game:GetService("Players")
+local localPlayer = PlayersSvc.LocalPlayer
+local playerGui = localPlayer:WaitForChild("PlayerGui")
+
+local function ensurePassGui()
+	local gui = playerGui:FindFirstChild("SeasonPassGui")
+	if gui then return gui end
+	gui = Instance.new("ScreenGui")
+	gui.Name = "SeasonPassGui"
+	gui.ResetOnSpawn = false
+	gui.IgnoreGuiInset = true
+	gui.DisplayOrder = 125
+	gui.Parent = playerGui
+
+	local dock = Instance.new("TextButton")
+	dock.Name = "OpenPassButton"
+	dock.Size = UDim2.fromOffset(176, 36)
+	dock.Position = UDim2.new(0, 16, 1, -92)
+	dock.BackgroundColor3 = Color3.fromRGB(255, 196, 80)
+	dock.BackgroundTransparency = 0.05
+	dock.Text = "Сезон · 0 жетонов"
+	dock.Font = Enum.Font.GothamBold
+	dock.TextSize = 15
+	dock.TextColor3 = Color3.fromRGB(40, 28, 8)
+	dock.Parent = gui
+	do
+		local c = Instance.new("UICorner") c.CornerRadius = UDim.new(0, 10) c.Parent = dock
+		local s = Instance.new("UIStroke") s.Color = Color3.fromRGB(255, 230, 150) s.Thickness = 2 s.Parent = dock
+	end
+
+	local hint = Instance.new("TextLabel")
+	hint.Name = "DockHint"
+	hint.Size = UDim2.fromOffset(176, 16)
+	hint.Position = UDim2.new(0, 16, 1, -52)
+	hint.TextXAlignment = Enum.TextXAlignment.Left
+	hint.BackgroundTransparency = 1
+	hint.Font = Enum.Font.Gotham
+	hint.TextSize = 11
+	hint.TextColor3 = Color3.fromRGB(255, 235, 180)
+	hint.Text = "Жетоны: Уход · Закалка · бой · лут"
+	hint.Parent = gui
+
+	local passPanel = Instance.new("Frame")
+	passPanel.Name = "PassPanelFrame"
+	passPanel.Size = UDim2.new(0, 380, 0, 400)
+	passPanel.Position = UDim2.new(0.5, -190, 0.5, -200)
+	passPanel.BackgroundColor3 = Color3.fromRGB(22, 20, 32)
+	passPanel.Visible = false
+	passPanel.Parent = gui
+	do
+		local c = Instance.new("UICorner") c.CornerRadius = UDim.new(0, 12) c.Parent = passPanel
+		local s = Instance.new("UIStroke") s.Color = Color3.fromRGB(255, 196, 80) s.Thickness = 2 s.Parent = passPanel
+	end
+
+	local passTitle = Instance.new("TextLabel")
+	passTitle.Name = "Title"
+	passTitle.Size = UDim2.new(1, -48, 0, 32)
+	passTitle.Position = UDim2.new(0, 14, 0, 10)
+	passTitle.BackgroundTransparency = 1
+	passTitle.Font = Enum.Font.GothamBold
+	passTitle.TextSize = 18
+	passTitle.TextXAlignment = Enum.TextXAlignment.Left
+	passTitle.TextColor3 = Color3.fromRGB(255, 220, 140)
+	passTitle.Text = "Сезонный пропуск"
+	passTitle.Parent = passPanel
+
+	local passClose = Instance.new("TextButton")
+	passClose.Name = "Close"
+	passClose.Size = UDim2.new(0, 30, 0, 30)
+	passClose.Position = UDim2.new(1, -38, 0, 10)
+	passClose.BackgroundColor3 = Color3.fromRGB(60, 45, 40)
+	passClose.Text = "X"
+	passClose.TextColor3 = Color3.fromRGB(255, 230, 200)
+	passClose.Font = Enum.Font.GothamBold
+	passClose.Parent = passPanel
+	do local c = Instance.new("UICorner") c.CornerRadius = UDim.new(0, 6) c.Parent = passClose end
+	passClose.MouseButton1Click:Connect(function() passPanel.Visible = false end)
+
+	local howBox = Instance.new("Frame")
+	howBox.Name = "HowBox"
+	howBox.Size = UDim2.new(1, -28, 0, 78)
+	howBox.Position = UDim2.new(0, 14, 0, 48)
+	howBox.BackgroundColor3 = Color3.fromRGB(40, 32, 28)
+	howBox.Parent = passPanel
+	do local c = Instance.new("UICorner") c.CornerRadius = UDim.new(0, 8) c.Parent = howBox end
+	local howTitle = Instance.new("TextLabel")
+	howTitle.Size = UDim2.new(1, -16, 0, 20)
+	howTitle.Position = UDim2.new(0, 10, 0, 6)
+	howTitle.BackgroundTransparency = 1
+	howTitle.Font = Enum.Font.GothamBold
+	howTitle.TextSize = 13
+	howTitle.TextXAlignment = Enum.TextXAlignment.Left
+	howTitle.TextColor3 = Color3.fromRGB(255, 210, 120)
+	howTitle.Text = "Как получить жетоны"
+	howTitle.Parent = howBox
+	local howBody = Instance.new("TextLabel")
+	howBody.Size = UDim2.new(1, -16, 0, 48)
+	howBody.Position = UDim2.new(0, 10, 0, 26)
+	howBody.BackgroundTransparency = 1
+	howBody.Font = Enum.Font.Gotham
+	howBody.TextSize = 12
+	howBody.TextXAlignment = Enum.TextXAlignment.Left
+	howBody.TextYAlignment = Enum.TextYAlignment.Top
+	howBody.TextColor3 = Color3.fromRGB(235, 220, 200)
+	howBody.TextWrapped = true
+	howBody.Text = "• Уход за духом  → +2\n• Закалка (Temper) → +3\n• Победа в бою / лут → +1 (+ Daily Board)"
+	howBody.Parent = howBox
+
+	local passBody = Instance.new("TextLabel")
+	passBody.Name = "Body"
+	passBody.Size = UDim2.new(1, -28, 0, 140)
+	passBody.Position = UDim2.new(0, 14, 0, 136)
+	passBody.BackgroundTransparency = 1
+	passBody.Font = Enum.Font.Gotham
+	passBody.TextSize = 13
+	passBody.TextXAlignment = Enum.TextXAlignment.Left
+	passBody.TextYAlignment = Enum.TextYAlignment.Top
+	passBody.TextColor3 = Color3.fromRGB(220, 225, 240)
+	passBody.TextWrapped = true
+	passBody.Text = "Загрузка сезона…"
+	passBody.Parent = passPanel
+
+	local passActions = Instance.new("Frame")
+	passActions.Name = "Actions"
+	passActions.Size = UDim2.new(1, -28, 0, 100)
+	passActions.Position = UDim2.new(0, 14, 1, -110)
+	passActions.BackgroundTransparency = 1
+	passActions.Parent = passPanel
+	local lay = Instance.new("UIListLayout")
+	lay.Padding = UDim.new(0, 5)
+	lay.Parent = passActions
+
+	dock.MouseButton1Click:Connect(function()
+		passPanel.Visible = true
+		havenEvent:FireServer("RequestSeason", {})
+	end)
+	return gui
+end
+
+local function setDockTokens(n)
+	local gui = playerGui:FindFirstChild("SeasonPassGui")
+	local dock = gui and gui:FindFirstChild("OpenPassButton")
+	if dock then
+		dock.Text = string.format("Сезон · %d жетонов", tonumber(n) or 0)
+	end
+end
+
+local function refreshPassPanel(state)
+	local gui = ensurePassGui()
+	local panel = gui.PassPanelFrame
+	local body = panel.Body
+	local title = panel.Title
+	local actions = panel.Actions
+	for _, ch in ipairs(actions:GetChildren()) do
+		if ch:IsA("TextButton") then ch:Destroy() end
+	end
+	local season = state.Season or {}
+	local sp = state.SeasonPass or {}
+	local pity = state.CrystalPity or {}
+	local tokens = tonumber(state.EventTokens) or 0
+	setDockTokens(tokens)
+	local lines = { string.format("Сезон: %s", tostring(season.Name or "?")) }
+	if state.DaysLeft ~= nil then
+		table.insert(lines, string.format("До конца: %d дн.", tonumber(state.DaysLeft) or 0))
+	end
+	table.insert(lines, string.format("Баланс: %d %s", tokens, tostring(state.TokenName or "жетонов")))
+	table.insert(lines, string.format("Pass XP: %d", tonumber(sp.Xp) or 0))
+	table.insert(lines, string.format("Pity кристаллов: %d/%d (до гаранта %d)",
+		tonumber(pity.Misses) or 0, tonumber(pity.Threshold) or 10, tonumber(pity.Remaining) or 0))
+	local soft = state.SoftBuffs or {}
+	if soft.BondXpMult and (tonumber(soft.BondSecondsLeft) or 0) > 0 then
+		local hrs = math.ceil((tonumber(soft.BondSecondsLeft) or 0) / 3600)
+		table.insert(lines, string.format("Bond soft: ×%s · ещё ~%d ч", tostring(soft.BondXpMult), hrs))
+	end
+	table.insert(lines, "")
+	table.insert(lines, "Награды пропуска:")
+	local levels = (state.BattlePass and state.BattlePass.Levels) or {}
+	for i, row in ipairs(levels) do
+		local claimed = sp.Claimed and (sp.Claimed[i] or sp.Claimed[tostring(i)])
+		local mark = claimed and "✓" or ((tonumber(sp.Xp) or 0) >= (tonumber(row.Need) or 0) and "★" or "·")
+		table.insert(lines, string.format("%s L%d (нужно %d XP) — %s", mark, i, tonumber(row.Need) or 0, (row.Reward and row.Reward.Note) or ""))
+	end
+	body.Text = table.concat(lines, "\n")
+	title.Text = "Сезонный пропуск"
+	local function btn(text, color, cb)
+		local b = Instance.new("TextButton")
+		b.Size = UDim2.new(1, 0, 0, 28)
+		b.BackgroundColor3 = color or Color3.fromRGB(70, 90, 130)
+		b.Text = text
+		b.Font = Enum.Font.GothamBold
+		b.TextSize = 13
+		b.TextColor3 = Color3.fromRGB(255, 245, 220)
+		b.Parent = actions
+		do local c = Instance.new("UICorner") c.CornerRadius = UDim.new(0, 6) c.Parent = b end
+		b.MouseButton1Click:Connect(cb)
+	end
+	for i, row in ipairs(levels) do
+		local claimed = sp.Claimed and (sp.Claimed[i] or sp.Claimed[tostring(i)])
+		local ready = (tonumber(sp.Xp) or 0) >= (tonumber(row.Need) or 0)
+		if ready and not claimed then
+			btn("Забрать награду L" .. tostring(i), Color3.fromRGB(60, 130, 80), function()
+				havenEvent:FireServer("ClaimSeasonPass", { LevelIndex = i })
+			end)
+		end
+	end
+	btn("Сезонная форма — 50 жетонов", Color3.fromRGB(160, 110, 50), function()
+		havenEvent:FireServer("BuySeasonOffer", { OfferId = "seasonal_form" })
+	end)
+end
+
+havenEvent.OnClientEvent:Connect(function(action, data)
+	if action == "SeasonState" then
+		refreshPassPanel(data or {})
+	elseif action == "SeasonBuyResult" or action == "SeasonClaimResult" then
+		showToast((data and data.Message) or "Сезон")
+		havenEvent:FireServer("RequestSeason", {})
+	end
+end)
+
+do
+	local dataSync = nil
+	pcall(function()
+		dataSync = ReplicatedStorage:WaitForChild("RealmOfSpirits"):WaitForChild("DataSync", 5)
+	end)
+	if dataSync then
+		dataSync.OnClientEvent:Connect(function(action, data)
+			if action == "FullSync" and type(data) == "table" then
+				ensurePassGui()
+				setDockTokens(data.EventTokens)
+				local gui = playerGui:FindFirstChild("SeasonPassGui")
+				local panel = gui and gui:FindFirstChild("PassPanelFrame")
+				if panel and panel.Visible then
+					havenEvent:FireServer("RequestSeason", {})
+				end
+			end
+		end)
+	end
+end
+
 task.defer(function()
 	havenEvent:FireServer("RequestBuffs")
 	havenEvent:FireServer("RequestFomo")
+	ensurePassGui()
+	havenEvent:FireServer("RequestSeason", {})
 end)
 print("Realm of Spirits - OtakuHavenController loaded!")

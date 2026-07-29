@@ -38,6 +38,37 @@ local function applyTemperHeal(heal, spirit)
 	return heal
 end
 
+local function battleEnemyRef(battle)
+	if battle.EnemyInfo and battle.EnemyInfo.Id then
+		return battle.EnemyInfo.Id
+	end
+	if battle.EnemySpirit and battle.EnemySpirit.Id then
+		return battle.EnemySpirit.Id
+	end
+	return battle.EnemyInfo or battle.EnemySpirit
+end
+
+local function battlePlayerRef(battle)
+	if battle.PlayerSpirit and battle.PlayerSpirit.Id then
+		return battle.PlayerSpirit.Id
+	end
+	return battle.PlayerSpirit or battle.SpiritInfo
+end
+
+local function applyElementDamage(damage, attackerRef, defenderRef)
+	local mult = SpiritDatabase.GetElementMultiplier(attackerRef, defenderRef)
+	damage = math.max(1, math.floor((tonumber(damage) or 1) * mult))
+	local tip = SpiritDatabase.FormatElementMatchup(attackerRef, defenderRef)
+	return damage, tip, mult
+end
+
+local function appendMatchup(msg, tip)
+	if tip and tip ~= "" then
+		return msg .. " • " .. tip
+	end
+	return msg
+end
+
 local BattleOrchestrator = {}
 
 function BattleOrchestrator.CreateEffectsState()
@@ -145,6 +176,9 @@ function BattleOrchestrator.ExecutePlayerSkill(battle, skillIndex, opts)
 	if opts.DamageMultiplier then
 		damage = math.floor(damage * opts.DamageMultiplier)
 	end
+	local elementTip
+	damage, elementTip = applyElementDamage(damage, battlePlayerRef(battle), battleEnemyRef(battle))
+	damage = applyTemperDamage(damage, playerSpirit, nil, battle)
 	damage = EffectCatalog.ComputeDamage(damage, battle.PlayerEffects, battle.EnemyEffects)
 	battle.EnemyHP = math.max(0, battle.EnemyHP - damage)
 	local effectText = EffectCatalog.Apply(ability.Effect, battle.PlayerEffects, battle.EnemyEffects)
@@ -158,18 +192,19 @@ function BattleOrchestrator.ExecutePlayerSkill(battle, skillIndex, opts)
 		return {
 			Ok = true,
 			Kind = "Attack",
-			Message = "Вы нанесли " .. damage .. " урона! (" .. ability.Name .. ")",
+			Message = appendMatchup("Вы нанесли " .. damage .. " урона! (" .. ability.Name .. ")", elementTip),
 			Ability = ability,
 			Damage = damage,
 			BurnDamage = burnDamage,
 			EffectText = effectText,
+			ElementTip = elementTip,
 			Ended = true,
 			Winner = "Player",
 		}
 	end
 
 	battle.Turn = (battle.Turn or 1) + 1
-	local msg = "Вы нанесли " .. damage .. " урона! (" .. ability.Name .. ")"
+	local msg = appendMatchup("Вы нанесли " .. damage .. " урона! (" .. ability.Name .. ")", elementTip)
 	if effectText ~= "" then msg = msg .. " • " .. effectText end
 	if burnDamage and burnDamage > 0 then msg = msg .. " • Горение: -" .. burnDamage .. " HP" end
 	return {
@@ -180,6 +215,7 @@ function BattleOrchestrator.ExecutePlayerSkill(battle, skillIndex, opts)
 		Damage = damage,
 		BurnDamage = burnDamage,
 		EffectText = effectText,
+		ElementTip = elementTip,
 		Ended = false,
 	}
 end
@@ -245,6 +281,13 @@ function BattleOrchestrator.ExecuteFairSkill(battle, side, skillIndex, opts)
 		damage = math.floor(damage * opts.DamageMultiplier)
 	end
 
+	local defenderSpirit = (side == "Player") and battle.EnemySpirit or battle.PlayerSpirit
+	damage = applyTemperDamage(damage, attackerSpirit, defenderSpirit, battle)
+	local atkRef = (side == "Player") and battlePlayerRef(battle) or battleEnemyRef(battle)
+	local defRef = (side == "Player") and battleEnemyRef(battle) or battlePlayerRef(battle)
+	local elementTip
+	damage, elementTip = applyElementDamage(damage, atkRef, defRef)
+
 	local effectText
 	local burnDamage
 	if side == "Player" then
@@ -269,7 +312,7 @@ function BattleOrchestrator.ExecuteFairSkill(battle, side, skillIndex, opts)
 	end
 
 	local actor = (side == "Player") and "Вы" or (battle.EnemyInfo and battle.EnemyInfo.Name or "Соперник")
-	local msg = actor .. ": " .. ability.Name .. "! -" .. damage .. " HP"
+	local msg = appendMatchup(actor .. ": " .. ability.Name .. "! -" .. damage .. " HP", elementTip)
 	if effectText and effectText ~= "" then msg = msg .. " • " .. effectText end
 	if burnDamage and burnDamage > 0 then msg = msg .. " • Горение: -" .. burnDamage .. " HP" end
 
@@ -282,6 +325,7 @@ function BattleOrchestrator.ExecuteFairSkill(battle, side, skillIndex, opts)
 			Damage = damage,
 			BurnDamage = burnDamage,
 			EffectText = effectText,
+			ElementTip = elementTip,
 			Ended = true,
 			Winner = winner,
 			Side = side,
@@ -297,6 +341,7 @@ function BattleOrchestrator.ExecuteFairSkill(battle, side, skillIndex, opts)
 		Damage = damage,
 		BurnDamage = burnDamage,
 		EffectText = effectText,
+		ElementTip = elementTip,
 		Ended = false,
 		Side = side,
 	}
@@ -329,8 +374,11 @@ function BattleOrchestrator.ExecuteEnemySkill(battle, skillIndex, opts)
 	local rawEnemy = (ability.Damage or 10) + math.random(-2, 2)
 	local level = (battle.PlayerSpirit and battle.PlayerSpirit.Level) or 1
 	local earlyFactor = (level <= 5) and 0.65 or 0.85
+	local elementTip
+	local preDmg = math.max(3, math.floor(rawEnemy * earlyFactor) - math.floor(playerDef * 0.3))
+	preDmg, elementTip = applyElementDamage(preDmg, battleEnemyRef(battle), battlePlayerRef(battle))
 	local damage = EffectCatalog.ComputeDamage(
-		math.max(3, math.floor(rawEnemy * earlyFactor) - math.floor(playerDef * 0.3)),
+		preDmg,
 		battle.EnemyEffects,
 		battle.PlayerEffects
 	)
@@ -347,17 +395,18 @@ function BattleOrchestrator.ExecuteEnemySkill(battle, skillIndex, opts)
 		return {
 			Ok = true,
 			Kind = "Attack",
-			Message = name .. ": " .. ability.Name .. "! -" .. damage .. " HP",
+			Message = appendMatchup(name .. ": " .. ability.Name .. "! -" .. damage .. " HP", elementTip),
 			Ability = ability,
 			Damage = damage,
 			BurnDamage = burnDamage,
 			EffectText = effectText,
+			ElementTip = elementTip,
 			Ended = true,
 			Winner = "Enemy",
 		}
 	end
 
-	local msg = name .. ": " .. ability.Name .. "! -" .. damage .. " HP"
+	local msg = appendMatchup(name .. ": " .. ability.Name .. "! -" .. damage .. " HP", elementTip)
 	if effectText ~= "" then msg = msg .. " • " .. effectText end
 	if burnDamage and burnDamage > 0 then msg = msg .. " • Горение: -" .. burnDamage .. " HP" end
 	return {

@@ -194,6 +194,8 @@ activityLabel.TextSize = 12
 activityLabel.ZIndex = 21
 activityLabel.Parent = activityBar
 
+local RefreshDexPanel
+
 local function RefreshActivityBar(snapshot)
 	local board = (snapshot and snapshot.DailyBoard)
 		or (PlayerData and PlayerData.DailyBoard)
@@ -214,12 +216,137 @@ local function RefreshActivityBar(snapshot)
 		and Color3.fromRGB(120, 255, 180)
 		or (board.BonusNextDay and Color3.fromRGB(255, 210, 120) or Color3.fromRGB(255, 230, 170))
 	if snapshot and snapshot.Dex then
-		-- Dex panel refresh when bundled in resonance snapshot (Studio)
 		pcall(function()
 			if RefreshDexPanel then RefreshDexPanel(snapshot.Dex) end
 		end)
 	end
 end
+
+local dexPanel = Instance.new("Frame")
+dexPanel.Name = "DexPanelFrame"
+dexPanel.Size = UDim2.new(0, 320, 0, 260)
+dexPanel.Position = UDim2.new(0.5, -160, 0.5, -130)
+dexPanel.BackgroundColor3 = Color3.fromRGB(28, 24, 40)
+dexPanel.BorderSizePixel = 0
+dexPanel.Visible = false
+dexPanel.ZIndex = 60
+dexPanel.Parent = screenGui
+do
+	local c = Instance.new("UICorner")
+	c.CornerRadius = UDim.new(0, 10)
+	c.Parent = dexPanel
+	local s = Instance.new("UIStroke")
+	s.Color = Color3.fromRGB(160, 120, 220)
+	s.Thickness = 2
+	s.Parent = dexPanel
+end
+local dexTitle = Instance.new("TextLabel")
+dexTitle.Size = UDim2.new(1, -40, 0, 32)
+dexTitle.Position = UDim2.new(0, 12, 0, 8)
+dexTitle.BackgroundTransparency = 1
+dexTitle.Font = Enum.Font.GothamBold
+dexTitle.TextSize = 18
+dexTitle.TextXAlignment = Enum.TextXAlignment.Left
+dexTitle.TextColor3 = Color3.fromRGB(230, 210, 255)
+dexTitle.Text = "Dex · Коллекция"
+dexTitle.ZIndex = 61
+dexTitle.Parent = dexPanel
+local dexClose = Instance.new("TextButton")
+dexClose.Size = UDim2.new(0, 28, 0, 28)
+dexClose.Position = UDim2.new(1, -34, 0, 8)
+dexClose.BackgroundColor3 = Color3.fromRGB(60, 40, 70)
+dexClose.Text = "X"
+dexClose.TextColor3 = Color3.fromRGB(255, 220, 255)
+dexClose.Font = Enum.Font.GothamBold
+dexClose.TextSize = 14
+dexClose.ZIndex = 62
+dexClose.Parent = dexPanel
+do local c = Instance.new("UICorner") c.CornerRadius = UDim.new(0, 6) c.Parent = dexClose end
+dexClose.MouseButton1Click:Connect(function() dexPanel.Visible = false end)
+local dexBody = Instance.new("TextLabel")
+dexBody.Name = "DexBody"
+dexBody.Size = UDim2.new(1, -24, 1, -90)
+dexBody.Position = UDim2.new(0, 12, 0, 44)
+dexBody.BackgroundTransparency = 1
+dexBody.Font = Enum.Font.Gotham
+dexBody.TextSize = 14
+dexBody.TextXAlignment = Enum.TextXAlignment.Left
+dexBody.TextYAlignment = Enum.TextYAlignment.Top
+dexBody.TextColor3 = Color3.fromRGB(220, 210, 240)
+dexBody.TextWrapped = true
+dexBody.Text = "Соберите 3 / 6 / 12 духов одной Primary-стихии (Огонь · Земля · Ветер · Вода)."
+dexBody.ZIndex = 61
+dexBody.Parent = dexPanel
+local dexHint = Instance.new("TextLabel")
+dexHint.Size = UDim2.new(1, -24, 0, 36)
+dexHint.Position = UDim2.new(0, 12, 1, -44)
+dexHint.BackgroundTransparency = 1
+dexHint.Font = Enum.Font.Gotham
+dexHint.TextSize = 12
+dexHint.TextColor3 = Color3.fromRGB(180, 160, 210)
+dexHint.TextXAlignment = Enum.TextXAlignment.Left
+dexHint.TextWrapped = true
+dexHint.Text = "Primary: 3=+2% ATK · 6=+3% DEF · 12=+3% ATK/DEF · Aspect не дробит сет"
+dexHint.ZIndex = 61
+dexHint.Parent = dexPanel
+
+RefreshDexPanel = function(dex)
+	if not dex then return end
+	local lines = {}
+	local by = dex.ByElement or {}
+	local primaryOrder = { "Fire", "Earth", "Wind", "Water" }
+	local labels = (SpiritDatabaseModule.PrimaryLabelsRu)
+		or { Fire = "Огонь", Earth = "Земля", Wind = "Ветер", Water = "Вода" }
+	local shown = {}
+	local function addLine(el)
+		local n = by[el] or 0
+		if n <= 0 then return end
+		shown[el] = true
+		local mark = (n >= 12 and "★★★") or (n >= 6 and "★★") or (n >= 3 and "★") or "·"
+		local name = labels[el] or tostring(el)
+		table.insert(lines, string.format("%s  %s  ×%d", mark, name, n))
+	end
+	for _, el in ipairs(primaryOrder) do
+		addLine(el)
+	end
+	local extras = {}
+	for el, n in pairs(by) do
+		if not shown[el] and (tonumber(n) or 0) > 0 then
+			table.insert(extras, el)
+		end
+	end
+	table.sort(extras)
+	for _, el in ipairs(extras) do
+		addLine(el)
+	end
+	if #lines == 0 then
+		table.insert(lines, "Пока нет духов в коллекции.")
+	end
+	local atk = math.floor((tonumber(dex.AttackPct) or 0) * 1000 + 0.5) / 10
+	local def = math.floor((tonumber(dex.DefensePct) or 0) * 1000 + 0.5) / 10
+	table.insert(lines, "")
+	table.insert(lines, string.format("Бонус боя: ATK +%s%%  DEF +%s%%", tostring(atk), tostring(def)))
+	dexBody.Text = table.concat(lines, "\n")
+end
+
+local function OpenDexPanel()
+	dexPanel.Visible = true
+	ResonanceEvent:FireServer("GetDex", {})
+end
+
+local dexButton = Instance.new("TextButton")
+dexButton.Name = "DexButton"
+dexButton.Size = UDim2.new(0, 56, 0, 22)
+dexButton.Position = UDim2.new(1, -60, 0, 2)
+dexButton.BackgroundColor3 = Color3.fromRGB(70, 50, 100)
+dexButton.Text = "DEX"
+dexButton.Font = Enum.Font.GothamBold
+dexButton.TextSize = 12
+dexButton.TextColor3 = Color3.fromRGB(230, 210, 255)
+dexButton.ZIndex = 22
+dexButton.Parent = activityBar
+do local c = Instance.new("UICorner") c.CornerRadius = UDim.new(0, 6) c.Parent = dexButton end
+dexButton.MouseButton1Click:Connect(OpenDexPanel)
 
 local function PulseFrame(frame, color, times)
 	if not frame then return end
@@ -851,6 +978,16 @@ local battleTitle = CreateTextLabel(battleFrame, "BattleTitle",
 	20
 )
 
+local battleElementTip = CreateTextLabel(battleFrame, "BattleElementTip",
+	UDim2.new(0, 110, 0, 5),
+	UDim2.new(0, 280, 0, 25),
+	"",
+	Color3.fromRGB(255, 220, 140),
+	12
+)
+battleElementTip.TextXAlignment = Enum.TextXAlignment.Left
+battleElementTip.TextTruncate = Enum.TextTruncate.AtEnd
+
 -- Лог боя (центр сверху панели)
 local battleLogLabel = CreateTextLabel(battleFrame, "BattleLogLabel",
 	UDim2.new(0.3, 0, 0, 5),
@@ -990,6 +1127,9 @@ local function EnterNormalMode()
 	if UpdateBattleLog then
 		UpdateBattleLog("")
 	end
+	if battleElementTip then
+		battleElementTip.Text = ""
+	end
 	local hint = player:GetAttribute("TargetHint")
 	if UpdateHint then
 		UpdateHint((hint and hint ~= "") and hint or "")
@@ -1117,7 +1257,10 @@ OpenSpiritDetail = function(index)
 	-- Заполняем информацию
 	detailSpiritName.Text = "Имя: " .. spiritInfo.Name
 	detailSpiritLevel.Text = "Уровень: " .. (spirit.Level or 1)
-	detailSpiritElement.Text = "Элемент: " .. spiritInfo.Element .. " | Редкость: " .. spiritInfo.Rarity
+	detailSpiritElement.Text = "Элемент: "
+		.. (spiritInfo.ElementLabel or spiritInfo.Element or "-")
+		.. " | Редкость: "
+		.. (spiritInfo.Rarity or "-")
 
 	-- Текущее состояние (базовые характеристики зависят от уровня)
 	local lvl = spirit.Level or 1
@@ -2028,6 +2171,8 @@ ResonanceEvent.OnClientEvent:Connect(function(action, data)
 		end)
 	elseif action == "CareFailed" or action == "TemperFailed" then
 		ShowNotification((data and data.Reason) or "Не удалось")
+	elseif action == "DexBonus" and data then
+		RefreshDexPanel(data)
 	elseif action == "State" and data then
 		RefreshActivityBar(data)
 		if data.Spirits and selectedSpiritIndex and PlayerData and PlayerData.Spirits then
@@ -2212,11 +2357,34 @@ BattleEvent.OnClientEvent:Connect(function(action, data)
 		end
 		UpdateBattleSkillButtons(data)
 
+		if battleElementTip then
+			local tip = data.ElementTip
+			if (not tip or tip == "") and data.PlayerElementLabel and data.EnemyElementLabel then
+				tip = data.PlayerElementLabel .. " vs " .. data.EnemyElementLabel
+			end
+			battleElementTip.Text = tip or ""
+			if tip and string.find(tip, "Сильно", 1, true) then
+				battleElementTip.TextColor3 = Color3.fromRGB(120, 255, 160)
+			elseif tip and string.find(tip, "Слабо", 1, true) then
+				battleElementTip.TextColor3 = Color3.fromRGB(255, 160, 120)
+			else
+				battleElementTip.TextColor3 = Color3.fromRGB(255, 220, 140)
+			end
+		end
+
 		-- Обновляем лог
 		if data.Message and data.Message ~= "" then
 			UpdateBattleLog("Ход " .. data.Turn .. " | " .. data.Message)
+			if string.find(data.Message, "Сильно", 1, true) then
+				battleLogLabel.TextColor3 = Color3.fromRGB(120, 255, 160)
+			elseif string.find(data.Message, "Слабо", 1, true) then
+				battleLogLabel.TextColor3 = Color3.fromRGB(255, 160, 120)
+			else
+				battleLogLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+			end
 		else
 			UpdateBattleLog("Ход " .. data.Turn)
+			battleLogLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
 		end
 
 	elseif action == "End" then

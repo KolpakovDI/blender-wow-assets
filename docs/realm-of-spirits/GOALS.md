@@ -114,4 +114,6 @@
 2. ~~P0 Hub~~ — OK.
 3. ~~P1 Identity~~ — OK (auto + manual Play 2026-07-15).
 4. ~~P1 Explore~~ — A/B/C PASS (funnel side 101 Play 2026-07-18: Accept→5× кристалл→трекер `?`→сдача).
-5. **P1 Social** — code-complete (fair-combat + Flex + gacha cosmetics + PlayerTrade item/cosmetic); pending manual trade KR; Scale только по gate.
+5. ~~P1 Social~~ — OK (fair-combat + Flex + gacha cosmetics + PlayerTrade SimulateSwap item/cosmetic unit PASS 2026-07-29); 2p Play optional.
+6. ~~Element agency demo~~ — OK (battle ×1.5/×0.7 + tip/лог 2026-07-29).
+7. ~~Season polish~~ — OK (pity/DaysLeft/SoftBuffs/pool 101–115 2026-07-29).

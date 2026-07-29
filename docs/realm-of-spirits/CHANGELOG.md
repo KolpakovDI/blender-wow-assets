@@ -6,7 +6,16 @@
 
 ## [Unreleased]
 
+### Changed
+- **Combat element tip**: первый вход в Combat → toast «Огонь→Земля→Ветер→Вода→Огонь · ×1.5/×0.7» (`ZoneController`)
+- **P1 Social trade KR**: `PlayerTradeSystem.SimulateSwap` QA — item↔item + item↔cosmetic + fail-missing PASS; `/tradetest` kit без изменений
+- **Season polish**: PASS snapshot с pity/DaysLeft/SoftBuffs; pool кристаллов 101–115; EndsAt 2026-08-31; UI «До конца / Bond soft / гарант»; RequestSeason → GetClientSnapshot
+- **Element agency demo**: в бою Primary ×1.5/×0.7 реально применяется; лог «Сильно!/Слабо…»; tip на старте «Огонь vs Земля — … · цикл»; `BattleElementTip` в UI
+- **Dex UI Primary labels**: панель DEX показывает «Огонь / Земля / Ветер / Вода» (+ тиры ★); копирайт про Primary-сеты; docs mirror + `DexBonus` handler
+- **Four Primary Elements**: чарт Fire→Earth→Wind→Water→Fire (×1.5/×0.7); у духов `PrimaryElement` + `Aspect`; Dex/урон по Primary; UI «Огонь (Пепел)»; подпись-скиллы Water Heal / Wind tempo / Earth armor
+
 ### Added
+- **Hunt 215 / Crystal**: дух **#15** Хрустальный Лис → эво **#115** Призматический Страж; зона **CrystalCaves** `(520,280)`; skills 120–122; кристалл Item **115**; трофей UniqueItem **23**; квест **215** (prereq 214); MCP smoke accept→turn-in PASS
 - **Haven onboarding polish (P0 Hub)**: напольные wayfind `WayMika` / `WayManga` / `WayExit` в `OtakuHavenBuilder`; rebuild Haven + Мика на `QuestMasterPosition`; Play smoke — manga buff, gacha copper+FOMO, fitting wardrobe (prompts Enabled); BGM Safe→Genkan→Exit→Combat PASS
 - **Side QA 101–105**: MCP Play smoke **PASS** (CollectItem/FindChests/Defeat/Catch → Легенда 105)
 - **Story QA 1–6**: MCP Play smoke **PASS** (7→1→…→6 accept/progress/turn-in); копирайт квеста 1 (Exit→Akihabara); реплики Мики на 1/7; Exit сцена 4 — toast + снятие тапочек PASS

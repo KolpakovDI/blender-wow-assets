@@ -333,7 +333,7 @@ function SpiritResonance.RegenStamina(playerData, amount)
 	)
 end
 
--- Element set bonuses: 3 / 6 / 12 owned spirits of same element
+-- Element set bonuses: 3 / 6 / 12 owned spirits of same Primary element
 function SpiritResonance.GetDexBonus(playerData, SpiritDatabase)
 	local counts = {}
 	if type(playerData.Spirits) ~= "table" then
@@ -341,7 +341,14 @@ function SpiritResonance.GetDexBonus(playerData, SpiritDatabase)
 	end
 	for _, s in ipairs(playerData.Spirits) do
 		local cat = SpiritDatabase and SpiritDatabase.Get(s.Id)
-		local el = cat and cat.Element or "Unknown"
+		local el = "Unknown"
+		if cat then
+			if SpiritDatabase.GetPrimary then
+				el = SpiritDatabase.GetPrimary(cat)
+			else
+				el = cat.PrimaryElement or cat.Element or "Unknown"
+			end
+		end
 		counts[el] = (counts[el] or 0) + 1
 	end
 	local atk, def = 0, 0

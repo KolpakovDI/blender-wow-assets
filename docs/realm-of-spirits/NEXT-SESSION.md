@@ -1,31 +1,28 @@
 # NEXT SESSION
 
-**Статус:** 2026-07-28 — Season / Daily Board polish **PASS** (Care/Temper soft + 4/4 BonusNextDay ×2 + PASS snapshot). Дальше: Hunt **215**.
+**Статус:** 2026-07-29 — Checkpoint. Primary/Season/Social/agency закрыты. Дальше: side 106+ · Hunt 216+ · по запросу.
 
-Дата якоря: 2026-07-28
+Дата якоря: 2026-07-29
 
 ## Старт сессии (порядок жёсткий)
 
-1. **Ctrl+S** place
-2. Hunt **215** (или другой приоритет по запросу)
-3. Опционально: ручной Play — уход/закалка → activity bar N/4 → PASS жетоны
+1. **Ctrl+S** place (если не сохранён)
+2. На выбор: **новый side 106+** · Hunt 216+ · другой контент
+3. Опционально: Play — Combat toast стихий; PASS; Fire→Earth «Сильно!»
 
 ## Product progress
 
 | Тема | Статус |
 |------|--------|
-| Story 7 + 1–6 + Exit | PASS |
-| Side 101–105 | PASS |
-| Haven polish | PASS |
-| Season / Daily Board | **PASS** |
-| Hunt 215 | next |
+| Hunt 201–215 | PASS |
+| Four Primary + Dex UI + Element agency | PASS |
+| Season polish | PASS |
+| P1 Social trade KR | PASS |
+| Combat element tip | PASS |
+| Hunt 216+ | не начинать без запроса |
 
 ## Studio SoT
 
 `C:\\Mimo\\RealmOfSpirits\\RealmOfSpirits second.rbxl` — **Ctrl+S.**
 
-Modules touched this checkpoint (Studio + git mirrors):
-- `ReplicatedStorage.RealmOfSpirits.SpiritResonance` — Daily Board Care/Temper soft
-- `ServerScriptService.RealmOfSpirits.QuestSystem` — no double soft on 301/302
-- `ServerScriptService.RealmOfSpirits.OtakuHavenBuilder` — wayfind pads
-- `StarterPlayer.StarterPlayerScripts.MusicController` — ZoneMusic → SoundService
+Touched: `SpiritDatabase`, `BattleOrchestrator`, `GameManager`, `UIController`, `SeasonLiveOps`, `OtakuHavenService`, `OtakuHavenController`, `PlayerTradeSystem`, `ZoneController`.

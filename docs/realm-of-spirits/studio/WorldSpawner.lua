@@ -538,6 +538,12 @@ local function BuildSpiritHabitats()
 			Ground = Color3.fromRGB(100, 110, 125),
 			Material = Enum.Material.Basalt,
 		},
+		{
+			Key = "CrystalCaves",
+			Accent = Color3.fromRGB(180, 220, 255),
+			Ground = Color3.fromRGB(90, 110, 140),
+			Material = Enum.Material.Glacier,
+		},
 	}
 
 	for _, h in ipairs(habitats) do

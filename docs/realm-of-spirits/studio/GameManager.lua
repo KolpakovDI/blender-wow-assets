@@ -661,6 +661,19 @@ local function GetBattleState(player, battle, message)
 	local playerData = player and GetPlayerData(player)
 	local potionCount = GetInventoryCount(playerData, 2)
 	local potionCd = math.max(0, (battle.PotionCooldownUntil or 0) - os.clock())
+	local SpiritDatabase = require(realmFolder:WaitForChild("SpiritDatabase"))
+	local pRef = battle.PlayerSpirit and battle.PlayerSpirit.Id
+	local eRef = (battle.EnemyInfo and battle.EnemyInfo.Id) or (battle.EnemySpirit and battle.EnemySpirit.Id)
+	local elementTip, playerEl, enemyEl = "", "", ""
+	if pRef and eRef and SpiritDatabase.FormatElementAgencyTip then
+		elementTip = select(1, SpiritDatabase.FormatElementAgencyTip(pRef, eRef))
+		playerEl = SpiritDatabase.FormatElementLabel(pRef)
+		enemyEl = SpiritDatabase.FormatElementLabel(eRef)
+	end
+	local msg = message or ""
+	if msg == "" and elementTip ~= "" then
+		msg = elementTip
+	end
 	return {
 		PlayerHP = battle.PlayerHP,
 		PlayerMaxHP = battle.PlayerMaxHP,
@@ -676,7 +689,10 @@ local function GetBattleState(player, battle, message)
 		PotionCooldown = potionCd,
 		PotionHeal = 40,
 		Turn = battle.Turn or 1,
-		Message = message or "",
+		Message = msg,
+		ElementTip = elementTip,
+		PlayerElementLabel = playerEl,
+		EnemyElementLabel = enemyEl,
 	}
 end
 

@@ -10,6 +10,7 @@ local ZoneConfig = require(RealmFolder:WaitForChild("ZoneConfig"))
 
 local hubIntroShown = false
 local prepHintShown = false
+local elementCycleHintShown = false
 
 local gui = Instance.new("ScreenGui")
 gui.Name = "ZoneUI"
@@ -87,6 +88,7 @@ local MESSAGES = {
 	VenomHollow = "Ядовитое ущелье — Ядовитая Гадюка",
 	SandDunes = "Песчаные дюны — Пустынный Скорпион",
 	IronWastes = "Железные пустоши — Стальной Жук",
+	CrystalCaves = "Кристальные пещеры — Хрустальный Лис",
 }
 
 local HABITAT_BANNERS = {
@@ -103,6 +105,7 @@ local HABITAT_BANNERS = {
 	VenomHollow = {Title = "Ядовитое ущелье", Color = Color3.fromRGB(90, 180, 60)},
 	SandDunes = {Title = "Песчаные дюны", Color = Color3.fromRGB(210, 170, 90)},
 	IronWastes = {Title = "Железные пустоши", Color = Color3.fromRGB(140, 155, 175)},
+	CrystalCaves = {Title = "Кристальные пещеры", Color = Color3.fromRGB(180, 220, 255)},
 }
 
 local SLIPPER_COLOR = Color3.fromRGB(255, 170, 200)
@@ -352,6 +355,12 @@ zoneChanged.OnClientEvent:Connect(function(zoneType, detail)
 		else
 			showBanner("Акихабара", Color3.fromRGB(255, 180, 80))
 			showToast("Музыка: Lo-Fi → J-Rock", 3)
+		end
+		if not elementCycleHintShown then
+			elementCycleHintShown = true
+			task.delay(3.2, function()
+				showToast("Стихии: Огонь→Земля→Ветер→Вода→Огонь · ×1.5 / ×0.7", 4.5)
+			end)
 		end
 	elseif zoneType == "Safe" then
 		if detail == "Genkan" then

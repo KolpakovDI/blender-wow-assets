@@ -31,6 +31,7 @@ local DETAIL_PRIORITY = {
 	VenomHollow = 45,
 	SandDunes = 45,
 	IronWastes = 45,
+	CrystalCaves = 45,
 	Exit = 30,
 	Genkan = 20,
 	Safe = 10,
@@ -67,6 +68,7 @@ local function classifyDetail(detail)
 		VenomHollow = true,
 		SandDunes = true,
 		IronWastes = true,
+		CrystalCaves = true,
 	}
 	if combatDetails[detail] then
 		if detail == "Combat" then

@@ -55,6 +55,7 @@ local UniqueItemDatabase = {
 	[20] = {Id = 20, Name = "Клешня Песчаных Дюн", Rarity = "Rare", Description = "Трофей: Пустынный Скорпион. +8% урон песком"},
 	[21] = {Id = 21, Name = "Панцирь Железных Пустошей", Rarity = "Rare", Description = "Трофей: Стальной Жук. +8% урон металлом"},
 	[22] = {Id = 22, Name = "Секретный билет", Rarity = "Rare", Description = "Награда Мики: особый билет Otaku Haven"},
+	[23] = {Id = 23, Name = "Осколок Кристальных Пещер", Rarity = "Rare", Description = "Трофей: Хрустальный Лис. +8% урон кристаллом"},
 }
 
 -- ============================================
@@ -588,6 +589,26 @@ local QuestDatabase = {
 			Items = {{Id = 114, Quantity = 3}, {Id = 1, Quantity = 3}}
 		},
 		Prerequisites = {213}
+	},
+	[215] = {
+		Id = 215,
+		Name = "Путь Охотника XV: Кристалл",
+		Description = "Поймайте Хрустального Лиса в Кристальных пещерах (северо-восток от IronWastes)",
+		Type = "Hunt",
+		Level = 5,
+		Objectives = {
+			{Type = "CatchSpecificSpirit", SpiritId = 15, Count = 1, SpiritName = "Хрустальный Лис"}
+		},
+		Rewards = {
+			Experience = 540,
+			CopperCoins = 260,
+			SilverCoins = 38,
+			GoldCoins = 1,
+			Reputation = 56,
+			UniqueItems = {{Id = 23, Quantity = 1}},
+			Items = {{Id = 115, Quantity = 3}, {Id = 1, Quantity = 3}}
+		},
+		Prerequisites = {214}
 	},
 	-- Spirit Resonance dailies (repeatable side — no hard prereq)
 	[301] = {

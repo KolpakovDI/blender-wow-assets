@@ -19,17 +19,17 @@ SkillCatalog.ById = {
 	[42] = {Id = 42, Name = "Божественная благодать", Element = "Light", Type = "Heal", HealAmount = 55, Cost = 36, Cooldown = 7, Effect = {Type = "BuffAttack", Value = 0.2, Duration = 2}},
 	[43] = {Id = 43, Name = "Световой шторм", Element = "Light", Type = "Attack", Damage = 62, Cost = 42, Cooldown = 9, Effect = {Type = "BuffAttack", Value = 0.25, Duration = 2}},
 	[51] = {Id = 51, Name = "Водная струя", Element = "Water", Type = "Attack", Damage = 25, Cost = 7, Cooldown = 1.5},
-	[52] = {Id = 52, Name = "Приливной удар", Element = "Water", Type = "Attack", Damage = 38, Cost = 18, Cooldown = 4, Effect = {Type = "DebuffDefense", Value = 0.2, Duration = 2}},
+	[52] = {Id = 52, Name = "Приливное исцеление", Element = "Water", Type = "Heal", HealAmount = 30, Cost = 18, Cooldown = 8},
 	[53] = {Id = 53, Name = "Цунами", Element = "Water", Type = "Attack", Damage = 50, Cost = 34, Cooldown = 7, Effect = {Type = "DebuffDefense", Value = 0.25, Duration = 3}},
 	[61] = {Id = 61, Name = "Каменный кулак", Element = "Earth", Type = "Attack", Damage = 28, Cost = 8, Cooldown = 1.8},
-	[62] = {Id = 62, Name = "Землетрясение", Element = "Earth", Type = "Attack", Damage = 40, Cost = 20, Cooldown = 4.5, Effect = {Type = "DebuffDefense", Value = 0.2, Duration = 2}},
+	[62] = {Id = 62, Name = "Землетрясение", Element = "Earth", Type = "Attack", Damage = 40, Cost = 20, Cooldown = 4.5, Effect = {Type = "DebuffDefense", Value = 0.25, Duration = 3}},
 	[63] = {Id = 63, Name = "Обвал скал", Element = "Earth", Type = "Attack", Damage = 55, Cost = 36, Cooldown = 7.5, Effect = {Type = "Stun", Duration = 1}},
 	[71] = {Id = 71, Name = "Пепельный укус", Element = "Fire", Type = "Attack", Damage = 27, Cost = 8, Cooldown = 1.6},
 	[72] = {Id = 72, Name = "Жаровня", Element = "Fire", Type = "Attack", Damage = 39, Cost = 19, Cooldown = 4.2, Effect = {Type = "Burn", Value = 7, Duration = 2}},
 	[73] = {Id = 73, Name = "Извержение", Element = "Fire", Type = "Attack", Damage = 54, Cost = 35, Cooldown = 7.2, Effect = {Type = "Burn", Value = 9, Duration = 3}},
-	[81] = {Id = 81, Name = "Порыв ветра", Element = "Wind", Type = "Attack", Damage = 26, Cost = 8, Cooldown = 1.5},
-	[82] = {Id = 82, Name = "Смерч", Element = "Wind", Type = "Attack", Damage = 38, Cost = 18, Cooldown = 4.0, Effect = {Type = "DebuffDefense", Value = 0.2, Duration = 2}},
-	[83] = {Id = 83, Name = "Ураган", Element = "Wind", Type = "Attack", Damage = 52, Cost = 34, Cooldown = 7.0, Effect = {Type = "DebuffAttack", Value = 0.2, Duration = 2}},
+	[81] = {Id = 81, Name = "Порыв ветра", Element = "Wind", Type = "Attack", Damage = 24, Cost = 6, Cooldown = 1.2},
+	[82] = {Id = 82, Name = "Смерч", Element = "Wind", Type = "Attack", Damage = 36, Cost = 16, Cooldown = 3.5, Effect = {Type = "DebuffAttack", Value = 0.22, Duration = 2}},
+	[83] = {Id = 83, Name = "Ураган", Element = "Wind", Type = "Attack", Damage = 52, Cost = 34, Cooldown = 7.0, Effect = {Type = "DebuffAttack", Value = 0.25, Duration = 2}},
 	[91] = {Id = 91, Name = "Лоза", Element = "Nature", Type = "Attack", Damage = 25, Cost = 8, Cooldown = 1.6},
 	[92] = {Id = 92, Name = "Споры", Element = "Nature", Type = "Attack", Damage = 37, Cost = 18, Cooldown = 4.1, Effect = {Type = "DebuffAttack", Value = 0.2, Duration = 2}},
 	[93] = {Id = 93, Name = "Гнев леса", Element = "Nature", Type = "Attack", Damage = 51, Cost = 34, Cooldown = 7.1, Effect = {Type = "DebuffDefense", Value = 0.25, Duration = 3}},
@@ -45,6 +45,9 @@ SkillCatalog.ById = {
 	[117] = {Id = 117, Name = "Стальной панцирь", Element = "Metal", Type = "Attack", Damage = 27, Cost = 8, Cooldown = 1.7},
 	[118] = {Id = 118, Name = "Магнитный удар", Element = "Metal", Type = "Attack", Damage = 39, Cost = 18, Cooldown = 4.2, Effect = {Type = "DebuffDefense", Value = 0.22, Duration = 2}},
 	[119] = {Id = 119, Name = "Кувалда колосса", Element = "Metal", Type = "Attack", Damage = 54, Cost = 35, Cooldown = 7.2, Effect = {Type = "Stun", Duration = 1}},
+	[120] = {Id = 120, Name = "Кристальный укус", Element = "Crystal", Type = "Attack", Damage = 28, Cost = 8, Cooldown = 1.7},
+	[121] = {Id = 121, Name = "Призматический луч", Element = "Crystal", Type = "Attack", Damage = 40, Cost = 18, Cooldown = 4.2, Effect = {Type = "DebuffAttack", Value = 0.22, Duration = 2}},
+	[122] = {Id = 122, Name = "Осколочный шторм", Element = "Crystal", Type = "Attack", Damage = 55, Cost = 35, Cooldown = 7.2, Effect = {Type = "DebuffDefense", Value = 0.25, Duration = 3}},
 }
 
 SkillCatalog.ByName = {}
@@ -82,6 +85,8 @@ SkillCatalog.SpiritSkills = {
 	[113] = {114, 115, 116},
 	[14] = {117, 118},
 	[114] = {117, 118, 119},
+	[15] = {120, 121},
+	[115] = {120, 121, 122},
 }
 
 function SkillCatalog.Get(idOrName)

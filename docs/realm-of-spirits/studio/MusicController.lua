@@ -144,6 +144,7 @@ local HABITAT_MUSIC_KEYS = {
 	VenomHollow = true,
 	SandDunes = true,
 	IronWastes = true,
+	CrystalCaves = true,
 }
 
 local function resolveZoneKey(zoneType, detail)

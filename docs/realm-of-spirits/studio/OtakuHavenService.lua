@@ -484,14 +484,7 @@ havenEvent.OnServerEvent:Connect(function(player, action, payload)
 			return
 		end
 		SeasonLiveOps.Ensure(playerData)
-		notify(player, "SeasonState", {
-			Season = SeasonLiveOps.Current,
-			TokenName = SeasonLiveOps.TokenName,
-			EventTokens = playerData.EventTokens,
-			EventShop = SeasonLiveOps.EventShop,
-			BattlePass = SeasonLiveOps.BattlePass,
-			SeasonPass = playerData.SeasonPass,
-		})
+		notify(player, "SeasonState", SeasonLiveOps.GetClientSnapshot(playerData))
 	elseif action == "BuySeasonOffer" then
 		if not isInSafeZone(player) then
 			notify(player, "Toast", { Text = "Сезонный магазин только в Haven" })
