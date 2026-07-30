@@ -24,6 +24,7 @@ local UniqueItemNames = {
 	[5] = {Name = "Корона Дракона", Rarity = "Legendary"},
 	[6] = {Name = "Кристалл Удачи", Rarity = "Rare"},
 	[7] = {Name = "Посох Хранителя", Rarity = "Epic"},
+	[27] = {Name = "Перо Небесного Хребта", Rarity = "Rare"},
 }
 
 local focusActive = false

@@ -86,9 +86,12 @@ local MESSAGES = {
 	MossGlade = "Моховая поляна — Моховой Олень",
 	Moonwell = "Лунный колодец — Лунный Кролик",
 	VenomHollow = "Ядовитое ущелье — Ядовитая Гадюка",
-	SandDunes = "Песчаные дюны — Пустынный Скорпион",
+	SandDunes = "Песчаные дюны — [архив] Пустынный Скорпион",
 	IronWastes = "Железные пустоши — Стальной Жук",
-	CrystalCaves = "Кристальные пещеры — Хрустальный Лис",
+	CrystalCaves = "Кристальные пещеры — [архив] Хрустальный Лис",
+	MagmaFissure = "Лавовый разлом — Лавовый Краб",
+	FogBasin = "Туманная низина — Туманный Дух",
+	SkyRidge = "Небесный хребет — Небесный Сокол",
 }
 
 local HABITAT_BANNERS = {
@@ -103,9 +106,12 @@ local HABITAT_BANNERS = {
 	MossGlade = {Title = "Моховая поляна", Color = Color3.fromRGB(80, 160, 70)},
 	Moonwell = {Title = "Лунный колодец", Color = Color3.fromRGB(180, 195, 255)},
 	VenomHollow = {Title = "Ядовитое ущелье", Color = Color3.fromRGB(90, 180, 60)},
-	SandDunes = {Title = "Песчаные дюны", Color = Color3.fromRGB(210, 170, 90)},
+	SandDunes = {Title = "Песчаные дюны (архив)", Color = Color3.fromRGB(210, 170, 90)},
 	IronWastes = {Title = "Железные пустоши", Color = Color3.fromRGB(140, 155, 175)},
-	CrystalCaves = {Title = "Кристальные пещеры", Color = Color3.fromRGB(180, 220, 255)},
+	CrystalCaves = {Title = "Кристальные пещеры (архив)", Color = Color3.fromRGB(180, 220, 255)},
+	MagmaFissure = {Title = "Лавовый разлом", Color = Color3.fromRGB(255, 90, 40)},
+	FogBasin = {Title = "Туманная низина", Color = Color3.fromRGB(160, 190, 220)},
+	SkyRidge = {Title = "Небесный хребет", Color = Color3.fromRGB(180, 210, 255)},
 }
 
 local SLIPPER_COLOR = Color3.fromRGB(255, 170, 200)

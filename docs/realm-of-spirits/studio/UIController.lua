@@ -988,6 +988,37 @@ local battleElementTip = CreateTextLabel(battleFrame, "BattleElementTip",
 battleElementTip.TextXAlignment = Enum.TextXAlignment.Left
 battleElementTip.TextTruncate = Enum.TextTruncate.AtEnd
 
+local battleAgencyFlash = Instance.new("Frame")
+battleAgencyFlash.Name = "BattleAgencyFlash"
+battleAgencyFlash.Size = UDim2.new(1, 0, 1, 0)
+battleAgencyFlash.BackgroundColor3 = Color3.fromRGB(120, 255, 160)
+battleAgencyFlash.BackgroundTransparency = 1
+battleAgencyFlash.BorderSizePixel = 0
+battleAgencyFlash.ZIndex = 20
+battleAgencyFlash.Visible = false
+battleAgencyFlash.Parent = battleFrame
+
+local function PulseBattleAgency(kind)
+	if not battleAgencyFlash then return end
+	local color = Color3.fromRGB(200, 200, 200)
+	if kind == "strong" then
+		color = Color3.fromRGB(80, 255, 140)
+	elseif kind == "weak" then
+		color = Color3.fromRGB(255, 120, 90)
+	end
+	battleAgencyFlash.BackgroundColor3 = color
+	battleAgencyFlash.Visible = true
+	battleAgencyFlash.BackgroundTransparency = 0.55
+	task.spawn(function()
+		for t = 1, 8 do
+			battleAgencyFlash.BackgroundTransparency = 0.55 + t * 0.05
+			task.wait(0.04)
+		end
+		battleAgencyFlash.Visible = false
+		battleAgencyFlash.BackgroundTransparency = 1
+	end)
+end
+
 -- Лог боя (центр сверху панели)
 local battleLogLabel = CreateTextLabel(battleFrame, "BattleLogLabel",
 	UDim2.new(0.3, 0, 0, 5),
@@ -1947,18 +1978,25 @@ UpdateBattleLog = function(text)
 	battleLogLabel.Text = text
 end
 
-local function SetBattleSkillButton(button, defaultText, skillData, playerMP)
+local function SetBattleSkillButton(button, defaultText, skillData, playerMP, hotkey)
 	local label = button:FindFirstChild("ButtonLabel")
 	local title = defaultText
+	local hk = hotkey and ("[" .. tostring(hotkey) .. "] ") or ""
 	if skillData then
 		local cd = tonumber(skillData.Cooldown) or 0
 		local cost = tonumber(skillData.Cost) or 0
 		title = skillData.Name or defaultText
-		if cd > 0.05 then
-			title = string.format("%s [%.1fс]", title, cd)
+		if cd > 0.05 and cost > 0 then
+			title = string.format("%s%s · %dMP %.0fс", hk, title, cost, cd)
+		elseif cd > 0.05 then
+			title = string.format("%s%s %.0fс", hk, title, cd)
 		elseif cost > 0 then
-			title = string.format("%s [%d MP]", title, cost)
+			title = string.format("%s%s %dMP", hk, title, cost)
+		else
+			title = hk .. title
 		end
+	else
+		title = hk .. title
 	end
 	if label then
 		label.Text = title
@@ -1969,15 +2007,30 @@ local function SetBattleSkillButton(button, defaultText, skillData, playerMP)
 	local disabled = (not skillData)
 		or ((tonumber(skillData.Cooldown) or 0) > 0.05)
 		or ((tonumber(playerMP) or 0) < (tonumber(skillData.Cost) or 0))
-	button.BackgroundColor3 = disabled and Color3.fromRGB(95, 95, 95) or Color3.fromRGB(180, 70, 70)
+	local readyColor = Color3.fromRGB(180, 70, 70)
+	if skillData and skillData.Element then
+		local el = skillData.Element
+		if el == "Fire" or el == "Ash" or el == "Magma" or el == "Light" then
+			readyColor = Color3.fromRGB(200, 80, 50)
+		elseif el == "Earth" or el == "Nature" or el == "Metal" or el == "Poison" then
+			readyColor = Color3.fromRGB(120, 150, 70)
+		elseif el == "Wind" or el == "Storm" or el == "Dark" or el == "Sky" or el == "Lightning" then
+			readyColor = Color3.fromRGB(70, 160, 200)
+		elseif el == "Water" or el == "Ice" or el == "Moon" or el == "Mist" then
+			readyColor = Color3.fromRGB(60, 120, 210)
+		end
+	end
+	button.BackgroundColor3 = disabled and Color3.fromRGB(95, 95, 95) or readyColor
+	button.Active = not disabled
+	button.AutoButtonColor = not disabled
 end
 
 local function UpdateBattleSkillButtons(battleData)
 	local skills = battleData and battleData.PlayerSkills or nil
 	local mp = battleData and battleData.PlayerMP or 0
-	SetBattleSkillButton(attack1Button, "Коготь Духа", skills and skills[1], mp)
-	SetBattleSkillButton(attack2Button, "Призрачный Вихрь", skills and skills[2], mp)
-	SetBattleSkillButton(attack3Button, "Навык 3", skills and skills[3], mp)
+	SetBattleSkillButton(attack1Button, "Коготь Духа", skills and skills[1], mp, 1)
+	SetBattleSkillButton(attack2Button, "Призрачный Вихрь", skills and skills[2], mp, 2)
+	SetBattleSkillButton(attack3Button, "Навык 3", skills and skills[3], mp, 3)
 	attack3Button.Visible = skills ~= nil and skills[3] ~= nil
 
 	local count = tonumber(battleData and battleData.PotionCount) or 0
@@ -2082,37 +2135,17 @@ menuButton.MouseButton1Click:Connect(function()
 end)
 
 -- Кнопки боя
-attack1Button.MouseButton1Click:Connect(function()
+local function TryBattleSkill(skillIndex)
 	if not CurrentBattle then return end
-	local s = CurrentBattle.PlayerSkills and CurrentBattle.PlayerSkills[1]
+	local s = CurrentBattle.PlayerSkills and CurrentBattle.PlayerSkills[skillIndex]
 	if s and (tonumber(s.Cooldown) or 0) <= 0.05 and (CurrentBattle.PlayerMP or 0) >= (tonumber(s.Cost) or 0) then
-		BattleEvent:FireServer("Attack", {SkillIndex = 1})
+		BattleEvent:FireServer("Attack", {SkillIndex = skillIndex})
 	else
-		ShowNotification("Навык 1 недоступен")
+		ShowNotification("Навык " .. tostring(skillIndex) .. " недоступен")
 	end
-end)
+end
 
-attack2Button.MouseButton1Click:Connect(function()
-	if not CurrentBattle then return end
-	local s = CurrentBattle.PlayerSkills and CurrentBattle.PlayerSkills[2]
-	if s and (tonumber(s.Cooldown) or 0) <= 0.05 and (CurrentBattle.PlayerMP or 0) >= (tonumber(s.Cost) or 0) then
-		BattleEvent:FireServer("Attack", {SkillIndex = 2})
-	else
-		ShowNotification("Навык 2 недоступен")
-	end
-end)
-
-attack3Button.MouseButton1Click:Connect(function()
-	if not CurrentBattle then return end
-	local s = CurrentBattle.PlayerSkills and CurrentBattle.PlayerSkills[3]
-	if s and (tonumber(s.Cooldown) or 0) <= 0.05 and (CurrentBattle.PlayerMP or 0) >= (tonumber(s.Cost) or 0) then
-		BattleEvent:FireServer("Attack", {SkillIndex = 3})
-	else
-		ShowNotification("Навык 3 недоступен")
-	end
-end)
-
-potionButton.MouseButton1Click:Connect(function()
+local function TryBattlePotion()
 	if not CurrentBattle then return end
 	local count = tonumber(CurrentBattle.PotionCount) or 0
 	local cd = tonumber(CurrentBattle.PotionCooldown) or 0
@@ -2129,6 +2162,35 @@ potionButton.MouseButton1Click:Connect(function()
 		return
 	end
 	BattleEvent:FireServer("UsePotion", {})
+end
+
+attack1Button.MouseButton1Click:Connect(function()
+	TryBattleSkill(1)
+end)
+
+attack2Button.MouseButton1Click:Connect(function()
+	TryBattleSkill(2)
+end)
+
+attack3Button.MouseButton1Click:Connect(function()
+	TryBattleSkill(3)
+end)
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+	if gameProcessed or not CurrentBattle then return end
+	if input.KeyCode == Enum.KeyCode.One or input.KeyCode == Enum.KeyCode.KeypadOne then
+		TryBattleSkill(1)
+	elseif input.KeyCode == Enum.KeyCode.Two or input.KeyCode == Enum.KeyCode.KeypadTwo then
+		TryBattleSkill(2)
+	elseif input.KeyCode == Enum.KeyCode.Three or input.KeyCode == Enum.KeyCode.KeypadThree then
+		if attack3Button.Visible then TryBattleSkill(3) end
+	elseif input.KeyCode == Enum.KeyCode.H then
+		TryBattlePotion()
+	end
+end)
+
+potionButton.MouseButton1Click:Connect(function()
+	TryBattlePotion()
 end)
 
 fleeButton.MouseButton1Click:Connect(function()
@@ -2289,9 +2351,8 @@ DataEvent.OnClientEvent:Connect(function(action, data)
 		if not hasDataBeenLoaded then
 			ShowNotification("Данные загружены! ")
 			hasDataBeenLoaded = true
-		else
-			ShowNotification("Данные синхронизированы!")
 		end
+		-- Subsequent FullSync is silent (catch/battle toast their own feedback)
 
 	elseif action == "LevelUp" then
 		-- Повышение уровня
@@ -2377,8 +2438,10 @@ BattleEvent.OnClientEvent:Connect(function(action, data)
 			UpdateBattleLog("Ход " .. data.Turn .. " | " .. data.Message)
 			if string.find(data.Message, "Сильно", 1, true) then
 				battleLogLabel.TextColor3 = Color3.fromRGB(120, 255, 160)
+				if PulseBattleAgency then PulseBattleAgency("strong") end
 			elseif string.find(data.Message, "Слабо", 1, true) then
 				battleLogLabel.TextColor3 = Color3.fromRGB(255, 160, 120)
+				if PulseBattleAgency then PulseBattleAgency("weak") end
 			else
 				battleLogLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
 			end
@@ -2395,7 +2458,8 @@ BattleEvent.OnClientEvent:Connect(function(action, data)
 			local rewards = data.Rewards or {}
 		local rewardText = "Победа!"
 		if rewards.Experience then rewardText = rewardText .. " +" .. rewards.Experience .. " опыта" end
-		if rewards.CopperCoins and rewards.CopperCoins > 0 then rewardText = rewardText .. ", +" .. rewards.CopperCoins .. " 🥉" end
+		local copper = tonumber(rewards.CopperCoins) or tonumber(rewards.Coins) or 0
+		if copper > 0 then rewardText = rewardText .. ", +" .. copper .. " 🥉" end
 		if rewards.SilverCoins and rewards.SilverCoins > 0 then rewardText = rewardText .. ", +" .. rewards.SilverCoins .. " 🥈" end
 		if rewards.GoldCoins and rewards.GoldCoins > 0 then rewardText = rewardText .. ", +" .. rewards.GoldCoins .. " 🥇" end
 		ShowNotification(rewardText)

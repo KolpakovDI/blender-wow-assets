@@ -45,7 +45,6 @@ local function ensureLive2D()
 end
 
 local function showEmotion(key, duration)
-	if true then return end -- Live2D emoji billboard disabled
 	ensureLive2D()
 	local emo = EMOTIONS[key] or EMOTIONS.Idle
 	emotionToken += 1

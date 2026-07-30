@@ -448,6 +448,25 @@ local function addWayfindPad(parent, name, position, label, color)
 	matLbl.TextScaled = true
 	matLbl.Font = Enum.Font.GothamBold
 	matLbl.Parent = matGui
+	local bb = Instance.new("BillboardGui")
+	bb.Name = "WayBillboard"
+	bb.Size = UDim2.new(0, 140, 0, 40)
+	bb.StudsOffset = Vector3.new(0, 3.5, 0)
+	bb.AlwaysOnTop = true
+	bb.MaxDistance = 90
+	bb.Parent = mat
+	local lbl = Instance.new("TextLabel")
+	lbl.Size = UDim2.fromScale(1, 1)
+	lbl.BackgroundColor3 = color or Color3.fromRGB(255, 180, 220)
+	lbl.BackgroundTransparency = 0.2
+	lbl.Text = label
+	lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+	lbl.Font = Enum.Font.GothamBold
+	lbl.TextScaled = true
+	lbl.Parent = bb
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 8)
+	corner.Parent = lbl
 	return mat
 end
 

@@ -228,7 +228,29 @@ local function EnsureQuestMasterInteract(model)
 	anchor.CFrame = CFrame.new(ax, headTop + 0.85, az)
 
 	local hint = anchor:FindFirstChild("TalkHint")
-	if hint then hint:Destroy() end
+	if not hint then
+		hint = Instance.new("BillboardGui")
+		hint.Name = "TalkHint"
+		hint.Size = UDim2.new(0, 120, 0, 36)
+		hint.StudsOffset = Vector3.new(0, 2.2, 0)
+		hint.AlwaysOnTop = true
+		hint.MaxDistance = 60
+		hint.Parent = anchor
+		local lbl = Instance.new("TextLabel")
+		lbl.Name = "Label"
+		lbl.Size = UDim2.fromScale(1, 1)
+		lbl.BackgroundColor3 = Color3.fromRGB(40, 20, 50)
+		lbl.BackgroundTransparency = 0.25
+		lbl.Text = "КВЕСТ →"
+		lbl.TextColor3 = Color3.fromRGB(255, 210, 240)
+		lbl.Font = Enum.Font.GothamBold
+		lbl.TextScaled = true
+		lbl.Parent = hint
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(0, 8)
+		corner.Parent = lbl
+	end
+	hint.Enabled = true
 
 	for _, desc in ipairs(model:GetDescendants()) do
 		if desc:IsA("ProximityPrompt") and not desc:IsDescendantOf(anchor) then
@@ -543,6 +565,24 @@ local function BuildSpiritHabitats()
 			Accent = Color3.fromRGB(180, 220, 255),
 			Ground = Color3.fromRGB(90, 110, 140),
 			Material = Enum.Material.Glacier,
+		},
+		{
+			Key = "MagmaFissure",
+			Accent = Color3.fromRGB(255, 90, 40),
+			Ground = Color3.fromRGB(70, 30, 20),
+			Material = Enum.Material.Basalt,
+		},
+		{
+			Key = "FogBasin",
+			Accent = Color3.fromRGB(160, 190, 220),
+			Ground = Color3.fromRGB(70, 90, 110),
+			Material = Enum.Material.Limestone,
+		},
+		{
+			Key = "SkyRidge",
+			Accent = Color3.fromRGB(180, 210, 255),
+			Ground = Color3.fromRGB(90, 120, 150),
+			Material = Enum.Material.Sandstone,
 		},
 	}
 

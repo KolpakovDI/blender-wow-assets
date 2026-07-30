@@ -7,14 +7,29 @@
 ## [Unreleased]
 
 ### Changed
+- **Haven P0 Hub polish**: spawn → **Genkan** `(-25,1.5,-6)` лицом к Мике; TalkHint «КВЕСТ →» снова; Mika `showEmotion` on; wayfind AlwaysOnTop + `WaySpawnMika`
+- **Battle agency/VFX**: скиллы окрашены по Element; вспышка панели на «Сильно!/Слабо…»; `PlayerSkills.Element` в battle payload
+- **P0 core-loop polish**: victory toast показывает copper (`CopperCoins`); FullSync без спама «синхронизированы»; бой хоткеи **1/2/3 + H**; catch hint «нет ловушек» без блокировки `isInBattle`; квест 7 → Exit в description/tracker
+- **GDD §3.2.1 / 4×4**: канон Primary 4 линии (+эво); ElementPassives vs 3 unique; deprecated Sand/Crystal
+- **GDD §3.2.1**: таблица духов по Primary (legacy mesh inventory) — superseded by 4×4 canon 2026-07-30; убрана временная `SpiritMeshGallery` из EditPreviews
 - **Combat element tip**: первый вход в Combat → toast «Огонь→Земля→Ветер→Вода→Огонь · ×1.5/×0.7» (`ZoneController`)
 - **P1 Social trade KR**: `PlayerTradeSystem.SimulateSwap` QA — item↔item + item↔cosmetic + fail-missing PASS; `/tradetest` kit без изменений
-- **Season polish**: PASS snapshot с pity/DaysLeft/SoftBuffs; pool кристаллов 101–115; EndsAt 2026-08-31; UI «До конца / Bond soft / гарант»; RequestSeason → GetClientSnapshot
+- **Season polish**: PASS snapshot с pity/DaysLeft/SoftBuffs; pool кристаллов 101–117; EndsAt 2026-08-31; UI «До конца / Bond soft / гарант»; RequestSeason → GetClientSnapshot
 - **Element agency demo**: в бою Primary ×1.5/×0.7 реально применяется; лог «Сильно!/Слабо…»; tip на старте «Огонь vs Земля — … · цикл»; `BattleElementTip` в UI
 - **Dex UI Primary labels**: панель DEX показывает «Огонь / Земля / Ветер / Вода» (+ тиры ★); копирайт про Primary-сеты; docs mirror + `DexBonus` handler
 - **Four Primary Elements**: чарт Fire→Earth→Wind→Water→Fire (×1.5/×0.7); у духов `PrimaryElement` + `Aspect`; Dex/урон по Primary; UI «Огонь (Пепел)»; подпись-скиллы Water Heal / Wind tempo / Earth armor
 
 ### Added
+- **Spirit meshes evo 101–105**: Studio AI → `SpiritTemplates` Огненный Тигр / Ледяной Феникс / Теневой Волк / Грозовой Левиафан / Световой Альфа — **канон 4×4 полностью с мешами**
+- **Spirit meshes Magma/Mist/Sky**: Studio AI `generate_mesh` → `ReplicatedStorage.SpiritTemplates` **16/116, 17/117, 18/118** (+ ServerStorage mirror, EditPreviews); Blender MCP был offline; Play smoke spawn PASS
+- **Evo QA #18→#118**: MCP Play PASS — PrepareEvoBF + EvolveSpiritBF → Небесный Феникс (skills 129–131, кристаллы 118 списаны)
+- **Hunt 218 / Sky cascade**: accept→ForceCatch #18→turn-in PASS (UniqueItem **27** Перо Небесного Хребта + 3×118); Studio `QuestSeedCompletedBF`
+- **Hunt remap / Sky 218**: квесты **213/215** `Deprecated` (не в available, Accept блокируется); цепь **212→214→216→217→218**; Hunt **218** Небесный Сокол / UniqueItem **27**; зоны Sand/Crystal «архив»; WorldLoot SkyRidge ×2 кристалла 118
+- **4×4 Primary canon (1B/2B)**: 16 линий / 32 формы; бой = 3 unique skills; 2 `ElementPassives` на Primary (пассив Atk%/Def%, tip в agency); Wind **#18→#118** Небесный Сокол / SkyRidge; Sand/Crystal soft-deprecate (нет spawn); smoke slots+passives PASS; **Play smoke** Fire vs Earth — tip «Пассивы:…», слоты база 2
+- **Hunt 217 / Mist**: дух **#17** Туманный Дух → эво **#117** Призрачный Кирин; Primary Water / Aspect Mist; зона **FogBasin** `(660,200)`; skills 126–128; кристалл Item **117**; трофей UniqueItem **26**; квест **217** (prereq 216); Season pool +117; MCP cascade 201→217 accept→catch→turn-in PASS (трофей 26 + 3×117)
+- **Evo QA #16→#116**: MCP Play smoke PASS — L14 + Bond 3 + 5×116 + 14 wins → Вулканический Титан (skills 123–125, кристаллы списаны); `PrepareEvoBF` теперь выставляет `Bond`
+- **Hunt 216 / Magma**: дух **#16** Лавовый Краб → эво **#116** Вулканический Титан; Primary Fire / Aspect Magma; зона **MagmaFissure** `(590,240)`; skills 123–125; кристалл Item **116**; трофей UniqueItem **25**; квест **216** (prereq 215); Season pool +116; MCP cascade 201→216 accept→catch→turn-in PASS (трофей 25 + 3×116)
+- **Side 106 «Цикл стихий»**: CollectItem 2× Primary-кристаллы 101/107/109/106 (prereq 101); UniqueItem **24** Скрижаль; ветряные кристаллы у GaleCliff; MCP Play accept→turn-in PASS (Скрижаль 24)
 - **Hunt 215 / Crystal**: дух **#15** Хрустальный Лис → эво **#115** Призматический Страж; зона **CrystalCaves** `(520,280)`; skills 120–122; кристалл Item **115**; трофей UniqueItem **23**; квест **215** (prereq 214); MCP smoke accept→turn-in PASS
 - **Haven onboarding polish (P0 Hub)**: напольные wayfind `WayMika` / `WayManga` / `WayExit` в `OtakuHavenBuilder`; rebuild Haven + Мика на `QuestMasterPosition`; Play smoke — manga buff, gacha copper+FOMO, fitting wardrobe (prompts Enabled); BGM Safe→Genkan→Exit→Combat PASS
 - **Side QA 101–105**: MCP Play smoke **PASS** (CollectItem/FindChests/Defeat/Catch → Легенда 105)

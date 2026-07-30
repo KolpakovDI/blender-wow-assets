@@ -125,6 +125,30 @@ SpiritDatabase.Spirits = {
 		SkillIds = {120, 121},
 		CatchRate = 0.35,
 	},
+	[16] = {
+		MovementType = "Walk",
+		Id = 16, Name = "Лавовый Краб", Element = "Magma", Rarity = "Uncommon",
+		Color = Color3.fromRGB(255, 90, 40), Size = 3.5,
+		BaseStats = {HP = 112, Attack = 23, Defense = 15, Speed = 14},
+		SkillIds = {123, 124},
+		CatchRate = 0.34,
+	},
+	[17] = {
+		MovementType = "Fly",
+		Id = 17, Name = "Туманный Дух", Element = "Mist", Rarity = "Uncommon",
+		Color = Color3.fromRGB(160, 190, 220), Size = 3.3,
+		BaseStats = {HP = 100, Attack = 20, Defense = 12, Speed = 20},
+		SkillIds = {126, 127},
+		CatchRate = 0.34,
+	},
+	[18] = {
+		MovementType = "Fly",
+		Id = 18, Name = "Небесный Сокол", Element = "Sky", Rarity = "Uncommon",
+		Color = Color3.fromRGB(180, 210, 255), Size = 3.4,
+		BaseStats = {HP = 98, Attack = 21, Defense = 11, Speed = 22},
+		SkillIds = {129, 130},
+		CatchRate = 0.34,
+	},
 	[101] = {Id = 101, Name = "Огненный Тигр", Element = "Fire", Rarity = "Rare", BaseStats = {HP = 150, Attack = 25, Defense = 15, Speed = 18}, SkillIds = {1, 2, 3}, CatchRate = 0.1},
 	[102] = {MovementType = "Fly", Id = 102, Name = "Ледяной Феникс", Element = "Ice", Rarity = "Rare", BaseStats = {HP = 120, Attack = 22, Defense = 12, Speed = 28}, SkillIds = {11, 12, 13}, CatchRate = 0.08},
 	[103] = {Id = 103, Name = "Теневой Волк", Element = "Dark", Rarity = "Epic", BaseStats = {HP = 180, Attack = 30, Defense = 18, Speed = 22}, SkillIds = {21, 22, 23}, CatchRate = 0.05},
@@ -140,6 +164,9 @@ SpiritDatabase.Spirits = {
 	[113] = {MovementType = "Walk", Id = 113, Name = "Песчаный Император", Element = "Sand", Rarity = "Rare", Color = Color3.fromRGB(190, 150, 70), Size = 5.3, BaseStats = {HP = 185, Attack = 29, Defense = 20, Speed = 15}, SkillIds = {114, 115, 116}, CatchRate = 0.07},
 	[114] = {MovementType = "Walk", Id = 114, Name = "Железный Колосс", Element = "Metal", Rarity = "Rare", Color = Color3.fromRGB(100, 115, 135), Size = 5.5, BaseStats = {HP = 195, Attack = 30, Defense = 24, Speed = 12}, SkillIds = {117, 118, 119}, CatchRate = 0.07},
 	[115] = {MovementType = "Walk", Id = 115, Name = "Призматический Страж", Element = "Crystal", Rarity = "Rare", Color = Color3.fromRGB(140, 200, 255), Size = 5.2, BaseStats = {HP = 180, Attack = 31, Defense = 20, Speed = 20}, SkillIds = {120, 121, 122}, CatchRate = 0.07},
+	[116] = {MovementType = "Walk", Id = 116, Name = "Вулканический Титан", Element = "Magma", Rarity = "Rare", Color = Color3.fromRGB(220, 50, 20), Size = 5.4, BaseStats = {HP = 190, Attack = 32, Defense = 22, Speed = 14}, SkillIds = {123, 124, 125}, CatchRate = 0.06},
+	[117] = {MovementType = "Fly", Id = 117, Name = "Призрачный Кирин", Element = "Mist", Rarity = "Rare", Color = Color3.fromRGB(120, 160, 210), Size = 5.1, BaseStats = {HP = 170, Attack = 30, Defense = 18, Speed = 24}, SkillIds = {126, 127, 128}, CatchRate = 0.06},
+	[118] = {MovementType = "Fly", Id = 118, Name = "Небесный Феникс", Element = "Sky", Rarity = "Rare", Color = Color3.fromRGB(140, 190, 255), Size = 5.2, BaseStats = {HP = 165, Attack = 31, Defense = 16, Speed = 26}, SkillIds = {129, 130, 131}, CatchRate = 0.06},
 }
 
 for _, spirit in pairs(SpiritDatabase.Spirits) do
@@ -177,6 +204,12 @@ local PRIMARY_ASPECT = {
 	[114] = { "Earth", "Metal" },
 	[15] = { "Earth", "Crystal" },
 	[115] = { "Earth", "Crystal" },
+	[16] = { "Fire", "Magma" },
+	[116] = { "Fire", "Magma" },
+	[17] = { "Water", "Mist" },
+	[117] = { "Water", "Mist" },
+	[18] = { "Wind", "Sky" },
+	[118] = { "Wind", "Sky" },
 	[12] = { "Earth", "Poison" },
 	[112] = { "Earth", "Poison" },
 	[9] = { "Wind", "Wind" },
@@ -220,6 +253,9 @@ SpiritDatabase.AspectLabelsRu = {
 	Sand = "Песок",
 	Metal = "Металл",
 	Crystal = "Кристалл",
+	Magma = "Лава",
+	Mist = "Туман",
+	Sky = "Небо",
 	Poison = "Яд",
 	Wind = "Ветер",
 	Storm = "Гроза",
@@ -257,7 +293,20 @@ SpiritDatabase.EvolutionRules = {
 	[13] = {EvolvedId = 113, RequiredLevel = 14, RequiredBond = 3, RequiredItems = {{Id = 113, Quantity = 5}}, RequiredBattles = 14},
 	[14] = {EvolvedId = 114, RequiredLevel = 14, RequiredBond = 3, RequiredItems = {{Id = 114, Quantity = 5}}, RequiredBattles = 14},
 	[15] = {EvolvedId = 115, RequiredLevel = 14, RequiredBond = 3, RequiredItems = {{Id = 115, Quantity = 5}}, RequiredBattles = 14},
+	[16] = {EvolvedId = 116, RequiredLevel = 14, RequiredBond = 3, RequiredItems = {{Id = 116, Quantity = 5}}, RequiredBattles = 14},
+	[17] = {EvolvedId = 117, RequiredLevel = 14, RequiredBond = 3, RequiredItems = {{Id = 117, Quantity = 5}}, RequiredBattles = 14},
+	[18] = {EvolvedId = 118, RequiredLevel = 14, RequiredBond = 3, RequiredItems = {{Id = 118, Quantity = 5}}, RequiredBattles = 14},
 }
+
+-- Soft-deprecate: not in 4×4 canon spawn (data kept for old hunts/saves)
+SpiritDatabase.DeprecatedSpiritIds = {
+	[13] = true, [113] = true, -- Sand
+	[15] = true, [115] = true, -- Crystal
+}
+
+function SpiritDatabase.IsCanonical(id)
+	return SpiritDatabase.Spirits[id] ~= nil and not SpiritDatabase.DeprecatedSpiritIds[id]
+end
 
 function SpiritDatabase.Get(id)
 	return SpiritDatabase.Spirits[id]
@@ -319,7 +368,7 @@ function SpiritDatabase.FormatElementMatchup(attacker, defender)
 	return nil, mult, tag
 end
 
---- Battle-start agency tip: your Primary vs enemy + cycle reminder
+--- Battle-start agency tip: your Primary vs enemy + cycle + ElementPassives
 function SpiritDatabase.FormatElementAgencyTip(attacker, defender)
 	local mult, tag, atkEl, defEl = SpiritDatabase.GetElementMultiplier(attacker, defender)
 	local aRu = SpiritDatabase.PrimaryLabelsRu[atkEl] or atkEl
@@ -330,7 +379,12 @@ function SpiritDatabase.FormatElementAgencyTip(attacker, defender)
 	elseif tag == "Weak" then
 		verdict = "Слабо ×0.7"
 	end
-	return string.format("%s vs %s — %s · Огонь→Земля→Ветер→Вода→Огонь", aRu, dRu, verdict), mult, tag
+	local tip = string.format("%s vs %s — %s · Огонь→Земля→Ветер→Вода→Огонь", aRu, dRu, verdict)
+	local passTip = SkillCatalog.FormatElementPassivesTip and SkillCatalog.FormatElementPassivesTip(atkEl)
+	if passTip then
+		tip = tip .. " · " .. passTip
+	end
+	return tip, mult, tag
 end
 
 function SpiritDatabase.GetSkillNames(spirit)

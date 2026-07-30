@@ -11,7 +11,7 @@ SeasonLiveOps.TokenName = "Жетон сезона"
 SeasonLiveOps.CRYSTAL_PITY_THRESHOLD = 10
 SeasonLiveOps.CRYSTAL_DROP_CHANCE = 0.28
 SeasonLiveOps.CRYSTAL_POOL = {
-	101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115,
+	101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118,
 }
 
 SeasonLiveOps.EventShop = {

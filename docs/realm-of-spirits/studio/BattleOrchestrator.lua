@@ -17,12 +17,23 @@ local function applyTemperDamage(damage, attackerSpirit, defenderSpirit, battle)
 		damage = math.max(1, damage - math.floor(tonumber(b.Defense) or 0))
 	end
 	if battle then
-		local atkPct = tonumber(battle.DexAttackPct) or 0
-		local defPct = tonumber(battle.DexDefensePct) or 0
-		if atkPct > 0 and attackerSpirit and battle.PlayerSpirit and attackerSpirit == battle.PlayerSpirit then
+		local isPlayerAtk = attackerSpirit and battle.PlayerSpirit and attackerSpirit == battle.PlayerSpirit
+		local isPlayerDef = defenderSpirit and battle.PlayerSpirit and defenderSpirit == battle.PlayerSpirit
+		local atkPct, defPct = 0, 0
+		if isPlayerAtk then
+			atkPct = (tonumber(battle.DexAttackPct) or 0) + (tonumber(battle.ElementPassiveAtkPct) or 0)
+		else
+			atkPct = tonumber(battle.EnemyElementPassiveAtkPct) or 0
+		end
+		if isPlayerDef then
+			defPct = (tonumber(battle.DexDefensePct) or 0) + (tonumber(battle.ElementPassiveDefPct) or 0)
+		else
+			defPct = tonumber(battle.EnemyElementPassiveDefPct) or 0
+		end
+		if atkPct ~= 0 then
 			damage = math.max(1, math.floor(damage * (1 + atkPct)))
 		end
-		if defPct > 0 and defenderSpirit and battle.PlayerSpirit and defenderSpirit == battle.PlayerSpirit then
+		if defPct ~= 0 then
 			damage = math.max(1, math.floor(damage * (1 - defPct)))
 		end
 	end

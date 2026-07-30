@@ -56,6 +56,10 @@ local UniqueItemDatabase = {
 	[21] = {Id = 21, Name = "Панцирь Железных Пустошей", Rarity = "Rare", Description = "Трофей: Стальной Жук. +8% урон металлом"},
 	[22] = {Id = 22, Name = "Секретный билет", Rarity = "Rare", Description = "Награда Мики: особый билет Otaku Haven"},
 	[23] = {Id = 23, Name = "Осколок Кристальных Пещер", Rarity = "Rare", Description = "Трофей: Хрустальный Лис. +8% урон кристаллом"},
+	[24] = {Id = 24, Name = "Скрижаль четырёх стихий", Rarity = "Rare", Description = "Огонь→Земля→Ветер→Вода→Огонь · ×1.5 / ×0.7"},
+	[25] = {Id = 25, Name = "Клешня Лавового Разлома", Rarity = "Rare", Description = "Трофей: Лавовый Краб. +8% урон лавой"},
+	[26] = {Id = 26, Name = "Осколок Туманной Низины", Rarity = "Rare", Description = "Трофей: Туманный Дух. +8% урон туманом"},
+	[27] = {Id = 27, Name = "Перо Небесного Хребта", Rarity = "Rare", Description = "Трофей: Небесный Сокол. +8% урон небом"},
 }
 
 -- ============================================
@@ -187,7 +191,7 @@ local QuestDatabase = {
 	[7] = {
 		Id = 7,
 		Name = "Украденная манга",
-		Description = "Верните коробку редкой манги, украденную бандой Shadow у склада Мики",
+		Description = "Верните коробку редкой манги у Exit (выход в Акихабару) — украдена бандой Shadow у склада Мики",
 		Type = "Story",
 		Level = 1,
 		Objectives = {
@@ -305,6 +309,30 @@ local QuestDatabase = {
 			Items = {{Id = 3, Quantity = 2}} -- свитки опыта
 		},
 		Prerequisites = {101, 102, 103, 104}
+	},
+
+	[106] = {
+		Id = 106,
+		Name = "Цикл стихий",
+		Description = "Соберите по 2 Primary-кристалла: Огонь (101), Земля (107), Ветер (109), Вода (106). Цикл: Огонь→Земля→Ветер→Вода→Огонь (×1.5/×0.7).",
+		Type = "Side",
+		Level = 6,
+		Objectives = {
+			{Type = "CollectItem", ItemId = 101, Count = 2},
+			{Type = "CollectItem", ItemId = 107, Count = 2},
+			{Type = "CollectItem", ItemId = 109, Count = 2},
+			{Type = "CollectItem", ItemId = 106, Count = 2},
+		},
+		Rewards = {
+			Experience = 450,
+			CopperCoins = 200,
+			SilverCoins = 25,
+			GoldCoins = 1,
+			Reputation = 40,
+			UniqueItems = {{Id = 24, Quantity = 1}},
+			Items = {{Id = 3, Quantity = 1}},
+		},
+		Prerequisites = {101},
 	},
 
 	-- ============================================
@@ -552,10 +580,11 @@ local QuestDatabase = {
 	},
 	[213] = {
 		Id = 213,
-		Name = "Путь Охотника XIII: Песок",
-		Description = "Поймайте Пустынного Скорпиона в Песчаных дюнах (восток от VenomHollow)",
+		Name = "[Архив] Путь Охотника XIII: Песок",
+		Description = "Архив 4×4: Песок вне канона (дух #13 не спавнится). Новые игроки: сразу Металл (214) после Яда (212).",
 		Type = "Hunt",
 		Level = 5,
+		Deprecated = true,
 		Objectives = {
 			{Type = "CatchSpecificSpirit", SpiritId = 13, Count = 1, SpiritName = "Пустынный Скорпион"}
 		},
@@ -588,14 +617,15 @@ local QuestDatabase = {
 			UniqueItems = {{Id = 21, Quantity = 1}},
 			Items = {{Id = 114, Quantity = 3}, {Id = 1, Quantity = 3}}
 		},
-		Prerequisites = {213}
+		Prerequisites = {212} -- skip archived Sand 213 (4×4 canon)
 	},
 	[215] = {
 		Id = 215,
-		Name = "Путь Охотника XV: Кристалл",
-		Description = "Поймайте Хрустального Лиса в Кристальных пещерах (северо-восток от IronWastes)",
+		Name = "[Архив] Путь Охотника XV: Кристалл",
+		Description = "Архив 4×4: Кристалл вне канона (дух #15 не спавнится). Новые игроки: Лава (216) сразу после Металла (214).",
 		Type = "Hunt",
 		Level = 5,
+		Deprecated = true,
 		Objectives = {
 			{Type = "CatchSpecificSpirit", SpiritId = 15, Count = 1, SpiritName = "Хрустальный Лис"}
 		},
@@ -609,6 +639,66 @@ local QuestDatabase = {
 			Items = {{Id = 115, Quantity = 3}, {Id = 1, Quantity = 3}}
 		},
 		Prerequisites = {214}
+	},
+	[216] = {
+		Id = 216,
+		Name = "Путь Охотника XVI: Лава",
+		Description = "Поймайте Лавового Краба в Лавовом разломе (восток от IronWastes)",
+		Type = "Hunt",
+		Level = 5,
+		Objectives = {
+			{Type = "CatchSpecificSpirit", SpiritId = 16, Count = 1, SpiritName = "Лавовый Краб"}
+		},
+		Rewards = {
+			Experience = 560,
+			CopperCoins = 270,
+			SilverCoins = 40,
+			GoldCoins = 1,
+			Reputation = 58,
+			UniqueItems = {{Id = 25, Quantity = 1}},
+			Items = {{Id = 116, Quantity = 3}, {Id = 1, Quantity = 3}}
+		},
+		Prerequisites = {214} -- skip archived Crystal 215 (4×4 canon)
+	},
+	[217] = {
+		Id = 217,
+		Name = "Путь Охотника XVII: Туман",
+		Description = "Поймайте Туманного Духа в Туманной низине (восток от MagmaFissure)",
+		Type = "Hunt",
+		Level = 5,
+		Objectives = {
+			{Type = "CatchSpecificSpirit", SpiritId = 17, Count = 1, SpiritName = "Туманный Дух"}
+		},
+		Rewards = {
+			Experience = 580,
+			CopperCoins = 280,
+			SilverCoins = 42,
+			GoldCoins = 1,
+			Reputation = 60,
+			UniqueItems = {{Id = 26, Quantity = 1}},
+			Items = {{Id = 117, Quantity = 3}, {Id = 1, Quantity = 3}}
+		},
+		Prerequisites = {216}
+	},
+	[218] = {
+		Id = 218,
+		Name = "Путь Охотника XVIII: Небо",
+		Description = "Поймайте Небесного Сокола на Небесном хребте (северо-запад, SkyRidge)",
+		Type = "Hunt",
+		Level = 5,
+		Objectives = {
+			{Type = "CatchSpecificSpirit", SpiritId = 18, Count = 1, SpiritName = "Небесный Сокол"}
+		},
+		Rewards = {
+			Experience = 600,
+			CopperCoins = 290,
+			SilverCoins = 44,
+			GoldCoins = 1,
+			Reputation = 62,
+			UniqueItems = {{Id = 27, Quantity = 1}},
+			Items = {{Id = 118, Quantity = 3}, {Id = 1, Quantity = 3}}
+		},
+		Prerequisites = {217}
 	},
 	-- Spirit Resonance dailies (repeatable side — no hard prereq)
 	[301] = {
@@ -700,6 +790,9 @@ function QuestSystem:AcceptQuest(questId)
 	questId = tonumber(questId) or questId
 	local quest = QuestDatabase[questId]
 	if not quest then return false, "Квест не найден" end
+	if quest.Deprecated then
+		return false, "Квест в архиве (вне канона 4×4)"
+	end
 
 	-- Проверяем prerequisites
 	for _, prereqId in ipairs(quest.Prerequisites or {}) do
@@ -1112,6 +1205,9 @@ end
 local function BuildAvailableQuests(questSystem)
 	local availableQuests = {}
 	for questId, quest in pairs(QuestDatabase) do
+		if quest.Deprecated then
+			continue
+		end
 		if not hasQuestFlag(questSystem.ActiveQuests, questId) and not hasQuestFlag(questSystem.CompletedQuests, questId) then
 			local canTake = true
 			for _, prereqId in ipairs(quest.Prerequisites or {}) do
@@ -1324,7 +1420,29 @@ task.spawn(function()
 		prompt.Style = Enum.ProximityPromptStyle.Default
 		prompt.UIOffset = Vector2.new(0, 0)
 		local hint = anchor:FindFirstChild("TalkHint")
-		if hint then hint:Destroy() end
+		if not hint then
+			hint = Instance.new("BillboardGui")
+			hint.Name = "TalkHint"
+			hint.Size = UDim2.new(0, 120, 0, 36)
+			hint.StudsOffset = Vector3.new(0, 2.2, 0)
+			hint.AlwaysOnTop = true
+			hint.MaxDistance = 60
+			hint.Parent = anchor
+			local lbl = Instance.new("TextLabel")
+			lbl.Name = "Label"
+			lbl.Size = UDim2.fromScale(1, 1)
+			lbl.BackgroundColor3 = Color3.fromRGB(40, 20, 50)
+			lbl.BackgroundTransparency = 0.25
+			lbl.Text = "КВЕСТ →"
+			lbl.TextColor3 = Color3.fromRGB(255, 210, 240)
+			lbl.Font = Enum.Font.GothamBold
+			lbl.TextScaled = true
+			lbl.Parent = hint
+			local corner = Instance.new("UICorner")
+			corner.CornerRadius = UDim.new(0, 8)
+			corner.Parent = lbl
+		end
+		hint.Enabled = true
 		if not hookedPrompts[prompt] then
 			hookedPrompts[prompt] = true
 			prompt.Triggered:Connect(openFor)
@@ -1369,6 +1487,13 @@ end
 
 -- Экспортируем для других скриптов
 _G.UpdateQuestProgress = updateQuestProgress
+
+if game:GetService("RunService"):IsStudio() then
+	_G.GetOrCreateQuestSystem = GetOrCreateQuestSystem
+end
+
+-- Studio MCP QA BindableFunctions live under ServerScriptService.RealmOfSpirits
+-- (QuestAcceptBF / QuestTurnInBF / QuestSeedCompletedBF / UpdateQuestProgressBF)
 
 -- ============================================
 -- Инициализация

@@ -21,6 +21,8 @@ Git holds docs + Cursor infra + tooling; the `.rbxl` is **not** in git.
 | `realm-session-checkpoint` | Pause / save / resume docs + optional commit |
 | `realm-battle-pipeline` | SkillCatalog → Orchestrator → battle UI |
 
+Personal (all Roblox projects): `luau-roblox-style` in `~/.cursor/skills/` — `--!strict`, `task.*`, Parent-last `Instance.new`, CollectionService tags.
+
 ## Subagent
 
 - `.cursor/agents/realm-orchestrator.md` — coordinator; use for “what next” / multi-step RoS work

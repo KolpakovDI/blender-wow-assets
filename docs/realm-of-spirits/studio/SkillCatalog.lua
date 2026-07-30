@@ -48,6 +48,25 @@ SkillCatalog.ById = {
 	[120] = {Id = 120, Name = "Кристальный укус", Element = "Crystal", Type = "Attack", Damage = 28, Cost = 8, Cooldown = 1.7},
 	[121] = {Id = 121, Name = "Призматический луч", Element = "Crystal", Type = "Attack", Damage = 40, Cost = 18, Cooldown = 4.2, Effect = {Type = "DebuffAttack", Value = 0.22, Duration = 2}},
 	[122] = {Id = 122, Name = "Осколочный шторм", Element = "Crystal", Type = "Attack", Damage = 55, Cost = 35, Cooldown = 7.2, Effect = {Type = "DebuffDefense", Value = 0.25, Duration = 3}},
+	[123] = {Id = 123, Name = "Лавовый щипок", Element = "Magma", Type = "Attack", Damage = 28, Cost = 8, Cooldown = 1.7, Effect = {Type = "Burn", Value = 5, Duration = 2}},
+	[124] = {Id = 124, Name = "Поток магмы", Element = "Magma", Type = "Attack", Damage = 41, Cost = 18, Cooldown = 4.2, Effect = {Type = "Burn", Value = 7, Duration = 2}},
+	[125] = {Id = 125, Name = "Извержение", Element = "Magma", Type = "Attack", Damage = 56, Cost = 35, Cooldown = 7.2, Effect = {Type = "Burn", Value = 10, Duration = 3}},
+	[126] = {Id = 126, Name = "Касание тумана", Element = "Mist", Type = "Attack", Damage = 27, Cost = 8, Cooldown = 1.7},
+	[127] = {Id = 127, Name = "Пелена тумана", Element = "Mist", Type = "Attack", Damage = 40, Cost = 18, Cooldown = 4.2, Effect = {Type = "DebuffAttack", Value = 0.22, Duration = 2}},
+	[128] = {Id = 128, Name = "Призрачный шквал", Element = "Mist", Type = "Attack", Damage = 55, Cost = 35, Cooldown = 7.2, Effect = {Type = "Stun", Duration = 1}},
+	-- Sky line (#18→#118)
+	[129] = {Id = 129, Name = "Небесный пике", Element = "Sky", Type = "Attack", Damage = 26, Cost = 7, Cooldown = 1.4},
+	[130] = {Id = 130, Name = "Порыв высоты", Element = "Sky", Type = "Attack", Damage = 39, Cost = 17, Cooldown = 3.8, Effect = {Type = "DebuffAttack", Value = 0.2, Duration = 2}},
+	[131] = {Id = 131, Name = "Штормовой клекот", Element = "Sky", Type = "Attack", Damage = 54, Cost = 34, Cooldown = 7.0, Effect = {Type = "Stun", Duration = 1}},
+	-- ElementPassives (meta only — not action-bar slots)
+	[200] = {Id = 200, Name = "Жар стихии", Element = "Fire", Type = "Passive", Kind = "AtkPct", Value = 0.05, Description = "+5% урон"},
+	[201] = {Id = 201, Name = "Угли защиты", Element = "Fire", Type = "Passive", Kind = "DefPct", Value = 0.05, Description = "+5% защита"},
+	[202] = {Id = 202, Name = "Каменная стойкость", Element = "Earth", Type = "Passive", Kind = "DefPct", Value = 0.06, Description = "+6% защита"},
+	[203] = {Id = 203, Name = "Глубинный удар", Element = "Earth", Type = "Passive", Kind = "AtkPct", Value = 0.04, Description = "+4% урон"},
+	[204] = {Id = 204, Name = "Порыв ветра", Element = "Wind", Type = "Passive", Kind = "AtkPct", Value = 0.05, Description = "+5% урон"},
+	[205] = {Id = 205, Name = "Лёгкость", Element = "Wind", Type = "Passive", Kind = "DefPct", Value = 0.04, Description = "+4% защита"},
+	[206] = {Id = 206, Name = "Прилив", Element = "Water", Type = "Passive", Kind = "AtkPct", Value = 0.04, Description = "+4% урон"},
+	[207] = {Id = 207, Name = "Зеркало вод", Element = "Water", Type = "Passive", Kind = "DefPct", Value = 0.06, Description = "+6% защита"},
 }
 
 SkillCatalog.ByName = {}
@@ -87,7 +106,52 @@ SkillCatalog.SpiritSkills = {
 	[114] = {117, 118, 119},
 	[15] = {120, 121},
 	[115] = {120, 121, 122},
+	[16] = {123, 124},
+	[116] = {123, 124, 125},
+	[17] = {126, 127},
+	[117] = {126, 127, 128},
+	[18] = {129, 130},
+	[118] = {129, 130, 131},
 }
+
+-- 2 meta passives per Primary (not action-bar)
+SkillCatalog.ElementPassives = {
+	Fire = {200, 201},
+	Earth = {202, 203},
+	Wind = {204, 205},
+	Water = {206, 207},
+}
+
+function SkillCatalog.GetElementPassives(primary)
+	local ids = SkillCatalog.ElementPassives[primary]
+	if not ids then return {} end
+	local out = {}
+	for _, id in ipairs(ids) do
+		local s = SkillCatalog.GetClone(id)
+		if s then table.insert(out, s) end
+	end
+	return out
+end
+
+function SkillCatalog.GetElementPassiveMods(primary)
+	local atk, def = 0, 0
+	for _, s in ipairs(SkillCatalog.GetElementPassives(primary)) do
+		if s.Kind == "AtkPct" then atk += (tonumber(s.Value) or 0)
+		elseif s.Kind == "DefPct" then def += (tonumber(s.Value) or 0)
+		end
+	end
+	return atk, def
+end
+
+function SkillCatalog.FormatElementPassivesTip(primary)
+	local list = SkillCatalog.GetElementPassives(primary)
+	if #list == 0 then return nil end
+	local parts = {}
+	for _, s in ipairs(list) do
+		table.insert(parts, string.format("%s (%s)", s.Name, s.Description or s.Kind or ""))
+	end
+	return "Пассивы: " .. table.concat(parts, " · ")
+end
 
 function SkillCatalog.Get(idOrName)
 	if type(idOrName) == "number" then

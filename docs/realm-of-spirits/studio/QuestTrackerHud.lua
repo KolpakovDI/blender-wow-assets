@@ -36,11 +36,17 @@ local function objectiveName(obj)
 		return "Разные духи"
 	elseif objType == "CollectItem" then
 		local item = obj.ItemId and ItemCatalog.ById and ItemCatalog.ById[obj.ItemId]
+		local name
 		if item and item.Name then
-			return item.Name
+			name = item.Name
+		else
+			local def = ItemCatalog.Get and ItemCatalog.Get(obj.ItemId)
+			name = (def and def.Name) or "Собрать предметы"
 		end
-		local def = ItemCatalog.Get and ItemCatalog.Get(obj.ItemId)
-		return (def and def.Name) or "Собрать предметы"
+		if obj.ItemId == 120 then
+			return name .. " (у Exit)"
+		end
+		return name
 	elseif objType == "LevelUpSpirit" then
 		return "Уровень духа"
 	elseif objType == "CareSpirit" then

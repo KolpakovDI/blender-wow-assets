@@ -204,7 +204,7 @@ local function selectSpirit(spiritModel)
 			if canCatch then
 				hint = hint .. "  ·  E — поймать  ·  F — бой"
 			else
-				hint = hint .. "  ·  F — бой"
+				hint = hint .. "  ·  E — нет ловушек  ·  F — бой"
 			end
 		else
 			hint = hint .. "  ·  Подойдите ближе (до " .. MAX_TARGET_DISTANCE .. " studs)"
@@ -362,10 +362,11 @@ local function getNearestCatchableSpirit()
 end
 
 function TryCatchSpirit(spirit)
-	if not spirit or isInBattle then return end
+	if not spirit or isInBattle or isCatchPending then return end
 	if (_G.GetTrapCount and _G.GetTrapCount() or 0) <= 0 then
 		if _G.ShowNoTrapMessage then _G.ShowNoTrapMessage() end
 		if _G.UpdateCatchAvailability then _G.UpdateCatchAvailability() end
+		setTargetHint("Нет ловушек — купите у торговца в Haven")
 		return
 	end
 	if not isWithinRange(spirit) then
@@ -376,7 +377,6 @@ function TryCatchSpirit(spirit)
 	if not spiritId then return end
 	local instanceId = spirit:GetAttribute("SpiritInstanceId")
 
-	isInBattle = true
 	isCatchPending = true
 	catchRequestId = catchRequestId + 1
 	local requestId = catchRequestId
@@ -389,7 +389,6 @@ function TryCatchSpirit(spirit)
 
 	task.delay(4.5, function()
 		if isCatchPending and catchRequestId == requestId then
-			isInBattle = false
 			isCatchPending = false
 			selectSpirit(nil)
 			setTargetHint("")

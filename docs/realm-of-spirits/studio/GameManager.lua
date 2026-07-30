@@ -90,12 +90,14 @@ do
 				Stats = base.BaseStats,
 				SkillIds = base.SkillIds,
 				EnemiesDefeated = rule.RequiredBattles or 0,
+				Bond = rule.RequiredBond or 0,
 			})
 			idx = #data.Spirits
 		else
 			local s = data.Spirits[idx]
 			s.Level = math.max(s.Level or 1, rule.RequiredLevel or 1)
 			s.EnemiesDefeated = math.max(s.EnemiesDefeated or 0, rule.RequiredBattles or 0)
+			s.Bond = math.max(s.Bond or 0, rule.RequiredBond or 0)
 		end
 		data.Inventory = data.Inventory or {}
 		for _, req in ipairs(rule.RequiredItems or {}) do
@@ -654,6 +656,7 @@ local function GetBattleState(player, battle, message)
 		playerSkills[i] = {
 			Name = ability.Name,
 			Type = ability.Type,
+			Element = ability.Element,
 			Cost = ability.Cost or 0,
 			Cooldown = playerCooldowns[i] or 0,
 		}
@@ -807,7 +810,7 @@ local function EndBattle(player, winner, battle)
 
 		BattleEvent:FireClient(player, "End", {
 			Winner = "Player",
-			Rewards = {Experience = expReward, Coins = coinReward}
+			Rewards = {Experience = expReward, Coins = coinReward, CopperCoins = coinReward}
 		})
 		DataEvent:FireClient(player, "FullSync", playerData)
 
@@ -1644,7 +1647,23 @@ BattleEvent.OnServerEvent:Connect(function(player, action, data)
 			EnemyCooldowns = {},
 			PlayerEffects = CreateEffectsState(),
 			EnemyEffects = CreateEffectsState(),
+			DexAttackPct = 0,
+			DexDefensePct = 0,
 		}
+		do
+			local dex = SpiritResonance.GetDexBonus(playerData, SpiritDatabase)
+			battleData.DexAttackPct = tonumber(dex and dex.AttackPct) or 0
+			battleData.DexDefensePct = tonumber(dex and dex.DefensePct) or 0
+		end
+		do
+			local SkillCatalog = require(realmFolder:WaitForChild("SkillCatalog"))
+			local pAtk, pDef = SkillCatalog.GetElementPassiveMods(SpiritDatabase.GetPrimary(spiritInfo))
+			local eAtk, eDef = SkillCatalog.GetElementPassiveMods(SpiritDatabase.GetPrimary(enemyInfo))
+			battleData.ElementPassiveAtkPct = pAtk
+			battleData.ElementPassiveDefPct = pDef
+			battleData.EnemyElementPassiveAtkPct = eAtk
+			battleData.EnemyElementPassiveDefPct = eDef
+		end
 
 		activeBattles[player.UserId] = battleData
 		if _G.ShowBattleBlade then
@@ -2165,6 +2184,10 @@ task.spawn(function()
 	end
 
 	for spiritId, pos in pairs(SpiritSpawnPositions) do
+		local SpiritDatabase = require(ReplicatedStorage:WaitForChild("RealmOfSpirits"):WaitForChild("SpiritDatabase"))
+		if SpiritDatabase.IsCanonical and not SpiritDatabase.IsCanonical(spiritId) then
+			continue
+		end
 		CreateSpiritModel(spiritId, pos)
 	end
 	print("Спавн начальных духов завершён!")

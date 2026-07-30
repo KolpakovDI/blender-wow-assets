@@ -1,28 +1,26 @@
 # NEXT SESSION
 
-**Статус:** 2026-07-29 — Checkpoint. Primary/Season/Social/agency закрыты. Дальше: side 106+ · Hunt 216+ · по запросу.
+**Статус:** 2026-07-30 — по порядку закрыто: meshes → P0 core-loop → battle VFX → **Haven Hub**. Осталось: **commit docs** (по запросу).
 
-Дата якоря: 2026-07-29
+Дата якоря: 2026-07-30
 
 ## Старт сессии (порядок жёсткий)
 
-1. **Ctrl+S** place (если не сохранён)
-2. На выбор: **новый side 106+** · Hunt 216+ · другой контент
-3. Опционально: Play — Combat toast стихий; PASS; Fire→Earth «Сильно!»
+1. **Ctrl+S** place
+2. Play smoke Haven: spawn в Genkan → bell/BGM → «КВЕСТ →» у Мики → wayfind
+3. Play smoke боя: 1/2/3, flash Сильно/Слабо, toast 🥉
+4. **Commit docs** — когда скажешь
 
 ## Product progress
 
 | Тема | Статус |
 |------|--------|
-| Hunt 201–215 | PASS |
-| Four Primary + Dex UI + Element agency | PASS |
-| Season polish | PASS |
-| P1 Social trade KR | PASS |
-| Combat element tip | PASS |
-| Hunt 216+ | не начинать без запроса |
+| Canon meshes 32/32 | **DONE** |
+| P0 core-loop polish | **DONE** |
+| Бой agency/VFX | **DONE** |
+| Haven polish | **DONE** |
+| Commit docs | wait for ask |
 
 ## Studio SoT
 
 `C:\\Mimo\\RealmOfSpirits\\RealmOfSpirits second.rbxl` — **Ctrl+S.**
-
-Touched: `SpiritDatabase`, `BattleOrchestrator`, `GameManager`, `UIController`, `SeasonLiveOps`, `OtakuHavenService`, `OtakuHavenController`, `PlayerTradeSystem`, `ZoneController`.

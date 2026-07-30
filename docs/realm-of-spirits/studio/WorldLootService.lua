@@ -218,6 +218,9 @@ local crystalSpots = {
 	-- StoneBasin / Earth (#7)
 	{ Pos = Vector3.new(-88, 2, -128), ItemId = 107, Label = "Земляной кристалл", Color = Color3.fromRGB(160, 120, 70), LightColor = Color3.fromRGB(200, 160, 100) },
 	{ Pos = Vector3.new(-72, 2, -112), ItemId = 107, Label = "Земляной кристалл", Color = Color3.fromRGB(160, 120, 70), LightColor = Color3.fromRGB(200, 160, 100) },
+	-- GaleCliff / Wind (#9)
+	{ Pos = Vector3.new(-148, 2, 172), ItemId = 109, Label = "Ветряной кристалл", Color = Color3.fromRGB(180, 230, 210), LightColor = Color3.fromRGB(210, 255, 235) },
+	{ Pos = Vector3.new(-128, 2, 192), ItemId = 109, Label = "Ветряной кристалл", Color = Color3.fromRGB(180, 230, 210), LightColor = Color3.fromRGB(210, 255, 235) },
 	-- AshGarden / Fire ash (#8)
 	{ Pos = Vector3.new(168, 2, 42), ItemId = 108, Label = "Пепельный кристалл", Color = Color3.fromRGB(255, 90, 40), LightColor = Color3.fromRGB(255, 140, 60) },
 	{ Pos = Vector3.new(182, 2, 58), ItemId = 108, Label = "Пепельный кристалл", Color = Color3.fromRGB(255, 90, 40), LightColor = Color3.fromRGB(255, 140, 60) },
@@ -236,6 +239,15 @@ local crystalSpots = {
 	-- CrystalCaves / Crystal (#15)
 	{ Pos = Vector3.new(512, 2, 268), ItemId = 115, Label = "Кристальный кристалл", Color = Color3.fromRGB(180, 220, 255), LightColor = Color3.fromRGB(210, 240, 255) },
 	{ Pos = Vector3.new(528, 2, 292), ItemId = 115, Label = "Кристальный кристалл", Color = Color3.fromRGB(180, 220, 255), LightColor = Color3.fromRGB(210, 240, 255) },
+	-- MagmaFissure / Magma (#16)
+	{ Pos = Vector3.new(582, 2, 228), ItemId = 116, Label = "Лавовый кристалл", Color = Color3.fromRGB(255, 90, 40), LightColor = Color3.fromRGB(255, 140, 60) },
+	{ Pos = Vector3.new(598, 2, 252), ItemId = 116, Label = "Лавовый кристалл", Color = Color3.fromRGB(255, 90, 40), LightColor = Color3.fromRGB(255, 140, 60) },
+	-- FogBasin / Mist (#17)
+	{ Pos = Vector3.new(652, 2, 188), ItemId = 117, Label = "Туманный кристалл", Color = Color3.fromRGB(160, 190, 220), LightColor = Color3.fromRGB(200, 220, 245) },
+	{ Pos = Vector3.new(668, 2, 212), ItemId = 117, Label = "Туманный кристалл", Color = Color3.fromRGB(160, 190, 220), LightColor = Color3.fromRGB(200, 220, 245) },
+	-- SkyRidge / Sky (#18)
+	{ Pos = Vector3.new(-212, 2, 208), ItemId = 118, Label = "Небесный кристалл", Color = Color3.fromRGB(140, 190, 255), LightColor = Color3.fromRGB(180, 220, 255) },
+	{ Pos = Vector3.new(-188, 2, 232), ItemId = 118, Label = "Небесный кристалл", Color = Color3.fromRGB(140, 190, 255), LightColor = Color3.fromRGB(180, 220, 255) },
 	-- Haven Exit / Akihabara approach — квест 7 «Украденная манга»
 	{ Pos = Vector3.new(-25, 2, 72), ItemId = 120, Label = "Коробка редкой манги", Color = Color3.fromRGB(220, 90, 120), LightColor = Color3.fromRGB(255, 140, 170) },
 	{ Pos = Vector3.new(-18, 2, 85), ItemId = 120, Label = "Коробка редкой манги", Color = Color3.fromRGB(220, 90, 120), LightColor = Color3.fromRGB(255, 140, 170) },

@@ -35,6 +35,12 @@ ZoneConfig.Zones = {
 	IronWastes = {Center = Vector3.new(450, 1, 200), Size = Vector3.new(55, 22, 50)},
 	-- Crystal (#15 Хрустальный Лис)
 	CrystalCaves = {Center = Vector3.new(520, 1, 280), Size = Vector3.new(55, 22, 50)},
+	-- Magma (#16 Лавовый Краб)
+	MagmaFissure = {Center = Vector3.new(590, 1, 240), Size = Vector3.new(55, 22, 50)},
+	-- Mist (#17 Туманный Дух)
+	FogBasin = {Center = Vector3.new(660, 1, 200), Size = Vector3.new(55, 22, 50)},
+	-- Sky (#18 Небесный Сокол)
+	SkyRidge = {Center = Vector3.new(-200, 1, 220), Size = Vector3.new(55, 22, 50)},
 }
 
 ZoneConfig.CounterPosition = Vector3.new(-30, 0, 0)
@@ -42,7 +48,7 @@ ZoneConfig.CounterPosition = Vector3.new(-30, 0, 0)
 ZoneConfig.QuestMasterPosition = Vector3.new(-12, 0, -38)
 ZoneConfig.QuestMasterHeightOffset = 0.25
 -- Пол Haven (ближе к центру Safe / магазину)
-ZoneConfig.SpawnPosition = Vector3.new(-25, 1, 18)
+ZoneConfig.SpawnPosition = Vector3.new(-25, 1.5, -6) -- Genkan (funnel: bell → Mika → Exit)
 ZoneConfig.BattleArenaPosition = Vector3.new(236, 0, 40)
 ZoneConfig.MistPondCenter = Vector3.new(30, 1, -880)
 
@@ -60,9 +66,12 @@ ZoneConfig.SpiritSpawnPositions = {
 	[10] = Vector3.new(50, 0, -200), -- MossGlade / Nature
 	[11] = Vector3.new(-220, 0, -160), -- Moonwell / Moon
 	[12] = Vector3.new(280, 0, -160), -- VenomHollow / Poison
-	[13] = Vector3.new(360, 0, -40), -- SandDunes / Sand
+	-- [13] Sand deprecated (4×4 canon)
 	[14] = Vector3.new(450, 0, 200), -- IronWastes / Metal
-	[15] = Vector3.new(520, 0, 280), -- CrystalCaves / Crystal
+	-- [15] Crystal deprecated (4×4 canon)
+	[16] = Vector3.new(590, 0, 240), -- MagmaFissure / Magma
+	[17] = Vector3.new(660, 0, 200), -- FogBasin / Mist
+	[18] = Vector3.new(-200, 0, 220), -- SkyRidge / Sky
 }
 
 -- Метаданные для будущей цепочки «ловить по очереди»
@@ -79,9 +88,11 @@ ZoneConfig.SpiritHabitats = {
 	[10] = {ZoneKey = "MossGlade", Label = "Моховая поляна", HuntOrder = 10, Element = "Nature"},
 	[11] = {ZoneKey = "Moonwell", Label = "Лунный колодец", HuntOrder = 11, Element = "Moon"},
 	[12] = {ZoneKey = "VenomHollow", Label = "Ядовитое ущелье", HuntOrder = 12, Element = "Poison"},
-	[13] = {ZoneKey = "SandDunes", Label = "Песчаные дюны", HuntOrder = 13, Element = "Sand"},
+	-- Sand #13 / Crystal #15 soft-deprecated from 4×4 canon spawn
 	[14] = {ZoneKey = "IronWastes", Label = "Железные пустоши", HuntOrder = 14, Element = "Metal"},
-	[15] = {ZoneKey = "CrystalCaves", Label = "Кристальные пещеры", HuntOrder = 15, Element = "Crystal"},
+	[16] = {ZoneKey = "MagmaFissure", Label = "Лавовый разлом", HuntOrder = 16, Element = "Magma"},
+	[17] = {ZoneKey = "FogBasin", Label = "Туманная низина", HuntOrder = 17, Element = "Mist"},
+	[18] = {ZoneKey = "SkyRidge", Label = "Небесный хребет", HuntOrder = 18, Element = "Sky"},
 }
 
 function ZoneConfig.GetSpiritSpawnPositions()
@@ -111,6 +122,9 @@ ZoneConfig.Music = {
 	SandDunes = {SoundId = "9047105584", Volume = 0.35},
 	IronWastes = {SoundId = "9047105584", Volume = 0.36},
 	CrystalCaves = {SoundId = "9047105584", Volume = 0.36},
+	MagmaFissure = {SoundId = "9047105584", Volume = 0.38},
+	FogBasin = {SoundId = "9047105584", Volume = 0.36},
+	SkyRidge = {SoundId = "9047105584", Volume = 0.36},
 }
 
 ZoneConfig.GachaRobuxProductId = 0
