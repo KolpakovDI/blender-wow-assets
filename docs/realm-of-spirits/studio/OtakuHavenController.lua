@@ -5,58 +5,21 @@ local player = Players.LocalPlayer
 local RealmFolder = ReplicatedStorage:WaitForChild("RealmOfSpirits")
 local havenEvent = RealmFolder:WaitForChild("OtakuHaven")
 local tradeEvent = RealmFolder:WaitForChild("Trade")
+local ToastRouter = require(RealmFolder:WaitForChild("ToastRouter"))
 local function getMainGui()
 	return player:WaitForChild("PlayerGui"):FindFirstChild("RealmOfSpiritsUI")
 end
 local function showToast(text, color)
 	if not text or text == "" then return end
-	local pg = player:FindFirstChild("PlayerGui") or player:WaitForChild("PlayerGui", 5)
-	if not pg then return end
-	-- Отдельный GUI выше XP-бара и основного UI (не ZoneToast внизу экрана)
-	local gui = pg:FindFirstChild("OtakuHavenToastGui")
-	if not gui then
-		gui = Instance.new("ScreenGui")
-		gui.Name = "OtakuHavenToastGui"
-		gui.ResetOnSpawn = false
-		gui.IgnoreGuiInset = true
-		gui.DisplayOrder = 400
-		gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-		gui.Parent = pg
+	local priority = "Tip"
+	if string.find(text, "Собран", 1, true)
+		or string.find(text, "Сундук", 1, true)
+		or string.find(text, "Гача", 1, true)
+		or string.find(text, "меди", 1, true)
+	then
+		priority = "Reward"
 	end
-	gui.DisplayOrder = 400
-	gui.Enabled = true
-	local label = gui:FindFirstChild("Toast")
-	if not label then
-		label = Instance.new("TextLabel")
-		label.Name = "Toast"
-		label.AnchorPoint = Vector2.new(0.5, 0)
-		label.Position = UDim2.new(0.5, 0, 0.14, 0)
-		label.Size = UDim2.new(0, 460, 0, 40)
-		label.BackgroundColor3 = Color3.fromRGB(20, 18, 28)
-		label.BackgroundTransparency = 0.15
-		label.Font = Enum.Font.GothamBold
-		label.TextSize = 17
-		label.TextWrapped = true
-		label.ZIndex = 10
-		label.Parent = gui
-		local c = Instance.new("UICorner")
-		c.CornerRadius = UDim.new(0, 8)
-		c.Parent = label
-		local pad = Instance.new("UIPadding")
-		pad.PaddingLeft = UDim.new(0, 12)
-		pad.PaddingRight = UDim.new(0, 12)
-		pad.Parent = label
-	end
-	label.Position = UDim2.new(0.5, 0, 0.14, 0)
-	label.AnchorPoint = Vector2.new(0.5, 0)
-	label.Text = text
-	label.TextColor3 = color or Color3.fromRGB(200, 255, 220)
-	label.Visible = true
-	task.delay(3.5, function()
-		if label and label.Parent and label.Text == text then
-			label.Visible = false
-		end
-	end)
+	ToastRouter.Notify(text, 3.5, priority, color)
 end
 
 local function ensureGachaPopup()

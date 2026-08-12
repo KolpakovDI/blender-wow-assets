@@ -32,14 +32,145 @@ ItemCatalog.ById = {
 	[116] = {Id = 116, Name = "Лавовый кристалл", Category = "Material", Element = "Magma", SellPrice = 0, Unsellable = true, Description = "Материал эволюции лавовых духов", CombatUtility = false},
 	[117] = {Id = 117, Name = "Туманный кристалл", Category = "Material", Element = "Mist", SellPrice = 0, Unsellable = true, Description = "Материал эволюции туманных духов", CombatUtility = false},
 	[118] = {Id = 118, Name = "Небесный кристалл", Category = "Material", Element = "Sky", SellPrice = 0, Unsellable = true, Description = "Материал эволюции небесных духов", CombatUtility = false},
-	[120] = {Id = 120, Name = "Коробка редкой манги", Category = "Quest", SellPrice = 0, Unsellable = true, Description = "Украденная партия манги для Мики (квест)", CombatUtility = false},
+	[120] = {Id = 120, Name = "Коробка редкой манги", Category = "Quest", SellPrice = 0, Unsellable = true, WhyTag = "квест Мики", Description = "Украденная партия манги для Мики (квест)", CombatUtility = false},
+	-- Kami Sanctum materials
+	[301] = {Id = 301, Name = "Осколок Ками", Category = "SanctumMaterial", SellPrice = 0, Unsellable = true, Description = "Базовый катализатор синтеза в Святилище Ками", CombatUtility = false},
+	[302] = {Id = 302, Name = "Камень Гармонии", Category = "SanctumMaterial", SellPrice = 0, Unsellable = true, Description = "Стабилизирует Primary при синтезе", CombatUtility = false},
+	[303] = {Id = 303, Name = "Ядро Разлома", Category = "SanctumMaterial", SellPrice = 0, Unsellable = true, Description = "Усиливает Unique при разнородных донорах", CombatUtility = false},
+	[304] = {Id = 304, Name = "Печать Мики", Category = "SanctumMaterial", SellPrice = 0, Unsellable = true, Description = "Ивент/квест: шанс Rare+ Unique", CombatUtility = false},
+	[310] = {Id = 310, Name = "Звезда трансформации I", Category = "SanctumMaterial", SellPrice = 0, Unsellable = true, Description = "Сдвигает веса Unique и силу синтеза", CombatUtility = false},
+	[311] = {Id = 311, Name = "Звезда трансформации II", Category = "SanctumMaterial", SellPrice = 0, Unsellable = true, Description = "Сильнее Звезды I", CombatUtility = false},
+	[312] = {Id = 312, Name = "Звезда трансформации III", Category = "SanctumMaterial", SellPrice = 0, Unsellable = true, Description = "Макс. тир; редкий лут Resonant-дезинтеграции", CombatUtility = false},
+	[320] = {Id = 320, Name = "Эссенция Огня", Category = "SanctumMaterial", Element = "Fire", SellPrice = 0, Unsellable = true, Description = "Дезинтеграция / квесты Святилища", CombatUtility = false},
+	[321] = {Id = 321, Name = "Эссенция Земли", Category = "SanctumMaterial", Element = "Earth", SellPrice = 0, Unsellable = true, Description = "Дезинтеграция / квесты Святилища", CombatUtility = false},
+	[322] = {Id = 322, Name = "Эссенция Ветра", Category = "SanctumMaterial", Element = "Wind", SellPrice = 0, Unsellable = true, Description = "Дезинтеграция / квесты Святилища", CombatUtility = false},
+	[323] = {Id = 323, Name = "Эссенция Воды", Category = "SanctumMaterial", Element = "Water", SellPrice = 0, Unsellable = true, Description = "Дезинтеграция / квесты Святилища", CombatUtility = false},
 }
 
 -- Copper shop + gold sinks (201–203)
 ItemCatalog.ShopIds = {1, 2, 3, 4, 5, 201, 202, 203}
 
 function ItemCatalog.Get(id)
+	local n = tonumber(id)
+	if n ~= nil then
+		return ItemCatalog.ById[n]
+	end
 	return ItemCatalog.ById[id]
+end
+
+--- Short bag tag: why the player holds this (UI package A)
+function ItemCatalog.GetWhyTag(id)
+	local item = ItemCatalog.Get(id)
+	if not item then
+		return nil
+	end
+	if type(item.WhyTag) == "string" and item.WhyTag ~= "" then
+		return item.WhyTag
+	end
+	local cat = item.Category
+	if cat == "Material" then
+		return "эволюция"
+	end
+	if cat == "Quest" then
+		return "квест Мики"
+	end
+	if cat == "SanctumMaterial" then
+		return "святилище"
+	end
+	if cat == "Catch" then
+		return "ловля"
+	end
+	if cat == "Consumable" and item.HealAmount then
+		return "бой"
+	end
+	return nil
+end
+
+--- Emoji icon for bag grid (UI package D)
+function ItemCatalog.GetIconEmoji(id)
+	local item = ItemCatalog.Get(id)
+	if not item then
+		return "📦"
+	end
+	local el = item.Element
+	if el == "Fire" or el == "Magma" then
+		return "🔥"
+	end
+	if el == "Ice" or el == "Water" or el == "Mist" then
+		return "❄️"
+	end
+	if el == "Earth" or el == "Sand" or el == "Metal" or el == "Crystal" then
+		return "🪨"
+	end
+	if el == "Wind" or el == "Sky" or el == "Lightning" then
+		return "💨"
+	end
+	if el == "Dark" or el == "Poison" then
+		return "🌑"
+	end
+	if el == "Light" or el == "Moon" or el == "Nature" then
+		return "✨"
+	end
+	local cat = item.Category
+	if cat == "Catch" then
+		return "🎯"
+	end
+	if cat == "Consumable" then
+		if item.HealAmount then
+			return "❤️"
+		end
+		if item.ExpAmount then
+			return "📜"
+		end
+		if item.TemperStone then
+			return "🪨"
+		end
+		if item.BondTreat then
+			return "🍬"
+		end
+		return "🧪"
+	end
+	if cat == "Quest" then
+		return "📚"
+	end
+	if cat == "SanctumMaterial" then
+		return "⛩️"
+	end
+	if cat == "Cosmetic" or cat == "Service" then
+		return "🏮"
+	end
+	if cat == "Material" then
+		return "💎"
+	end
+	return "📦"
+end
+
+--- Rarity tone for bag cell stroke (UI package D)
+function ItemCatalog.GetRarityColor(id)
+	local item = ItemCatalog.Get(id)
+	if not item then
+		return Color3.fromRGB(140, 140, 150)
+	end
+	local cat = item.Category
+	if cat == "Material" then
+		return Color3.fromRGB(90, 170, 255)
+	end
+	if cat == "Quest" then
+		return Color3.fromRGB(255, 200, 80)
+	end
+	if cat == "SanctumMaterial" then
+		return Color3.fromRGB(190, 120, 255)
+	end
+	if cat == "Cosmetic" or cat == "Service" then
+		return Color3.fromRGB(255, 215, 120)
+	end
+	if cat == "Catch" then
+		return Color3.fromRGB(90, 220, 120)
+	end
+	if cat == "Consumable" then
+		return Color3.fromRGB(180, 230, 180)
+	end
+	return Color3.fromRGB(170, 170, 180)
 end
 
 function ItemCatalog.GetShopItems()

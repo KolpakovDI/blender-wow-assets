@@ -25,7 +25,9 @@ local QuestEvent = realmFolder:WaitForChild("Quest")
 
 local SpiritDatabaseModule = require(realmFolder:WaitForChild("SpiritDatabase"))
 local ItemCatalog = require(realmFolder:WaitForChild("ItemCatalog"))
+local SpiritMeshResolve = require(realmFolder:WaitForChild("SpiritMeshResolve"))
 local SpiritResonance = require(realmFolder:WaitForChild("SpiritResonance"))
+local ToastRouter = require(realmFolder:WaitForChild("ToastRouter"))
 local WoWUITheme = require(realmFolder:WaitForChild("WoWUITheme"))
 local QuestTrackerHud = require(realmFolder:WaitForChild("QuestTrackerHud"))
 local function GetSpiritInfo(id)
@@ -35,25 +37,107 @@ end
 -- Маппинг числового ранга в буквенный
 local RankNames = {[1] = "D", [2] = "C", [3] = "B", [4] = "A", [5] = "S", [6] = "SS", [7] = "SSS"}
 
--- Иконки духов для меню (цвет + эмодзи по элементу)
-local SpiritIcons = {
-	[1] = {Color = Color3.fromRGB(255, 100, 50), Emoji = "🔥"},
-	[2] = {Color = Color3.fromRGB(100, 200, 255), Emoji = "❄️"},
-	[3] = {Color = Color3.fromRGB(100, 50, 150), Emoji = "🌑"},
-	[4] = {Color = Color3.fromRGB(200, 200, 100), Emoji = "⚡"},
-	[5] = {Color = Color3.fromRGB(255, 255, 200), Emoji = "✨"},
-	[6] = {Color = Color3.fromRGB(25, 40, 85), Emoji = "🐟"},
-	[7] = {Color = Color3.fromRGB(140, 110, 70), Emoji = "🪨"},
-	[8] = {Color = Color3.fromRGB(220, 90, 40), Emoji = "🦎"},
-	[101] = {Color = Color3.fromRGB(255, 120, 50), Emoji = "🔥"},
-	[102] = {Color = Color3.fromRGB(100, 200, 255), Emoji = "❄️"},
-	[103] = {Color = Color3.fromRGB(100, 50, 150), Emoji = "🌑"},
-	[104] = {Color = Color3.fromRGB(200, 200, 100), Emoji = "⚡"},
-	[105] = {Color = Color3.fromRGB(255, 255, 200), Emoji = "✨"},
-	[106] = {Color = Color3.fromRGB(25, 40, 85), Emoji = "🌊"},
-	[107] = {Color = Color3.fromRGB(160, 130, 80), Emoji = "⛰️"},
-	[108] = {Color = Color3.fromRGB(255, 80, 30), Emoji = "🔥"},
+-- Иконки духов для меню (Id 1.x–4.x + evo; fallback по Element)
+local ElementIcons = {
+	Fire = {Color = Color3.fromRGB(255, 100, 50), Emoji = "🔥"},
+	Ash = {Color = Color3.fromRGB(220, 90, 40), Emoji = "🦎"},
+	Light = {Color = Color3.fromRGB(255, 255, 200), Emoji = "✨"},
+	Magma = {Color = Color3.fromRGB(220, 50, 20), Emoji = "🌋"},
+	Earth = {Color = Color3.fromRGB(140, 110, 70), Emoji = "🪨"},
+	Nature = {Color = Color3.fromRGB(80, 160, 70), Emoji = "🦌"},
+	Metal = {Color = Color3.fromRGB(100, 115, 135), Emoji = "🪲"},
+	Poison = {Color = Color3.fromRGB(90, 180, 60), Emoji = "🐍"},
+	Sand = {Color = Color3.fromRGB(190, 150, 70), Emoji = "🦂"},
+	Crystal = {Color = Color3.fromRGB(140, 200, 255), Emoji = "💎"},
+	Wind = {Color = Color3.fromRGB(120, 200, 180), Emoji = "🦊"},
+	Storm = {Color = Color3.fromRGB(200, 200, 100), Emoji = "⚡"},
+	Lightning = {Color = Color3.fromRGB(200, 200, 100), Emoji = "⚡"},
+	Dark = {Color = Color3.fromRGB(100, 50, 150), Emoji = "🌑"},
+	Sky = {Color = Color3.fromRGB(140, 190, 255), Emoji = "🦅"},
+	Water = {Color = Color3.fromRGB(25, 100, 200), Emoji = "🐟"},
+	Ice = {Color = Color3.fromRGB(100, 200, 255), Emoji = "❄️"},
+	Moon = {Color = Color3.fromRGB(200, 210, 255), Emoji = "🐰"},
+	Mist = {Color = Color3.fromRGB(120, 160, 210), Emoji = "🌫️"},
 }
+
+local SpiritIcons = {
+	-- Fire 1.x
+	[11] = {Color = Color3.fromRGB(255, 100, 50), Emoji = "🔥"}, -- Огненный Кот
+	[12] = {Color = Color3.fromRGB(220, 90, 40), Emoji = "🦎"}, -- Пепельный Саламандр
+	[13] = {Color = Color3.fromRGB(255, 255, 200), Emoji = "✨"}, -- Световой Единорог
+	[14] = {Color = Color3.fromRGB(220, 50, 20), Emoji = "🌋"}, -- Лавовый Краб
+	-- Earth 2.x
+	[21] = {Color = Color3.fromRGB(140, 110, 70), Emoji = "🪨"}, -- Каменный Голем
+	[22] = {Color = Color3.fromRGB(80, 160, 70), Emoji = "🦌"}, -- Моховой Олень
+	[23] = {Color = Color3.fromRGB(100, 115, 135), Emoji = "🪲"}, -- Стальной Жук
+	[24] = {Color = Color3.fromRGB(90, 180, 60), Emoji = "🐍"}, -- Ядовитая Гадюка
+	[25] = {Color = Color3.fromRGB(190, 150, 70), Emoji = "🦂"}, -- Пустынный Скорпион
+	[26] = {Color = Color3.fromRGB(140, 200, 255), Emoji = "💎"}, -- Хрустальный Лис
+	-- Wind 3.x
+	[31] = {Color = Color3.fromRGB(120, 200, 180), Emoji = "🦊"}, -- Ветряной Лис
+	[32] = {Color = Color3.fromRGB(200, 200, 100), Emoji = "⚡"}, -- Грозовой Дракон
+	[33] = {Color = Color3.fromRGB(100, 50, 150), Emoji = "🌑"}, -- Теневой Пёс
+	[34] = {Color = Color3.fromRGB(140, 190, 255), Emoji = "🦅"}, -- Небесный Сокол
+	-- Water 4.x
+	[41] = {Color = Color3.fromRGB(25, 100, 200), Emoji = "🐟"}, -- Водный Карп
+	[42] = {Color = Color3.fromRGB(100, 200, 255), Emoji = "❄️"}, -- Ледяная Птица
+	[43] = {Color = Color3.fromRGB(200, 210, 255), Emoji = "🐰"}, -- Лунный Кролик
+	[44] = {Color = Color3.fromRGB(120, 160, 210), Emoji = "🌫️"}, -- Туманный Дух
+	-- Evolved
+	[1011] = {Color = Color3.fromRGB(255, 120, 50), Emoji = "🔥"},
+	[1012] = {Color = Color3.fromRGB(255, 80, 30), Emoji = "🐉"},
+	[1013] = {Color = Color3.fromRGB(255, 255, 200), Emoji = "✨"},
+	[1014] = {Color = Color3.fromRGB(220, 50, 20), Emoji = "🌋"},
+	[1021] = {Color = Color3.fromRGB(160, 130, 80), Emoji = "⛰️"},
+	[1022] = {Color = Color3.fromRGB(60, 130, 55), Emoji = "🌳"},
+	[1023] = {Color = Color3.fromRGB(100, 115, 135), Emoji = "🛡️"},
+	[1024] = {Color = Color3.fromRGB(70, 150, 45), Emoji = "☠️"},
+	[1025] = {Color = Color3.fromRGB(190, 150, 70), Emoji = "🦂"},
+	[1026] = {Color = Color3.fromRGB(140, 200, 255), Emoji = "💎"},
+	[1031] = {Color = Color3.fromRGB(90, 220, 200), Emoji = "🌬️"},
+	[1032] = {Color = Color3.fromRGB(200, 200, 100), Emoji = "⚡"},
+	[1033] = {Color = Color3.fromRGB(100, 50, 150), Emoji = "🌑"},
+	[1034] = {Color = Color3.fromRGB(140, 190, 255), Emoji = "🦅"},
+	[1041] = {Color = Color3.fromRGB(30, 100, 200), Emoji = "🌊"},
+	[1042] = {Color = Color3.fromRGB(100, 200, 255), Emoji = "❄️"},
+	[1043] = {Color = Color3.fromRGB(160, 175, 255), Emoji = "🌙"},
+	[1044] = {Color = Color3.fromRGB(120, 160, 210), Emoji = "🌫️"},
+}
+
+local function getSpiritIconData(spiritId, spiritRow)
+	local candidates = SpiritMeshResolve.IconLookupId(spiritRow or spiritId)
+	if #candidates == 0 then
+		local id = tonumber(spiritId)
+		if SpiritDatabaseModule.MigrateId then
+			id = SpiritDatabaseModule.MigrateId(id) or id
+		end
+		if id then
+			candidates = {id}
+		end
+	end
+	for _, rawId in ipairs(candidates) do
+		local id = tonumber(rawId)
+		if SpiritDatabaseModule.MigrateId then
+			id = SpiritDatabaseModule.MigrateId(id) or id
+		end
+		local byId = id and SpiritIcons[id]
+		if byId then
+			return byId
+		end
+		local info = id and GetSpiritInfo(id)
+		local el = info and (info.Aspect or info.Element or info.PrimaryElement)
+		if type(el) == "string" and ElementIcons[el] then
+			return ElementIcons[el]
+		end
+	end
+	if type(spiritRow) == "table" then
+		local el = spiritRow.PrimaryElement or spiritRow.HybridPrimary or spiritRow.Element or spiritRow.Aspect
+		if type(el) == "string" and ElementIcons[el] then
+			return ElementIcons[el]
+		end
+	end
+	return {Color = Color3.fromRGB(80, 80, 80), Emoji = "✦"}
+end
 
 -- ============================================
 -- Данные игрока (клиент)
@@ -117,6 +201,7 @@ local function CreateTextButton(parent, name, position, size, text, buttonColor,
 	textButton.Position = position
 	textButton.Size = size
 	textButton.Text = ""
+	textButton.TextTransparency = 1
 	textButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 	textButton.TextSize = 14
 	textButton.BackgroundColor3 = buttonColor or Color3.fromRGB(70, 130, 180)
@@ -148,6 +233,7 @@ local function CreateTextButton(parent, name, position, size, text, buttonColor,
 		textLabel.BackgroundTransparency = 1
 		textLabel.Parent = textButton
 	else
+		textButton.TextTransparency = 0
 		textButton.Text = text
 	end
 
@@ -512,7 +598,7 @@ local function PlayCareClientVfx()
 end
 
 pcall(function()
-	QuestTrackerHud.init(screenGui, { Width = 210, Height = 150, Position = UDim2.new(1, -222, 0, 268) })
+	QuestTrackerHud.init(screenGui, { Width = 210, Height = 160, Position = UDim2.new(1, -220, 0, 220) })
 	QuestTrackerHud.bind(QuestEvent)
 end)
 
@@ -639,130 +725,25 @@ local currentBagContents = {}
 local openedBagIndex = nil
 local OpenBag
 
-local bagContentFrame = CreateFrame(screenGui, "BagContentFrame",
-	UDim2.new(0.5, -190, 0.5, -145),
-	UDim2.new(0, 380, 0, 290),
-	Color3.fromRGB(28, 28, 40)
-)
-bagContentFrame.Visible = false
-WoWUITheme.StylePanel(bagContentFrame, "stone")
-
-local bagContentTitle = CreateTextLabel(bagContentFrame, "BagContentTitle",
-	UDim2.new(0, 12, 0, 8),
-	UDim2.new(1, -24, 0, 26),
-	"Сумка",
-	Color3.fromRGB(255, 215, 0),
-	18
-)
-bagContentTitle.TextXAlignment = Enum.TextXAlignment.Left
-
-local bagContentList = Instance.new("Frame")
-bagContentList.Name = "BagContentList"
-bagContentList.Position = UDim2.new(0, 12, 0, 42)
-bagContentList.Size = UDim2.new(1, -24, 1, -138)
-bagContentList.BackgroundColor3 = Color3.fromRGB(36, 36, 50)
-bagContentList.BorderSizePixel = 0
-bagContentList.Parent = bagContentFrame
-local bagContentCorner = Instance.new("UICorner")
-bagContentCorner.CornerRadius = UDim.new(0, 8)
-bagContentCorner.Parent = bagContentList
-
-local bagCurrencyPanel = CreateFrame(bagContentFrame, "BagCurrencyPanel",
-	UDim2.new(0, 12, 1, -88),
-	UDim2.new(1, -24, 0, 36),
-	Color3.fromRGB(50, 45, 32)
-)
-WoWUITheme.StylePanel(bagCurrencyPanel, "wood")
-
-local bagCurrencyLabel = CreateTextLabel(bagCurrencyPanel, "BagCurrencyLabel",
-	UDim2.new(0, 10, 0, 0),
-	UDim2.new(1, -20, 1, 0),
-	"💰 0 🥇 | 0 🥈 | 0 🥉",
-	Color3.fromRGB(255, 230, 170),
-	13
-)
-bagCurrencyLabel.TextXAlignment = Enum.TextXAlignment.Left
-
-local closeBagContentButton = CreateTextButton(bagContentFrame, "CloseBagContentButton",
-	UDim2.new(0.5, -60, 1, -44),
-	UDim2.new(0, 120, 0, 32),
-	"Закрыть",
-	Color3.fromRGB(100, 100, 100),
-	"❌"
-)
+local BagContentUI = require(realmFolder:WaitForChild("BagContentUI"))
+local bagUI = BagContentUI.Mount(screenGui, {
+	CreateFrame = CreateFrame,
+	CreateTextLabel = CreateTextLabel,
+	CreateTextButton = CreateTextButton,
+	StylePanel = WoWUITheme.StylePanel,
+	ItemCatalog = ItemCatalog,
+	bagCapacities = bagCapacities,
+})
+local bagContentFrame = screenGui:FindFirstChild("BagContentFrame")
 
 local function BuildBagContentsFromInventory(inventory, bags)
-	local packed = {}
-	for i = 1, 9 do
-		local bagInfo = bags and bags[i]
-		packed[i] = {
-			Capacity = (bagInfo and bagInfo.Capacity) or bagCapacities[i],
-			Items = {},
-		}
-	end
-
-	local bagIndex = 1
-	for _, item in ipairs(inventory or {}) do
-		while bagIndex <= 9 and #packed[bagIndex].Items >= packed[bagIndex].Capacity do
-			bagIndex = bagIndex + 1
-		end
-		if bagIndex > 9 then
-			break
-		end
-
-		local shopInfo = SpiritDatabaseModule.ShopItems and SpiritDatabaseModule.ShopItems[item.Id]
-		table.insert(packed[bagIndex].Items, {
-			Id = item.Id,
-			Name = (shopInfo and shopInfo.Name) or ("Предмет #" .. tostring(item.Id)),
-			Quantity = tonumber(item.Quantity) or 1,
-		})
-	end
-
-	return packed
-end
-
-local function RefreshBagContentView(index)
-	local bag = currentBagContents[index] or {Capacity = bagCapacities[index], Items = {}}
-	bagContentTitle.Text = string.format("Сумка %d (%d слотов)", index, bag.Capacity)
-
-	for _, child in ipairs(bagContentList:GetChildren()) do
-		child:Destroy()
-	end
-
-	if #bag.Items == 0 then
-		local emptyLabel = CreateTextLabel(bagContentList, "BagEmpty",
-			UDim2.new(0, 10, 0, 10),
-			UDim2.new(1, -20, 0, 24),
-			"Пусто",
-			Color3.fromRGB(180, 180, 200),
-			14
-		)
-		emptyLabel.TextXAlignment = Enum.TextXAlignment.Left
-		return
-	end
-
-	for i, item in ipairs(bag.Items) do
-		local row = CreateTextLabel(bagContentList, "BagItemRow" .. i,
-			UDim2.new(0, 10, 0, 8 + (i - 1) * 24),
-			UDim2.new(1, -20, 0, 22),
-			string.format("%d. %s x%d", i, item.Name, item.Quantity),
-			Color3.fromRGB(220, 220, 240),
-			13
-		)
-		row.TextXAlignment = Enum.TextXAlignment.Left
-	end
+	return bagUI.BuildFromInventory(inventory, bags)
 end
 
 OpenBag = function(index)
 	openedBagIndex = index
-	bagContentFrame.Visible = true
-	RefreshBagContentView(index)
+	bagUI.Open(index)
 end
-
-closeBagContentButton.MouseButton1Click:Connect(function()
-	bagContentFrame.Visible = false
-	openedBagIndex = nil
-end)
 
 for i = 1, 9 do
 	local col = (i - 1) % 3
@@ -817,7 +798,7 @@ for i = 1, 9 do
 end
 
 local function UpdateBagSlots(bags)
-	currentBagContents = BuildBagContentsFromInventory(PlayerData.Inventory, bags)
+	currentBagContents = bagUI.BuildFromInventory(PlayerData.Inventory, bags)
 	for i = 1, 9 do
 		local slot = bagSlots[i]
 		local capLabel = slot and slot:FindFirstChild("BagCapacity")
@@ -832,9 +813,8 @@ local function UpdateBagSlots(bags)
 			usageLabel.Text = string.format("%d/%d", used, capacity)
 		end
 	end
-	if openedBagIndex then
-		RefreshBagContentView(openedBagIndex)
-	end
+	openedBagIndex = bagUI.GetOpenedIndex()
+	bagUI.RefreshOpened()
 end
 
 -- Глобальный перехват правого клика
@@ -866,7 +846,7 @@ end)
 -- ============================================
 
 local expBarFrame = CreateFrame(screenGui, "ExpBarFrame",
-	UDim2.new(0.5, -275, 1, -98),
+	UDim2.new(0.5, -275, 1, -152),
 	UDim2.new(0, 550, 0, 26),
 	WoWUITheme.Colors.Wood
 )
@@ -920,16 +900,19 @@ WoWUITheme.StyleActionButton(profileButton)
 -- ============================================
 
 local actionsFrame = CreateFrame(screenGui, "ActionsFrame",
-	UDim2.new(0.5, -275, 1, -70),
-	UDim2.new(0, 550, 0, 50),
+	UDim2.new(0.5, -275, 1, -96),
+	UDim2.new(0, 550, 0, 54),
 	WoWUITheme.Colors.Stone
 )
 WoWUITheme.StylePanel(actionsFrame, "stone")
+pcall(function()
+	screenGui.ScreenInsets = Enum.ScreenInsets.DeviceSafeInsets
+end)
 
 -- Кнопка ловли
 local catchButton = CreateTextButton(actionsFrame, "CatchButton",
 	UDim2.new(0, 10, 0, 5),
-	UDim2.new(0, 80, 0, 40),
+	UDim2.new(0, 88, 0, 44),
 	"Поймать [E]",
 	Color3.fromRGB(70, 180, 70),
 	"🎯"
@@ -937,8 +920,8 @@ local catchButton = CreateTextButton(actionsFrame, "CatchButton",
 
 -- Кнопка битвы
 local battleButton = CreateTextButton(actionsFrame, "BattleButton",
-	UDim2.new(0, 100, 0, 5),
-	UDim2.new(0, 80, 0, 40),
+	UDim2.new(0, 108, 0, 5),
+	UDim2.new(0, 88, 0, 44),
 	"Бой [F]",
 	Color3.fromRGB(180, 70, 70),
 	"⚔️"
@@ -946,8 +929,8 @@ local battleButton = CreateTextButton(actionsFrame, "BattleButton",
 
 -- Кнопка меню
 local menuButton = CreateTextButton(actionsFrame, "MenuButton",
-	UDim2.new(0, 190, 0, 5),
-	UDim2.new(0, 80, 0, 40),
+	UDim2.new(0, 206, 0, 5),
+	UDim2.new(0, 88, 0, 44),
 	"Меню [Tab]",
 	Color3.fromRGB(70, 130, 180),
 	"📜"
@@ -962,8 +945,8 @@ WoWUITheme.StyleActionButton(menuButton)
 -- ============================================
 
 local battleFrame = CreateFrame(screenGui, "BattleFrame",
-	UDim2.new(0, 0, 1, -170),
-	UDim2.new(1, 0, 0, 170),
+	UDim2.new(0, 0, 1, -188),
+	UDim2.new(1, 0, 0, 178),
 	WoWUITheme.Colors.Stone
 )
 battleFrame.Visible = false
@@ -1058,40 +1041,66 @@ mpFill = mpFillNode
 -- ============================================
 
 local attack1Button = CreateTextButton(battleFrame, "Attack1Button",
-	UDim2.new(0.22, 5, 0, 130),
-	UDim2.new(0.1, 0, 0, 35),
+	UDim2.new(0.20, 5, 0, 118),
+	UDim2.new(0.125, 0, 0, 48),
 	"Коготь Духа",
 	Color3.fromRGB(180, 70, 70),
 	"🐾"
 )
 
 local attack2Button = CreateTextButton(battleFrame, "Attack2Button",
-	UDim2.new(0.32, 0, 0, 130),
-	UDim2.new(0.1, 0, 0, 35),
+	UDim2.new(0.325, 0, 0, 118),
+	UDim2.new(0.125, 0, 0, 48),
 	"Призрачный Вихрь",
 	Color3.fromRGB(180, 70, 70),
 	"🌀"
 )
 
 local attack3Button = CreateTextButton(battleFrame, "Attack3Button",
-	UDim2.new(0.42, -5, 0, 130),
-	UDim2.new(0.1, 0, 0, 35),
+	UDim2.new(0.45, -5, 0, 118),
+	UDim2.new(0.125, 0, 0, 48),
 	"Навык 3",
 	Color3.fromRGB(180, 70, 70),
 	"✦"
 )
+attack3Button.Visible = false
+
+do
+	for _, btn in ipairs({attack1Button, attack2Button, attack3Button}) do
+		local icon = btn:FindFirstChild("IconLabel")
+		local label = btn:FindFirstChild("ButtonLabel")
+		if icon and icon:IsA("TextLabel") then
+			icon.Size = UDim2.new(1, 0, 0.42, 0)
+			icon.TextSize = 18
+		end
+		if label and label:IsA("TextLabel") then
+			label.Position = UDim2.new(0, 2, 0.42, 0)
+			label.Size = UDim2.new(1, -4, 0.58, 0)
+			label.TextSize = 11
+			label.TextScaled = true
+			label.TextWrapped = true
+			local constraint = label:FindFirstChildOfClass("UITextSizeConstraint")
+			if not constraint then
+				constraint = Instance.new("UITextSizeConstraint")
+				constraint.Parent = label
+			end
+			constraint.MinTextSize = 8
+			constraint.MaxTextSize = 12
+		end
+	end
+end
 
 local potionButton = CreateTextButton(battleFrame, "PotionButton",
-	UDim2.new(0.52, -5, 0, 130),
-	UDim2.new(0.1, 0, 0, 35),
+	UDim2.new(0.58, -5, 0, 118),
+	UDim2.new(0.1, 0, 0, 48),
 	"Зелье x0",
 	Color3.fromRGB(70, 160, 100),
 	"🧪"
 )
 
 local fleeButton = CreateTextButton(battleFrame, "FleeButton",
-	UDim2.new(0.62, -5, 0, 130),
-	UDim2.new(0.1, 0, 0, 35),
+	UDim2.new(0.68, -5, 0, 118),
+	UDim2.new(0.1, 0, 0, 48),
 	"Побег",
 	Color3.fromRGB(100, 100, 180),
 	"🏃"
@@ -1107,20 +1116,23 @@ WoWUITheme.StyleActionButton(fleeButton)
 -- ============================================
 
 local hintFrame = CreateFrame(screenGui, "HintFrame",
-	UDim2.new(0.5, -150, 0.5, -25),
-	UDim2.new(0, 300, 0, 50),
-	Color3.fromRGB(40, 40, 50)
+	UDim2.new(0.5, -280, 1, -128),
+	UDim2.new(0, 560, 0, 48),
+	Color3.fromRGB(28, 22, 40)
 )
 hintFrame.Visible = false
-hintFrame.BackgroundTransparency = 0.5
+hintFrame.BackgroundTransparency = 0.25
+hintFrame.ZIndex = 40
 
 local hintText = CreateTextLabel(hintFrame, "HintText",
-	UDim2.new(0, 10, 0, 0),
-	UDim2.new(0.9, 0, 1, 0),
+	UDim2.new(0, 12, 0, 0),
+	UDim2.new(1, -24, 1, 0),
 	"",
-	Color3.fromRGB(255, 255, 255),
-	14
+	Color3.fromRGB(255, 245, 210),
+	16
 )
+hintText.TextWrapped = true
+hintText.ZIndex = 41
 
 -- ============================================
 -- Переключение режима боя (скрывает основной UI, показывает боевой)
@@ -1142,7 +1154,11 @@ local function SetBattleMode(enabled)
 		battleFrame.Visible = true
 	else
 		for _, element in ipairs(mainUIElements) do
-			element.Visible = true
+			if element == hintFrame then
+				element.Visible = hintText.Text ~= ""
+			else
+				element.Visible = true
+			end
 		end
 		battleFrame.Visible = false
 	end
@@ -1155,6 +1171,9 @@ local function EnterNormalMode()
 	suppressBattleUpdates = true
 	SetBattleMode(false)
 	CurrentBattle = nil
+	if spiritDetailFrame then
+		spiritDetailFrame.Visible = false
+	end
 	if UpdateBattleLog then
 		UpdateBattleLog("")
 	end
@@ -1791,19 +1810,24 @@ end
 -- ============================================
 
 local notificationFrame = CreateFrame(screenGui, "NotificationFrame",
-	UDim2.new(0.5, -150, 0, 10),
-	UDim2.new(0, 300, 0, 50),
+	UDim2.new(0.5, -210, 0, 88),
+	UDim2.new(0, 420, 0, 44),
 	Color3.fromRGB(40, 40, 50)
 )
-notificationFrame.BackgroundTransparency = 0.3
+notificationFrame.BackgroundTransparency = 1
+notificationFrame.Visible = false
+notificationFrame.ZIndex = 40
 
 local notificationLabel = CreateTextLabel(notificationFrame, "NotificationLabel",
 	UDim2.new(0, 10, 0, 0),
 	UDim2.new(0.9, 0, 1, 0),
 	"",
-	Color3.fromRGB(255, 215, 0),
-	14
+	Color3.fromRGB(255, 230, 120),
+	16
 )
+notificationLabel.ZIndex = 41
+notificationLabel.TextStrokeTransparency = 0.35
+notificationLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
 
 -- ============================================
 -- Миникарта (правый верхний угол)
@@ -1873,8 +1897,30 @@ minimapTitle.ZIndex = 15
 UpdateHint = function(text)
 	text = text or ""
 	hintText.Text = text
-	if hintFrame then
-		hintFrame.Visible = text ~= ""
+	if not hintFrame then return end
+	if text ~= "" then
+		hintFrame.Visible = true
+		hintFrame.BackgroundTransparency = 0.25
+		hintText.TextTransparency = 0
+		hintText.TextStrokeTransparency = 0.5
+	else
+		-- Гасим подсказку
+		local fadeToken = (hintFrame:GetAttribute("FadeToken") or 0) + 1
+		hintFrame:SetAttribute("FadeToken", fadeToken)
+		task.spawn(function()
+			for t = 1, 6 do
+				if hintFrame:GetAttribute("FadeToken") ~= fadeToken then return end
+				if hintText.Text ~= "" then return end
+				hintFrame.BackgroundTransparency = 0.25 + t * 0.12
+				hintText.TextTransparency = t * 0.15
+				task.wait(0.04)
+			end
+			if hintFrame:GetAttribute("FadeToken") == fadeToken and hintText.Text == "" then
+				hintFrame.Visible = false
+				hintFrame.BackgroundTransparency = 0.25
+				hintText.TextTransparency = 0
+			end
+		end)
 	end
 end
 
@@ -1920,9 +1966,7 @@ local function UpdateCoins(copper, silver, gold)
 	PlayerData.CopperCoins = c
 	PlayerData.SilverCoins = s
 	PlayerData.GoldCoins = g
-	if bagCurrencyLabel then
-		bagCurrencyLabel.Text = string.format("💰 %d 🥇 | %d 🥈 | %d 🥉", g, s, c)
-	end
+	bagUI.SetCurrency(g, s, c)
 	if tradeCoinsLabel then
 		tradeCoinsLabel.Text = string.format("Монеты: %d 🥇 %d 🥈 %d 🥉", g, s, c)
 	end
@@ -1936,11 +1980,32 @@ local currentTrapCount = 0
 
 local function UpdateTraps(trapCount)
 	currentTrapCount = math.max(0, tonumber(trapCount) or 0)
+	local catchReady = currentTrapCount > 0 and player:GetAttribute("CatchUiActive") == true
 	if catchButton then
 		catchButton.AutoButtonColor = currentTrapCount > 0
-		catchButton.BackgroundColor3 = currentTrapCount > 0
-			and Color3.fromRGB(70, 180, 70)
-			or Color3.fromRGB(80, 80, 90)
+		catchButton.Active = true
+		local caption = "Поймать [E]"
+		if catchReady then
+			catchButton.BackgroundTransparency = 0
+			catchButton.BackgroundColor3 = Color3.fromRGB(90, 230, 100)
+			caption = string.format("Поймать [E]! ×%d", currentTrapCount)
+		elseif currentTrapCount > 0 then
+			-- Dim outside catch context (Safe / no target)
+			catchButton.BackgroundTransparency = 0.35
+			catchButton.BackgroundColor3 = Color3.fromRGB(55, 110, 60)
+			caption = string.format("Поймать [E] ×%d", currentTrapCount)
+		else
+			catchButton.BackgroundTransparency = 0.15
+			catchButton.BackgroundColor3 = Color3.fromRGB(80, 80, 90)
+			caption = "Нет ловушек"
+		end
+		-- Never set TextButton.Text when ButtonLabel exists (double text ghosting)
+		catchButton.Text = ""
+		catchButton.TextTransparency = 1
+		local label = catchButton:FindFirstChild("ButtonLabel")
+		if label and label:IsA("TextLabel") then
+			label.Text = caption
+		end
 	end
 end
 
@@ -1964,14 +2029,42 @@ _G.UpdateCatchAvailability = function()
 	UpdateTraps(currentTrapCount)
 end
 
-ShowNotification = function(text, duration)
-	notificationLabel.Text = text
-	notificationFrame.Visible = true
+player:GetAttributeChangedSignal("CatchUiActive"):Connect(function()
+	UpdateTraps(currentTrapCount)
+end)
 
-	task.spawn(function()
-		task.wait(duration or 3)
-		notificationFrame.Visible = false
-	end)
+local notificationToken = 0
+pcall(function()
+	ToastRouter.Bind(notificationFrame, notificationLabel)
+end)
+_G.RoS_Notify = function(text, duration, priority, color)
+	ToastRouter.Notify(text, duration, priority, color)
+end
+ShowNotification = function(text, duration, priority)
+	if type(text) ~= "string" or text == "" then
+		return
+	end
+	if not priority then
+		if string.find(text, "Недостаточно", 1, true)
+			or string.find(text, "перезаряжается", 1, true)
+			or string.find(text, "Ошибка", 1, true)
+			or string.find(text, "Не удалось", 1, true)
+			or string.find(text, "пуст", 1, true)
+		then
+			priority = "Critical"
+		elseif string.find(text, "Собран", 1, true)
+			or string.find(text, "XP", 1, true)
+			or string.find(text, "меди", 1, true)
+			or string.find(text, "поймали", 1, true)
+			or string.find(text, "Победа", 1, true)
+			or string.find(text, "награда", 1, true)
+		then
+			priority = "Reward"
+		else
+			priority = "Tip"
+		end
+	end
+	ToastRouter.Notify(text, duration or 4, priority)
 end
 
 UpdateBattleLog = function(text)
@@ -1982,31 +2075,49 @@ local function SetBattleSkillButton(button, defaultText, skillData, playerMP, ho
 	local label = button:FindFirstChild("ButtonLabel")
 	local title = defaultText
 	local hk = hotkey and ("[" .. tostring(hotkey) .. "] ") or ""
+	local remainingCd = 0
+	local cost = 0
+	local maxCd = 0
+	local lowMp = false
 	if skillData then
-		local cd = tonumber(skillData.Cooldown) or 0
-		local cost = tonumber(skillData.Cost) or 0
-		title = skillData.Name or defaultText
-		if cd > 0.05 and cost > 0 then
-			title = string.format("%s%s · %dMP %.0fс", hk, title, cost, cd)
-		elseif cd > 0.05 then
-			title = string.format("%s%s %.0fс", hk, title, cd)
+		remainingCd = tonumber(skillData.Cooldown) or 0
+		cost = tonumber(skillData.Cost) or 0
+		maxCd = tonumber(skillData.MaxCooldown) or 0
+		local name = skillData.Name or defaultText
+		lowMp = (tonumber(playerMP) or 0) < cost
+		if remainingCd > 0.05 then
+			if cost > 0 then
+				title = string.format("%s%s\nCD %.1fс · %dMP", hk, name, remainingCd, cost)
+			else
+				title = string.format("%s%s\nCD %.1fс", hk, name, remainingCd)
+			end
+		elseif cost > 0 and maxCd > 0.05 then
+			title = string.format("%s%s\n%dMP · CD%.0fс", hk, name, cost, maxCd)
 		elseif cost > 0 then
-			title = string.format("%s%s %dMP", hk, title, cost)
+			title = string.format("%s%s\n%dMP", hk, name, cost)
+		elseif maxCd > 0.05 then
+			title = string.format("%s%s\nCD%.0fс", hk, name, maxCd)
 		else
-			title = hk .. title
+			title = hk .. name
 		end
 	else
 		title = hk .. title
 	end
 	if label then
 		label.Text = title
+		if lowMp and remainingCd <= 0.05 then
+			label.TextColor3 = Color3.fromRGB(255, 190, 160)
+		elseif remainingCd > 0.05 then
+			label.TextColor3 = Color3.fromRGB(210, 210, 220)
+		else
+			label.TextColor3 = Color3.fromRGB(255, 255, 255)
+		end
 	else
 		button.Text = title
 	end
 
-	local disabled = (not skillData)
-		or ((tonumber(skillData.Cooldown) or 0) > 0.05)
-		or ((tonumber(playerMP) or 0) < (tonumber(skillData.Cost) or 0))
+	local onCd = skillData ~= nil and remainingCd > 0.05
+	local disabled = (not skillData) or onCd or lowMp
 	local readyColor = Color3.fromRGB(180, 70, 70)
 	if skillData and skillData.Element then
 		local el = skillData.Element
@@ -2020,9 +2131,37 @@ local function SetBattleSkillButton(button, defaultText, skillData, playerMP, ho
 			readyColor = Color3.fromRGB(60, 120, 210)
 		end
 	end
-	button.BackgroundColor3 = disabled and Color3.fromRGB(95, 95, 95) or readyColor
+	local disabledColor = Color3.fromRGB(95, 95, 95)
+	if lowMp and not onCd then
+		disabledColor = Color3.fromRGB(95, 70, 90)
+	end
+	button.BackgroundColor3 = disabled and disabledColor or readyColor
 	button.Active = not disabled
 	button.AutoButtonColor = not disabled
+
+	-- Visual CD fill (remaining ratio); text CD/MP stays
+	local fill = button:FindFirstChild("CdFill")
+	if not fill then
+		fill = Instance.new("Frame")
+		fill.Name = "CdFill"
+		fill.BackgroundColor3 = Color3.fromRGB(10, 10, 16)
+		fill.BackgroundTransparency = 0.4
+		fill.BorderSizePixel = 0
+		fill.ZIndex = math.max(1, (button.ZIndex or 1))
+		fill.AnchorPoint = Vector2.new(0, 1)
+		fill.Position = UDim2.new(0, 0, 1, 0)
+		fill.Parent = button
+	end
+	if label then
+		label.ZIndex = fill.ZIndex + 1
+	end
+	if onCd and maxCd > 0.05 then
+		local ratio = math.clamp(remainingCd / maxCd, 0, 1)
+		fill.Size = UDim2.new(1, 0, ratio, 0)
+		fill.Visible = true
+	else
+		fill.Visible = false
+	end
 end
 
 local function UpdateBattleSkillButtons(battleData)
@@ -2031,6 +2170,7 @@ local function UpdateBattleSkillButtons(battleData)
 	SetBattleSkillButton(attack1Button, "Коготь Духа", skills and skills[1], mp, 1)
 	SetBattleSkillButton(attack2Button, "Призрачный Вихрь", skills and skills[2], mp, 2)
 	SetBattleSkillButton(attack3Button, "Навык 3", skills and skills[3], mp, 3)
+	attack2Button.Visible = skills ~= nil and skills[2] ~= nil
 	attack3Button.Visible = skills ~= nil and skills[3] ~= nil
 
 	local count = tonumber(battleData and battleData.PotionCount) or 0
@@ -2070,14 +2210,9 @@ local function UpdateSpiritSlots(spirits)
 			if spirits[i] then
 				local spiritInfo = spirits[i]
 				local shortName = spiritInfo.Name:match("(%S+)") or spiritInfo.Name
-				local iconData = SpiritIcons[spiritInfo.Id]
-				if iconData then
-					if iconFrame then iconFrame.BackgroundColor3 = iconData.Color end
-					if iconEmoji then iconEmoji.Text = iconData.Emoji end
-				else
-					if iconFrame then iconFrame.BackgroundColor3 = Color3.fromRGB(80, 80, 80) end
-					if iconEmoji then iconEmoji.Text = "❓" end
-				end
+				local iconData = getSpiritIconData(spiritInfo.Id, spiritInfo)
+				if iconFrame then iconFrame.BackgroundColor3 = iconData.Color end
+				if iconEmoji then iconEmoji.Text = iconData.Emoji end
 				if nameLabel then
 					nameLabel.Text = shortName .. " Ур." .. (spiritInfo.Level or 1)
 				end
@@ -2113,8 +2248,8 @@ catchButton.MouseButton1Click:Connect(function()
 
 	local tween2 = TweenService:Create(catchButton,
 		TweenInfo.new(0.1, Enum.EasingStyle.Quad),
-		{BackgroundColor3 = currentTrapCount > 1
-			and Color3.fromRGB(70, 180, 70)
+		{BackgroundColor3 = currentTrapCount > 0
+			and (player:GetAttribute("CatchUiActive") and Color3.fromRGB(90, 230, 100) or Color3.fromRGB(70, 180, 70))
 			or Color3.fromRGB(80, 80, 90)}
 	)
 	tween2:Play()
@@ -2138,11 +2273,23 @@ end)
 local function TryBattleSkill(skillIndex)
 	if not CurrentBattle then return end
 	local s = CurrentBattle.PlayerSkills and CurrentBattle.PlayerSkills[skillIndex]
-	if s and (tonumber(s.Cooldown) or 0) <= 0.05 and (CurrentBattle.PlayerMP or 0) >= (tonumber(s.Cost) or 0) then
-		BattleEvent:FireServer("Attack", {SkillIndex = skillIndex})
-	else
-		ShowNotification("Навык " .. tostring(skillIndex) .. " недоступен")
+	if not s then
+		ShowNotification("Слот " .. tostring(skillIndex) .. " пуст")
+		return
 	end
+	local cd = tonumber(s.Cooldown) or 0
+	local cost = tonumber(s.Cost) or 0
+	local mp = tonumber(CurrentBattle.PlayerMP) or 0
+	local skillName = s.Name or ("Навык " .. tostring(skillIndex))
+	if cd > 0.05 then
+		ShowNotification(string.format("«%s» перезаряжается: %.1fс", skillName, cd))
+		return
+	end
+	if mp < cost then
+		ShowNotification(string.format("Недостаточно MP: нужно %d (есть %d)", cost, math.floor(mp)))
+		return
+	end
+	BattleEvent:FireServer("Attack", {SkillIndex = skillIndex})
 end
 
 local function TryBattlePotion()
@@ -2294,11 +2441,17 @@ end)
 DataEvent.OnClientEvent:Connect(function(action, data)
 	if action == "FullSync" then
 		-- Полная синхронизация данных
+		data = data or {}
 		PlayerData = data
 		RefreshActivityBar(data)
-		UpdateLevel(data.Level)
-		UpdateExp(data.Experience, data.Level * 100)
-		UpdateCoins(data.CopperCoins, data.SilverCoins, data.GoldCoins)
+		-- Не открывать панель свойств на каждый FullSync (после боя и т.п.)
+		if spiritDetailFrame.Visible and selectedSpiritIndex and OpenSpiritDetail then
+			pcall(function() OpenSpiritDetail(selectedSpiritIndex) end)
+		end
+		local level = tonumber(data.Level) or 1
+		UpdateLevel(level)
+		UpdateExp(data.Experience or 0, level * 100)
+		UpdateCoins(data.CopperCoins or 0, data.SilverCoins or 0, data.GoldCoins or 0)
 
 		-- Обновляем ранг
 		if data.Rank and data.RankTitle then
@@ -2369,11 +2522,13 @@ DataEvent.OnClientEvent:Connect(function(action, data)
 
 	elseif action == "CatchFailed" then
 		EnterNormalMode()
-		ShowNotification("Не удалось поймать " .. data.SpiritName .. "!")
+		data = data or {}
+		ShowNotification("Не удалось поймать " .. tostring(data.SpiritName or "духа") .. "!")
 
 	elseif action == "Error" then
 		EnterNormalMode()
-		ShowNotification("Ошибка: " .. data.Message)
+		data = data or {}
+		ShowNotification("Ошибка: " .. tostring(data.Message or "неизвестно"))
 
 	elseif action == "RankUpdated" then
 		-- Обновляем ранг
@@ -2403,6 +2558,8 @@ player:GetAttributeChangedSignal("BattleRequest"):Connect(function()
 	suppressBattleUpdates = false
 end)
 
+local battleAgencyHintShown = false
+
 BattleEvent.OnClientEvent:Connect(function(action, data)
 	if action == "Update" then
 		if suppressBattleUpdates then return end
@@ -2417,6 +2574,20 @@ BattleEvent.OnClientEvent:Connect(function(action, data)
 			UpdateMP(data.PlayerMP / data.PlayerMaxMP)
 		end
 		UpdateBattleSkillButtons(data)
+		-- P0 agency: once per fight, nudge hotkeys 1–2 when slot 2 exists
+		if (tonumber(data.Turn) or 0) <= 1 and data.PlayerSkills and data.PlayerSkills[2] then
+			if not battleAgencyHintShown then
+				battleAgencyHintShown = true
+				if UpdateHint then
+					UpdateHint("Бой: 1 / 2 / 3 — навыки · H — зелье")
+					task.delay(2.2, function()
+						if UpdateHint and battleAgencyHintShown then
+							UpdateHint("")
+						end
+					end)
+				end
+			end
+		end
 
 		if battleElementTip then
 			local tip = data.ElementTip
@@ -2452,23 +2623,28 @@ BattleEvent.OnClientEvent:Connect(function(action, data)
 
 	elseif action == "End" then
 		-- Конец боя
+		battleAgencyHintShown = false
 		EnterNormalMode()
+		data = data or {}
 
 		if data.Winner == "Player" then
 			local rewards = data.Rewards or {}
-		local rewardText = "Победа!"
-		if rewards.Experience then rewardText = rewardText .. " +" .. rewards.Experience .. " опыта" end
-		local copper = tonumber(rewards.CopperCoins) or tonumber(rewards.Coins) or 0
-		if copper > 0 then rewardText = rewardText .. ", +" .. copper .. " 🥉" end
-		if rewards.SilverCoins and rewards.SilverCoins > 0 then rewardText = rewardText .. ", +" .. rewards.SilverCoins .. " 🥈" end
-		if rewards.GoldCoins and rewards.GoldCoins > 0 then rewardText = rewardText .. ", +" .. rewards.GoldCoins .. " 🥇" end
-		ShowNotification(rewardText)
+			local rewardText = "Победа!"
+			if rewards.Experience then rewardText = rewardText .. " +" .. rewards.Experience .. " опыта" end
+			local copper = tonumber(rewards.CopperCoins) or tonumber(rewards.Coins) or 0
+			if copper > 0 then rewardText = rewardText .. ", +" .. copper .. " 🥉" end
+			if rewards.SilverCoins and rewards.SilverCoins > 0 then rewardText = rewardText .. ", +" .. rewards.SilverCoins .. " 🥈" end
+			if rewards.GoldCoins and rewards.GoldCoins > 0 then rewardText = rewardText .. ", +" .. rewards.GoldCoins .. " 🥇" end
+			ShowNotification(rewardText, 4.5)
+		elseif data.Winner == "Enemy" then
+			ShowNotification("Поражение... Дух повержен", 4)
 		else
-			ShowNotification("Поражение...")
+			ShowNotification("Бой окончен", 3)
 		end
 
 	elseif action == "Flee" then
 		if data.Success then
+			battleAgencyHintShown = false
 			EnterNormalMode()
 			ShowNotification("Вы сбежали!")
 		else
@@ -2476,6 +2652,7 @@ BattleEvent.OnClientEvent:Connect(function(action, data)
 		end
 
 	elseif action == "Error" then
+		battleAgencyHintShown = false
 		EnterNormalMode()
 		ShowNotification("Бой: " .. (data.Message or "ошибка"))
 	end
@@ -2498,6 +2675,29 @@ EvolutionEvent.OnClientEvent:Connect(function(action, data)
 		local info = data.Info
 		if info then
 			ShowNotification("Эволюция: " .. info.EvolvedName)
+		end
+
+	elseif action == "CanEvolve" then
+		local idx = (data and data.SpiritIndex) or selectedSpiritIndex or (PlayerData and PlayerData.ActiveSpiritIndex) or 1
+		if OpenSpiritDetail then
+			OpenSpiritDetail(idx)
+		end
+		local toName = (data and (data.EvolveToName or data.EvolvedName)) or "новую форму"
+		ShowNotification("Доступна эволюция → " .. tostring(toName))
+
+	elseif action == "SpiritLevelUp" then
+		local idx = data and data.SpiritIndex
+		local newLevel = data and tonumber(data.NewLevel) or 0
+		-- Открыть панель только на порогах улучшения (новый навык / эволюция)
+		if idx and OpenSpiritDetail and (newLevel == 5 or newLevel == 10) then
+			local sp = PlayerData and PlayerData.Spirits and PlayerData.Spirits[idx]
+			if sp then sp.Level = newLevel end
+			OpenSpiritDetail(idx)
+			if newLevel >= 10 then
+				ShowNotification("Дух ур. " .. newLevel .. " — проверьте эволюцию!")
+			else
+				ShowNotification("Дух ур. " .. newLevel .. " — новый навык!")
+			end
 		end
 
 	elseif action == "EvolutionSuccess" then
@@ -2727,10 +2927,10 @@ task.spawn(function()
 				if spirit.PrimaryPart and not spirit:GetAttribute("Dying") then
 					local spiritIdVal = spirit:FindFirstChild("SpiritId")
 					local spiritId = spiritIdVal and spiritIdVal.Value or 1
-					local iconData = SpiritIcons[spiritId]
+					local iconData = getSpiritIconData(spiritId)
 					table.insert(targets, {
 						pos = spirit.PrimaryPart.Position,
-						color = iconData and iconData.Color or Color3.fromRGB(255, 255, 255),
+						color = iconData.Color,
 						size = 6,
 					})
 				end

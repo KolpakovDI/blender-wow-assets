@@ -1,26 +1,42 @@
 # NEXT SESSION
 
-**Статус:** 2026-07-30 — по порядку закрыто: meshes → P0 core-loop → battle VFX → **Haven Hub**. Осталось: **commit docs** (по запросу).
+**Статус:** 2026-08-20 — чекпоинт. Закрыты Explore W3, UI A→D, HUD double-layer.  
+**Цель на завтра (2026-08-21):** старт трека **Identity** — эволюция должна **менять вид и удар** (не только запись в данных).
 
-Дата якоря: 2026-07-30
+Дата якоря: 2026-08-20 → завтра **2026-08-21**  
+**План:** `WEEK-PLAN-2026-08-19.md` (UI очередь done → Identity)
 
-## Старт сессии (порядок жёсткий)
+## Вердикт
 
-1. **Ctrl+S** place
-2. Play smoke Haven: spawn в Genkan → bell/BGM → «КВЕСТ →» у Мики → wayfind
-3. Play smoke боя: 1/2/3, flash Сильно/Слабо, toast 🥉
-4. **Commit docs** — когда скажешь
-
-## Product progress
-
-| Тема | Статус |
+| Item | Status |
 |------|--------|
-| Canon meshes 32/32 | **DONE** |
-| P0 core-loop polish | **DONE** |
-| Бой agency/VFX | **DONE** |
-| Haven polish | **DONE** |
-| Commit docs | wait for ask |
+| W3 Explore | PASS |
+| UI-A / B / C / D | PASS |
+| HUD double-layer | FIXED |
+| AI mesh online | deferred |
+| **Identity (вид + удар)** | **цель завтра** |
+| Week wrap (вт 25.08) | later |
 
-## Studio SoT
+## Старт сессии завтра (порядок жёсткий)
 
-`C:\\Mimo\\RealmOfSpirits\\RealmOfSpirits second.rbxl` — **Ctrl+S.**
+1. **Ctrl+S** / открыть place SoT, проверить Studio MCP
+2. **Identity slice 1:** после эволюции игрок **видит** новый mesh/модель и **другой** skill/удар в бою (smoke: эволюция → бой слот 1)
+3. Не online AI mesh без «разморозить»; не PvP как основной фокус
+
+## Закрыто сегодня (2026-08-20)
+
+- UI D: `BagContentUI` grid + detail
+- HUD: Catch/Profile ghost, Exp/Actions overlap, toast без серого бара, NextStepChip vs activity bar
+- Docs mirrors + CHANGELOG `[Unreleased]`
+
+## Docs
+
+- `SESSION-2026-08-20-checkpoint.md`
+- `SESSION-2026-08-20g-ui-package-d.md`
+- `SESSION-2026-08-20f-hud-double-layer.md`
+
+## Studio SoT (после правок — Ctrl+S)
+
+`C:\\Mimo\\RealmOfSpirits\\RealmOfSpirits second.rbxl`
+
+Модули сессии: `UIController`, `WoWUITheme`, `ToastRouter`, `NextStepChip`, `ItemCatalog`, **`BagContentUI`** (new)

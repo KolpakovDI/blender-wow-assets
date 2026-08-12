@@ -172,6 +172,44 @@ do
 		end
 		return true, spirit.Name, #data.Spirits
 	end
+
+	ensureBF("GrantItemBF").OnInvoke = function(userId, itemId, quantity)
+		if not game:GetService("RunService"):IsStudio() then
+			return false, "studio only"
+		end
+		userId = tonumber(userId)
+		itemId = tonumber(itemId)
+		quantity = tonumber(quantity) or 1
+		local player = Players:GetPlayerByUserId(userId)
+		local data = dataStore:GetPlayerData(userId)
+		if not data then
+			return false, "no data"
+		end
+		if _G.AddInventoryItem and player then
+			_G.AddInventoryItem(player, itemId, quantity)
+		else
+			data.Inventory = data.Inventory or {}
+			local found = false
+			for _, inv in ipairs(data.Inventory) do
+				if tonumber(inv.Id) == itemId then
+					inv.Quantity = (inv.Quantity or 0) + quantity
+					found = true
+					break
+				end
+			end
+			if not found then
+				table.insert(data.Inventory, { Id = itemId, Quantity = quantity })
+			end
+		end
+		if player and _G.UpdateQuestProgress then
+			_G.UpdateQuestProgress(player, "CollectItem", { ItemId = itemId, Count = quantity })
+		end
+		local DataEvent = realmFolder:FindFirstChild("DataSync")
+		if DataEvent and player then
+			DataEvent:FireClient(player, "FullSync", dataStore:GetPlayerData(userId))
+		end
+		return true, itemId, quantity
+	end
 end
 
 -- Подключаем LevelingSystem
@@ -659,6 +697,7 @@ local function GetBattleState(player, battle, message)
 			Element = ability.Element,
 			Cost = ability.Cost or 0,
 			Cooldown = playerCooldowns[i] or 0,
+			MaxCooldown = tonumber(ability.Cooldown) or 0,
 		}
 	end
 	local playerData = player and GetPlayerData(player)
@@ -1057,17 +1096,22 @@ end
 
 local SpiritSpawnPositions = require(ReplicatedStorage:WaitForChild("RealmOfSpirits"):WaitForChild("ZoneConfig")).GetSpiritSpawnPositions()
 
-CreateSpiritModel = function(spiritId, position)
+CreateSpiritModel = function(spiritId, position, spiritRow)
 	local spiritInfo = GetSpirit(spiritId)
+	if not spiritInfo and type(spiritRow) == "table" then
+		-- Resonant / custom: synthetic catalog row for naming/animation
+		spiritInfo = {
+			Id = spiritId,
+			Name = spiritRow.Name or ("Дух " .. tostring(spiritId)),
+			Element = spiritRow.PrimaryElement or spiritRow.HybridPrimary or spiritRow.Element or "Earth",
+			PrimaryElement = spiritRow.PrimaryElement or spiritRow.HybridPrimary,
+		}
+	end
 	if not spiritInfo then return nil end
 
-	-- Получаем шаблон из ReplicatedStorage
-	local templates = ReplicatedStorage:FindFirstChild("SpiritTemplates")
-	local template = templates and templates:FindFirstChild("SpiritTemplate" .. spiritId)
-	if not template then return nil end
-
-	-- Клонируем шаблон
-	local spirit = template:Clone()
+	local SpiritMeshResolve = require(ReplicatedStorage:WaitForChild("RealmOfSpirits"):WaitForChild("SpiritMeshResolve"))
+	-- Offline: template by Id/ParentIds, else geometric placeholder (AI MeshAssetId deferred)
+	local spirit = SpiritMeshResolve.CloneResolvedModel(spiritRow or spiritId, spiritInfo.Name)
 	spirit.Name = spiritInfo.Name
 
 	-- Устанавливаем PrimaryPart (AI meshes often lack body_geom)
@@ -1075,7 +1119,7 @@ CreateSpiritModel = function(spiritId, position)
 
 	-- Размещаем модель в точке спавна
 	PlaceModelOnGround(spirit, position)
-	if spiritId == 4 then
+	if spiritId == 32 then
 		PlaceModelOnGround(spirit, spirit:GetPivot().Position)
 		SpiritAnimation.ResetPose(spirit)
 	end
@@ -1121,12 +1165,13 @@ CreateSpiritModel = function(spiritId, position)
 	local _, size = spirit:GetBoundingBox()
 	local hudHeight = size.Y + 2
 
-	-- Создаем HUD (BillboardGui) с HP и маной
+	-- HUD (BillboardGui): скрыт по умолчанию, клиент показывает 1.5с при наведении
 	local hud = Instance.new("BillboardGui")
 	hud.Name = "StatsHUD"
 	hud.Size = UDim2.new(0, 140, 0, 55)
 	hud.StudsOffset = Vector3.new(0, hudHeight, 0)
 	hud.MaxDistance = 200
+	hud.Enabled = false
 	if spirit.PrimaryPart then
 		hud.Adornee = spirit.PrimaryPart
 	end

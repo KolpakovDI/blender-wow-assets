@@ -215,11 +215,23 @@ function WoWUITheme.CreateMinimap(parent, name, position, size)
 end
 
 function WoWUITheme.StyleActionButton(button)
-	WoWUITheme.StylePanel(button, "stone")
+	button.BorderSizePixel = 0
+	for _, ch in ipairs(button:GetChildren()) do
+		if ch:IsA("UIStroke") then
+			ch:Destroy()
+		end
+	end
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = WoWUITheme.Colors.Gold
+	stroke.Thickness = 1.5
+	stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	stroke.Parent = button
 	button.AutoButtonColor = true
 	local label = button:FindFirstChild("ButtonLabel")
 	if label then
 		label.TextColor3 = WoWUITheme.Colors.TextGold
+		button.Text = ""
+		button.TextTransparency = 1
 	end
 	return button
 end

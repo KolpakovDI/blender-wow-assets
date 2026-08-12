@@ -6,7 +6,93 @@
 
 ## [Unreleased]
 
+### Checkpoint 2026-08-20
+- UI A→D + HUD double-layer закрыты; цель завтра: **Identity** (эволюция = вид + удар) — `SESSION-2026-08-20-checkpoint.md`, `NEXT-SESSION.md`
+
+### UI package D (2026-08-20g)
+- Сумки: **grid** (иконка + stack + rarity stroke) + **detail** (имя / why-tag / описание ItemCatalog)
+- `BagContentUI` ModuleScript (вынесен из UIController — лимит 200 locals)
+- `ItemCatalog.GetIconEmoji` / `GetRarityColor`
+- Smoke: open bag → 4 cells, detail «Ловушка · ловля» — `SESSION-2026-08-20g-ui-package-d.md`
+
+### HUD double-layer fix (2026-08-20f)
+- Catch/Profile: `TextButton.Text` + `ButtonLabel` больше не рисуют подпись дважды (`TextTransparency=1`, caption только в label)
+- ExpBar `Y=-152` / Actions `Y=-96` — без наложения «0 / 100» на hotbar
+- `WoWUITheme.StyleActionButton`: один gold stroke (не `StylePanel` с двумя UIStroke)
+- **NextStepChip** vs `ResonanceActivityBar`: один inset-space + chip под баром (`Y=bar+H+8`); smoke gap=8, overlap=false
+- **Toast** (`NotificationFrame` / ToastRouter fallback): `Y=88` под chip+activity; **без серого бара** (`BackgroundTransparency=1` + TextStroke); Bind уничтожает fallback GUI
+- Client smoke: 1× `RealmOfSpiritsUI`, gap Exp→Actions ≈30px, strokes=1 — `SESSION-2026-08-20f-hud-double-layer.md`
+
+### UI package C (2026-08-20e)
+- DeviceSafeInsets; Actions/Battle подняты (+44px hit); skill `CdFill`; Catch dim вне цели — `SESSION-2026-08-20e-ui-package-c.md`
+
+### UI package B (2026-08-20d)
+- `NextStepChip`: persistent chip Мика → Exit → лут (E); client-only; smoke Combat→loot step **PASS** — `SESSION-2026-08-20d-ui-package-b.md`
+
+### UI package A (2026-08-20c)
+- `ToastRouter`: один toast; приоритеты Critical > Reward > Tip; wired UIController / ZoneController / OtakuHavenController
+- `ItemCatalog.GetWhyTag` + сумки `Имя · тег xN` (эволюция / квест Мики / святилище / ловля / бой)
+- Smoke Client GetWhyTag 101/120/1 **PASS** — `SESSION-2026-08-20c-ui-package-a.md`
+
+### Explore diversity / funnel polish (2026-08-20b)
+- Funnel у Exit→Combat: highlight **101** + **102** + **120** + сундук медь `(18,54)` — ≥3 типа награды ≤4 мин
+- Exit toast: «огонь / лёд / манга / сундук (E)»; chest toast через ItemCatalog (не `#id`)
+- MCP Play: 4 ExploreFunnel + funnel chest **PASS** — `SESSION-2026-08-20b-explore-diversity.md`
+
+### Backlog queue (2026-08-12)
+- **UI пакеты A→B→C→D** и **online AI-меши** поставлены в очередь «когда гармонично» (после Explore W3; AI — после UI A + явная разморозка) — `WEEK-PLAN-2026-08-19.md`, `SPIRIT-AI-MESH.md`. Сейчас код UI/AI online **не** стартовали.
+
+### AI spirit mesh — offline only (2026-08-12)
+- **Онлайн GenerationService / PromptCreateAssetAsync / MeshAssetId — ОТЛОЖЕНО** (см. `SPIRIT-AI-MESH.md`); todos gen/publish cancelled
+- `SpiritMeshResolve.CreatePlaceholder` + `CloneResolvedModel`: Id → ParentIds template → geometric placeholder (`IsMeshPlaceholder`)
+- `GameManager.CreateSpiritModel` больше не `return nil` без шаблона — всегда клон или placeholder
+- Smoke Edit: ParentIds `{11}` → template; bad parent → placeholder **PASS**
+
+### Explore loot feel — slice 1 (2026-08-20)
+- **Visible funnel loot** outside Safe: highlight огненные кристаллы (ItemId **101**) на пути Hub Exit→Combat `(8,2,58)` / `(28,2,52)`; billboards AlwaysOnTop **Enabled**; Exit toast про кристаллы (E)
+- `WorldLootService`: grant → toast + `FullSync`; `getPlayerData` через `_G` / `GetPlayerDataBF` (без ephemeral DSM); MCP Play smoke grant **PASS** — `SESSION-2026-08-20.md`
+- W3 ещё не полный PASS (diversity ≥2–3 типов — следующий день)
+
+### Social 2p / E4 PASS (2026-08-19)
+- **E4 PASS** — user play-test: Local Server **2 Players**, Safe, `/tradetest`, live inventory swap (2026-08-12/19). Evidence = **ручной**, не MCP. P1 Social gate для недели закрыт → Explore loot unlocked (`SESSION-2026-08-19.md`, `WEEK-PLAN-2026-08-19.md`)
+- E1 остаётся **CONDITIONAL** (нет полных e2e ×N глазами); Solo MCP trade regress ранее зелёный
+
+### Week wrap / stabilize (2026-08-12 → 2026-08-18)
+- **Вт 18.08 стабилизация:** MCP Play regress — Q7→turn-in, Q1 ForceCatch→turn-in, Battle Start→SkillIndex 1+2→End, Kami `SeedQA`+Synthesize Resonant **PASS**; Showcase plaza structural OK; Critical hotfix не потребовался — `SESSION-2026-08-18.md`
+- **Итог exit criteria:** E2/E3/E5 **PASS**; E1/E4 **CONDITIONAL** (нет 5× manual; нет live 2p Local Server)
+- **P0 Core+Hub CONDITIONAL · P1 Social CONDITIONAL** — следующий крупный трек (Explore / Identity / PvP) только после ручного E4 PASS
+- Place SoT без кодовых правок 18.08 (только smoke)
+
+### P1 Social 2p / E4 (2026-08-17)
+- **E4 CONDITIONAL** (не PASS / не FAIL) — `SESSION-2026-08-17.md`
+  - MCP smoke: `PlayerTradeSystem.SimulateSwap` item↔item + item↔cosmetic **PASS**; empty/missing **reject PASS**
+  - `/tradetest` kit (ловушка+зелье+косметика) + toast **PASS**; Request unknown/self → «Игрок не найден» **PASS**
+  - Live **2 Players Local Server** UI-обмен не гонялся (MCP Play Solo) — для полного PASS нужен ручной 2p в Safe
+  - Hotfix кода не потребовались; docs mirror `PlayerTradeSystem` синхронизирован (`typeof(action)` + payload table guard)
+
+### P0 play-test gate (2026-08-15)
+- **Вердикт Core+Hub: CONDITIONAL** (не FAIL) — `SESSION-2026-08-15.md`, `NEXT-SESSION.md`
+  - **E1 CONDITIONAL:** MCP e2e Q7→catch→Battle End PASS (12–13.08); формальный 5× Local Server не закрыт
+  - **E2 PASS:** SkillIndex 1+2 End; `ensureMinBattleSkills` ≥2; MaxCooldown/CD/MP UI (слот 2 доступен)
+  - **E3 PASS:** Мика ≤15 с; Exit KeepVisible; BGM Safe→Combat (14.08 + MCP regress 15.08)
+  - **E4** → пн Social: **CONDITIONAL** 17.08 (см. блок выше); **E5** docs обновлены
+- Backlog triage: FEFF ShortGrass = plugin (skip); Exit hint optional; 5× manual желателен но не блокер Social при CONDITIONAL
+- Prep Social: `/tradetest`, Safe, 1-slot offer — выполнено в smoke 17.08
+
+### Product checkpoint (2026-08-14)
+- P0 Hub как продукт (60 с): видимый Exit wayfind (`ExitWayfindBillboard` + KeepVisible); funnel toast; Play smoke Мика≤15 с + Exit + BGM Safe→Combat **PASS** — `SESSION-2026-08-14.md`
+
+### Product checkpoint (2026-08-13)
+- P0 Core polish день 2 (agency): слоты 2–3 читаемы (имя / MP / CD remaining+Max); MCP smoke SkillIndex 1+2 End + Q7/Q1 e2e **PASS** — `SESSION-2026-08-13.md`
+
+### Product checkpoint (2026-08-12)
+- P0 Core polish день 1: agency/UI hints + MCP smoke regress **PASS** — `SESSION-2026-08-12.md`
+- `user_RoS_ShortGrass` FEFF: **не в place** (plugin/package Output noise); skip
+
 ### Changed
+- **P0 Hub Exit visibility**: `OtakuHavenBuilder` ShopExit billboard AlwaysOnTop/Enabled + `HubWayfind`/`KeepVisible`; `ClientController` не гасит Exit wayfind; ZoneController hub/Exit toasts
+- **Battle agency day-2**: `PlayerSkills.MaxCooldown` в sync; кнопки навыков 2-строчные (MP + CD); toast CD/MP по-русски; layout слотов шире
+- **Battle agency UX**: `SkillCatalog.ensureMinBattleSkills` (≥2 слота); UI слоты 2/3 Visible по skills; catch `×N` ловушек; EndBattle toast дольше/яснее; hint «1/2/3 · H» на старте боя
 - **Haven P0 Hub polish**: spawn → **Genkan** `(-25,1.5,-6)` лицом к Мике; TalkHint «КВЕСТ →» снова; Mika `showEmotion` on; wayfind AlwaysOnTop + `WaySpawnMika`
 - **Battle agency/VFX**: скиллы окрашены по Element; вспышка панели на «Сильно!/Слабо…»; `PlayerSkills.Element` в battle payload
 - **P0 core-loop polish**: victory toast показывает copper (`CopperCoins`); FullSync без спама «синхронизированы»; бой хоткеи **1/2/3 + H**; catch hint «нет ловушек» без блокировки `isInBattle`; квест 7 → Exit в description/tracker
@@ -18,6 +104,9 @@
 - **Element agency demo**: в бою Primary ×1.5/×0.7 реально применяется; лог «Сильно!/Слабо…»; tip на старте «Огонь vs Земля — … · цикл»; `BattleElementTip` в UI
 - **Dex UI Primary labels**: панель DEX показывает «Огонь / Земля / Ветер / Вода» (+ тиры ★); копирайт про Primary-сеты; docs mirror + `DexBonus` handler
 - **Four Primary Elements**: чарт Fire→Earth→Wind→Water→Fire (×1.5/×0.7); у духов `PrimaryElement` + `Aspect`; Dex/урон по Primary; UI «Огонь (Пепел)»; подпись-скиллы Water Heal / Wind tempo / Earth armor
+
+### Removed
+- **Эйфелева башня** у Haven (`EiffelTowerStatue` + `EiffelPedestal`) — удалена по запросу
 
 ### Added
 - **Spirit meshes evo 101–105**: Studio AI → `SpiritTemplates` Огненный Тигр / Ледяной Феникс / Теневой Волк / Грозовой Левиафан / Световой Альфа — **канон 4×4 полностью с мешами**
@@ -47,6 +136,8 @@
 - **Spirit Resonance Phase 0 → Studio**: `SpiritResonance` module, `ResonanceEvent`, Care/Temper UI, battle XP share, RequiredBond evo gate, quest progress CareSpirit/TemperSpirit — см. `SPIRIT-RESONANCE-PLAN.md`
 
 ### Fixed
+- **Bag UI item names**: `UIController.BuildBagContentsFromInventory` брал имя только из `SpiritDatabase.ShopItems` → лут 101/102/120 показывался как `Предмет #102`; теперь `ItemCatalog.Get` (имя + qty). `ItemCatalog.Get` принимает tonumber(id). Smoke: `Огненный кристалл x2`, `Ледяной кристалл x3`, `Коробка редкой манги x1`
+- **P0 Wed smoke regress PASS**: Q7→Q1 catch→Battle End (SkillIndex 1+2); FEFF ShortGrass вне place (plugin)
 - **Daily Board Care/Temper soft**: `MarkDailySlot` → `OnDailyCare`/`OnDailyTemper` при первом claim (раньше только CatchOrChest + квесты 301/302); без double-grant на сдаче квеста; MCP smoke 4/4 + `BonusNextDay` ×2 + PASS snapshot PASS
 - **MusicController BGM**: `ZoneMusic` больше не в `PlayerGui` (Roblox снимал Folder) — папка в `SoundService`; кроссфейд Safe/Genkan/Exit/Combat снова слышен
 - **ShowcasePlaza**: LoS=false, prompt на Base, ClickDetector; `showcaseSet` напрямую (не только `_G`)

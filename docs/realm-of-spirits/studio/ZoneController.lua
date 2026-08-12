@@ -7,6 +7,7 @@ local player = Players.LocalPlayer
 local RealmFolder = ReplicatedStorage:WaitForChild("RealmOfSpirits")
 local zoneChanged = RealmFolder:WaitForChild("ZoneChanged")
 local ZoneConfig = require(RealmFolder:WaitForChild("ZoneConfig"))
+local ToastRouter = require(RealmFolder:WaitForChild("ToastRouter"))
 
 local hubIntroShown = false
 local prepHintShown = false
@@ -20,21 +21,27 @@ gui.Parent = player:WaitForChild("PlayerGui")
 
 local banner = Instance.new("TextLabel")
 banner.Name = "ZoneBanner"
-banner.AnchorPoint = Vector2.new(1, 0)
-banner.Position = UDim2.new(1, -16, 0, 12)
-banner.Size = UDim2.new(0, 220, 0, 32)
-banner.BackgroundColor3 = Color3.fromRGB(30, 25, 40)
-banner.BackgroundTransparency = 0.25
-banner.TextColor3 = Color3.fromRGB(255, 220, 240)
+banner.AnchorPoint = Vector2.new(0.5, 0.5)
+banner.Position = UDim2.new(0.5, 0, 0.22, 0)
+banner.Size = UDim2.new(0, 420, 0, 56)
+banner.BackgroundColor3 = Color3.fromRGB(18, 16, 28)
+banner.BackgroundTransparency = 0.2
+banner.TextColor3 = Color3.fromRGB(255, 235, 245)
 banner.Text = ""
-banner.TextSize = 18
-banner.Font = Enum.Font.GothamMedium
+banner.TextSize = 28
+banner.Font = Enum.Font.GothamBold
 banner.Visible = false
 banner.Parent = gui
 
 local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0, 8)
+corner.CornerRadius = UDim.new(0, 12)
 corner.Parent = banner
+
+local stroke = Instance.new("UIStroke")
+stroke.Color = Color3.fromRGB(255, 180, 220)
+stroke.Thickness = 1.5
+stroke.Transparency = 0.35
+stroke.Parent = banner
 
 local toast = Instance.new("TextLabel")
 toast.Name = "ZoneToast"
@@ -50,23 +57,48 @@ toast.Font = Enum.Font.Gotham
 toast.Visible = false
 toast.Parent = gui
 
-local function showBanner(text, color)
+local bannerToken = 0
+local ZONE_TITLE_DURATION = 1.5
+
+local function showZoneTitle(text, color)
+	if not text or text == "" then
+		return
+	end
+	bannerToken += 1
+	local token = bannerToken
 	banner.Text = text
-	banner.TextColor3 = color or Color3.fromRGB(255, 220, 240)
+	banner.TextColor3 = color or Color3.fromRGB(255, 235, 245)
+	banner.TextTransparency = 0
+	banner.BackgroundTransparency = 0.2
+	stroke.Transparency = 0.35
 	banner.Visible = true
-	banner.BackgroundTransparency = 0.25
-	local tween = TweenService:Create(banner, TweenInfo.new(2.5), { BackgroundTransparency = 0.6 })
-	tween:Play()
+	task.delay(ZONE_TITLE_DURATION, function()
+		if token ~= bannerToken then
+			return
+		end
+		local fade = TweenService:Create(banner, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			TextTransparency = 1,
+			BackgroundTransparency = 1,
+		})
+		local fadeStroke = TweenService:Create(stroke, TweenInfo.new(0.35), { Transparency = 1 })
+		fade:Play()
+		fadeStroke:Play()
+		fade.Completed:Connect(function()
+			if token == bannerToken then
+				banner.Visible = false
+			end
+		end)
+	end)
+end
+
+-- legacy alias
+local function showBanner(text, color)
+	showZoneTitle(text, color)
 end
 
 local function showToast(text, duration)
-	toast.Text = text
-	toast.Visible = true
-	task.delay(duration or 2.5, function()
-		if toast.Text == text then
-			toast.Visible = false
-		end
-	end)
+	-- Tip priority; shares queue with battle/loot notifications (UI package A)
+	ToastRouter.Tip(text, duration or 2.5)
 end
 
 local MESSAGES = {
@@ -270,7 +302,7 @@ local function shouldWearSlippers(zone, detail)
 end
 
 local havenBellWelcomed = false
-local function syncFootwearFromZone(_ringBellIfEnter)
+local function syncFootwearFromZone(ringBellIfEnter)
 	local character = player.Character
 	if not character then
 		return
@@ -294,16 +326,16 @@ player.CharacterAdded:Connect(function(character)
 	syncFootwearFromZone(false)
 	task.delay(1, function()
 		if player.Character == character then
-			syncFootwearFromZone(false)
+			syncFootwearFromZone(true)
 		end
 	end)
 end)
 
 player:GetAttributeChangedSignal("CurrentZone"):Connect(function()
-	syncFootwearFromZone(false)
+	syncFootwearFromZone(true)
 end)
 player:GetAttributeChangedSignal("ZoneDetail"):Connect(function()
-	syncFootwearFromZone(false)
+	syncFootwearFromZone(true)
 end)
 
 local bellSound = Instance.new("Sound")
@@ -335,58 +367,73 @@ local function ringEntranceBell(showBellToast)
 	end)
 end
 
+local ZONE_TITLES = {
+	Genkan = { Title = "Otaku Haven", Color = Color3.fromRGB(255, 180, 220) },
+	Safe = { Title = "Otaku Haven", Color = Color3.fromRGB(255, 180, 220) },
+	Spawn = { Title = "Otaku Haven", Color = Color3.fromRGB(255, 180, 220) },
+	Exit = { Title = "Выход в Акихабару", Color = Color3.fromRGB(255, 200, 120) },
+	Combat = { Title = "Акихабара", Color = Color3.fromRGB(255, 180, 80) },
+	Akihabara = { Title = "Акихабара", Color = Color3.fromRGB(255, 180, 80) },
+}
+
+local function resolveZoneTitle(zoneType, detail)
+	local habitat = HABITAT_BANNERS[detail]
+	if habitat then
+		return habitat.Title, habitat.Color
+	end
+	local z = ZONE_TITLES[detail] or ZONE_TITLES[zoneType]
+	if z then
+		return z.Title, z.Color
+	end
+	return nil, nil
+end
+
 local function showHubIntro()
 	if hubIntroShown then return end
 	hubIntroShown = true
-	showBanner("Otaku Haven", Color3.fromRGB(255, 180, 220))
-	showToast("Поговори с Микой у входа, затем зайди в магазин", 4.5)
+	showZoneTitle("Otaku Haven", Color3.fromRGB(255, 180, 220))
+	showToast("Мика у входа -> магазин (генкан) -> Выход в Акихабару", 5)
 end
 
 zoneChanged.OnClientEvent:Connect(function(zoneType, detail)
 	detail = detail or zoneType
-	local msg = MESSAGES[detail] or MESSAGES[zoneType]
-	if not msg and detail ~= "Spawn" then return end
 
 	if detail == "Spawn" then
 		showHubIntro()
+		syncFootwearFromZone(false)
 		return
+	end
+
+	local title, color = resolveZoneTitle(zoneType, detail)
+	if title then
+		showZoneTitle(title, color)
 	end
 
 	if zoneType == "Combat" then
 		syncFootwearFromZone(false)
-		local habitat = HABITAT_BANNERS[detail]
-		if habitat then
-			showBanner(habitat.Title, habitat.Color)
-			showToast(MESSAGES[detail] or "Зона духа", 3)
-		else
-			showBanner("Акихабара", Color3.fromRGB(255, 180, 80))
-			showToast("Музыка: Lo-Fi → J-Rock", 3)
-		end
 		if not elementCycleHintShown then
 			elementCycleHintShown = true
-			task.delay(3.2, function()
-				showToast("Стихии: Огонь→Земля→Ветер→Вода→Огонь · ×1.5 / ×0.7", 4.5)
+			task.delay(1.6, function()
+				showToast("Огонь→Земля→Ветер→Вода→Огонь · ×1.5 / ×0.7", 3.5)
 			end)
 		end
 	elseif zoneType == "Safe" then
 		if detail == "Genkan" then
-			showBanner("Otaku Haven", Color3.fromRGB(255, 180, 220))
 			syncFootwearFromZone(false)
 			if not havenBellWelcomed then
 				havenBellWelcomed = true
-				ringEntranceBell(true)
+				ringEntranceBell(false)
 			end
-			showToast("Колокольчик — иррасшаймасе!  ·  " .. MESSAGES.Genkan, 3)
 		elseif detail == "Exit" then
 			syncFootwearFromZone(false)
-			showBanner(MESSAGES.Exit, Color3.fromRGB(255, 200, 120))
-			showToast("Впереди боевая зона — проверь мангу и инвентарь", 3)
-		elseif detail == "Safe" or detail == "Spawn" then
-			showBanner("Otaku Haven", Color3.fromRGB(255, 180, 220))
-			syncFootwearFromZone(false)
-			if not prepHintShown and detail == "Safe" then
+			showToast("Снаружи: огонь / лёд / манга / сундук (E) — разный лут", 4)
+		elseif detail == "Safe" then
+			syncFootwearFromZone(true)
+			if not prepHintShown then
 				prepHintShown = true
-				showToast("Подготовка: манга «Путь Меча» (+урон) или примерочная", 4)
+				task.delay(1.6, function()
+					showToast("Подготовка: манга «Путь Меча» или примерочная", 3.5)
+				end)
 			end
 		end
 	end
