@@ -32,7 +32,7 @@
 |------|--------|--------|
 | Publish + API Services | Реальный DataStore round-trip (не только in-memory Studio) | **ops** (нужен publish place) |
 | `DataStoreManager` | Session lock + `UpdateAsync` | **PASS** 2026-08-15 — `studio/DataStoreManager.lua` |
-| Hub funnel | Лёгкая инструментация Mika/Exit (не опросники) | pending |
+| Hub funnel | Лёгкая инструментация Mika/Exit | **PASS** 2026-08-15c — `HubFunnel` + hooks |
 | Fair combat | `quality_gate.py` зелёный на mirrors | pending check |
 
 Старт кода фазы 2: session lock done. Publish — вручную в Creator Dashboard.

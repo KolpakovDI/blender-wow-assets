@@ -43,6 +43,7 @@ local DETAIL_PRIORITY = {
 
 local function setPlayerZone(player, zoneType, detail)
 	detail = detail or zoneType
+	local prevZone = playerZone[player]
 	if playerZone[player] == zoneType and playerDetail[player] == detail then
 		return
 	end
@@ -51,6 +52,14 @@ local function setPlayerZone(player, zoneType, detail)
 	player:SetAttribute("CurrentZone", zoneType)
 	player:SetAttribute("ZoneDetail", detail)
 	zoneChanged:FireClient(player, zoneType, detail)
+	if zoneType == "Combat" and (prevZone == "Safe" or prevZone == nil) then
+		local ok, HubFunnel = pcall(function()
+			return require(RealmFolder:WaitForChild("HubFunnel"))
+		end)
+		if ok and HubFunnel and HubFunnel.MarkPlayer then
+			HubFunnel.MarkPlayer(player, "ExitCombat")
+		end
+	end
 end
 
 local function classifyDetail(detail)

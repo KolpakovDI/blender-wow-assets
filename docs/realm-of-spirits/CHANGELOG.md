@@ -12,6 +12,11 @@
 - **Sanctum UX**: успешный `Open` сбрасывает sticky Status «Ошибка: …» → idle hint
 - Буфер: hands e2e n≥10 / Kami без ForceCatch; не AI mesh / не PvP
 
+### Hub funnel instrumentation (2026-08-15c)
+- `HubFunnel` ModuleScript: дневные флаги **Mika / Prep / ExitCombat** на `playerData`
+- Хуки: QuestSystem (GetQuests/Accept), OtakuHaven (манга/гача/wardrobe), ZoneSystem (Safe→Combat)
+- Edit smoke `Complete=true` — `SESSION-2026-08-15c-hub-funnel.md`
+
 ### DataStore session lock (2026-08-15b)
 - `DataStoreManager`: load/save через **`UpdateAsync`** + soft `_Session` lock (JobId/Time, 30 мин); leave/BindToClose release
 - Нет `SetAsync` на player key; DoNotSave при чужом lock / load fail — `SESSION-2026-08-15b-datastore-session-lock.md`

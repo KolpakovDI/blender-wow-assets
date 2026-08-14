@@ -309,7 +309,17 @@ local function deliverGachaResult(player, playerData, reward, paidWith)
 	end
 end
 
+local function MarkHubPrep(player)
+	local ok, HubFunnel = pcall(function()
+		return require(RealmFolder:WaitForChild("HubFunnel"))
+	end)
+	if ok and HubFunnel and HubFunnel.MarkPlayer then
+		HubFunnel.MarkPlayer(player, "Prep")
+	end
+end
+
 local function onMangaPrompt(player)
+	MarkHubPrep(player)
 	if not isInSafeZone(player) then notify(player, "Toast", { Text = "Читать мангу можно только в Otaku Haven" }); return end
 	local playerData = getPlayerData(player); if not playerData then return end
 	if BuffSystem.HasBuff(playerData, "MangaDamage") then
@@ -323,6 +333,7 @@ local function onMangaPrompt(player)
 end
 
 local function onGachaPrompt(player)
+	MarkHubPrep(player)
 	if not isInSafeZone(player) then notify(player, "Toast", { Text = "Гашапон только в Otaku Haven" }); return end
 	local playerData = getPlayerData(player)
 	if not playerData then
@@ -464,6 +475,7 @@ havenEvent.OnServerEvent:Connect(function(player, action, payload)
 	elseif action == "RequestFomo" then
 		notify(player, "GachaFomo", { SecondsLeft = getFomoSecondsLeft(), SeasonEnd = gachaSeasonEnd })
 	elseif action == "RequestWardrobe" then
+		MarkHubPrep(player)
 		if not isInSafeZone(player) then
 			notify(player, "Toast", { Text = "Гардероб только в Haven" })
 			return

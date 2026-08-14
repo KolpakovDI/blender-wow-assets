@@ -1349,6 +1349,16 @@ local function CanUseQuestMasterAction(player, maxDistance, graceSeconds)
 	return (os.clock() - lastInteraction) <= (graceSeconds or 8)
 end
 
+local function MarkHubMika(player)
+	local ok, HubFunnel = pcall(function()
+		local rs = game:GetService("ReplicatedStorage"):FindFirstChild("RealmOfSpirits")
+		return rs and require(rs:WaitForChild("HubFunnel"))
+	end)
+	if ok and HubFunnel and HubFunnel.MarkPlayer then
+		HubFunnel.MarkPlayer(player, "Mika")
+	end
+end
+
 QuestEvent.OnServerEvent:Connect(function(player, action, data)
 	if typeof(action) ~= "string" then
 		return
@@ -1356,6 +1366,7 @@ QuestEvent.OnServerEvent:Connect(function(player, action, data)
 	local questSystem = GetOrCreateQuestSystem(player)
 
 	if action == "GetQuests" then
+		MarkHubMika(player)
 		local availableQuests = BuildAvailableQuests(questSystem)
 		QuestEvent:FireClient(player, "QuestList", {Quests = availableQuests})
 
@@ -1370,6 +1381,7 @@ QuestEvent.OnServerEvent:Connect(function(player, action, data)
 			return
 		end
 		local success, message = questSystem:AcceptQuest(questId)
+		if success then MarkHubMika(player) end
 		TriggerQuestMasterReaction(success and "Point" or "Fail")
 		QuestEvent:FireClient(player, "QuestResult", {Success = success, Message = message})
 
