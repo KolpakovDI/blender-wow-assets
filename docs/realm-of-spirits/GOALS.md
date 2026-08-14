@@ -117,5 +117,5 @@
 5. ~~P1 Social~~ — OK; **E4 live 2p PASS** (2026-08-19 user).
 6. ~~Element agency demo~~ — OK (battle ×1.5/×0.7 + tip/лог 2026-07-29).
 7. ~~Season polish~~ — OK (pity/DaysLeft/SoftBuffs/pool 101–115 2026-07-29).
-8. **Next:** неделя **26.08–01.09** — Resonant loop + P0 friction (`WEEK-PLAN-2026-08-26.md`); LOOK **PASS**; E1 = 3 цикла / CONDITIONAL ×N; AI mesh **deferred**; PvP не стартовать.
-9. **Буфер:** E1 ×N глазами по желанию (не блокер W1–W3 новой недели).
+8. ~~Неделя 26.08–01.09 Resonant loop + P0 friction~~ — **W1–W4 PASS** досрочно 14.08 (`SESSION-2026-08-14f-week-wrap.md`).
+9. **Next:** hands-цикл Ками (синтез→бой слот 1→Care/Temper→Sanctum) + e2e глазами без MCP-костылей; E1 ×N буфер; AI mesh **deferred**; PvP не стартовать.
