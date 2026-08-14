@@ -10,7 +10,8 @@
 - Тема: **Resonant loop + P0 friction** (Ками в бою и Care/Temper; лут E без костыля) — `WEEK-PLAN-2026-08-26.md`
 - **W1 PASS**: Crystal_120 **E** без ручного Enabled; бой **V**+Keypad1/2 победа — `SESSION-2026-08-14c-w1-friction.md`
 - **W2 PASS**: Resonant Start больше не no-op — `ResolveBattleSpiritInfo` в `GameManager` (Id 9xxx / Kind Resonant → stats ядра + `SkillIds` roster); smoke слот 1 «Землетрясение» в бою — `SESSION-2026-08-14d-w2-resonant-battle.md`
-- Не AI mesh / не PvP; E1 ×N руками остаётся буфером; next **W3** Care/Temper
+- **W3 PASS**: Care + Temper на активном Resonant с toast/UI (`Уход выполнен` / `Закалка +Attack`); Source не меняли — `SESSION-2026-08-14e-w3-resonant-care-temper.md`
+- Не AI mesh / не PvP; E1 ×N руками остаётся буфером; next soft polish / week wrap
 
 ### Week wrap + Sanctum LOOK (2026-08-22)
 - Неделя 19–25.08: E4 / Explore W3 / UI A–D / Identity 1–3 закрыты по коду; след. неделя = **Sanctum/Resonant LOOK**
