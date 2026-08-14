@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "blender": {
+      "command": "C:\\Users\\Asus\\.local\\bin\\uvx.exe",
+      "args": ["blender-mcp"]
+    },
+    "Roblox_Studio": {
+      "command": "C:\\Users\\Asus\\AppData\\Local\\Roblox\\Versions\\version-a57f2f633baf4a86\\StudioMCP.exe",
+      "args": []
+    }
+  }
+}

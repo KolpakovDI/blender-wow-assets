@@ -39,7 +39,20 @@ local function NormalizeSpirits(data)
 	if type(data.Spirits) ~= "table" then return end
 	data.SpiritStamina = math.clamp(tonumber(data.SpiritStamina) or 100, 0, 100)
 	if type(data.ResonanceDaily) ~= "table" then
-		data.ResonanceDaily = { Date = "", Care = false, Temper = false }
+		data.ResonanceDaily = { Date = "", Care = false, Temper = false, SanctumSynth = 0, SanctumDisintegrate = 0 }
+	else
+		data.ResonanceDaily.SanctumSynth = math.max(0, math.floor(tonumber(data.ResonanceDaily.SanctumSynth) or 0))
+		data.ResonanceDaily.SanctumDisintegrate = math.max(0, math.floor(tonumber(data.ResonanceDaily.SanctumDisintegrate) or 0))
+	end
+	-- Resonant spirits: keep HybridPrimary / SkillIds
+	for _, sp in ipairs(data.Spirits) do
+		if type(sp) == "table" and sp.Kind == "Resonant" then
+			sp.PrimaryElement = sp.HybridPrimary or sp.PrimaryElement or sp.Element or "Earth"
+			sp.Element = sp.PrimaryElement
+			if type(sp.SkillIds) ~= "table" then
+				sp.SkillIds = {}
+			end
+		end
 	end
 	if type(data.DailyBoard) ~= "table" then
 		data.DailyBoard = {
@@ -74,6 +87,10 @@ local function NormalizeSpirits(data)
 	data.CrystalPity.Misses = math.max(0, math.floor(tonumber(data.CrystalPity.Misses) or 0))
 	for _, spirit in ipairs(data.Spirits) do
 		if type(spirit) ~= "table" or not spirit.Id then continue end
+		spirit.Id = SpiritDatabase.MigrateId(spirit.Id)
+		if spirit.Code == nil and SpiritDatabase.GetCode then
+			spirit.Code = SpiritDatabase.GetCode(spirit.Id)
+		end
 		local catalog = SpiritDatabase.Get(spirit.Id)
 		if not catalog then continue end
 		if not spirit.Name or spirit.Name == "" or spirit.Name == "Неизвестный" then
@@ -93,10 +110,14 @@ local function NormalizeSpirits(data)
 	end
 	local spirits = data.Spirits
 	local idx = tonumber(data.ActiveSpiritIndex)
+	if data.CurrentSpiritId ~= nil then
+		data.CurrentSpiritId = SpiritDatabase.MigrateId(data.CurrentSpiritId)
+	end
 	if not idx or not spirits[idx] then
 		idx = 1
 		local want = tonumber(data.CurrentSpiritId)
 		if want then
+			want = SpiritDatabase.MigrateId(want)
 			for i, s in ipairs(spirits) do
 				if s.Id == want then
 					idx = i
@@ -154,8 +175,7 @@ function DataStoreManager:GetDefaultData()
 		Crystals = 10,
 		Spirits = {
 			{
-				Id = 1,
-				Name = "Огненный Кот",
+				Id = 11, Name = "Огненный Кот",
 				Level = 1,
 				Experience = 0,
 				Bond = 0,
@@ -167,7 +187,7 @@ function DataStoreManager:GetDefaultData()
 				CaughtAt = 0,
 			},
 		},
-		CurrentSpiritId = 1,
+		CurrentSpiritId = 11,
 		ActiveSpiritIndex = 1,
 		SpiritStamina = 100,
 		ResonanceDaily = { Date = "", Care = false, Temper = false },
@@ -241,7 +261,16 @@ function DataStoreManager:LoadData(player)
 		end
 	end
 
-	if not data then
+	-- Если GetAsync упал — не создаём «нового игрока» (иначе SaveData затрёт сейв)
+	if self.DataStore and not success then
+		warn(player.Name .. " - DataStore load FAILED; session marked DoNotSave")
+		data = self:GetDefaultData()
+		data.FirstJoin = os.time()
+		data.TotalJoins = 1
+		data._DoNotSave = true
+		self.LoadFailed = self.LoadFailed or {}
+		self.LoadFailed[userId] = true
+	elseif not data then
 		data = self:GetDefaultData()
 		data.FirstJoin = os.time()
 		data.TotalJoins = 1
@@ -249,7 +278,7 @@ function DataStoreManager:LoadData(player)
 	else
 		data.LastLogin = os.time()
 		data.TotalJoins = (data.TotalJoins or 0) + 1
-		print(player.Name .. " - данные загружены (уровень: " .. data.Level .. ")")
+		print(player.Name .. " - данные загружены (уровень: " .. tostring(data.Level) .. ")")
 	end
 
 	NormalizeCurrency(data)
@@ -263,6 +292,10 @@ function DataStoreManager:SaveData(player)
 	local data = self.PlayerData[userId]
 	if not data then
 		warn("No data to save for " .. player.Name)
+		return false
+	end
+	if data._DoNotSave or (self.LoadFailed and self.LoadFailed[userId]) then
+		warn("Skip save for " .. player.Name .. " (load failed / DoNotSave)")
 		return false
 	end
 	if self.IsSaving[userId] then

@@ -24,6 +24,7 @@ local ResonanceEvent = realmFolder:WaitForChild("ResonanceEvent")
 local QuestEvent = realmFolder:WaitForChild("Quest")
 
 local SpiritDatabaseModule = require(realmFolder:WaitForChild("SpiritDatabase"))
+local SkillCatalog = require(realmFolder:WaitForChild("SkillCatalog"))
 local ItemCatalog = require(realmFolder:WaitForChild("ItemCatalog"))
 local SpiritMeshResolve = require(realmFolder:WaitForChild("SpiritMeshResolve"))
 local SpiritResonance = require(realmFolder:WaitForChild("SpiritResonance"))
@@ -84,7 +85,7 @@ local SpiritIcons = {
 	[43] = {Color = Color3.fromRGB(200, 210, 255), Emoji = "🐰"}, -- Лунный Кролик
 	[44] = {Color = Color3.fromRGB(120, 160, 210), Emoji = "🌫️"}, -- Туманный Дух
 	-- Evolved
-	[1011] = {Color = Color3.fromRGB(255, 120, 50), Emoji = "🔥"},
+	[1011] = {Color = Color3.fromRGB(255, 120, 50), Emoji = "🐯"}, -- Огненный Тигр (Identity look)
 	[1012] = {Color = Color3.fromRGB(255, 80, 30), Emoji = "🐉"},
 	[1013] = {Color = Color3.fromRGB(255, 255, 200), Emoji = "✨"},
 	[1014] = {Color = Color3.fromRGB(220, 50, 20), Emoji = "🌋"},
@@ -1253,12 +1254,25 @@ local detailSpiritSkills = CreateTextLabel(spiritDetailFrame, "DetailSpiritSkill
 -- Кнопка эволюции (активна если достаточно прокачаны скилы)
 local evolveButtonEnabled = false
 local detailEvolveButton = CreateTextButton(spiritDetailFrame, "DetailEvolveButton",
-	UDim2.new(0.5, -100, 0, 250),
-	UDim2.new(0, 200, 0, 36),
+	UDim2.new(0.5, -100, 0, 290),
+	UDim2.new(0, 200, 0, 40),
 	"ЭВОЛЮЦИЯ",
 	Color3.fromRGB(80, 80, 80),
 	"🧬"
 )
+
+local detailEvoProgressLabel = CreateTextLabel(spiritDetailFrame, "DetailEvoProgress",
+	UDim2.new(0, 10, 0, 248),
+	UDim2.new(0.9, 0, 0, 40),
+	"Эволюция: —",
+	Color3.fromRGB(255, 220, 140),
+	12
+)
+if detailEvoProgressLabel then
+	detailEvoProgressLabel.TextXAlignment = Enum.TextXAlignment.Left
+	detailEvoProgressLabel.TextYAlignment = Enum.TextYAlignment.Top
+	detailEvoProgressLabel.TextWrapped = true
+end
 
 local detailResonanceLabel = CreateTextLabel(spiritDetailFrame, "DetailResonance",
 	UDim2.new(0, 10, 0, 220),
@@ -1269,7 +1283,7 @@ local detailResonanceLabel = CreateTextLabel(spiritDetailFrame, "DetailResonance
 )
 
 local detailCareButton = CreateTextButton(spiritDetailFrame, "DetailCareButton",
-	UDim2.new(0.5, -185, 0, 290),
+	UDim2.new(0.5, -185, 0, 335),
 	UDim2.new(0, 170, 0, 34),
 	"УХОД",
 	Color3.fromRGB(70, 140, 90),
@@ -1277,7 +1291,7 @@ local detailCareButton = CreateTextButton(spiritDetailFrame, "DetailCareButton",
 )
 
 local detailTemperButton = CreateTextButton(spiritDetailFrame, "DetailTemperButton",
-	UDim2.new(0.5, 15, 0, 290),
+	UDim2.new(0.5, 15, 0, 335),
 	UDim2.new(0, 170, 0, 34),
 	"ЗАКАЛКА",
 	Color3.fromRGB(70, 100, 160),
@@ -1286,12 +1300,82 @@ local detailTemperButton = CreateTextButton(spiritDetailFrame, "DetailTemperButt
 
 -- Кнопка закрытия
 local detailCloseButton = CreateTextButton(spiritDetailFrame, "DetailCloseButton",
-	UDim2.new(0.5, -60, 0, 340),
-	UDim2.new(0, 120, 0, 35),
+	UDim2.new(0.5, -60, 0, 372),
+	UDim2.new(0, 120, 0, 32),
 	"Закрыть",
 	Color3.fromRGB(100, 100, 100),
 	"❌"
 )
+
+-- Identity slice 3: evo progress on spirit card (lvl/bond/wins/crystals + skill teaser)
+local function countInventoryItem(itemId)
+	local have = 0
+	for _, inv in ipairs((PlayerData and PlayerData.Inventory) or {}) do
+		if tonumber(inv.Id) == tonumber(itemId) then
+			have = tonumber(inv.Quantity) or 0
+			break
+		end
+	end
+	return have
+end
+
+local function ApplyEvoProgressUI(spirit)
+	if not detailEvoProgressLabel then
+		return false
+	end
+	if not spirit then
+		detailEvoProgressLabel.Text = "Эволюция: —"
+		evolveButtonEnabled = false
+		detailEvolveButton.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+		local lbl = detailEvolveButton:FindFirstChild("ButtonLabel")
+		if lbl then lbl.Text = "ЭВОЛЮЦИЯ" end
+		return false
+	end
+	local rule = SpiritDatabaseModule.GetEvolutionRule and SpiritDatabaseModule.GetEvolutionRule(spirit.Id)
+	if not rule then
+		detailEvoProgressLabel.Text = "Эволюция: финальная форма"
+		evolveButtonEnabled = false
+		detailEvolveButton.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+		local lbl = detailEvolveButton:FindFirstChild("ButtonLabel")
+		if lbl then lbl.Text = "Макс. форма" end
+		return false
+	end
+	local evoInfo = SpiritDatabaseModule.GetDisplay and SpiritDatabaseModule.GetDisplay(rule.EvolvedId)
+		or SpiritDatabaseModule.Get(rule.EvolvedId)
+	local evoName = (evoInfo and evoInfo.Name) or ("#" .. tostring(rule.EvolvedId))
+	local teaser = ""
+	if SpiritDatabaseModule.GetSkillNames and evoInfo then
+		local names = SpiritDatabaseModule.GetSkillNames(evoInfo)
+		if type(names) == "table" and names[1] then
+			teaser = " · удар «" .. tostring(names[1]) .. "»"
+		end
+	end
+	local lvl = tonumber(spirit.Level) or 1
+	local needLvl = tonumber(rule.RequiredLevel) or 1
+	local bond = tonumber(spirit.Bond) or 0
+	local needBond = tonumber(rule.RequiredBond) or 0
+	local wins = tonumber(PlayerData and PlayerData.Stats and PlayerData.Stats.EnemiesDefeated) or 0
+	local needWins = tonumber(rule.RequiredBattles) or 0
+	local cryHave, cryNeed, cryName = 0, 0, "кристаллы"
+	local req = rule.RequiredItems and rule.RequiredItems[1]
+	if type(req) == "table" then
+		cryNeed = tonumber(req.Quantity) or 0
+		cryHave = countInventoryItem(req.Id)
+		local item = ItemCatalog.Get and ItemCatalog.Get(req.Id)
+		cryName = (item and item.Name) or ("#" .. tostring(req.Id))
+	end
+	local can = lvl >= needLvl and bond >= needBond and wins >= needWins and cryHave >= cryNeed
+	detailEvoProgressLabel.Text = string.format(
+		"→ %s%s\nУр.%d/%d · Bond %d/%d · Побед %d/%d · %s %d/%d",
+		evoName, teaser,
+		lvl, needLvl, bond, needBond, wins, needWins, cryName, cryHave, cryNeed
+	)
+	evolveButtonEnabled = can
+	detailEvolveButton.BackgroundColor3 = can and Color3.fromRGB(255, 215, 0) or Color3.fromRGB(80, 80, 80)
+	local lbl = detailEvolveButton:FindFirstChild("ButtonLabel")
+	if lbl then lbl.Text = can and "ЭВОЛЮЦИЯ" or "Ещё рано" end
+	return can
+end
 
 -- Функция открытия панели свойств духа
 OpenSpiritDetail = function(index)
@@ -1334,30 +1418,46 @@ OpenSpiritDetail = function(index)
 		PlayerData.SpiritStamina or 100
 	)
 
-	-- Навыки (зависят от уровня духа)
+	-- Навыки: каталог / SkillIds инстанса (Identity: после эволюции слот 1 виден)
 	local skillsText = "Навыки:\n"
-	if lvl >= 1 then skillsText = skillsText .. "- Коготь Духа (ур. 1)\n" end
-	if lvl >= 5 then skillsText = skillsText .. "- Призрачный Вихрь (ур. 5)\n" end
-	if lvl >= 10 then skillsText = skillsText .. "- Духовный Щит (ур. 10)" end
+	local skillNames = {}
+	if type(spirit.Skills) == "table" and #spirit.Skills > 0 then
+		for _, sk in ipairs(spirit.Skills) do
+			if type(sk) == "string" then
+				table.insert(skillNames, sk)
+			elseif type(sk) == "table" and sk.Name then
+				table.insert(skillNames, tostring(sk.Name))
+			end
+		end
+	end
+	if #skillNames == 0 and SpiritDatabaseModule.GetSkillNames then
+		local fromDb = SpiritDatabaseModule.GetSkillNames(spiritInfo)
+		if type(fromDb) == "table" then
+			for _, name in ipairs(fromDb) do
+				table.insert(skillNames, tostring(name))
+			end
+		end
+	end
+	if #skillNames == 0 and type(spirit.SkillIds) == "table" then
+		for _, sid in ipairs(spirit.SkillIds) do
+			local sk = SkillCatalog.Get and SkillCatalog.Get(sid)
+			table.insert(skillNames, (sk and sk.Name) or ("#" .. tostring(sid)))
+		end
+	end
+	if #skillNames > 0 then
+		for i, name in ipairs(skillNames) do
+			skillsText = skillsText .. string.format("- %s%s\n", name, i == 1 and " ★" or "")
+		end
+	else
+		skillsText = skillsText .. "- нет данных\n"
+	end
 	detailSpiritSkills.Text = skillsText
 
-	-- Проверяем, можно ли эволюционировать (достаточно ли прокачаны скилы)
-	-- Эволюция доступна с уровня 10 (все скилы разблокированы)
-	if lvl >= 10 then
-		evolveButtonEnabled = true
-		detailEvolveButton.BackgroundColor3 = Color3.fromRGB(255, 215, 0)
-		local lbl = detailEvolveButton:FindFirstChild("ButtonLabel")
-		if lbl then lbl.Text = "ЭВОЛЮЦИЯ" end
-	else
-		evolveButtonEnabled = false
-		detailEvolveButton.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
-		local lbl = detailEvolveButton:FindFirstChild("ButtonLabel")
-		if lbl then lbl.Text = "Нужно ур. 10" end
-	end
+	ApplyEvoProgressUI(spirit)
 
 	spiritDetailFrame.Visible = true
 
-	-- Запрашиваем информацию об эволюции у сервера
+	-- Запрашиваем информацию об эволюции у сервера (тихо обновит карточку)
 	EvolutionEvent:FireServer("GetEvolutions", {})
 end
 
@@ -2325,6 +2425,7 @@ end)
 
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
 	if gameProcessed or not CurrentBattle then return end
+	-- Keypad1-3: same as 1-3; Studio MCP VirtualInput can send Keypad, not top-row One/Two
 	if input.KeyCode == Enum.KeyCode.One or input.KeyCode == Enum.KeyCode.KeypadOne then
 		TryBattleSkill(1)
 	elseif input.KeyCode == Enum.KeyCode.Two or input.KeyCode == Enum.KeyCode.KeypadTwo then
@@ -2664,11 +2765,27 @@ end)
 
 EvolutionEvent.OnClientEvent:Connect(function(action, data)
 	if action == "EvolutionsList" then
-		-- Обновляем список доступных эволюций
-		local evolutions = data.Evolutions
-		ShowNotification("Доступно эволюций: " .. #evolutions)
-
-		-- Здесь можно обновить UI эволюции
+		-- Identity slice 3: refresh card progress; no spam toast
+		local evolutions = data and data.Evolutions or {}
+		local idx = selectedSpiritIndex or (PlayerData and PlayerData.ActiveSpiritIndex) or 1
+		local spirit = PlayerData and PlayerData.Spirits and PlayerData.Spirits[idx]
+		local canLocal = ApplyEvoProgressUI(spirit)
+		for _, row in ipairs(evolutions) do
+			if tonumber(row.SpiritIndex) == tonumber(idx) then
+				if row.CanEvolve == true then
+					evolveButtonEnabled = true
+					detailEvolveButton.BackgroundColor3 = Color3.fromRGB(255, 215, 0)
+					local lbl = detailEvolveButton:FindFirstChild("ButtonLabel")
+					if lbl then lbl.Text = "ЭВОЛЮЦИЯ" end
+				elseif row.CanEvolve == false and not canLocal then
+					evolveButtonEnabled = false
+					detailEvolveButton.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+					local lbl = detailEvolveButton:FindFirstChild("ButtonLabel")
+					if lbl then lbl.Text = "Ещё рано" end
+				end
+				break
+			end
+		end
 
 	elseif action == "EvolutionInfo" then
 		-- Показываем информацию об эволюции
@@ -2701,26 +2818,42 @@ EvolutionEvent.OnClientEvent:Connect(function(action, data)
 		end
 
 	elseif action == "EvolutionSuccess" then
-		-- Эволюция успешна
+		-- Identity slice 2: toast Old→New, slots + reopen card with real skills
 		local newSpirit = data.NewSpirit
-		ShowNotification("Дух эволюционировал в " .. newSpirit.Name .. "!")
-		spiritDetailFrame.Visible = false
+		local idx = tonumber(data.SpiritIndex) or selectedSpiritIndex or (PlayerData and PlayerData.ActiveSpiritIndex) or 1
+		if newSpirit and PlayerData then
+			PlayerData.Spirits = PlayerData.Spirits or {}
+			PlayerData.Spirits[idx] = newSpirit
+			PlayerData.CurrentSpiritId = newSpirit.Id
+		end
+		local newName = tostring(newSpirit and newSpirit.Name or "новую форму")
+		local oldName = data.OldName and tostring(data.OldName) or nil
+		local msg
+		if oldName and oldName ~= "" and oldName ~= newName then
+			msg = oldName .. " → " .. newName .. "!"
+		else
+			msg = "Дух эволюционировал в " .. newName .. "!"
+		end
+		if data.UnlockedSkill then
+			msg = msg .. " Удар: " .. tostring(data.UnlockedSkill)
+		end
+		ShowNotification(msg, 4.5)
 
-		-- Обновляем слоты духов
-		if PlayerData.Spirits then
+		if PlayerData and PlayerData.Spirits then
 			local spiritDisplayData = {}
 			for i, spirit in ipairs(PlayerData.Spirits) do
 				local spiritInfo = GetSpiritInfo(spirit.Id)
-				if spiritInfo then
-						table.insert(spiritDisplayData, {
-						Id = spirit.Id,
-						Name = spiritInfo.Name,
-						Level = spirit.Level
-					})
-				end
+				local name = (spiritInfo and spiritInfo.Name) or spirit.Name or ("Дух " .. tostring(spirit.Id))
+				table.insert(spiritDisplayData, {
+					Id = spirit.Id,
+					Name = name,
+					Level = spirit.Level,
+				})
 			end
 			UpdateSpiritSlots(spiritDisplayData)
 		end
+		selectedSpiritIndex = idx
+		OpenSpiritDetail(idx)
 
 	elseif action == "EvolutionFailed" then
 		-- Эволюция не удалась

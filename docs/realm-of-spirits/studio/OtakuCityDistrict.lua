@@ -1,4 +1,4 @@
-﻿-- OtakuCityDistrict - anime hub plaza/alleys/north strip/approach
+-- OtakuCityDistrict - anime hub plaza/alleys/north strip/approach
 -- Layout: sidewalks clear; shops set back with open doorways + shallow interiors.
 -- Visual refs: Akihabara Electric Town (signage layers, spill light, LED) + stylized JP street packs.
 return function(api)
@@ -1102,13 +1102,9 @@ return function(api)
 				H = 16,
 				D = 24,
 			})
-			for i, ox in ipairs({ -22, -16, 16, 22 }) do
-				addLanternPole("PlazaLantern" .. i, Vector3.new(center.X + ox, 0, plazaZ + 8), Color3.fromRGB(255, 180, 220))
-			end
-			addBench("PlazaBenchL", Vector3.new(center.X - 16, 0, plazaZ + 7), 0)
-			addBench("PlazaBenchR", Vector3.new(center.X + 16, 0, plazaZ + 7), 0)
-			addBannerPole("PlazaBannerCatch", Vector3.new(center.X - 14, 0, plazaZ + 9), "CATCH", Color3.fromRGB(255, 120, 180))
-			addBannerPole("PlazaBannerBattle", Vector3.new(center.X + 14, 0, plazaZ + 9), "BATTLE", Color3.fromRGB(100, 180, 255))
+			-- PlazaLanterns у витрины Haven убраны
+			-- PlazaBench убраны
+			-- PlazaBanner CATCH/BATTLE убраны
 			addStandee(district, Vector3.new(center.X + 8, 3.2, center.Z - half - 2.5))
 		end
 
@@ -1214,7 +1210,7 @@ return function(api)
 			end
 			addBannerPole("NorthBannerEvolve", Vector3.new(center.X - 6, 0, streetZ + 32), "EVOLVE", Color3.fromRGB(180, 120, 255))
 			addBannerPole("NorthBannerCollect", Vector3.new(center.X + 6, 0, streetZ + 32), "COLLECT", Color3.fromRGB(255, 200, 90))
-			addBench("NorthBench", Vector3.new(center.X, 0, streetZ + 10), 0)
+			-- NorthBench убран
 		end
 
 		-- ========== Interior density (extra manga shelves) ==========
@@ -1373,7 +1369,7 @@ return function(api)
 				local x = -25 + (cc.X + 20 - (-25)) * t
 				local z = 70 + (cc.Z - 20 - 70) * t
 				addBannerPole("ApproachBanner" .. i, Vector3.new(x - 6, 0, z), if i % 2 == 0 then "SPIRIT" else "OTAKU", Color3.fromRGB(255, 100 + i * 30, 180))
-				addLanternPole("ApproachLantern" .. i, Vector3.new(x + 6, 0, z - 2), Color3.fromRGB(255, 210, 150))
+				-- ApproachLantern removed
 			end
 		end
 	end

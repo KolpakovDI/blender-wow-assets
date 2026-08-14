@@ -50,7 +50,16 @@ end
 - Large scripts: `script_read` → agent-tools file → strip `LINE→` prefixes → write `docs/realm-of-spirits/studio/<Name>.lua`.
 - Always update `CHANGELOG.md` `[Unreleased]` per project rule.
 
+## Play / VirtualInput
+
+- Player hotkeys stay **F** (бой) / **1–3** (навыки) / **E** (лут, ловля).
+- Studio MCP `user_keyboard_input` **не шлёт** F / top-row 1–3 (CoreGUI bind). Это лимит инструмента, не баг игры.
+- **MCP e2e recipe:** бой = **V** (тихий алиас F в `ClientController`); навыки = **KeypadOne / KeypadTwo / KeypadThree** (уже в `UIController`).
+- Запасной путь: клик HUD (`BattleButton`, `Attack1–3`) или remotes.
+- Руками в Play по-прежнему F / 1 / 2.
+
 ## Do not
 
 - Invent exploits / attack remote places.
 - Leave unsaved place — tell user **Ctrl+S**.
+- Remap primary player F/1/2 away just for MCP; use V + Keypad aliases instead.

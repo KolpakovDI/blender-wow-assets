@@ -403,7 +403,10 @@ end
 
 function PlayerTradeSystem.Start()
 	tradeEvent.OnServerEvent:Connect(function(player, action, payload)
-		payload = payload or {}
+		if typeof(action) ~= "string" then
+			return
+		end
+		payload = type(payload) == "table" and payload or {}
 		if action == "Request" then
 			local targetId = tonumber(payload.TargetUserId)
 			local target = targetId and Players:GetPlayerByUserId(targetId)

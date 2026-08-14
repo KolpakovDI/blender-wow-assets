@@ -48,51 +48,51 @@ ZoneConfig.CounterPosition = Vector3.new(-30, 0, 0)
 ZoneConfig.QuestMasterPosition = Vector3.new(-12, 0, -38)
 ZoneConfig.QuestMasterHeightOffset = 0.25
 -- Пол Haven (ближе к центру Safe / магазину)
-ZoneConfig.SpawnPosition = Vector3.new(-25, 1.5, -6) -- Genkan (funnel: bell → Mika → Exit)
+ZoneConfig.SpawnPosition = Vector3.new(-2, 0, -38) -- снаружи у земли, 10 стад напротив Мики (FaceDir +X)
 ZoneConfig.BattleArenaPosition = Vector3.new(236, 0, 40)
 ZoneConfig.MistPondCenter = Vector3.new(30, 1, -880)
 
 -- Базовые духи разнесены ≥~80 studs (под будущие hunt-квесты по очереди)
 ZoneConfig.SpiritSpawnPositions = {
-	[1] = Vector3.new(70, 0, 30), -- EmberCourt / Fire
-	[2] = Vector3.new(20, 0, 160), -- FrostRidge / Ice
-	[3] = Vector3.new(155, 0, -80), -- ShadowHollow / Dark
-	[4] = Vector3.new(230, 0, 175), -- StormSpire / Lightning
-	[5] = Vector3.new(340, 0, 220), -- DawnMeadow / Light
-	[6] = Vector3.new(30, 2, -880), -- MistPond / coastal sea / Water
-	[7] = Vector3.new(-80, 0, -120), -- StoneBasin / Earth
-	[8] = Vector3.new(175, 0, 50), -- AshGarden / Fire ash
-	[9] = Vector3.new(-140, 0, 180), -- GaleCliff / Wind
-	[10] = Vector3.new(50, 0, -200), -- MossGlade / Nature
-	[11] = Vector3.new(-220, 0, -160), -- Moonwell / Moon
-	[12] = Vector3.new(280, 0, -160), -- VenomHollow / Poison
-	-- [13] Sand deprecated (4×4 canon)
-	[14] = Vector3.new(450, 0, 200), -- IronWastes / Metal
-	-- [15] Crystal deprecated (4×4 canon)
-	[16] = Vector3.new(590, 0, 240), -- MagmaFissure / Magma
-	[17] = Vector3.new(660, 0, 200), -- FogBasin / Mist
-	[18] = Vector3.new(-200, 0, 220), -- SkyRidge / Sky
+	[11] = Vector3.new(70, 0, 30), -- EmberCourt / Fire
+	[42] = Vector3.new(20, 0, 160), -- FrostRidge / Ice
+	[33] = Vector3.new(155, 0, -80), -- ShadowHollow / Dark
+	[32] = Vector3.new(230, 0, 175), -- StormSpire / Lightning
+	[13] = Vector3.new(340, 0, 220), -- DawnMeadow / Light
+	[41] = Vector3.new(30, 2, -880), -- MistPond / coastal sea / Water
+	[21] = Vector3.new(-80, 0, -120), -- StoneBasin / Earth
+	[12] = Vector3.new(175, 0, 50), -- AshGarden / Fire ash
+	[31] = Vector3.new(-140, 0, 180), -- GaleCliff / Wind
+	[22] = Vector3.new(50, 0, -200), -- MossGlade / Nature
+	[43] = Vector3.new(-220, 0, -160), -- Moonwell / Moon
+	[24] = Vector3.new(280, 0, -160), -- VenomHollow / Poison
+	-- [25] Sand deprecated (4×4 canon)
+	[23] = Vector3.new(450, 0, 200), -- IronWastes / Metal
+	-- [26] Crystal deprecated (4×4 canon)
+	[14] = Vector3.new(590, 0, 240), -- MagmaFissure / Magma
+	[44] = Vector3.new(660, 0, 200), -- FogBasin / Mist
+	[34] = Vector3.new(-200, 0, 220), -- SkyRidge / Sky
 }
 
 -- Метаданные для будущей цепочки «ловить по очереди»
 ZoneConfig.SpiritHabitats = {
-	[1] = {ZoneKey = "Combat", Label = "Угольный двор", HuntOrder = 1, Element = "Fire"},
-	[2] = {ZoneKey = "FrostRidge", Label = "Морозный хребет", HuntOrder = 2, Element = "Ice"},
-	[6] = {ZoneKey = "MistPond", Label = "Прибрежное море", HuntOrder = 3, Element = "Water"},
-	[3] = {ZoneKey = "ShadowHollow", Label = "Теневая лощина", HuntOrder = 4, Element = "Dark"},
-	[4] = {ZoneKey = "StormSpire", Label = "Грозовой шпиль", HuntOrder = 5, Element = "Lightning"},
-	[5] = {ZoneKey = "DawnMeadow", Label = "Луг рассвета", HuntOrder = 6, Element = "Light"},
-	[7] = {ZoneKey = "StoneBasin", Label = "Каменный бассейн", HuntOrder = 7, Element = "Earth"},
-	[8] = {ZoneKey = "AshGarden", Label = "Пепельный сад", HuntOrder = 8, Element = "Fire"},
-	[9] = {ZoneKey = "GaleCliff", Label = "Ветряной утёс", HuntOrder = 9, Element = "Wind"},
-	[10] = {ZoneKey = "MossGlade", Label = "Моховая поляна", HuntOrder = 10, Element = "Nature"},
-	[11] = {ZoneKey = "Moonwell", Label = "Лунный колодец", HuntOrder = 11, Element = "Moon"},
-	[12] = {ZoneKey = "VenomHollow", Label = "Ядовитое ущелье", HuntOrder = 12, Element = "Poison"},
+	[11] = {ZoneKey = "Combat", Label = "Угольный двор", HuntOrder = 1, Element = "Fire"},
+	[42] = {ZoneKey = "FrostRidge", Label = "Морозный хребет", HuntOrder = 2, Element = "Ice"},
+	[41] = {ZoneKey = "MistPond", Label = "Прибрежное море", HuntOrder = 3, Element = "Water"},
+	[33] = {ZoneKey = "ShadowHollow", Label = "Теневая лощина", HuntOrder = 4, Element = "Dark"},
+	[32] = {ZoneKey = "StormSpire", Label = "Грозовой шпиль", HuntOrder = 5, Element = "Lightning"},
+	[13] = {ZoneKey = "DawnMeadow", Label = "Луг рассвета", HuntOrder = 6, Element = "Light"},
+	[21] = {ZoneKey = "StoneBasin", Label = "Каменный бассейн", HuntOrder = 7, Element = "Earth"},
+	[12] = {ZoneKey = "AshGarden", Label = "Пепельный сад", HuntOrder = 8, Element = "Fire"},
+	[31] = {ZoneKey = "GaleCliff", Label = "Ветряной утёс", HuntOrder = 9, Element = "Wind"},
+	[22] = {ZoneKey = "MossGlade", Label = "Моховая поляна", HuntOrder = 10, Element = "Nature"},
+	[43] = {ZoneKey = "Moonwell", Label = "Лунный колодец", HuntOrder = 11, Element = "Moon"},
+	[24] = {ZoneKey = "VenomHollow", Label = "Ядовитое ущелье", HuntOrder = 12, Element = "Poison"},
 	-- Sand #13 / Crystal #15 soft-deprecated from 4×4 canon spawn
-	[14] = {ZoneKey = "IronWastes", Label = "Железные пустоши", HuntOrder = 14, Element = "Metal"},
-	[16] = {ZoneKey = "MagmaFissure", Label = "Лавовый разлом", HuntOrder = 16, Element = "Magma"},
-	[17] = {ZoneKey = "FogBasin", Label = "Туманная низина", HuntOrder = 17, Element = "Mist"},
-	[18] = {ZoneKey = "SkyRidge", Label = "Небесный хребет", HuntOrder = 18, Element = "Sky"},
+	[23] = {ZoneKey = "IronWastes", Label = "Железные пустоши", HuntOrder = 14, Element = "Metal"},
+	[14] = {ZoneKey = "MagmaFissure", Label = "Лавовый разлом", HuntOrder = 16, Element = "Magma"},
+	[44] = {ZoneKey = "FogBasin", Label = "Туманная низина", HuntOrder = 17, Element = "Mist"},
+	[34] = {ZoneKey = "SkyRidge", Label = "Небесный хребет", HuntOrder = 18, Element = "Sky"},
 }
 
 function ZoneConfig.GetSpiritSpawnPositions()

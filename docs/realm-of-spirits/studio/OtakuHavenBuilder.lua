@@ -122,7 +122,7 @@ local function addNeonSign(parent, position)
 	local light = Instance.new("PointLight")
 	light.Color = Color3.fromRGB(255, 120, 200)
 	light.Range = 18
-	light.Brightness = 2
+	light.Brightness = 1.1
 	light.Parent = board
 
 	local gui = Instance.new("SurfaceGui")
@@ -140,7 +140,7 @@ local function addNeonSign(parent, position)
 	task.spawn(function()
 		while board.Parent do
 			local t = TweenService:Create(light, TweenInfo.new(0.35, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
-				Brightness = 1.2 + math.random() * 1.5,
+				Brightness = 0.7 + math.random() * 0.7,
 			})
 			t:Play()
 			task.wait(0.4 + math.random() * 0.3)
@@ -160,7 +160,7 @@ local function addLEDDisplay(parent, position, text)
 	})
 	local pl = Instance.new("PointLight")
 	pl.Color = Color3.fromRGB(80, 200, 255)
-	pl.Brightness = 1.5
+	pl.Brightness = 0.75
 	pl.Range = 8
 	pl.Parent = part
 
@@ -177,7 +177,7 @@ local function addLEDDisplay(parent, position, text)
 
 	task.spawn(function()
 		while part.Parent do
-			pl.Brightness = 1 + math.random() * 1.2
+			pl.Brightness = 0.5 + math.random() * 0.5
 			task.wait(0.15 + math.random() * 0.2)
 		end
 	end)
@@ -224,6 +224,7 @@ local function addGacha(parent, position)
 	bb.Size = UDim2.new(0, 180, 0, 40)
 	bb.StudsOffset = Vector3.new(0, 3.2, 0)
 	bb.AlwaysOnTop = true
+	bb.Enabled = false
 	bb.Parent = g
 	local label = Instance.new("TextLabel")
 	label.Name = "FomoLabel"
@@ -271,6 +272,7 @@ local function addFittingRoom(parent, position)
 	bb.Size = UDim2.new(0, 280, 0, 56)
 	bb.StudsOffset = Vector3.new(0, 0.2, 0)
 	bb.AlwaysOnTop = true
+	bb.Enabled = false
 	bb.Parent = sign
 	local label = Instance.new("TextLabel")
 	label.Size = UDim2.fromScale(1, 1)
@@ -377,6 +379,7 @@ local function addMangaBuff(parent, position)
 	bb.StudsOffset = Vector3.new(0, 5.2, 0)
 	bb.AlwaysOnTop = true
 	bb.MaxDistance = 60
+	bb.Enabled = false
 	bb.Parent = shelf
 	local hint = Instance.new("TextLabel")
 	hint.Size = UDim2.fromScale(1, 1)
@@ -391,27 +394,6 @@ local function addMangaBuff(parent, position)
 	local hc = Instance.new("UICorner")
 	hc.CornerRadius = UDim.new(0, 8)
 	hc.Parent = hint
-
-	local mat = bookPart({
-		Name = "MangaFloorArrow",
-		Size = Vector3.new(3.5, 0.12, 3.5),
-		Position = Vector3.new(position.X, 1.08, position.Z - 2.5),
-		Color = Color3.fromRGB(160, 80, 220),
-		Material = Enum.Material.Neon,
-		CanCollide = false,
-		Parent = model,
-	})
-	local matGui = Instance.new("SurfaceGui")
-	matGui.Face = Enum.NormalId.Top
-	matGui.Parent = mat
-	local matLbl = Instance.new("TextLabel")
-	matLbl.Size = UDim2.fromScale(1, 1)
-	matLbl.BackgroundTransparency = 1
-	matLbl.Text = "МАНГА"
-	matLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
-	matLbl.TextScaled = true
-	matLbl.Font = Enum.Font.GothamBold
-	matLbl.Parent = matGui
 
 	local prompt = Instance.new("ProximityPrompt")
 	prompt.ObjectText = "Манга «Путь Меча»"
@@ -546,19 +528,32 @@ local function addSlidingGlassDoor(parent, opts)
 	click.Parent = sensor
 
 	if billboardText then
+		local showBillboard = opts.ShowBillboard
+		if showBillboard == nil then
+			showBillboard = (modelName == "ShopExit")
+		end
 		local sign = Instance.new("BillboardGui")
-		sign.Size = UDim2.new(0, 200, 0, 40)
-		sign.StudsOffset = Vector3.new(0, 5.5, 0)
-		sign.AlwaysOnTop = true
+		sign.Name = "ExitWayfindBillboard"
+		sign.Size = UDim2.new(0, 280, 0, 56)
+		sign.StudsOffset = Vector3.new(0, 6.2, 0)
+		sign.MaxDistance = 140
+		sign.AlwaysOnTop = showBillboard == true
+		sign.Enabled = showBillboard == true
+		sign:SetAttribute("HubWayfind", showBillboard == true)
+		sign:SetAttribute("KeepVisible", showBillboard == true)
 		sign.Parent = sensor
 		local lbl = Instance.new("TextLabel")
 		lbl.Size = UDim2.fromScale(1, 1)
-		lbl.BackgroundTransparency = 1
+		lbl.BackgroundColor3 = Color3.fromRGB(30, 22, 40)
+		lbl.BackgroundTransparency = 0.25
 		lbl.Text = billboardText
 		lbl.TextColor3 = Color3.fromRGB(255, 220, 100)
 		lbl.TextScaled = true
 		lbl.Font = Enum.Font.GothamBold
 		lbl.Parent = sign
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(0, 8)
+		corner.Parent = lbl
 	end
 
 	local isOpen = false
@@ -1074,7 +1069,7 @@ local function addUpperFloorRoofAndBalcony(haven, center, half, floor1H)
 	local stairs = Instance.new("Model")
 	stairs.Name = "AnimeStairs"
 	stairs.Parent = upper
-	local steps = 14
+	local steps = math.max(14, math.ceil(floor2Y / 0.78))
 	local stepH = floor2Y / steps
 	local stepD = 1.35
 	local stairX = center.X - half + 5
@@ -1303,76 +1298,16 @@ local function addAtmosphereDecor(decor, haven, center, half, wallH)
 				bead.Shape = Enum.PartType.Ball
 				local pl = Instance.new("PointLight")
 				pl.Color = col
-				pl.Brightness = 0.18
+				pl.Brightness = 0.1
 				pl.Range = 3.5
 				pl.Parent = bead
 			end
 		end
 	end
 
-	-- бумажные фонари у кассы / Мики
-	do
-		local base = ZoneConfig.CounterPosition + Vector3.new(0, 6.2, -1.5)
-		for i, ox in ipairs({ -3.5, 3.5 }) do
-			local lantern = makePart({
-				Name = "PaperLantern" .. i,
-				Size = Vector3.new(1.4, 1.8, 1.4),
-				Position = base + Vector3.new(ox, 0, 0),
-				Color = Color3.fromRGB(255, 170, 90),
-				Material = Enum.Material.SmoothPlastic,
-				CanCollide = false,
-				Parent = folder,
-			})
-			local pl = Instance.new("PointLight")
-			pl.Color = Color3.fromRGB(255, 180, 100)
-			pl.Brightness = 0.55
-			pl.Range = 8
-			pl.Parent = lantern
-			makePart({
-				Name = "LanternCord",
-				Size = Vector3.new(0.08, 1.2, 0.08),
-				Position = lantern.Position + Vector3.new(0, 1.4, 0),
-				Color = Color3.fromRGB(80, 60, 50),
-				CanCollide = false,
-				Parent = folder,
-			})
-		end
-	end
+	-- PaperLanterns у двери убраны
 
-	-- тканевые баннеры на боковых стенах
-	do
-		local texts = { "CATCH", "BATTLE", "EVOLVE", "COLLECT" }
-		local colors = {
-			Color3.fromRGB(255, 120, 180),
-			Color3.fromRGB(100, 180, 255),
-			Color3.fromRGB(180, 120, 255),
-			Color3.fromRGB(255, 200, 90),
-		}
-		for i = 1, 4 do
-			local side = if i <= 2 then -1 else 1
-			local z = if (i % 2 == 1) then -10 else 12
-			local banner = makePart({
-				Name = "ClothBanner" .. i,
-				Size = Vector3.new(0.12, 4.5, 2.2),
-				Position = center + Vector3.new(side * (half - 0.7), 5.5, z),
-				Color = colors[i],
-				Material = Enum.Material.Fabric,
-				CanCollide = false,
-				Parent = folder,
-			})
-			local gui = Instance.new("SurfaceGui")
-			gui.Face = if side < 0 then Enum.NormalId.Right else Enum.NormalId.Left
-			gui.Parent = banner
-			local lbl = Instance.new("TextLabel")
-			lbl.Size = UDim2.fromScale(1, 1)
-			lbl.BackgroundTransparency = 1
-			lbl.Text = texts[i]
-			lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
-			lbl.TextScaled = true
-			lbl.Font = Enum.Font.GothamBold
-			lbl.Parent = gui
-		end
-	end
+	-- ClothBanner CATCH/BATTLE/EVOLVE/COLLECT убраны
 
 	-- доп. постеры + standee у входа
 	addPoster(folder, center + Vector3.new(-17, 5, 8), Color3.fromRGB(255, 160, 80))
@@ -1394,8 +1329,8 @@ local function addAtmosphereDecor(decor, haven, center, half, wallH)
 			Name = name .. "_Foliage",
 			Size = Vector3.new(2.2, 2.4, 2.2),
 			Position = pos + Vector3.new(0, 1.6, 0),
-			Color = Color3.fromRGB(60, 160, 90),
-			Material = Enum.Material.Grass,
+			Color = Color3.fromRGB(55, 140, 70),
+			Material = Enum.Material.SmoothPlastic, -- avoid Grass Part shimmer near Genkan
 			CanCollide = false,
 			Parent = folder,
 		})
@@ -1425,37 +1360,13 @@ local function addAtmosphereDecor(decor, haven, center, half, wallH)
 		local spot = Instance.new("SpotLight")
 		spot.Face = Enum.NormalId.Bottom
 		spot.Color = Color3.fromRGB(255, 230, 210)
-		spot.Brightness = 1.2
-		spot.Range = 28
+		spot.Brightness = 0.55
+		spot.Range = 24
 		spot.Angle = 70
 		spot.Parent = fixture
 	end
 
-	-- уличные фонарики перед фасадом (социальный хаб / «машины у входа» — маркер парковки)
-	for i, ox in ipairs({ -14, -5, 5, 14 }) do
-		local post = makePart({
-			Name = "PathLantern" .. i,
-			Size = Vector3.new(0.35, 4.5, 0.35),
-			Position = center + Vector3.new(ox, 3.2, -half - 4),
-			Color = Color3.fromRGB(50, 50, 60),
-			Material = Enum.Material.Metal,
-			Parent = folder,
-		})
-		local lamp = makePart({
-			Name = "PathLamp" .. i,
-			Size = Vector3.new(1.1, 1.1, 1.1),
-			Position = post.Position + Vector3.new(0, 2.6, 0),
-			Color = Color3.fromRGB(255, 220, 140),
-			Material = Enum.Material.Neon,
-			CanCollide = false,
-			Parent = folder,
-		})
-		local pl = Instance.new("PointLight")
-		pl.Color = Color3.fromRGB(255, 210, 150)
-		pl.Brightness = 0.4
-		pl.Range = 9
-		pl.Parent = lamp
-	end
+	-- PathLanterns removed
 
 	-- мягкий «парковочный» плейсхолдер (соц. статус) — детальные машины в CityDistrict
 	for i, ox in ipairs({ -18, 18 }) do
@@ -1567,7 +1478,7 @@ function OtakuHavenBuilder.Build()
 	local floorY = 0.5
 	local floorSize = 76
 	local half = floorSize / 2
-	local wallH, wallT = 11, 1
+	local wallH, wallT = 12, 1
 
 	makePart({
 		Name = "Floor",
@@ -1671,9 +1582,7 @@ function OtakuHavenBuilder.Build()
 	do
 		local qm = ZoneConfig.QuestMasterPosition or Vector3.new(-12, 0, -38)
 		local exitZ = (ZoneConfig.Zones and ZoneConfig.Zones.Exit and ZoneConfig.Zones.Exit.Center.Z) or (center.Z + half - 4)
-		addWayfindPad(decor, "WayMika", Vector3.new(qm.X - 4, 1.08, math.min(qm.Z + 12, center.Z - 8)), "МИКА →", Color3.fromRGB(255, 160, 200))
-		addWayfindPad(decor, "WayManga", Vector3.new(center.X - 6, 1.08, center.Z + 4), "МАНГА →", Color3.fromRGB(160, 80, 220))
-		addWayfindPad(decor, "WayExit", Vector3.new(center.X, 1.08, exitZ - 8), "EXIT →", Color3.fromRGB(255, 200, 100))
+		-- wayfind pads removed (no permanent world pointers)
 	end
 	addAtmosphereDecor(decor, haven, center, half, wallH)
 	ensureHavenMoodLighting()
@@ -1685,7 +1594,8 @@ function OtakuHavenBuilder.Build()
 		Slide = 5.2,
 		ModelName = "ShopExit",
 		ObjectText = "Выход в Акихабару",
-		BillboardText = "-> Akihabara",
+		BillboardText = "Выход -> Акихабара",
+		ShowBillboard = true,
 		LeftName = "ExitDoorLeft",
 		RightName = "ExitDoorRight",
 		SensorName = "ExitDoorSensor",
@@ -1733,7 +1643,12 @@ function OtakuHavenBuilder.Build()
 			end
 		end
 		if d:IsA("BillboardGui") then
-			d.AlwaysOnTop = false
+			if d:GetAttribute("HubWayfind") == true or d.Name == "ExitWayfindBillboard" then
+				d.AlwaysOnTop = true
+				d.Enabled = true
+			else
+				d.AlwaysOnTop = false
+			end
 		end
 	end
 
@@ -1946,10 +1861,10 @@ function OtakuHavenBuilder.BuildDirtRoadToArena()
 			})
 			part({
 				Name = "Shoulder",
-				Size = Vector3.new(1.4, THICK * 0.45, segLen),
-				CFrame = cf * CFrame.new(side * (halfAsphalt + 0.45 + SIDEWALK_W + 0.8), -0.05, 0),
+				Size = Vector3.new(1.45, THICK * 0.45, segLen),
+				CFrame = cf * CFrame.new(side * (halfAsphalt + 0.45 + SIDEWALK_W + 0.8), 0.05, 0),
 				Color = GRASS,
-				Material = Enum.Material.Grass,
+				Material = Enum.Material.Ground, -- Ground: green look without Grass Part shimmer
 				CanCollide = false,
 			})
 		end
@@ -1960,37 +1875,7 @@ function OtakuHavenBuilder.BuildDirtRoadToArena()
 	part({ Name = "HavenCap", Size = Vector3.new(ASPHALT_W + SIDEWALK_W * 2, THICK, 7), Position = Vector3.new(-25, yHaven, 70), Color = ASPHALT })
 	part({ Name = "ArenaCap", Size = Vector3.new(ASPHALT_W + SIDEWALK_W * 2, THICK, 8), Position = Vector3.new(116, yArena, 40), Color = ASPHALT })
 
-	-- street lamps along sidewalks (anime night-path feel)
-	local lampEvery = 18
-	local nLamps = math.max(4, math.floor(totalLen / lampEvery))
-	for i = 0, nLamps do
-		local t = i / nLamps
-		local pos, dir = samplePath(t)
-		local side = if (i % 2 == 0) then 1 else -1
-		local right = Vector3.new(-dir.Z, 0, dir.X)
-		local base = pos + right * side * (halfAsphalt + SIDEWALK_W * 0.55)
-		local post = part({
-			Name = "StreetPost",
-			Size = Vector3.new(0.32, 5.2, 0.32),
-			Position = base + Vector3.new(0, 2.4, 0),
-			Color = Color3.fromRGB(45, 48, 58),
-			Material = Enum.Material.Metal,
-			CanCollide = false,
-		})
-		local lamp = part({
-			Name = "StreetLamp",
-			Size = Vector3.new(1.05, 1.05, 1.05),
-			Position = post.Position + Vector3.new(0, 2.85, 0),
-			Color = Color3.fromRGB(255, 220, 150),
-			Material = Enum.Material.Neon,
-			CanCollide = false,
-		})
-		local pl = Instance.new("PointLight")
-		pl.Color = Color3.fromRGB(255, 210, 155)
-		pl.Brightness = 0.35
-		pl.Range = 14
-		pl.Parent = lamp
-	end
+	-- StreetLamps along Haven road removed
 
 	local function waySign(name, t, label)
 		local pos, dir = samplePath(t)

@@ -46,6 +46,10 @@ end
 
 local function showEmotion(key, duration)
 	ensureLive2D()
+	-- Live2D billboard disabled; keep callers safe (Joy/Talk/Point etc.)
+	if not liveGui or not livePanel or not liveTitle then
+		return
+	end
 	local emo = EMOTIONS[key] or EMOTIONS.Idle
 	emotionToken += 1
 	local token = emotionToken
@@ -62,6 +66,7 @@ local function showEmotion(key, duration)
 	}):Play()
 	task.delay(duration or 2.2, function()
 		if token ~= emotionToken then return end
+		if not liveGui or not liveTitle or not livePanel then return end
 		local idle = EMOTIONS.Idle
 		liveTitle.Text = idle.title
 		applyFaceStyle(idle)
@@ -308,7 +313,10 @@ local function ensurePrompt()
 	anchor.CFrame = CFrame.new(ax, headTop + 0.85, az)
 
 	local hint = anchor:FindFirstChild("TalkHint")
-	if hint then hint:Destroy() end
+	-- keep TalkHint (КВЕСТ →); do not destroy
+	if not hint then
+		hint = nil
+	end
 
 	local prompt = anchor:FindFirstChild("QuestPrompt")
 	if not prompt then

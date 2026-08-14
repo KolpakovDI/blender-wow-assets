@@ -6,6 +6,43 @@
 
 ## [Unreleased]
 
+### Week wrap + Sanctum LOOK (2026-08-22)
+- Неделя 19–25.08: E4 / Explore W3 / UI A–D / Identity 1–3 закрыты по коду; след. неделя = **Sanctum/Resonant LOOK**
+- После синтеза: toast имя + удар слота 1; status имя + `vid #ParentIds[1]` + 3 навыка (`*` на 1); ростер `[R]`; preview ядро-родитель
+- `KamiSanctumService.sync` пишет `ActiveSpiritName`; починен сломанный `SynthesizeResult` (обрезанный патч)
+- Smoke MCP Play **PASS**: `Ками-Глыба vid #11 | Жаровня * | …`; ростер `[R]`; `ActiveSpiritName` — `SESSION-2026-08-22b-sanctum-look-smoke.md`
+- E1 live-like **3 цикла PASS** в SoT (Q7 манга E → Q1 catch → бой F+1/2 → сдача); цикл 3 = UI/E + HUD-клики (MCP VirtualInput не шлёт F/1/2 — лимит Studio, не баг биндов); ×N руками нет — `SESSION-2026-08-14-e1-e2e.md`
+- MCP hotkeys: бой **V** (=F, silent alias в `ClientController`); навыки **Keypad1–3** (уже в `UIController`); игрок по-прежнему F/1/2
+
+### Luau / remote hygiene (2026-08-22)
+- Серверные remotes: `typeof(action)`, `tonumber` id, лов/бой требуют живую цель + range; слот атаки clamp 1–3
+- `BattleEvent` Attack больше не `task.wait` в хендлере (нет yield-race)
+- `EvolutionSystem.CanEvolve` nil-safe Inventory/Stats; Evolve индекс в пределах roster
+- `BattleOrchestrator.CanUseSkill` отклоняет нечисловой skillIndex
+- Бой берёт `playerSpirit.SkillIds` (не только каталог шаблона)
+- `SESSION-2026-08-22-luau-hygiene.md`
+
+### Checkpoint 2026-08-21
+- Identity slice **1–3 PASS** (удар слот 1, LOOK UI/showcase, evo-progress card); Explore W3 + UI A–D + HUD уже PASS
+- Week wrap закрыт 22.08; тема след. недели — Sanctum LOOK — `SESSION-2026-08-22-week-wrap.md`
+- Оценка: P0/P1 soft polish ~недели; P2 (PvP/гильдии) — месяцы; AI mesh online deferred
+
+### Identity slice 3 — evo progress card (2026-08-21c)
+- Карточка духа: строка прогресса `→ форма · удар` + Ур./Bond/Побед/кристаллы; Evolve только при полном can
+- `EvolutionsList` тихо обновляет UI (без toast «Доступно эволюций: N»)
+- Edit verify rule 11→Тигр/шторм **PASS** — `SESSION-2026-08-21c-identity-slice-3.md`
+
+### Identity slice 2 — LOOK sync (2026-08-21b)
+- Карточка духа: навыки из каталога/`SkillIds` (не placeholders); после Evolve — toast **Old→New** + reopen card; слот 1011 emoji 🐯
+- Showcase: entry Id следует эволюции → `RoS_ShowcaseOnSpiritEvolved` / carousel mesh `SpiritTemplate1011`
+- Edit verify skills+mesh+hooks **PASS** — `SESSION-2026-08-21b-identity-slice-2.md`
+
+### Identity slice 1 (2026-08-21)
+- Эволюция меняет **вид** (Id/template) и **удар слота 1**: evolved `SkillIds` / `SpiritSkills` — signature skill первым (1011 `{3,1,2}` → «Огненный шторм»)
+- `BuildPlayerAbilities` берёт `playerSpirit.SkillIds`; Evolve обновляет `CurrentSpiritId` + `ActiveSpiritName`; UI `EvolutionSuccess` мержит дух сразу
+- `EvolutionSystem.UnlockedSkill` = skill слота 1; DevBoostIdentity → Bond≥3; EvolveSpiritBF синхронит Id/имя
+- Smoke PrepareEvo→Evolve: id 1011, slot1 «Огненный шторм», mesh SpiritTemplate1011 **PASS** — `SESSION-2026-08-21-identity-slice-1.md`
+
 ### Checkpoint 2026-08-20
 - UI A→D + HUD double-layer закрыты; цель завтра: **Identity** (эволюция = вид + удар) — `SESSION-2026-08-20-checkpoint.md`, `NEXT-SESSION.md`
 

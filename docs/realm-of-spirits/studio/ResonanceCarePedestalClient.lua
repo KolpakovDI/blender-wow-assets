@@ -1,49 +1,13 @@
--- ResonanceCarePedestalClient: pedestal E → same Care path as UI button
-local Players = game:GetService("Players")
+-- ResonanceCarePedestalClient: prompt is server-authoritative (ResonanceCareService).
+-- Do not FireServer Care with FromPedestal — that duplicated Care and allowed spoofing.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local ProximityPromptService = game:GetService("ProximityPromptService")
 
-local player = Players.LocalPlayer
 local realm = ReplicatedStorage:WaitForChild("RealmOfSpirits")
 local ResonanceEvent = realm:WaitForChild("ResonanceEvent")
 
-local lastCareAt = 0
-
-local function resolveSpiritIndex()
-	local idx = tonumber(player:GetAttribute("ActiveSpiritIndex"))
-	if idx and idx >= 1 then
-		return math.floor(idx)
-	end
-	return 1
-end
-
-local function requestPedestalCare(source)
-	local now = os.clock()
-	if now - lastCareAt < 0.75 then
-		return
-	end
-	lastCareAt = now
-	local idx = resolveSpiritIndex()
-	print("[CarePedestalClient]", source, "SpiritIndex=", idx)
-	ResonanceEvent:FireServer("Care", {
-		SpiritIndex = idx,
-		UseTreat = false,
-		FromPedestal = true,
-	})
-end
-
+-- Legacy no-op: server no longer sends RequestPedestalCare
 ResonanceEvent.OnClientEvent:Connect(function(action, _data)
 	if action == "RequestPedestalCare" then
-		requestPedestalCare("server-event")
+		print("[CarePedestalClient] ignored RequestPedestalCare (server handles Care)")
 	end
-end)
-
-ProximityPromptService.PromptTriggered:Connect(function(prompt, who)
-	if who ~= player then
-		return
-	end
-	if prompt.Name ~= "CarePrompt" then
-		return
-	end
-	requestPedestalCare("prompt")
 end)

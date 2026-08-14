@@ -10,7 +10,10 @@ alwaysApply: true
 - After Studio/gameplay edits, verify **client AND server** behavior (Local Server / console both sides).
 - Prefer project skills under `.cursor/skills/realm-*` over inventing ad-hoc process.
 - Gameplay/code changes → update `docs/realm-of-spirits/CHANGELOG.md` `[Unreleased]`.
-- Commit only when the user explicitly asks; never commit `.rbxl` or secrets.
+- **Always commit** meaningful repo changes after a coherent chunk of work (docs, skills, rules, studio Lua mirrors, scripts, CI). Do not wait for «закоммить».
+- Never commit `.rbxl`, secrets, `.tmp_extract/`, or other scratch/tmp dumps.
+- Prefer one focused commit per finished task; message style like existing checkpoints (`Checkpoint YYYY-MM-DD: …`).
+- Do **not** `git push` unless the user asks.
 
 ## Permissions / Allow
 

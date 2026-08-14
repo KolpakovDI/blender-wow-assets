@@ -17,7 +17,7 @@ description: >-
 2. Append session bullets to `docs/realm-of-spirits/SESSION-YYYY-MM-DD.md` (create if needed).
 3. Sync changed Studio modules → `docs/realm-of-spirits/studio/`.
 4. Touch `CHANGELOG.md` `[Unreleased]` if gameplay/code changed.
-5. Commit **only if user asked** — stage only realm docs/skills related files; use one-shot `git -c user.name=... -c user.email=...` if identity missing (never `git config`).
+5. **Always commit** after a coherent checkpoint (docs/skills/rules/studio mirrors) — do not wait for the user to ask. Never commit `.rbxl`, secrets, or `.tmp_extract/`. Do not push unless asked.
 
 ## When resuming
 

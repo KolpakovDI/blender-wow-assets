@@ -3,11 +3,11 @@
 ## Project focus
 
 Roblox game **Realm of Spirits** (place: `RealmOfSpirits second.rbxl` under `C:\Mimo\RealmOfSpirits\`).  
-Git holds docs + Cursor infra + tooling; the `.rbxl` is **not** in git.
+Git holds docs + Cursor infra + tooling; the `.rbxl` is **not** in git. After meaningful repo edits, **commit** (never `.rbxl` / secrets / `.tmp_extract`); push only when asked.
 
 ## Start here every session
 
-1. Read [`docs/realm-of-spirits/NEXT-SESSION.md`](docs/realm-of-spirits/NEXT-SESSION.md)
+1. Read [`docs/realm-of-spirits/NEXT-SESSION.md`](docs/realm-of-spirits/NEXT-SESSION.md) — **current:** week wrap after Identity 1–3 PASS (`SESSION-2026-08-21-checkpoint.md`)
 2. Load skill **realm-orchestrator** (`.cursor/skills/realm-orchestrator/SKILL.md`)
 3. Confirm Studio MCP `user-Roblox_Studio` if place edits are needed
 

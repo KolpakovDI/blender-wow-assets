@@ -250,7 +250,7 @@ local function EnsureQuestMasterInteract(model)
 		corner.CornerRadius = UDim.new(0, 8)
 		corner.Parent = lbl
 	end
-	hint.Enabled = true
+	hint.Enabled = false
 
 	for _, desc in ipairs(model:GetDescendants()) do
 		if desc:IsA("ProximityPrompt") and not desc:IsDescendantOf(anchor) then
@@ -320,8 +320,13 @@ local function SetupSpawn()
 	spawn.Neutral = true
 	spawn.Duration = 0
 	spawn.Transparency = 1
-	-- Y = pad center so top sits ~1 stud above ground
-	spawn.Position = Vector3.new(pos.X, pos.Y + spawn.Size.Y * 0.5, pos.Z)
+	-- pad на земле: низ на top земли, центр = groundY + halfH
+	local bp = workspace:FindFirstChild("Baseplate")
+	local groundY = bp and (bp.Position.Y + bp.Size.Y * 0.5) or 0
+	local center = Vector3.new(pos.X, groundY + spawn.Size.Y * 0.5, pos.Z)
+	local mika = ZoneConfig.QuestMasterPosition or (center + Vector3.new(-10, 0, 0))
+	local lookAt = Vector3.new(mika.X, center.Y, mika.Z)
+	spawn.CFrame = CFrame.lookAt(center, lookAt)
 end
 
 local function SetupQuestMaster()
@@ -621,21 +626,6 @@ local function BuildSpiritHabitats()
 				Transparency = 0.35,
 			})
 			ring.Parent = model
-
-			local marker = part({
-				Name = "HabitatMarker",
-				Size = Vector3.new(2.2, 8, 2.2),
-				Position = Vector3.new(cfg.Center.X + 10, 4.2, cfg.Center.Z + 10),
-				Material = Enum.Material.Neon,
-				Color = h.Accent,
-				Transparency = 0.15,
-			})
-			marker.Parent = model
-			local light = Instance.new("PointLight")
-			light.Color = h.Accent
-			light.Brightness = 1.2
-			light.Range = 28
-			light.Parent = marker
 
 			model.Parent = folder
 		end

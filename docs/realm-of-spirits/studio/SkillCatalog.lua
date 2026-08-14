@@ -67,6 +67,15 @@ SkillCatalog.ById = {
 	[205] = {Id = 205, Name = "Лёгкость", Element = "Wind", Type = "Passive", Kind = "DefPct", Value = 0.04, Description = "+4% защита"},
 	[206] = {Id = 206, Name = "Прилив", Element = "Water", Type = "Passive", Kind = "AtkPct", Value = 0.04, Description = "+4% урон"},
 	[207] = {Id = 207, Name = "Зеркало вод", Element = "Water", Type = "Passive", Kind = "DefPct", Value = 0.06, Description = "+6% защита"},
+	-- Kami Sanctum Unique pool (Resonant weighted roll)
+	[300] = {Id = 300, Name = "Печать Ками", Element = "Fire", Type = "Attack", Damage = 48, Cost = 28, Cooldown = 6.5, Effect = {Type = "Burn", Value = 8, Duration = 3}, Unique = true},
+	[301] = {Id = 301, Name = "Зеркальный резонанс", Element = "Water", Type = "Attack", Damage = 42, Cost = 24, Cooldown = 5.5, Effect = {Type = "DebuffAttack", Value = 0.2, Duration = 3}, Unique = true},
+	[302] = {Id = 302, Name = "Корни синто", Element = "Earth", Type = "Attack", Damage = 45, Cost = 26, Cooldown = 6.0, Effect = {Type = "DebuffDefense", Value = 0.22, Duration = 3}, Unique = true},
+	[303] = {Id = 303, Name = "Небесный импульс", Element = "Wind", Type = "Attack", Damage = 40, Cost = 22, Cooldown = 5.0, Effect = {Type = "Stun", Duration = 1}, Unique = true},
+	[304] = {Id = 304, Name = "Исцеление святилища", Element = "Water", Type = "Heal", HealAmount = 55, Cost = 30, Cooldown = 8.0, Unique = true},
+	[305] = {Id = 305, Name = "Вспышка синтеза", Element = "Fire", Type = "Attack", Damage = 62, Cost = 36, Cooldown = 7.5, Effect = {Type = "Burn", Value = 12, Duration = 2}, Unique = true},
+	[306] = {Id = 306, Name = "Печать гармонии", Element = "Earth", Type = "Heal", HealAmount = 40, Cost = 22, Cooldown = 6.5, Unique = true},
+	[307] = {Id = 307, Name = "Разлом духа", Element = "Wind", Type = "Attack", Damage = 58, Cost = 34, Cooldown = 7.0, Effect = {Type = "DebuffDefense", Value = 0.28, Duration = 2}, Unique = true},
 }
 
 SkillCatalog.ByName = {}
@@ -74,44 +83,44 @@ for id, skill in pairs(SkillCatalog.ById) do
 	SkillCatalog.ByName[skill.Name] = skill
 end
 
--- Spirit unlock lists (slot order). Evolved forms get the storm skill as 3rd.
+-- Spirit unlock lists (slot order). Evolved forms: signature storm skill is slot 1 (Identity).
 SkillCatalog.SpiritSkills = {
-	[1] = {1, 2},
-	[2] = {11, 12},
-	[3] = {21, 22},
-	[4] = {31, 32},
-	[5] = {41, 42},
-	[6] = {51, 52},
-	[101] = {1, 2, 3},
-	[102] = {11, 12, 13},
-	[103] = {21, 22, 23},
-	[104] = {31, 32, 33},
-	[105] = {41, 42, 43},
-	[106] = {51, 52, 53},
-	[7] = {61, 62},
-	[107] = {61, 62, 63},
-	[8] = {71, 72},
-	[108] = {71, 72, 73},
-	[9] = {81, 82},
-	[109] = {81, 82, 83},
-	[10] = {91, 92},
-	[110] = {91, 92, 93},
-	[11] = {101, 102},
-	[111] = {101, 102, 103},
-	[12] = {111, 112},
-	[112] = {111, 112, 113},
-	[13] = {114, 115},
-	[113] = {114, 115, 116},
-	[14] = {117, 118},
-	[114] = {117, 118, 119},
-	[15] = {120, 121},
-	[115] = {120, 121, 122},
-	[16] = {123, 124},
-	[116] = {123, 124, 125},
-	[17] = {126, 127},
-	[117] = {126, 127, 128},
-	[18] = {129, 130},
-	[118] = {129, 130, 131},
+	[11] = {1, 2},
+	[42] = {11, 12},
+	[33] = {21, 22},
+	[32] = {31, 32},
+	[13] = {41, 42},
+	[41] = {51, 52},
+	[1011] = {3, 1, 2},
+	[1042] = {13, 11, 12},
+	[1033] = {23, 21, 22},
+	[1032] = {33, 31, 32},
+	[1013] = {43, 41, 42},
+	[1041] = {53, 51, 52},
+	[21] = {61, 62},
+	[1021] = {63, 61, 62},
+	[12] = {71, 72},
+	[1012] = {73, 71, 72},
+	[31] = {81, 82},
+	[1031] = {83, 81, 82},
+	[22] = {91, 92},
+	[1022] = {93, 91, 92},
+	[43] = {101, 102},
+	[1043] = {103, 101, 102},
+	[24] = {111, 112},
+	[1024] = {113, 111, 112},
+	[25] = {114, 115},
+	[1025] = {116, 114, 115},
+	[23] = {117, 118},
+	[1023] = {119, 117, 118},
+	[26] = {120, 121},
+	[1026] = {122, 120, 121},
+	[14] = {123, 124},
+	[1014] = {125, 123, 124},
+	[44] = {126, 127},
+	[1044] = {128, 126, 127},
+	[34] = {129, 130},
+	[1034] = {131, 129, 130},
 }
 
 -- 2 meta passives per Primary (not action-bar)
@@ -230,6 +239,26 @@ function SkillCatalog.Resolve(rawSkill, baseAttack)
 	}
 end
 
+local function ensureMinBattleSkills(skills, maxSlots, atk)
+	-- P0 agency: typical fights need ≥2 usable slots (hotkeys 1/2)
+	if maxSlots < 2 then
+		return skills
+	end
+	if #skills == 0 then
+		skills[1] = SkillCatalog.Resolve(nil, atk)
+	end
+	if #skills < 2 then
+		skills[2] = {
+			Name = "Духовный импульс",
+			Type = "Attack",
+			Damage = math.max(16, math.floor(atk * 1.25)),
+			Cost = 10,
+			Cooldown = 3.5,
+		}
+	end
+	return skills
+end
+
 function SkillCatalog.BuildAbilities(spiritIdOrInfo, maxSlots)
 	maxSlots = maxSlots or 3
 	local spiritId = spiritIdOrInfo
@@ -239,13 +268,28 @@ function SkillCatalog.BuildAbilities(spiritIdOrInfo, maxSlots)
 		spiritId = spiritInfo.Id
 	end
 	local atk = spiritInfo and spiritInfo.BaseStats and spiritInfo.BaseStats.Attack or 12
+	if spiritInfo and spiritInfo.BonusAttack then
+		atk = atk + (tonumber(spiritInfo.BonusAttack) or 0)
+	end
 	local skills = {}
+	-- Resonant / instance SkillIds take priority
+	if spiritInfo and type(spiritInfo.SkillIds) == "table" and #spiritInfo.SkillIds > 0 then
+		for i = 1, math.min(maxSlots, #spiritInfo.SkillIds) do
+			local sid = spiritInfo.SkillIds[i]
+			local resolved = SkillCatalog.Resolve(sid, atk)
+			if spiritInfo.UniqueSkill and spiritInfo.UniqueSkill.Id == sid then
+				resolved = spiritInfo.UniqueSkill
+			end
+			skills[i] = resolved
+		end
+		return ensureMinBattleSkills(skills, maxSlots, atk)
+	end
 	local unlocks = spiritId and SkillCatalog.SpiritSkills[spiritId]
 	if unlocks then
 		for i = 1, math.min(maxSlots, #unlocks) do
 			skills[i] = SkillCatalog.Resolve(unlocks[i], atk)
 		end
-		return skills
+		return ensureMinBattleSkills(skills, maxSlots, atk)
 	end
 	-- Fallback: inline Skills on spirit definition
 	if spiritInfo and spiritInfo.Skills then
@@ -253,10 +297,7 @@ function SkillCatalog.BuildAbilities(spiritIdOrInfo, maxSlots)
 			skills[i] = SkillCatalog.Resolve(spiritInfo.Skills[i], atk)
 		end
 	end
-	if #skills == 0 then
-		skills[1] = SkillCatalog.Resolve(nil, atk)
-	end
-	return skills
+	return ensureMinBattleSkills(skills, maxSlots, atk)
 end
 
 return SkillCatalog

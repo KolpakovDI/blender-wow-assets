@@ -112,8 +112,10 @@
 
 1. ~~P0 Core E2E~~ — OK.
 2. ~~P0 Hub~~ — OK.
-3. ~~P1 Identity~~ — OK (auto + manual Play 2026-07-15).
-4. ~~P1 Explore~~ — A/B/C PASS (funnel side 101 Play 2026-07-18: Accept→5× кристалл→трекер `?`→сдача).
-5. ~~P1 Social~~ — OK (fair-combat + Flex + gacha cosmetics + PlayerTrade SimulateSwap item/cosmetic unit PASS 2026-07-29); 2p Play optional.
+3. ~~P1 Identity~~ — OK (2026-07-15); **refresh 2026-08-21:** slice 1–3 PASS (slot-1 attack + LOOK UI/showcase + evo-progress card) — `SESSION-2026-08-21-checkpoint.md`.
+4. ~~P1 Explore~~ — A/B/C PASS; **W3 diversity PASS** (2026-08-20b).
+5. ~~P1 Social~~ — OK; **E4 live 2p PASS** (2026-08-19 user).
 6. ~~Element agency demo~~ — OK (battle ×1.5/×0.7 + tip/лог 2026-07-29).
 7. ~~Season polish~~ — OK (pity/DaysLeft/SoftBuffs/pool 101–115 2026-07-29).
+8. **Next:** буфер / по указанию ведущего; Sanctum LOOK **PASS**; E1 = 3 цикла PASS / CONDITIONAL ×N руками; AI mesh **deferred**; PvP не стартовать.
+9. **Буфер:** E1 live e2e ×N глазами всё ещё CONDITIONAL (не блокер продукта, но не «метрика ≥90% n≥10»).

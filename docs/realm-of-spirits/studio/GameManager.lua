@@ -121,18 +121,26 @@ do
 	end
 
 	ensureBF("EvolveSpiritBF").OnInvoke = function(userId, spiritIndex)
+		if not game:GetService("RunService"):IsStudio() then
+			return false, "studio only"
+		end
 		local data = dataStore:GetPlayerData(userId)
 		if not data then
 			return false, "no data"
 		end
-		local ok, msg = evolutionSystem:EvolveSpirit(spiritIndex, data)
+		local ok, result, meta = evolutionSystem:EvolveSpirit(spiritIndex, data)
 		if ok then
+			data.CurrentSpiritId = result.Id
+			local plr = game.Players:GetPlayerByUserId(userId)
+			if plr and (tonumber(data.ActiveSpiritIndex) or 1) == spiritIndex then
+				plr:SetAttribute("ActiveSpiritName", result.Name or "")
+			end
 			local DataEvent = realmFolder:FindFirstChild("DataSync")
-			if DataEvent then
-				DataEvent:FireClient(game.Players:GetPlayerByUserId(userId), "FullSync", data)
+			if DataEvent and plr then
+				DataEvent:FireClient(plr, "FullSync", data)
 			end
 		end
-		return ok, msg, data.Spirits[spiritIndex]
+		return ok, result, meta or data.Spirits[spiritIndex]
 	end
 
 	-- Studio MCP QA: grant catch + quest progress without RNG / interaction lock
@@ -1465,12 +1473,25 @@ end
 CatchSpiritEvent.OnServerEvent:Connect(function(player, spiritId, instanceId)
 	local data = GetPlayerData(player)
 	if not data then return end
+	spiritId = tonumber(spiritId)
+	if typeof(instanceId) ~= "string" then
+		instanceId = tostring(instanceId or "")
+	end
+	if not spiritId or instanceId == "" then
+		return
+	end
+	data.Inventory = data.Inventory or {}
+	data.Stats = data.Stats or {}
 
 	local spirit = GetSpirit(spiritId)
 	if not spirit then return end
 
 	local spiritModel = FindSpiritByInstanceId(instanceId)
-	if spiritModel then
+	if not spiritModel then
+		DataEvent:FireClient(player, "Error", {Message = "Цель не найдена"})
+		return
+	end
+	do
 		local sid = spiritModel:FindFirstChild("SpiritId")
 		if not sid or sid.Value ~= spiritId then return end
 		local ok, errMsg = ValidateSpiritTarget(player, spiritModel, 45)
@@ -1596,6 +1617,9 @@ end)
 
 -- Битва
 BattleEvent.OnServerEvent:Connect(function(player, action, data)
+	if typeof(action) ~= "string" then
+		return
+	end
 	if _G.PvPDuelHandleBattleAction and _G.PvPDuelHandleBattleAction(player, action, data) then
 		return
 	end
@@ -1607,7 +1631,8 @@ BattleEvent.OnServerEvent:Connect(function(player, action, data)
 			DataEvent:FireClient(player, "Error", {Message = "Сначала завершите дуэль"})
 			return
 		end
-		local enemyId = data and data.EnemyId
+		local enemyId = tonumber(data and data.EnemyId)
+		if not enemyId then return end
 		-- Проверяем, есть ли у игрока дух
 		local spirits = playerData.Spirits or {}
 		if #spirits == 0 then
@@ -1656,19 +1681,19 @@ BattleEvent.OnServerEvent:Connect(function(player, action, data)
 		local playerChar = player.Character
 		local playerPos = playerChar and playerChar.PrimaryPart and playerChar.PrimaryPart.Position or Vector3.new(0, 0, 0)
 		local enemyModel = FindSpiritByInstanceId(data and data.TargetInstanceId)
-		if enemyModel then
-			local ok, errMsg = ValidateSpiritTarget(player, enemyModel, 45)
-			if not ok then
-				DataEvent:FireClient(player, "Error", {Message = errMsg})
-				return
-			end
-			local sid = enemyModel:FindFirstChild("SpiritId")
-			if not sid or sid.Value ~= enemyId then
-				DataEvent:FireClient(player, "Error", {Message = "Неверная цель"})
-				return
-			end
-		else
-			enemyModel = FindSpiritModel(enemyId, playerPos)
+		if not enemyModel then
+			DataEvent:FireClient(player, "Error", {Message = "Цель не найдена"})
+			return
+		end
+		local ok, errMsg = ValidateSpiritTarget(player, enemyModel, 45)
+		if not ok then
+			DataEvent:FireClient(player, "Error", {Message = errMsg})
+			return
+		end
+		local sid = enemyModel:FindFirstChild("SpiritId")
+		if not sid or sid.Value ~= enemyId then
+			DataEvent:FireClient(player, "Error", {Message = "Неверная цель"})
+			return
 		end
 
 		local battleData = {
@@ -1686,7 +1711,13 @@ BattleEvent.OnServerEvent:Connect(function(player, action, data)
 			EnemyInfo = enemyInfo,
 			SpiritInfo = spiritInfo,
 			EnemyModel = enemyModel,
-			PlayerAbilities = BuildPlayerAbilities(spiritInfo),
+			PlayerAbilities = BuildPlayerAbilities({
+				Id = playerSpirit.Id,
+				BaseStats = spiritInfo.BaseStats,
+				BonusAttack = playerSpirit.BonusAttack,
+				SkillIds = playerSpirit.SkillIds or spiritInfo.SkillIds,
+				UniqueSkill = playerSpirit.UniqueSkill,
+			}),
 			PlayerCooldowns = {},
 			EnemyAbilities = GetEnemyAbilities(enemyInfo),
 			EnemyCooldowns = {},
@@ -1727,7 +1758,7 @@ BattleEvent.OnServerEvent:Connect(function(player, action, data)
 		local battle = activeBattles[player.UserId]
 		if not battle then return end
 
-		local skillIndex = data and data.SkillIndex or 1
+		local skillIndex = math.clamp(math.floor(tonumber(data and data.SkillIndex) or 1), 1, 3)
 		local playerData = GetPlayerData(player)
 		local dmgMul = playerData and BuffSystem.GetDamageMultiplier(playerData) or 1
 		local result = BattleOrchestrator.ExecutePlayerSkill(battle, skillIndex, {
@@ -1745,7 +1776,6 @@ BattleEvent.OnServerEvent:Connect(function(player, action, data)
 		if _G.ShowBattleBlade then
 			_G.ShowBattleBlade(player)
 		end
-		task.wait(0.18)
 		BattleEvent:FireClient(player, "PlayPlayerAttack", {Mode = "Battle", TargetPosition = targetPos})
 		if battle.EnemyModel and battle.EnemyModel.Parent then
 			PlaySpiritAttackAnimation(battle.EnemyModel, player.Character and player.Character.PrimaryPart and player.Character.PrimaryPart.Position)
@@ -1864,6 +1894,9 @@ end)
 -- Эволюция духов
 -- ============================================
 EvolutionEvent.OnServerEvent:Connect(function(player, action, data)
+	if typeof(action) ~= "string" then
+		return
+	end
 	local playerData = GetPlayerData(player)
 	if not playerData then return end
 
@@ -1873,10 +1906,36 @@ EvolutionEvent.OnServerEvent:Connect(function(player, action, data)
 
 	elseif action == "Evolve" then
 		local spiritIndex = math.floor(tonumber(data and data.SpiritIndex) or 1)
+		local spirits = playerData.Spirits or {}
+		if spiritIndex < 1 or spiritIndex > #spirits then
+			EvolutionEvent:FireClient(player, "EvolutionFailed", {Reason = "Дух не найден"})
+			return
+		end
+		local before = spirits[spiritIndex]
+		local oldId = before and before.Id
 		local success, result, meta = evolutionSystem:EvolveSpirit(spiritIndex, playerData)
 		if success then
+			playerData.CurrentSpiritId = result.Id
+			if (tonumber(playerData.ActiveSpiritIndex) or 1) == spiritIndex then
+				player:SetAttribute("ActiveSpiritName", result.Name or "")
+			end
+			-- Identity slice 2: showcase entry Id/Name follow evolve → mesh refresh
+			if type(playerData.Showcase) == "table" and oldId ~= nil then
+				for _, entry in pairs(playerData.Showcase) do
+					if type(entry) == "table" and tonumber(entry.Id) == tonumber(oldId) then
+						entry.Id = result.Id
+						entry.Name = result.Name or entry.Name
+						entry.Level = result.Level or entry.Level
+						entry.Bond = result.Bond or entry.Bond
+					end
+				end
+			end
+			if type(_G.RoS_ShowcaseOnSpiritEvolved) == "function" then
+				pcall(_G.RoS_ShowcaseOnSpiritEvolved, player, oldId, result)
+			end
 			EvolutionEvent:FireClient(player, "EvolutionSuccess", {
 				NewSpirit = result,
+				SpiritIndex = spiritIndex,
 				OldName = meta and meta.OldName,
 				UnlockedSkill = meta and meta.UnlockedSkill,
 			})
@@ -1925,6 +1984,7 @@ EvolutionEvent.OnServerEvent:Connect(function(player, action, data)
 		local spirit = playerData.Spirits and playerData.Spirits[1]
 		if not spirit then return end
 		spirit.Level = math.max(spirit.Level or 1, 10)
+		spirit.Bond = math.max(tonumber(spirit.Bond) or 0, 3)
 		playerData.Stats = playerData.Stats or {}
 		playerData.Stats.EnemiesDefeated = math.max(playerData.Stats.EnemiesDefeated or 0, 10)
 		playerData.Inventory = playerData.Inventory or {}

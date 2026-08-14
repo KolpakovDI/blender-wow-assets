@@ -16,6 +16,7 @@ local character = player.Character or player.CharacterAdded:Wait()
 
 local realmFolder = ReplicatedStorage:WaitForChild("RealmOfSpirits")
 local CatchSpiritEvent = realmFolder:WaitForChild("CatchSpirit")
+local ArenaPortalEvent = realmFolder:WaitForChild("ArenaPortal", 15)
 local BattleEvent = realmFolder:WaitForChild("Battle")
 local EvolveSpiritEvent = realmFolder:WaitForChild("EvolveSpirit")
 local QuestEvent = realmFolder:WaitForChild("Quest")
@@ -84,11 +85,15 @@ local function getSpiritPosition(spiritModel)
 end
 
 local function isWithinRange(spiritModel)
-	local char = character
-	if not char or not char.PrimaryPart or not spiritModel then
+	local char = player.Character or character
+	if not char or not spiritModel then
 		return false
 	end
-	return (char.PrimaryPart.Position - getSpiritPosition(spiritModel)).Magnitude <= MAX_TARGET_DISTANCE
+	local root = char.PrimaryPart or char:FindFirstChild("HumanoidRootPart")
+	if not root then
+		return false
+	end
+	return (root.Position - getSpiritPosition(spiritModel)).Magnitude <= MAX_TARGET_DISTANCE
 end
 
 local function isSpiritQuestRelevant(spiritId)
@@ -120,53 +125,164 @@ local function isSpiritQuestRelevant(spiritId)
 	return false, nil
 end
 
-local function updateQuestMarker(spiritModel)
-	if not spiritModel then return end
-	local spiritId = getSpiritId(spiritModel)
-	local relevant, questKind = isSpiritQuestRelevant(spiritId)
-	local marker = spiritModel:FindFirstChild("QuestTargetMarker")
-	if relevant then
-		if not marker then
-			marker = Instance.new("BillboardGui")
-			marker.Name = "QuestTargetMarker"
-			marker.Size = UDim2.new(0, 36, 0, 36)
-			marker.StudsOffset = Vector3.new(0, 3, 0)
-			marker.AlwaysOnTop = true
-			marker.MaxDistance = 120
-			if spiritModel.PrimaryPart then marker.Adornee = spiritModel.PrimaryPart else ensureSpiritPrimaryPart(spiritModel); if spiritModel.PrimaryPart then marker.Adornee = spiritModel.PrimaryPart end end
-			marker.Parent = spiritModel
-			local lbl = Instance.new("TextLabel")
-			lbl.Name = "Icon"
-			lbl.Size = UDim2.new(1, 0, 1, 0)
-			lbl.BackgroundTransparency = 1
-			lbl.Text = "?"
-			lbl.TextColor3 = Color3.fromRGB(255, 220, 80)
-			lbl.TextStrokeTransparency = 0.3
-			lbl.Font = Enum.Font.FredokaOne
-			lbl.TextScaled = true
-			lbl.Parent = marker
+-- Info billboards: hidden by default, flash 1.5s on mouse hover. No permanent markers/pointers.
+local HOVER_LABEL_SEC = 1.5
+local KEEP_VISIBLE_BB = {
+	EntranceTitle = true,
+	Emblem = true,
+	NeonLabel = true,
+	QuestIndicator = true,
+	ShowcaseLabel = true,
+	ShowcaseToast = true,
+	ShowcaseDisplay = true,
+	ExitWayfindBillboard = true,
+}
+local POINTER_INSTANCE_NAMES = {
+	QuestTargetMarker = true,
+	WayBillboard = true,
+	WayMika = true,
+	WayManga = true,
+	WayExit = true,
+	WaySpawnMika = true,
+	MangaFloorArrow = true,
+	HabitatMarker = true,
+}
+local hoverLabelToken = 0
+local lastHoverLabelKey = ""
+
+local function shouldManageWorldBillboard(bb)
+	if not bb:IsA("BillboardGui") then
+		return false
+	end
+	if KEEP_VISIBLE_BB[bb.Name] or bb:GetAttribute("KeepVisible") == true or bb:GetAttribute("HubWayfind") == true or bb.Name == "QuestIndicator" then
+		return false
+	end
+	local p = bb.Parent
+	if not p then
+		return false
+	end
+	if p.Name == "DamagePopup" or p.Name == "CatchTrapFX" then
+		return false
+	end
+	if p:FindFirstAncestor("CatchTrapFX") then
+		return false
+	end
+	if bb:FindFirstAncestorOfClass("PlayerGui") then
+		return false
+	end
+	return true
+end
+
+local function stripPointersAndMarkers(root)
+	root = root or workspace
+	for _, d in ipairs(root:GetDescendants()) do
+		if POINTER_INSTANCE_NAMES[d.Name] then
+			d:Destroy()
 		end
-		local icon = marker:FindFirstChild("Icon")
-		if icon then
-			icon.Text = questKind == "defeat" and "⚔" or "?"
-			icon.TextColor3 = questKind == "defeat" and Color3.fromRGB(255, 120, 120) or Color3.fromRGB(255, 220, 80)
-		end
-		marker.Enabled = true
-	elseif marker then
-		marker.Enabled = false
 	end
 end
 
-local function refreshAllQuestMarkers()
-	local folder = getSpiritsFolder()
-	if not folder then return end
-	for _, spirit in ipairs(folder:GetChildren()) do
-		if spirit:IsA("Model") then updateQuestMarker(spirit) end
+local function hideAllWorldInfoLabels()
+	stripPointersAndMarkers()
+	for _, d in ipairs(workspace:GetDescendants()) do
+		if d:IsA("BillboardGui") and shouldManageWorldBillboard(d) then
+			d.Enabled = false
+		end
 	end
 end
 
-local function setTargetHint(text)
-	player:SetAttribute("TargetHint", text or "")
+local HOVER_STOP_ROOTS = {
+	OtakuHaven = true,
+	BattleArena = true,
+	Akihabara = true,
+	SpiritHabitats = true,
+	WorldLoot = true,
+	Spirits = true,
+	Transition = true,
+	Coastal = true,
+}
+
+local function resolveHoverScope(inst)
+	local cur = inst
+	local lastModel = nil
+	while cur and cur ~= workspace do
+		if HOVER_STOP_ROOTS[cur.Name] == true then
+			break
+		end
+		if cur:IsA("Model") then
+			lastModel = cur
+		end
+		cur = cur.Parent
+	end
+	return lastModel or inst
+end
+
+local function collectHoverBillboards(inst)
+	local list = {}
+	if not inst then
+		return list
+	end
+	local scope = resolveHoverScope(inst)
+	local seen = {}
+	local function add(bb)
+		if bb and shouldManageWorldBillboard(bb) and not seen[bb] then
+			seen[bb] = true
+			table.insert(list, bb)
+		end
+	end
+	if scope:IsA("BillboardGui") then
+		add(scope)
+	end
+	for _, d in ipairs(scope:GetDescendants()) do
+		if d:IsA("BillboardGui") then
+			add(d)
+		end
+	end
+	if #list == 0 then
+		for _, c in ipairs(inst:GetChildren()) do
+			if c:IsA("BillboardGui") then
+				add(c)
+			end
+		end
+	end
+	return list
+end
+
+local function flashHoverLabels(inst)
+	local list = collectHoverBillboards(inst)
+	if #list == 0 then
+		return
+	end
+	hoverLabelToken += 1
+	local token = hoverLabelToken
+	for _, bb in ipairs(list) do
+		bb.Enabled = true
+	end
+	task.delay(HOVER_LABEL_SEC, function()
+		if token ~= hoverLabelToken then
+			return
+		end
+		for _, bb in ipairs(list) do
+			if bb.Parent then
+				bb.Enabled = false
+			end
+		end
+	end)
+end
+
+local hintClearToken = 0
+local function setTargetHint(text, autoClearSec)
+	text = text or ""
+	player:SetAttribute("TargetHint", text)
+	hintClearToken += 1
+	local token = hintClearToken
+	if text ~= "" and type(autoClearSec) == "number" and autoClearSec > 0 then
+		task.delay(autoClearSec, function()
+			if token == hintClearToken and player:GetAttribute("TargetHint") == text then
+				player:SetAttribute("TargetHint", "")
+			end
+		end)
+	end
 end
 
 local function applySelectionVisual(spiritModel)
@@ -206,10 +322,11 @@ local function selectSpirit(spiritModel)
 			else
 				hint = hint .. "  ·  E — нет ловушек  ·  F — бой"
 			end
+			setTargetHint(hint, 1.5)
 		else
 			hint = hint .. "  ·  Подойдите ближе (до " .. MAX_TARGET_DISTANCE .. " studs)"
+			setTargetHint(hint, 1.5)
 		end
-		setTargetHint(hint)
 	else
 		setTargetHint("")
 	end
@@ -289,63 +406,26 @@ local function pickSpiritAtMouse()
 end
 
 local function nearArenaEnterPortal()
-	local root = character and character:FindFirstChild("HumanoidRootPart")
+	local char = player.Character or character
+	local root = char and char:FindFirstChild("HumanoidRootPart")
 	if not root then return false end
 	local arena = workspace:FindFirstChild("BattleArena")
-	local portal = arena and arena:FindFirstChild("EntrancePortal", true)
-	if not portal or not portal:IsA("BasePart") then return false end
-	return (root.Position - portal.Position).Magnitude <= 20
+	if not arena then return false end
+	local portal = arena:FindFirstChild("EntrancePortal", true)
+	local exitP = arena:FindFirstChild("ExitPortal", true)
+	local function near(p)
+		return p and p:IsA("BasePart") and (root.Position - p.Position).Magnitude <= 26
+	end
+	if near(portal) then return "Enter" end
+	if near(exitP) then return "Exit" end
+	return false
 end
-
-local function getTargetSpirit()
-	if selectedSpirit and selectedSpirit.Parent and not selectedSpirit:GetAttribute("Dying") and not selectedSpirit:GetAttribute("InteractionLocked") then
-		if isWithinRange(selectedSpirit) then return selectedSpirit end
-	end
-	return nil
-end
-
--- ============================================
--- Управление персонажем
--- ============================================
-
--- Базовое движение уже встроено в Roblox
--- Мы добавляем дополнительные действия
-
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-	if gameProcessed then return end
-
-	-- E - Поймать выбранного духа
-	if input.KeyCode == Enum.KeyCode.E then
-		if nearArenaEnterPortal() then return end
-		local target = getTargetSpirit()
-		if target then TryCatchSpirit(target) end
-	end
-
-	-- Q - Смена духа
-	if input.KeyCode == Enum.KeyCode.Q then
-		CycleSpirits()
-	end
-
-	-- Tab - Меню
-	if input.KeyCode == Enum.KeyCode.Tab then
-		ToggleMenu()
-	end
-
-	-- F - Бой с выбранным духом
-	if input.KeyCode == Enum.KeyCode.F then
-		local target = getTargetSpirit()
-		if target and not isInBattle then StartBattle(target) end
-	end
-end)
-
--- ============================================
--- Система ловли духов
--- ============================================
 
 local function getNearestCatchableSpirit()
 	local folder = getSpiritsFolder()
 	if not folder then return nil end
-	local root = character and character:FindFirstChild("HumanoidRootPart")
+	local char = player.Character or character
+	local root = char and char:FindFirstChild("HumanoidRootPart")
 	if not root then return nil end
 	local best, bestDist = nil, MAX_TARGET_DISTANCE
 	for _, child in ipairs(folder:GetChildren()) do
@@ -360,6 +440,58 @@ local function getNearestCatchableSpirit()
 	end
 	return best
 end
+
+local function getTargetSpirit()
+	if selectedSpirit and selectedSpirit.Parent and not selectedSpirit:GetAttribute("Dying") and not selectedSpirit:GetAttribute("InteractionLocked") then
+		if isWithinRange(selectedSpirit) then return selectedSpirit end
+	end
+	-- Без клика: ближайший дух в радиусе (E / F / кнопки)
+	return getNearestCatchableSpirit()
+end
+
+-- ============================================
+-- Управление персонажем
+-- ============================================
+
+-- Базовое движение уже встроено в Roblox
+-- Мы добавляем дополнительные действия
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+	if gameProcessed then return end
+
+	-- E - Поймать выбранного духа
+	if input.KeyCode == Enum.KeyCode.E then
+		local portalAction = nearArenaEnterPortal()
+		if portalAction then
+			if ArenaPortalEvent then
+				ArenaPortalEvent:FireServer(portalAction)
+			end
+			return
+		end
+		local target = getTargetSpirit()
+		if target then TryCatchSpirit(target) end
+	end
+
+	-- Q - Смена духа
+	if input.KeyCode == Enum.KeyCode.Q then
+		CycleSpirits()
+	end
+
+	-- Tab - Меню
+	if input.KeyCode == Enum.KeyCode.Tab then
+		ToggleMenu()
+	end
+
+	-- F/V - Бой с выбранным духом (V = silent MCP alias; Studio VirtualInput blocks F)
+	if input.KeyCode == Enum.KeyCode.F or input.KeyCode == Enum.KeyCode.V then
+		local target = getTargetSpirit()
+		if target and not isInBattle then StartBattle(target) end
+	end
+end)
+
+-- ============================================
+-- Система ловли духов
+-- ============================================
 
 function TryCatchSpirit(spirit)
 	if not spirit or isInBattle or isCatchPending then return end
@@ -510,7 +642,7 @@ local function tweenMotorC0(motor, goalC0, duration)
 	return tw
 end
 
--- Выхватить меч → лицом к врагу → slash-анимация + взмах BladeMotor + выпад
+-- Выхватить меч → лицом к врагу → slash + tween взмах BladeMotor + выпад
 local function playPlayerAttackAnimation(data)
 	data = data or {}
 	if isPlayerAttackAnimating then
@@ -544,7 +676,7 @@ local function playPlayerAttackAnimation(data)
 
 		root.CFrame = CFrame.lookAt(root.Position, root.Position + forward)
 
-		local restC0 = computeBladeRestC0(char)
+				local restC0 = computeBladeRestC0(char)
 		local windupC0 = restC0 * CFrame.Angles(math.rad(35), math.rad(-15), math.rad(110))
 		local slashC0 = restC0 * CFrame.Angles(math.rad(-110), math.rad(30), math.rad(-55))
 		local _, motor = waitForBladeModel(char, 0.8)
@@ -552,7 +684,7 @@ local function playPlayerAttackAnimation(data)
 			motor.C0 = restC0
 		end
 
-		playSlashAnimation(char, humanoid)
+playSlashAnimation(char, humanoid)
 
 		local origin = root.CFrame
 		local lungeCF = CFrame.lookAt(origin.Position + forward * 2.0, origin.Position + forward * 6)
@@ -667,9 +799,54 @@ end
 
 mouse.Button1Down:Connect(onMouseSelect)
 
+-- Подсказка + активация кнопки Поймать при приближении (без обязательного клика)
+local lastProximityHintKey = ""
+RunService.Heartbeat:Connect(function()
+	if isInBattle or isCatchPending then
+		if player:GetAttribute("CatchUiActive") then
+			player:SetAttribute("CatchUiActive", false)
+		end
+		return
+	end
+	local target = getTargetSpirit()
+	local active = target ~= nil
+	if player:GetAttribute("CatchUiActive") ~= active then
+		player:SetAttribute("CatchUiActive", active)
+	end
+	if selectedSpirit and selectedSpirit.Parent then
+		-- явный выбор обновляет hint через selectSpirit
+		return
+	end
+	if target then
+		local name = getSpiritDisplayName(target)
+		local relevant = isSpiritQuestRelevant(getSpiritId(target))
+		local canCatch = (_G.GetTrapCount and _G.GetTrapCount() or 0) > 0
+		local key = tostring(target) .. tostring(canCatch) .. tostring(relevant)
+		if key ~= lastProximityHintKey then
+			lastProximityHintKey = key
+			local hint = "Рядом: " .. name
+			if relevant then hint = hint .. "  [Квест]" end
+			if canCatch then
+				hint = hint .. "  ·  E — поймать  ·  F — бой"
+			else
+				hint = hint .. "  ·  нет ловушек  ·  F — бой"
+			end
+			setTargetHint(hint, 1.5)
+			applySelectionVisual(target)
+		end
+	else
+		if lastProximityHintKey ~= "" then
+			lastProximityHintKey = ""
+			setTargetHint("")
+			if not selectedSpirit then
+				applySelectionVisual(nil)
+			end
+		end
+	end
+end)
+
 RunService.RenderStepped:Connect(function()
 	if isInBattle then return end
-	local pos = UserInputService:GetMouseLocation()
 	local spirit = pickSpiritAtMouse()
 	if spirit == selectedSpirit then
 		applySelectionVisual(selectedSpirit)
@@ -686,6 +863,21 @@ RunService.RenderStepped:Connect(function()
 		selectionHighlight.Adornee = nil
 	end
 	hoveredSpirit = spirit
+
+	local worldHit = spirit or mouse.Target
+	local hoverKey = ""
+	if spirit then
+		hoverKey = "S:" .. tostring(spirit)
+	elseif worldHit then
+		local model = worldHit:FindFirstAncestorOfClass("Model")
+		hoverKey = "W:" .. tostring(model or worldHit)
+	end
+	if hoverKey ~= lastHoverLabelKey then
+		lastHoverLabelKey = hoverKey
+		if worldHit then
+			flashHoverLabels(worldHit)
+		end
+	end
 end)
 
 local function onSpiritRemoved(spiritModel)
@@ -698,8 +890,27 @@ task.spawn(function()
 	local folder = getSpiritsFolder() or workspace:WaitForChild("Spirits")
 	folder.ChildRemoved:Connect(onSpiritRemoved)
 	folder.ChildAdded:Connect(function(child)
-		task.defer(refreshAllQuestMarkers)
+		task.defer(function()
+			stripPointersAndMarkers(child)
+			local hud = child:FindFirstChild("StatsHUD")
+			if hud and hud:IsA("BillboardGui") then
+				hud.Enabled = false
+			end
+		end)
 	end)
+end)
+
+task.defer(hideAllWorldInfoLabels)
+workspace.DescendantAdded:Connect(function(d)
+	if POINTER_INSTANCE_NAMES[d.Name] then
+		task.defer(function()
+			if d.Parent then
+				d:Destroy()
+			end
+		end)
+	elseif d:IsA("BillboardGui") and shouldManageWorldBillboard(d) then
+		d.Enabled = false
+	end
 end)
 
 -- ============================================
@@ -811,7 +1022,6 @@ end)
 
 CatchSpiritEvent.OnClientEvent:Connect(function(success, spiritName)
 	exitNormalMode()
-	refreshAllQuestMarkers()
 	if success then
 		print("Ура! Вы поймали: " .. (spiritName or "духа") .. "!")
 	else
@@ -822,7 +1032,6 @@ end)
 QuestEvent.OnClientEvent:Connect(function(action, data)
 	if action == "ActiveQuests" then
 		activeQuests = data.Quests or {}
-		refreshAllQuestMarkers()
 		if selectedSpirit then selectSpirit(selectedSpirit) end
 	elseif action == "QuestProgress" or action == "QuestAccepted" or action == "QuestCompleted" or action == "OpenQuestUI" then
 		QuestEvent:FireServer("GetActiveQuests", {})
@@ -843,7 +1052,6 @@ DataEvent.OnClientEvent:Connect(function(action, data)
 		if spirits[idx] and spirits[idx].Name then
 			player:SetAttribute("ActiveSpiritName", spirits[idx].Name)
 		end
-		refreshAllQuestMarkers()
 	elseif action == "SpiritCaught" then
 		exitNormalMode()
 		QuestEvent:FireServer("GetActiveQuests", {})
@@ -863,4 +1071,141 @@ task.defer(function()
 	setTargetHint("")
 end)
 
+-- Studio play-test: LeftAlt+B (F9 = Developer Console в Studio — не работает)
+if RunService:IsStudio() then
+	UserInputService.InputBegan:Connect(function(input, processed)
+		if processed then return end
+		if input.KeyCode == Enum.KeyCode.B and UserInputService:IsKeyDown(Enum.KeyCode.LeftAlt) then
+			print("[DevBoost] LeftAlt+B → DevBoostIdentity")
+			EvolveSpiritEvent:FireServer("DevBoostIdentity", {})
+		end
+	end)
+	EvolveSpiritEvent.OnClientEvent:Connect(function(action, data)
+		if action == "DevBoostReady" then
+			print(string.format("[DevBoost] Identity ready: lvl=%s wins=%s crystals=%s", tostring(data and data.Level), tostring(data and data.Wins), tostring(data and data.Crystals)))
+		end
+	end)
+end
+
+-- Arena entrance FX: 1.5s approach hint + Spirit Arena banner
+do
+	local portalHintGui = Instance.new("ScreenGui")
+	portalHintGui.Name = "ArenaPortalHint"
+	portalHintGui.ResetOnSpawn = false
+	portalHintGui.DisplayOrder = 160
+	portalHintGui.IgnoreGuiInset = true
+	portalHintGui.Parent = player:WaitForChild("PlayerGui")
+
+	local hint = Instance.new("TextLabel")
+	hint.Name = "Hint"
+	hint.AnchorPoint = Vector2.new(0.5, 0.5)
+	hint.Position = UDim2.fromScale(0.5, 0.72)
+	hint.Size = UDim2.fromOffset(280, 42)
+	hint.BackgroundColor3 = Color3.fromRGB(15, 35, 50)
+	hint.BackgroundTransparency = 0.25
+	hint.TextColor3 = Color3.fromRGB(120, 255, 230)
+	hint.Font = Enum.Font.GothamBold
+	hint.TextScaled = true
+	hint.Visible = false
+	hint.Parent = portalHintGui
+	do local c = Instance.new("UICorner") c.CornerRadius = UDim.new(0, 8) c.Parent = hint end
+
+	local lastPortal = nil
+	local hintToken = 0
+	local function flashPortalHint(text)
+		hintToken += 1
+		local token = hintToken
+		hint.Text = text
+		hint.Visible = true
+		hint.TextTransparency = 0
+		hint.BackgroundTransparency = 0.25
+		task.delay(1.5, function()
+			if token ~= hintToken then return end
+			local tw = TweenService:Create(hint, TweenInfo.new(0.35), { TextTransparency = 1, BackgroundTransparency = 1 })
+			tw:Play()
+			tw.Completed:Connect(function()
+				if token == hintToken then hint.Visible = false end
+			end)
+		end)
+	end
+
+	local function bindArenaFX()
+		local arena = workspace:FindFirstChild("BattleArena")
+		if not arena then return end
+		local sign = arena:FindFirstChild("EntranceSign", true)
+		local lintel = arena:FindFirstChild("OuterLintel", true)
+		if sign and sign:IsA("BasePart") then
+			local width = (lintel and lintel.Size.Z) or 30
+			local signH = 3.2
+			sign.Size = Vector3.new(1.2, signH, width)
+			sign.Color = Color3.fromRGB(48, 105, 118)
+			sign.Material = Enum.Material.SmoothPlastic
+			sign.Reflectance = 0.05
+			if lintel and lintel:IsA("BasePart") then
+				sign.Position = Vector3.new(
+					lintel.Position.X,
+					lintel.Position.Y + lintel.Size.Y * 0.5 + signH * 0.5 + 0.6,
+					lintel.Position.Z
+				)
+			end
+			for _, d in ipairs(sign:GetDescendants()) do
+				if d:IsA("PointLight") or d:IsA("SpotLight") then
+					d.Brightness = math.min(d.Brightness, 0.45)
+					d.Color = Color3.fromRGB(48, 105, 118)
+				end
+			end
+		end
+		local titleBb = arena:FindFirstChild("EntranceTitle", true)
+		if titleBb and titleBb:IsA("BillboardGui") then
+			local clip = titleBb:FindFirstChild("MarqueeClip")
+			local title = titleBb:FindFirstChild("TitleText", true) or titleBb:FindFirstChildWhichIsA("TextLabel", true)
+			if clip and title and title:IsDescendantOf(clip) then
+				title.Parent = titleBb
+				clip:Destroy()
+			end
+			if title then
+				title:SetAttribute("ArenaTitleFXBound", nil)
+				title.Rotation = 0
+				title.Position = UDim2.fromScale(0, 0)
+				title.Size = UDim2.fromScale(1, 1)
+				title.AutomaticSize = Enum.AutomaticSize.None
+				title.Text = "Spirit Arena"
+				title.TextScaled = true
+				title.TextColor3 = Color3.fromRGB(210, 235, 240)
+				title.Font = Enum.Font.GothamBold
+				local grad = title:FindFirstChildOfClass("UIGradient")
+				if grad then grad:Destroy() end
+			end
+			titleBb.StudsOffset = Vector3.new(0, 0, 0)
+			local width = (lintel and lintel.Size.Z) or 30
+			titleBb.Size = UDim2.fromOffset(math.floor(width * 18), 56)
+		end
+		for _, portal in ipairs({ arena:FindFirstChild("EntrancePortal", true), arena:FindFirstChild("ExitPortal", true) }) do
+			if portal then
+				local bb = portal:FindFirstChild("PortalBillboard")
+				if bb then bb:Destroy() end
+				for _, pr in ipairs(portal:GetChildren()) do
+					if pr:IsA("ProximityPrompt") then
+						pr.Style = Enum.ProximityPromptStyle.Custom
+					end
+				end
+			end
+		end
+	end
+
+	bindArenaFX()
+	workspace.ChildAdded:Connect(function(ch)
+		if ch.Name == "BattleArena" then task.defer(bindArenaFX) end
+	end)
+
+	RunService.Heartbeat:Connect(function()
+		local action = nearArenaEnterPortal()
+		if action and action ~= lastPortal then
+			flashPortalHint(if action == "Enter" then "Войти [E]" else "Выйти [E]")
+		end
+		lastPortal = action or nil
+	end)
+end
+
 print("Realm of Spirits - Client Controller загружен!")
+

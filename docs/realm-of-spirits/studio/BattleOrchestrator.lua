@@ -99,6 +99,10 @@ end
 
 function BattleOrchestrator.CanUseSkill(battle, side, skillIndex, now)
 	now = now or os.clock()
+	skillIndex = math.floor(tonumber(skillIndex) or 0)
+	if skillIndex < 1 then
+		return false, "Навык недоступен", nil
+	end
 	local abKey, cdKey, mpKey, selfFxKey = sideFields(side)
 	local abilities = battle[abKey]
 	local ability = abilities and abilities[skillIndex]

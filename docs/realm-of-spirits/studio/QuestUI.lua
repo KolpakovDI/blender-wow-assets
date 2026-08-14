@@ -29,15 +29,24 @@ local UniqueItemNames = {
 
 local focusActive = false
 local savedCameraType = nil
+local savedCameraSubject = nil
 local savedAutoRotate = nil
 local savedMikaFaceDir = nil
 local panelTrackConn = nil
+local cameraTween = nil
 local questPanel -- assigned when UI is built
 
 local function stopPanelTrack()
 	if panelTrackConn then
 		panelTrackConn:Disconnect()
 		panelTrackConn = nil
+	end
+end
+
+local function cancelCameraTween()
+	if cameraTween then
+		cameraTween:Cancel()
+		cameraTween = nil
 	end
 end
 
@@ -50,19 +59,62 @@ local function setTalkHintVisible(visible)
 	end
 end
 
+local function restoreDefaultCamera()
+	local camera = workspace.CurrentCamera
+	if not camera then
+		savedCameraType = nil
+		savedCameraSubject = nil
+		return
+	end
+	local character = Players.LocalPlayer.Character
+	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+	local hrp = character and character:FindFirstChild("HumanoidRootPart")
+	cancelCameraTween()
+	if hrp then
+		camera.CameraType = Enum.CameraType.Scriptable
+		local restorePos = hrp.Position - hrp.CFrame.LookVector * 10 + Vector3.new(0, 6, 0)
+		local restoreCf = CFrame.lookAt(restorePos, hrp.Position + Vector3.new(0, 1.5, 0))
+		local tw = TweenService:Create(camera, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			CFrame = restoreCf,
+		})
+		cameraTween = tw
+		tw:Play()
+		tw.Completed:Connect(function()
+			if cameraTween ~= tw then
+				return
+			end
+			cameraTween = nil
+			if focusActive then
+				return
+			end
+			camera.CameraType = savedCameraType or Enum.CameraType.Custom
+			if humanoid then
+				camera.CameraSubject = humanoid
+			elseif savedCameraSubject then
+				camera.CameraSubject = savedCameraSubject
+			end
+			savedCameraType = nil
+			savedCameraSubject = nil
+		end)
+	else
+		camera.CameraType = savedCameraType or Enum.CameraType.Custom
+		if humanoid then
+			camera.CameraSubject = humanoid
+		end
+		savedCameraType = nil
+		savedCameraSubject = nil
+	end
+end
+
 local function endMikaFocus()
-	setTalkHintVisible(true)
+	setTalkHintVisible(false)
 	stopPanelTrack()
 	if questPanel then
 		questPanel.Visible = false
 	end
 	if not focusActive then return end
 	focusActive = false
-	local camera = workspace.CurrentCamera
-	if camera then
-		camera.CameraType = savedCameraType or Enum.CameraType.Custom
-	end
-	savedCameraType = nil
+	restoreDefaultCamera()
 
 	local character = Players.LocalPlayer.Character
 	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
@@ -122,28 +174,32 @@ local function startMikaFocus()
 	if not questMaster or not camera then return end
 
 	local hrp = facePlayerAndMika(questMaster)
-	local pivot = questMaster:GetPivot()
-	local mikaPos = pivot.Position
-	-- Кадр на корпус: UI висит Billboard над головой и не перекрывает образ
-	local lookTarget = mikaPos + Vector3.new(0, 0.55, 0)
+	local mikaPos = questMaster:GetPivot().Position
+	local playerPos = hrp and hrp.Position or (mikaPos + Vector3.new(0, 0, 4))
 
-	local camPos
-	if hrp then
-		local flat = Vector3.new(mikaPos.X - hrp.Position.X, 0, mikaPos.Z - hrp.Position.Z)
-		local dir = flat.Magnitude > 0.05 and flat.Unit or pivot.LookVector
-		camPos = mikaPos - dir * 16.5 + Vector3.new(0, 2.1, 0)
-	else
-		camPos = mikaPos - pivot.LookVector * 16.5 + Vector3.new(0, 2.1, 0)
-	end
+	-- Кадр: оба в кадре, камера справа сверху; UI слева — герои справа на экране
+	local mid = (playerPos + mikaPos) * 0.5 + Vector3.new(0, 1.35, 0)
+	local flat = Vector3.new(mikaPos.X - playerPos.X, 0, mikaPos.Z - playerPos.Z)
+	local along = flat.Magnitude > 0.1 and flat.Unit or Vector3.new(0, 0, -1)
+	local right = Vector3.new(-along.Z, 0, along.X)
+	local span = math.clamp(flat.Magnitude, 3.5, 14)
+	local dist = span * 0.85 + 10
+	local camPos = mid + right * (dist * 0.64) + Vector3.new(0, dist * 0.5, 0) + along * (dist * 0.06)
+	local provisional = CFrame.lookAt(camPos, mid)
+	local lookTarget = mid - provisional.RightVector * 3.2 + Vector3.new(0, 0.25, 0)
 
+	cancelCameraTween()
 	if not focusActive then
 		savedCameraType = camera.CameraType
+		savedCameraSubject = camera.CameraSubject
 	end
 	focusActive = true
 	camera.CameraType = Enum.CameraType.Scriptable
-	TweenService:Create(camera, TweenInfo.new(0.55, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+	local tw = TweenService:Create(camera, TweenInfo.new(0.55, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
 		CFrame = CFrame.lookAt(camPos, lookTarget),
-	}):Play()
+	})
+	cameraTween = tw
+	tw:Play()
 end
 
 -- Escape closing is wired after questPanel is created
@@ -233,25 +289,56 @@ local function getMikaHeadScreenPos()
 	return Vector2.new(screen.X, screen.Y), onScreen and screen.Z > 0
 end
 
+local function getPlayerScreenPos()
+	local character = Players.LocalPlayer.Character
+	local hrp = character and character:FindFirstChild("HumanoidRootPart")
+	local camera = workspace.CurrentCamera
+	if not hrp or not camera then
+		return nil
+	end
+	local screen, onScreen = camera:WorldToViewportPoint(hrp.Position + Vector3.new(0, 1.5, 0))
+	if onScreen and screen.Z > 0 then
+		return Vector2.new(screen.X, screen.Y)
+	end
+	return nil
+end
+
 local function placeQuestPanelOnScreen()
 	if not questPanel or not questPanel.Visible then return end
 	local cam = workspace.CurrentCamera
 	if not cam then return end
 	local vp = cam.ViewportSize
 	local head, ok = getMikaHeadScreenPos()
-	local x, y
-	if head and ok then
-		x = head.X - PANEL_W * 0.5
-		y = head.Y - PANEL_H - 8
-		-- Если не влезает сверху — справа от Мики, чтобы X и панель были на экране
-		if y < PANEL_MARGIN then
-			x = head.X + 28
-			y = math.clamp(head.Y - PANEL_H * 0.45, PANEL_MARGIN, math.max(PANEL_MARGIN, vp.Y - PANEL_H - PANEL_MARGIN))
-		end
-	else
-		x = (vp.X - PANEL_W) * 0.5
-		y = PANEL_MARGIN
+	local playerScreen = getPlayerScreenPos()
+
+	-- Держим UI у левого края; правый край панели — левее игрока и Мики
+	local charLeft = vp.X * 0.55
+	if playerScreen then
+		charLeft = math.min(charLeft, playerScreen.X)
 	end
+	if head and ok then
+		charLeft = math.min(charLeft, head.X)
+	end
+	local x = PANEL_MARGIN
+	local panelRight = x + PANEL_W
+	if panelRight > charLeft - 36 then
+		x = math.max(PANEL_MARGIN, charLeft - PANEL_W - 36)
+	end
+	-- Если всё ещё пересекается — прижимаем к левому краю (камера держит героев справа)
+	if x + PANEL_W > charLeft - 16 then
+		x = PANEL_MARGIN
+	end
+
+	local yAnchor = vp.Y * 0.5
+	if playerScreen and head and ok then
+		yAnchor = (playerScreen.Y + head.Y) * 0.5
+	elseif playerScreen then
+		yAnchor = playerScreen.Y
+	elseif head and ok then
+		yAnchor = head.Y
+	end
+	local y = yAnchor - PANEL_H * 0.45
+
 	x = math.clamp(x, PANEL_MARGIN, math.max(PANEL_MARGIN, vp.X - PANEL_W - PANEL_MARGIN))
 	y = math.clamp(y, PANEL_MARGIN, math.max(PANEL_MARGIN, vp.Y - PANEL_H - PANEL_MARGIN))
 	questPanel.Position = UDim2.fromOffset(math.floor(x + 0.5), math.floor(y + 0.5))
@@ -289,22 +376,53 @@ titleLabel.Font = Enum.Font.FredokaOne
 titleLabel.TextXAlignment = Enum.TextXAlignment.Left
 titleLabel.Parent = questPanel
 
-local dialogueLabel = Instance.new("TextLabel")
-dialogueLabel.Name = "MikaDialogue"
-dialogueLabel.Size = UDim2.new(1, -20, 0, 52)
-dialogueLabel.Position = UDim2.new(0, 10, 0, 30)
-dialogueLabel.BackgroundColor3 = Color3.fromRGB(45, 35, 70)
-dialogueLabel.BackgroundTransparency = 0.2
-dialogueLabel.TextColor3 = COLORS.Text
-dialogueLabel.TextWrapped = true
-dialogueLabel.TextSize = 11
-dialogueLabel.Font = Enum.Font.Gotham
-dialogueLabel.TextXAlignment = Enum.TextXAlignment.Left
-dialogueLabel.Text = "Мика: Добро пожаловать в Otaku Haven! О боже, ты выглядишь как настоящий герой! Мне как раз нужна помощь..."
-dialogueLabel.Parent = questPanel
+local DIALOGUE_H = 72
+local dialogueScroll = Instance.new("ScrollingFrame")
+dialogueScroll.Name = "MikaDialogueScroll"
+dialogueScroll.Size = UDim2.new(1, -20, 0, DIALOGUE_H)
+dialogueScroll.Position = UDim2.new(0, 10, 0, 28)
+dialogueScroll.BackgroundColor3 = Color3.fromRGB(45, 35, 70)
+dialogueScroll.BackgroundTransparency = 0.2
+dialogueScroll.BorderSizePixel = 0
+dialogueScroll.ScrollBarThickness = 5
+dialogueScroll.ScrollBarImageColor3 = COLORS.Accent
+dialogueScroll.ScrollingDirection = Enum.ScrollingDirection.Y
+dialogueScroll.ElasticBehavior = Enum.ElasticBehavior.WhenScrollable
+dialogueScroll.CanvasSize = UDim2.new(0, 0, 0, DIALOGUE_H)
+dialogueScroll.AutomaticCanvasSize = Enum.AutomaticSize.None
+dialogueScroll.ClipsDescendants = true
+dialogueScroll.ZIndex = 5
+dialogueScroll.Parent = questPanel
 local dlgCorner = Instance.new("UICorner")
 dlgCorner.CornerRadius = UDim.new(0, 8)
-dlgCorner.Parent = dialogueLabel
+dlgCorner.Parent = dialogueScroll
+
+local dialogueLabel = Instance.new("TextLabel")
+dialogueLabel.Name = "MikaDialogue"
+dialogueLabel.Size = UDim2.new(1, -12, 0, 0)
+dialogueLabel.Position = UDim2.new(0, 6, 0, 4)
+dialogueLabel.AutomaticSize = Enum.AutomaticSize.Y
+dialogueLabel.BackgroundTransparency = 1
+dialogueLabel.TextColor3 = COLORS.Text
+dialogueLabel.TextWrapped = true
+dialogueLabel.TextSize = 12
+dialogueLabel.Font = Enum.Font.Gotham
+dialogueLabel.TextXAlignment = Enum.TextXAlignment.Left
+dialogueLabel.TextYAlignment = Enum.TextYAlignment.Top
+dialogueLabel.Text = "Мика: Добро пожаловать в Otaku Haven! О боже, ты выглядишь как настоящий герой! Мне как раз нужна помощь..."
+dialogueLabel.ZIndex = 6
+dialogueLabel.Parent = dialogueScroll
+
+local function refreshDialogueCanvas()
+	task.defer(function()
+		if not dialogueLabel.Parent then return end
+		local h = math.max(dialogueLabel.TextBounds.Y + 10, DIALOGUE_H)
+		dialogueScroll.CanvasSize = UDim2.new(0, 0, 0, h)
+	end)
+end
+dialogueLabel:GetPropertyChangedSignal("Text"):Connect(refreshDialogueCanvas)
+dialogueLabel:GetPropertyChangedSignal("TextBounds"):Connect(refreshDialogueCanvas)
+refreshDialogueCanvas()
 
 -- Кнопка закрытия
 local closeBtn = Instance.new("TextButton")
@@ -338,7 +456,7 @@ end)
 -- Вкладки (Доступные / Активные / Выполненные)
 local tabContainer = Instance.new("Frame")
 tabContainer.Size = UDim2.new(1, -16, 0, 24)
-tabContainer.Position = UDim2.new(0, 8, 0, 58)
+tabContainer.Position = UDim2.new(0, 8, 0, 104)
 tabContainer.BackgroundTransparency = 1
 tabContainer.Parent = questPanel
 
@@ -384,7 +502,7 @@ createTab("Completed", "Выполненные")
 
 -- Тело: список + описание от вкладок до кнопки Принять/Сдать
 -- Окно описания: от нижнего края вкладок до кнопки Принять/Сдать
-local QUEST_BODY_TOP = 88
+local QUEST_BODY_TOP = 132
 local QUEST_FOOTER_H = 28
 local QUEST_LIST_H = 168
 local questBody = Instance.new("Frame")
@@ -465,30 +583,127 @@ actionFooter.Parent = questPanel
 -- Переменные для данных
 local readyToTurnInIds = {}
 local hasAvailableQuests = false
+local indicatorPulseToken = 0
+
+local INDICATOR_GOLD = Color3.fromRGB(255, 210, 55)
+local INDICATOR_GOLD_STROKE = Color3.fromRGB(255, 170, 40)
+local INDICATOR_EMERALD = Color3.fromRGB(60, 245, 150)
+local INDICATOR_EMERALD_STROKE = Color3.fromRGB(30, 200, 120)
+
+local function ensureQuestMasterIndicator()
+	local questMaster = workspace:FindFirstChild("QuestMaster")
+	if not questMaster then
+		return nil, nil
+	end
+	local indicator = questMaster:FindFirstChild("QuestIndicator")
+	if not indicator then
+		indicator = Instance.new("BillboardGui")
+		indicator.Name = "QuestIndicator"
+		indicator.Size = UDim2.fromOffset(52, 52)
+		indicator.StudsOffset = Vector3.new(0, 5.2, 0)
+		indicator.AlwaysOnTop = true
+		indicator.MaxDistance = 140
+		indicator.LightInfluence = 0
+		indicator:SetAttribute("KeepVisible", true)
+		indicator.Enabled = false
+		local adornee = questMaster:FindFirstChild("QuestInteractAnchor")
+		if not (adornee and adornee:IsA("BasePart")) then
+			adornee = questMaster.PrimaryPart or questMaster:FindFirstChildWhichIsA("BasePart", true)
+		end
+		if adornee and adornee:IsA("BasePart") then
+			indicator.Adornee = adornee
+		end
+		indicator.Parent = questMaster
+
+		local label = Instance.new("TextLabel")
+		label.Name = "Icon"
+		label.Size = UDim2.fromScale(1, 1)
+		label.BackgroundTransparency = 1
+		label.Text = "!"
+		label.Font = Enum.Font.GothamBlack
+		label.TextScaled = true
+		label.TextStrokeTransparency = 0.15
+		label.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+		label.ZIndex = 2
+		label.Parent = indicator
+
+		local stroke = Instance.new("UIStroke")
+		stroke.Name = "GlowStroke"
+		stroke.Thickness = 2.8
+		stroke.Parent = label
+	end
+	local label = indicator:FindFirstChild("Icon") or indicator:FindFirstChildOfClass("TextLabel")
+	return indicator, label
+end
+
+local function stopIndicatorPulse()
+	indicatorPulseToken += 1
+end
+
+local function startEmeraldPulse(label, stroke)
+	indicatorPulseToken += 1
+	local token = indicatorPulseToken
+	task.spawn(function()
+		while token == indicatorPulseToken and label and label.Parent do
+			local tw1 = TweenService:Create(label, TweenInfo.new(0.55, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+				TextTransparency = 0.22,
+			})
+			local tws1 = stroke and TweenService:Create(stroke, TweenInfo.new(0.55, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+				Thickness = 4.2,
+				Transparency = 0.05,
+			}) or nil
+			tw1:Play()
+			if tws1 then tws1:Play() end
+			tw1.Completed:Wait()
+			if token ~= indicatorPulseToken then break end
+			local tw2 = TweenService:Create(label, TweenInfo.new(0.55, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+				TextTransparency = 0,
+			})
+			local tws2 = stroke and TweenService:Create(stroke, TweenInfo.new(0.55, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+				Thickness = 2.8,
+				Transparency = 0.2,
+			}) or nil
+			tw2:Play()
+			if tws2 then tws2:Play() end
+			tw2.Completed:Wait()
+		end
+	end)
+end
 
 local function updateQuestMasterIndicator()
-	local questMaster = workspace:FindFirstChild("QuestMaster")
-	if not questMaster then return end
-	local indicator = questMaster:FindFirstChild("QuestIndicator")
-	if not indicator then return end
-	local label = indicator:FindFirstChildOfClass("TextLabel")
+	local indicator, label = ensureQuestMasterIndicator()
+	if not indicator then
+		return
+	end
 	local hasReady = next(readyToTurnInIds) ~= nil
-	local showQuestion = hasReady
-	local showExclamation = (not hasReady) and hasAvailableQuests
-	indicator.Enabled = showQuestion or showExclamation
-	if label then
-		if showQuestion then
-			label.Text = "?"
-			label.TextColor3 = Color3.fromRGB(255, 230, 80)
-		elseif showExclamation then
-			label.Text = "!"
-			label.TextColor3 = Color3.fromRGB(255, 170, 60)
-		end
-		local stroke = label:FindFirstChildOfClass("UIStroke") or Instance.new("UIStroke")
+	local showReady = hasReady
+	local showAvailable = (not hasReady) and hasAvailableQuests
+	indicator.Enabled = showReady or showAvailable
+	if not label then
+		return
+	end
+	local stroke = label:FindFirstChild("GlowStroke") or label:FindFirstChildOfClass("UIStroke")
+	if not stroke then
+		stroke = Instance.new("UIStroke")
 		stroke.Name = "GlowStroke"
-		stroke.Color = showQuestion and Color3.fromRGB(255, 215, 0) or Color3.fromRGB(255, 150, 50)
-		stroke.Thickness = 3
 		stroke.Parent = label
+	end
+	label.Text = "!"
+	label.TextTransparency = 0
+	if showReady then
+		label.TextColor3 = INDICATOR_EMERALD
+		stroke.Color = INDICATOR_EMERALD_STROKE
+		stroke.Thickness = 2.8
+		stroke.Transparency = 0.15
+		startEmeraldPulse(label, stroke)
+	elseif showAvailable then
+		stopIndicatorPulse()
+		label.TextColor3 = INDICATOR_GOLD
+		stroke.Color = INDICATOR_GOLD_STROKE
+		stroke.Thickness = 2.8
+		stroke.Transparency = 0.2
+	else
+		stopIndicatorPulse()
 	end
 end
 
@@ -640,7 +855,7 @@ local function showQuestDetail(quest, isActive, progress, readyToTurnIn)
 			local objText = obj.Type or "Objective"
 			if obj.Type == "CatchSpirit" then objText = "Поймать духов: " .. obj.Count
 			elseif obj.Type == "CatchSpecificSpirit" then
-				obText = "Поймать: " .. (obj.SpiritName or ("дух #" .. tostring(obj.SpiritId or "?")))
+				objText = "Поймать: " .. (obj.SpiritName or ("дух #" .. tostring(obj.SpiritId or "?")))
 			elseif obj.Type == "DefeatEnemies" then objText = "Победить врагов: " .. obj.Count
 			elseif obj.Type == "CatchDifferentSpirits" then objText = "Поймать разных духов: " .. obj.Count
 			elseif obj.Type == "CollectItem" then
@@ -935,6 +1150,7 @@ end
 
 QuestEvent.OnClientEvent:Connect(function(action, data)
 	if action == "OpenQuestUI" then
+		data = data or {}
 		local readyCount = 0
 		for _, questData in ipairs(data.Active or {}) do
 			if questData.ReadyToTurnIn then readyCount += 1 end
@@ -947,6 +1163,28 @@ QuestEvent.OnClientEvent:Connect(function(action, data)
 				dialogueLabel.Text = "Мика: Банда Shadow разгромила склад в Сеуле и украли партию редкой манги! Верни коробку — я щедро награжу!"
 			elseif tonumber(activeId) == 1 then
 				dialogueLabel.Text = "Мика: Через Exit в Акихабару — поймай первого дикого духа!"
+			elseif tonumber(activeId) == 2 then
+				dialogueLabel.Text = "Мика: Тренировка! Найди дикого духа и жми F — или зайди на арену. Нужно 5 побед!"
+			elseif tonumber(activeId) == 3 then
+				dialogueLabel.Text = "Мика: Коллекционер! Поймай 3 разных типа духов (E). Разные виды — в счёт!"
+			elseif tonumber(activeId) == 4 then
+				dialogueLabel.Text = "Мика: Боевое испытание! 10 побед — F по диким или арена. Я жду у стойки!"
+			elseif tonumber(activeId) == 5 then
+				dialogueLabel.Text = "Мика: Мастер Духов! Прокачай любого духа до 10 ур. — бои F качают активный слот."
+			elseif tonumber(activeId) == 6 then
+				dialogueLabel.Text = "Мика: Легендарный Мастер! Собери 6 разных типов духов (E) — финал сюжета!"
+			elseif tonumber(activeId) == 101 then
+				dialogueLabel.Text = "Мика: Помощь торговцу! У EmberCourt (огненная зона) собери 5 кристаллов — E."
+			elseif tonumber(activeId) == 102 then
+				dialogueLabel.Text = "Мика: Охотник за сокровищами! Ищи золотые сундуки у троп — E, нужно 3."
+			elseif tonumber(activeId) == 103 then
+				dialogueLabel.Text = "Мика: Тренер духов! 20 побед — F по диким или арена."
+			elseif tonumber(activeId) == 104 then
+				dialogueLabel.Text = "Мика: Хранитель мира! Поймай 5 духов (E) — любые виды."
+			elseif tonumber(activeId) == 105 then
+				dialogueLabel.Text = "Мика: Легенда о Мастере! Финал побочек — 50 побед (F)."
+			elseif tonumber(activeId) == 106 then
+				dialogueLabel.Text = "Мика: Цикл стихий! По 2 кристалла: Огонь/Земля/Ветер/Вода (E) — зоны на карте."
 			else
 				dialogueLabel.Text = "Мика: Удачи с заданием! Я буду ждать у стойки."
 			end
@@ -965,7 +1203,47 @@ QuestEvent.OnClientEvent:Connect(function(action, data)
 				if hasFirst then
 					dialogueLabel.Text = "Мика: Манга на месте! Готов к Первым шагам? Выйди в Акихабару и поймай духа!"
 				else
-					dialogueLabel.Text = "Мика: Добро пожаловать в Otaku Haven! О боже, ты выглядишь как настоящий герой!"
+					local hasTrain = false
+					for _, q in ipairs(data.Available or {}) do
+						if tonumber(q.Id) == 2 then hasTrain = true break end
+					end
+					if hasTrain then
+						dialogueLabel.Text = "Мика: Первый дух пойман! Пора в Тренировку — 5 побед в бою (F)!"
+					else
+						local hasCollect = false
+						for _, q in ipairs(data.Available or {}) do
+							if tonumber(q.Id) == 3 then hasCollect = true break end
+						end
+						if hasCollect then
+							dialogueLabel.Text = "Мика: Тренировка закрыта! Теперь Коллекционер — 3 разных духа (E)!"
+						else
+							local hasCombat = false
+							for _, q in ipairs(data.Available or {}) do
+								if tonumber(q.Id) == 4 then hasCombat = true break end
+							end
+							if hasCombat then
+								dialogueLabel.Text = "Мика: Коллекция собрана! Боевое испытание — 10 побед (F)!"
+							else
+								local hasMaster = false
+								for _, q in ipairs(data.Available or {}) do
+									if tonumber(q.Id) == 5 then hasMaster = true break end
+								end
+								if hasMaster then
+									dialogueLabel.Text = "Мика: Испытание пройдено! Мастер Духов — докачай духа до 10 ур.!"
+								else
+									local hasLegend = false
+									for _, q in ipairs(data.Available or {}) do
+										if tonumber(q.Id) == 6 then hasLegend = true break end
+									end
+									if hasLegend then
+										dialogueLabel.Text = "Мика: Ты почти легенда! Легендарный Мастер — 6 разных духов (E)!"
+									else
+										dialogueLabel.Text = "Мика: Добро пожаловать в Otaku Haven! О боже, ты выглядишь как настоящий герой!"
+									end
+								end
+							end
+						end
+					end
 				end
 			end
 		end
@@ -1044,7 +1322,34 @@ QuestEvent.OnClientEvent:Connect(function(action, data)
 		QuestEvent:FireServer("GetActiveQuests", {})
 
 	elseif action == "QuestAccepted" then
-		showNotification("Новый квест!", "Удачи в выполнении!", COLORS.Accent)
+		local qid = data and tonumber(data.QuestId)
+		if qid == 1 then
+			showNotification("Первые шаги", "Выйди в Акихабару → подойди к духу → E / Поймать", COLORS.Accent)
+		elseif qid == 2 then
+			showNotification("Тренировка", "Найди духа → F — бой. Нужно 5 побед!", COLORS.Accent)
+		elseif qid == 3 then
+			showNotification("Коллекционер", "Поймай 3 разных типа духов (E)!", COLORS.Accent)
+		elseif qid == 4 then
+			showNotification("Боевое испытание", "10 побед в бою (F / арена)!", COLORS.Accent)
+		elseif qid == 5 then
+			showNotification("Мастер Духов", "Докачай любого духа до 10 уровня (бои F)!", COLORS.Accent)
+		elseif qid == 6 then
+			showNotification("Легендарный Мастер", "Поймай 6 разных типов духов (E) — финал!", COLORS.Accent)
+		elseif qid == 101 then
+			showNotification("Помощь торговцу", "EmberCourt → 5 огненных кристаллов (E)!", COLORS.Accent)
+		elseif qid == 102 then
+			showNotification("Охотник за сокровищами", "Найди 3 сундука у троп (E)!", COLORS.Accent)
+		elseif qid == 103 then
+			showNotification("Тренер духов", "20 побед в бою (F / арена)!", COLORS.Accent)
+		elseif qid == 104 then
+			showNotification("Хранитель мира", "Поймай 5 духов (E)!", COLORS.Accent)
+		elseif qid == 105 then
+			showNotification("Легенда о Мастере", "50 побед (F) — финал побочек!", COLORS.Accent)
+		elseif qid == 106 then
+			showNotification("Цикл стихий", "По 2 кристалла: Огонь/Земля/Ветер/Вода (E)!", COLORS.Accent)
+		else
+			showNotification("Новый квест!", "Удачи в выполнении!", COLORS.Accent)
+		end
 
 	elseif action == "QuestCompleted" then
 		if data.QuestId then readyToTurnInIds[data.QuestId] = nil end
@@ -1073,17 +1378,24 @@ QuestEvent.OnClientEvent:Connect(function(action, data)
 		for _, questData in ipairs(currentQuestData.Active) do
 			if questData.ReadyToTurnIn and questData.Quest then readyToTurnInIds[questData.Quest.Id] = true end
 		end
-		hasAvailableQuests = #currentQuestData.Available > 0
 		updateQuestMasterIndicator()
+		QuestEvent:FireServer("GetQuests", {})
 		if questPanel.Visible then
 			showQuestList(currentTab)
 		end
 	end
 end)
 
+workspace.ChildAdded:Connect(function(ch)
+	if ch.Name == "QuestMaster" then
+		task.defer(updateQuestMasterIndicator)
+	end
+end)
+
 task.defer(function()
 	QuestEvent:FireServer("GetQuests", {})
 	QuestEvent:FireServer("GetActiveQuests", {})
+	task.delay(1, updateQuestMasterIndicator)
 end)
 
 print("Realm of Spirits - Quest UI загружен!")

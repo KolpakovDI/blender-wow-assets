@@ -27,13 +27,14 @@ end
 local function objectiveName(obj)
 	local objType = obj and obj.Type or ""
 	if objType == "CatchSpirit" then
-		return "Поймать духов"
+		return "Поймать духа (E / Поймать)"
 	elseif objType == "CatchSpecificSpirit" then
-		return (obj.SpiritName and ("Поймать: " .. obj.SpiritName)) or "Поймать духа"
+		return (obj.SpiritName and ("Поймать: " .. obj.SpiritName .. " (E)")) or "Поймать духа (E)"
 	elseif objType == "DefeatEnemies" then
-		return "Победить врагов"
+		return "Победить врагов (F / арена)"
 	elseif objType == "CatchDifferentSpirits" then
-		return "Разные духи"
+		local n = obj.Count or 3
+		return string.format("Разные духи (E · %d типа)", n)
 	elseif objType == "CollectItem" then
 		local item = obj.ItemId and ItemCatalog.ById and ItemCatalog.ById[obj.ItemId]
 		local name
@@ -46,15 +47,27 @@ local function objectiveName(obj)
 		if obj.ItemId == 120 then
 			return name .. " (у Exit)"
 		end
+		if obj.ItemId == 101 then
+			return name .. " (EmberCourt · E)"
+		end
+		if obj.ItemId == 107 then
+			return name .. " (StoneBasin · E)"
+		end
+		if obj.ItemId == 109 then
+			return name .. " (GaleCliff · E)"
+		end
+		if obj.ItemId == 106 then
+			return name .. " (MistPond · E)"
+		end
 		return name
 	elseif objType == "LevelUpSpirit" then
-		return "Уровень духа"
+		return "Дух до ур. 10 (бои F)"
 	elseif objType == "CareSpirit" then
 		return "Уход за духом"
 	elseif objType == "TemperSpirit" then
 		return "Закалка духа"
 	elseif objType == "FindChests" then
-		return "Найти сундуки"
+		return "Сундуки (E · зоны)"
 	end
 	return objType ~= "" and objType or "Цель"
 end
@@ -219,13 +232,15 @@ function QuestTrackerHud.refresh(quests)
 		y += buildRow(listFrame, entry, y)
 	end
 	listFrame.CanvasSize = UDim2.new(0, 0, 0, y + 4)
+	listFrame.CanvasPosition = Vector2.new(0, 0)
 end
 
 function QuestTrackerHud.init(screenGui, opts)
 	opts = opts or {}
-	local width = opts.Width or 200
-	local height = opts.Height or 140
-	local pos = opts.Position or UDim2.new(1, -(width + 12), 0, 268)
+	local width = opts.Width or 210
+	local height = opts.Height or 160
+	-- Below minimap; right edge aligns with SpiritsFrame (spirits: X=W-100, w=90 → right at W-10)
+	local pos = opts.Position or UDim2.new(1, -(width + 10), 0, 220)
 
 	local existing = screenGui:FindFirstChild("QuestTrackerFrame")
 	if existing then existing:Destroy() end
@@ -238,6 +253,7 @@ function QuestTrackerHud.init(screenGui, opts)
 	rootFrame.BackgroundTransparency = 0.12
 	rootFrame.BorderSizePixel = 0
 	rootFrame.ZIndex = 12
+	rootFrame.ClipsDescendants = true
 	rootFrame.Parent = screenGui
 	local corner = Instance.new("UICorner")
 	corner.CornerRadius = UDim.new(0, 8)
@@ -267,16 +283,19 @@ function QuestTrackerHud.init(screenGui, opts)
 	listFrame.Position = UDim2.new(0, 4, 0, 24)
 	listFrame.BackgroundTransparency = 1
 	listFrame.BorderSizePixel = 0
-	listFrame.ScrollBarThickness = 4
+	listFrame.ScrollBarThickness = 6
 	listFrame.ScrollBarImageColor3 = Color3.fromRGB(200, 160, 80)
+	listFrame.ScrollingEnabled = true
+	listFrame.ScrollingDirection = Enum.ScrollingDirection.Y
+	listFrame.ElasticBehavior = Enum.ElasticBehavior.WhenScrollable
 	listFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+	listFrame.AutomaticCanvasSize = Enum.AutomaticSize.None
+	listFrame.ClipsDescendants = true
 	listFrame.ZIndex = 13
 	listFrame.Parent = rootFrame
 
 	emptyLabel = Instance.new("TextLabel")
 	emptyLabel.Name = "EmptyLabel"
-	emptyLabel.Size = UDim2.new(1, -12, 0, 40)
-	emptyLabel.Position = UDim2.new(0, 6, 0, 8)
 	emptyLabel.BackgroundTransparency = 1
 	emptyLabel.Text = "Нет активных квестов\nПоговорите с Микой"
 	emptyLabel.TextColor3 = MUTED

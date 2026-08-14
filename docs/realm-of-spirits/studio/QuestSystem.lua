@@ -71,7 +71,7 @@ local QuestDatabase = {
 	[1] = {
 		Id = 1,
 		Name = "Первые шаги",
-		Description = "Выйдите через Exit в Акихабару и поймайте своего первого дикого духа (ловушка в инвентаре)",
+		Description = "Выйдите через Exit в Акихабару, подойдите к дикому духу и нажмите E (или кнопку Поймать)",
 		Type = "Story",
 		Level = 1,
 		Objectives = {
@@ -91,7 +91,7 @@ local QuestDatabase = {
 	[2] = {
 		Id = 2,
 		Name = "Тренировка",
-		Description = "Победите 5 врагов на тренировочной площадке",
+		Description = "Победите 5 врагов: бой с диким духом (F) или на арене BattleArena",
 		Type = "Story",
 		Level = 2,
 		Objectives = {
@@ -111,7 +111,7 @@ local QuestDatabase = {
 	[3] = {
 		Id = 3,
 		Name = "Коллекционер",
-		Description = "Поймайте 3 разных духов",
+		Description = "Поймайте 3 разных духа (E / Поймать). Уже пойманные типы тоже считаются",
 		Type = "Story",
 		Level = 3,
 		Objectives = {
@@ -126,12 +126,12 @@ local QuestDatabase = {
 			UniqueItems = {{Id = 6, Quantity = 1}}, -- Кристалл Удачи
 			Items = {{Id = 3, Quantity = 1}}
 		},
-		Prerequisites = {1}
+		Prerequisites = {2}
 	},
 	[4] = {
 		Id = 4,
 		Name = "Боевое испытание",
-		Description = "Победите 10 врагов в битве",
+		Description = "Победите 10 врагов в бою (F с диким духом или арена BattleArena)",
 		Type = "Story",
 		Level = 5,
 		Objectives = {
@@ -151,7 +151,7 @@ local QuestDatabase = {
 	[5] = {
 		Id = 5,
 		Name = "Мастер Духов",
-		Description = "Прокачайте духа до 10 уровня",
+		Description = "Прокачайте любого духа до 10 уровня (бои F дают XP духу)",
 		Type = "Story",
 		Level = 8,
 		Objectives = {
@@ -171,7 +171,7 @@ local QuestDatabase = {
 	[6] = {
 		Id = 6,
 		Name = "Легендарный Мастер",
-		Description = "Поймайте всех 6 различных духов в мире",
+		Description = "Поймайте 6 разных типов духов (E). Уже пойманные виды тоже идут в счёт",
 		Type = "Story",
 		Level = 10,
 		Objectives = {
@@ -213,7 +213,7 @@ local QuestDatabase = {
 	[101] = {
 		Id = 101,
 		Name = "Помощь торговцу",
-		Description = "Соберите 5 огненных кристаллов",
+		Description = "Соберите 5 огненных кристаллов у EmberCourt (E) — оранжевое свечение у огненной зоны",
 		Type = "Side",
 		Level = 1,
 		Objectives = {
@@ -233,7 +233,7 @@ local QuestDatabase = {
 	[102] = {
 		Id = 102,
 		Name = "Охотник за сокровищами",
-		Description = "Найдите 3 скрытых сундука в мире",
+		Description = "Найдите 3 сундука в зонах (E) — золотые сундуки у троп стихий",
 		Type = "Side",
 		Level = 3,
 		Objectives = {
@@ -253,7 +253,7 @@ local QuestDatabase = {
 	[103] = {
 		Id = 103,
 		Name = "Тренер духов",
-		Description = "Победите 20 врагов любого типа",
+		Description = "Победите 20 врагов — F по диким духам или арена",
 		Type = "Side",
 		Level = 4,
 		Objectives = {
@@ -273,7 +273,7 @@ local QuestDatabase = {
 	[104] = {
 		Id = 104,
 		Name = "Хранитель мира",
-		Description = "Поймайте 5 духов для защиты королевства",
+		Description = "Поймайте 5 духов (E / Поймать) — любые виды идут в счёт",
 		Type = "Side",
 		Level = 5,
 		Objectives = {
@@ -293,7 +293,7 @@ local QuestDatabase = {
 	[105] = {
 		Id = 105,
 		Name = "Легенда о Мастере",
-		Description = "Завершите побочные 101–104 и победите 50 врагов",
+		Description = "Финал побочек: после 101–104 победите 50 врагов (F / арена)",
 		Type = "Side",
 		Level = 10,
 		Objectives = {
@@ -314,7 +314,7 @@ local QuestDatabase = {
 	[106] = {
 		Id = 106,
 		Name = "Цикл стихий",
-		Description = "Соберите по 2 Primary-кристалла: Огонь (101), Земля (107), Ветер (109), Вода (106). Цикл: Огонь→Земля→Ветер→Вода→Огонь (×1.5/×0.7).",
+		Description = "Соберите по 2 Primary-кристалла (E): Огонь EmberCourt, Земля StoneBasin, Ветер GaleCliff, Вода MistPond. Цикл ×1.5/×0.7",
 		Type = "Side",
 		Level = 6,
 		Objectives = {
@@ -345,7 +345,7 @@ local QuestDatabase = {
 		Type = "Hunt",
 		Level = 1,
 		Objectives = {
-			{Type = "CatchSpecificSpirit", SpiritId = 1, Count = 1, SpiritName = "Огненный Кот"}
+			{Type = "CatchSpecificSpirit", SpiritId = 11, Count = 1, SpiritName = "Огненный Кот"}
 		},
 		Rewards = {
 			Experience = 120,
@@ -365,7 +365,7 @@ local QuestDatabase = {
 		Type = "Hunt",
 		Level = 2,
 		Objectives = {
-			{Type = "CatchSpecificSpirit", SpiritId = 2, Count = 1, SpiritName = "Ледяная Птица"}
+			{Type = "CatchSpecificSpirit", SpiritId = 42, Count = 1, SpiritName = "Ледяная Птица"}
 		},
 		Rewards = {
 			Experience = 180,
@@ -385,7 +385,7 @@ local QuestDatabase = {
 		Type = "Hunt",
 		Level = 3,
 		Objectives = {
-			{Type = "CatchSpecificSpirit", SpiritId = 6, Count = 1, SpiritName = "Водный Карп"}
+			{Type = "CatchSpecificSpirit", SpiritId = 41, Count = 1, SpiritName = "Водный Карп"}
 		},
 		Rewards = {
 			Experience = 220,
@@ -405,7 +405,7 @@ local QuestDatabase = {
 		Type = "Hunt",
 		Level = 4,
 		Objectives = {
-			{Type = "CatchSpecificSpirit", SpiritId = 3, Count = 1, SpiritName = "Теневой Пёс"}
+			{Type = "CatchSpecificSpirit", SpiritId = 33, Count = 1, SpiritName = "Теневой Пёс"}
 		},
 		Rewards = {
 			Experience = 320,
@@ -425,7 +425,7 @@ local QuestDatabase = {
 		Type = "Hunt",
 		Level = 6,
 		Objectives = {
-			{Type = "CatchSpecificSpirit", SpiritId = 4, Count = 1, SpiritName = "Грозовой Дракон"}
+			{Type = "CatchSpecificSpirit", SpiritId = 32, Count = 1, SpiritName = "Грозовой Дракон"}
 		},
 		Rewards = {
 			Experience = 450,
@@ -445,7 +445,7 @@ local QuestDatabase = {
 		Type = "Hunt",
 		Level = 8,
 		Objectives = {
-			{Type = "CatchSpecificSpirit", SpiritId = 5, Count = 1, SpiritName = "Световой Единорог"}
+			{Type = "CatchSpecificSpirit", SpiritId = 13, Count = 1, SpiritName = "Световой Единорог"}
 		},
 		Rewards = {
 			Experience = 800,
@@ -465,7 +465,7 @@ local QuestDatabase = {
 		Type = "Hunt",
 		Level = 5,
 		Objectives = {
-			{Type = "CatchSpecificSpirit", SpiritId = 7, Count = 1, SpiritName = "Каменный Голем"}
+			{Type = "CatchSpecificSpirit", SpiritId = 21, Count = 1, SpiritName = "Каменный Голем"}
 		},
 		Rewards = {
 			Experience = 380,
@@ -485,7 +485,7 @@ local QuestDatabase = {
 		Type = "Hunt",
 		Level = 5,
 		Objectives = {
-			{Type = "CatchSpecificSpirit", SpiritId = 8, Count = 1, SpiritName = "Пепельный Саламандр"}
+			{Type = "CatchSpecificSpirit", SpiritId = 12, Count = 1, SpiritName = "Пепельный Саламандр"}
 		},
 		Rewards = {
 			Experience = 400,
@@ -505,7 +505,7 @@ local QuestDatabase = {
 		Type = "Hunt",
 		Level = 5,
 		Objectives = {
-			{Type = "CatchSpecificSpirit", SpiritId = 9, Count = 1, SpiritName = "Ветряной Лис"}
+			{Type = "CatchSpecificSpirit", SpiritId = 31, Count = 1, SpiritName = "Ветряной Лис"}
 		},
 		Rewards = {
 			Experience = 420,
@@ -525,7 +525,7 @@ local QuestDatabase = {
 		Type = "Hunt",
 		Level = 5,
 		Objectives = {
-			{Type = "CatchSpecificSpirit", SpiritId = 10, Count = 1, SpiritName = "Моховой Олень"}
+			{Type = "CatchSpecificSpirit", SpiritId = 22, Count = 1, SpiritName = "Моховой Олень"}
 		},
 		Rewards = {
 			Experience = 440,
@@ -545,7 +545,7 @@ local QuestDatabase = {
 		Type = "Hunt",
 		Level = 5,
 		Objectives = {
-			{Type = "CatchSpecificSpirit", SpiritId = 11, Count = 1, SpiritName = "Лунный Кролик"}
+			{Type = "CatchSpecificSpirit", SpiritId = 43, Count = 1, SpiritName = "Лунный Кролик"}
 		},
 		Rewards = {
 			Experience = 460,
@@ -565,7 +565,7 @@ local QuestDatabase = {
 		Type = "Hunt",
 		Level = 5,
 		Objectives = {
-			{Type = "CatchSpecificSpirit", SpiritId = 12, Count = 1, SpiritName = "Ядовитая Гадюка"}
+			{Type = "CatchSpecificSpirit", SpiritId = 24, Count = 1, SpiritName = "Ядовитая Гадюка"}
 		},
 		Rewards = {
 			Experience = 480,
@@ -586,7 +586,7 @@ local QuestDatabase = {
 		Level = 5,
 		Deprecated = true,
 		Objectives = {
-			{Type = "CatchSpecificSpirit", SpiritId = 13, Count = 1, SpiritName = "Пустынный Скорпион"}
+			{Type = "CatchSpecificSpirit", SpiritId = 25, Count = 1, SpiritName = "Пустынный Скорпион"}
 		},
 		Rewards = {
 			Experience = 500,
@@ -606,7 +606,7 @@ local QuestDatabase = {
 		Type = "Hunt",
 		Level = 5,
 		Objectives = {
-			{Type = "CatchSpecificSpirit", SpiritId = 14, Count = 1, SpiritName = "Стальной Жук"}
+			{Type = "CatchSpecificSpirit", SpiritId = 23, Count = 1, SpiritName = "Стальной Жук"}
 		},
 		Rewards = {
 			Experience = 520,
@@ -627,7 +627,7 @@ local QuestDatabase = {
 		Level = 5,
 		Deprecated = true,
 		Objectives = {
-			{Type = "CatchSpecificSpirit", SpiritId = 15, Count = 1, SpiritName = "Хрустальный Лис"}
+			{Type = "CatchSpecificSpirit", SpiritId = 26, Count = 1, SpiritName = "Хрустальный Лис"}
 		},
 		Rewards = {
 			Experience = 540,
@@ -647,7 +647,7 @@ local QuestDatabase = {
 		Type = "Hunt",
 		Level = 5,
 		Objectives = {
-			{Type = "CatchSpecificSpirit", SpiritId = 16, Count = 1, SpiritName = "Лавовый Краб"}
+			{Type = "CatchSpecificSpirit", SpiritId = 14, Count = 1, SpiritName = "Лавовый Краб"}
 		},
 		Rewards = {
 			Experience = 560,
@@ -667,7 +667,7 @@ local QuestDatabase = {
 		Type = "Hunt",
 		Level = 5,
 		Objectives = {
-			{Type = "CatchSpecificSpirit", SpiritId = 17, Count = 1, SpiritName = "Туманный Дух"}
+			{Type = "CatchSpecificSpirit", SpiritId = 44, Count = 1, SpiritName = "Туманный Дух"}
 		},
 		Rewards = {
 			Experience = 580,
@@ -687,7 +687,7 @@ local QuestDatabase = {
 		Type = "Hunt",
 		Level = 5,
 		Objectives = {
-			{Type = "CatchSpecificSpirit", SpiritId = 18, Count = 1, SpiritName = "Небесный Сокол"}
+			{Type = "CatchSpecificSpirit", SpiritId = 34, Count = 1, SpiritName = "Небесный Сокол"}
 		},
 		Rewards = {
 			Experience = 600,
@@ -743,6 +743,30 @@ local QuestDatabase = {
 			Items = {{Id = 5, Quantity = 1}},
 		},
 		Prerequisites = {301}
+	},
+	-- Note: Studio also has [303] Weekly Temper; mirror may lag — SoT is .rbxl
+	[304] = {
+		Id = 304,
+		Name = "Звёзды трансформации",
+		Description = "Откройте Святилище Ками у Мики (E). С 10 ур. — синтез и дезинтеграция; Звёзды усиливают Unique.",
+		Type = "Side",
+		Level = 10,
+		Objectives = {
+			{Type = "OpenKamiSanctum", Count = 1}
+		},
+		Rewards = {
+			Experience = 100,
+			CopperCoins = 50,
+			SilverCoins = 5,
+			GoldCoins = 0,
+			Reputation = 12,
+			UniqueItems = {},
+			Items = {
+				{Id = 310, Quantity = 2},
+				{Id = 301, Quantity = 1},
+			},
+		},
+		Prerequisites = {5}
 	},
 }
 
@@ -920,7 +944,10 @@ function QuestSystem:UpdateProgress(progressType, data)
 						if data and data.ItemId == objective.ItemId then
 							progress.Current = progress.Current + (data.Count or 1)
 						end
-					elseif progressType == "CareSpirit" or progressType == "TemperSpirit" then
+					elseif progressType == "CareSpirit" or progressType == "TemperSpirit"
+						or progressType == "OpenKamiSanctum"
+						or progressType == "KamiSynthesize"
+						or progressType == "KamiDisintegrate" then
 						progress.Current = math.min((progress.Current or 0) + (data and data.Count or 1), progress.Target or 1)
 					end
 
@@ -981,8 +1008,9 @@ function QuestSystem:TurnInQuest(questId)
 				if objective.Type == "CollectItem" and objective.ItemId then
 					local need = objective.Count or 1
 					local have = 0
+					local want = tonumber(objective.ItemId)
 					for _, inv in ipairs(playerData.Inventory or {}) do
-						if inv.Id == objective.ItemId then
+						if tonumber(inv.Id) == want then
 							have += (inv.Quantity or 0)
 						end
 					end
@@ -991,15 +1019,24 @@ function QuestSystem:TurnInQuest(questId)
 					end
 				end
 			end
+		else
+			for _, objective in ipairs(quest.Objectives or {}) do
+				if objective.Type == "CollectItem" then
+					return false, "Данные игрока недоступны"
+				end
+			end
 		end
 	end
-	self:CompleteQuest(questId)
+	local okComplete = self:CompleteQuest(questId)
+	if not okComplete then
+		return false, "Не удалось выдать награды"
+	end
 	return true, "Квест сдан!"
 end
 
 function QuestSystem:CompleteQuest(questId)
 	local quest = QuestDatabase[questId]
-	if not quest then return end
+	if not quest then return false end
 
 	local playerData = nil
 	if _G.GetPlayerData then
@@ -1008,19 +1045,31 @@ function QuestSystem:CompleteQuest(questId)
 		local DataStoreManagerModule = require(script.Parent.DataStoreManager)
 		playerData = DataStoreManagerModule.new():GetPlayerData(self.Player.UserId)
 	end
-	if playerData then
-		playerData.Stats = playerData.Stats or {}
-		playerData.Inventory = playerData.Inventory or {}
-		playerData.UniqueItems = playerData.UniqueItems or {}
+	if not playerData then
+		warn("CompleteQuest: no playerData for", self.Player and self.Player.Name)
+		return false
+	end
 
-		-- Списываем предметы CollectItem при сдаче
+	playerData.Stats = playerData.Stats or {}
+	playerData.Inventory = playerData.Inventory or {}
+	playerData.UniqueItems = playerData.UniqueItems or {}
+
+		-- Списываем предметы CollectItem при сдаче (все стаки)
 		for _, objective in ipairs(quest.Objectives or {}) do
 			if objective.Type == "CollectItem" and objective.ItemId then
 				local need = objective.Count or 1
-				for _, invItem in ipairs(playerData.Inventory) do
-					if invItem.Id == objective.ItemId then
-						invItem.Quantity = math.max(0, (invItem.Quantity or 0) - need)
-						break
+				local want = tonumber(objective.ItemId)
+				for idx = #playerData.Inventory, 1, -1 do
+					if need <= 0 then break end
+					local invItem = playerData.Inventory[idx]
+					if tonumber(invItem.Id) == want then
+						local qty = invItem.Quantity or 0
+						local take = math.min(qty, need)
+						invItem.Quantity = qty - take
+						need -= take
+						if invItem.Quantity <= 0 then
+							table.remove(playerData.Inventory, idx)
+						end
 					end
 				end
 			end
@@ -1100,7 +1149,6 @@ function QuestSystem:CompleteQuest(questId)
 
 		-- Отправляем обновление клиенту
 		DataEvent:FireClient(self.Player, "FullSync", playerData)
-	end
 
 	-- Отмечаем как выполненное
 	self.ReadyToTurnIn[questId] = nil
@@ -1115,6 +1163,7 @@ function QuestSystem:CompleteQuest(questId)
 	})
 
 	print(self.Player.Name .. " выполнил квест: " .. quest.Name)
+	return true
 end
 
 function QuestSystem:GetQuestInfo(questId)
@@ -1122,15 +1171,20 @@ function QuestSystem:GetQuestInfo(questId)
 end
 
 function QuestSystem:SyncInventoryObjectives(questId)
+	questId = tonumber(questId) or questId
 	local quest = QuestDatabase[questId]
-	local progress = self.QuestProgress[questId]
+	local progress = self.QuestProgress[questId] or self.QuestProgress[tostring(questId)]
 	if not quest or not progress then return end
+	if self.QuestProgress[questId] == nil and self.QuestProgress[tostring(questId)] then
+		self.QuestProgress[questId] = self.QuestProgress[tostring(questId)]
+	end
 	local playerData = _G.GetPlayerData and _G.GetPlayerData(self.Player) or nil
 	if not playerData then return end
 	local function countInv(itemId)
 		local n = 0
+		local want = tonumber(itemId) or itemId
 		for _, inv in ipairs(playerData.Inventory or {}) do
-			if inv.Id == itemId then
+			if tonumber(inv.Id) == tonumber(want) or inv.Id == want then
 				n += (inv.Quantity or 0)
 			end
 		end
@@ -1138,6 +1192,14 @@ function QuestSystem:SyncInventoryObjectives(questId)
 	end
 	for i, objective in ipairs(quest.Objectives or {}) do
 		local p = progress[i]
+		if not p and objective.Type == "CollectItem" then
+			p = {
+				Type = objective.Type,
+				Current = 0,
+				Target = objective.Count or 1,
+			}
+			progress[i] = p
+		end
 		if p and objective.Type == "CollectItem" and objective.ItemId then
 			p.Current = math.min(countInv(objective.ItemId), p.Target or objective.Count or 1)
 		end
@@ -1222,12 +1284,12 @@ local function BuildAvailableQuests(questSystem)
 		end
 	end
 	-- Стабильный порядок: уровень → Id (иначе pairs() прячет побочные ниже скролла)
-	-- Резонанс 301–303 сверху, затем уровень → Id
+	-- Резонанс 301–304 сверху, затем уровень → Id
 	table.sort(availableQuests, function(a, b)
 		local function prio(q)
 			local id = tonumber(q.Id) or 0
-			if id >= 301 and id <= 303 then
-				return id - 301 -- 0,1,2
+			if id >= 301 and id <= 304 then
+				return id - 301 -- 0..3
 			end
 			return 100 + (tonumber(q.Level) or 1)
 		end
@@ -1288,6 +1350,9 @@ local function CanUseQuestMasterAction(player, maxDistance, graceSeconds)
 end
 
 QuestEvent.OnServerEvent:Connect(function(player, action, data)
+	if typeof(action) ~= "string" then
+		return
+	end
 	local questSystem = GetOrCreateQuestSystem(player)
 
 	if action == "GetQuests" then
@@ -1442,7 +1507,7 @@ task.spawn(function()
 			corner.CornerRadius = UDim.new(0, 8)
 			corner.Parent = lbl
 		end
-		hint.Enabled = true
+		hint.Enabled = false
 		if not hookedPrompts[prompt] then
 			hookedPrompts[prompt] = true
 			prompt.Triggered:Connect(openFor)
