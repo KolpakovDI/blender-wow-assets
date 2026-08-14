@@ -6,6 +6,10 @@
 
 ## [Unreleased]
 
+### Week plan 26.08–01.09 (2026-08-14)
+- Тема: **Resonant loop + P0 friction** (Ками в бою и Care/Temper; лут E без костыля) — `WEEK-PLAN-2026-08-26.md`
+- Не AI mesh / не PvP; E1 ×N руками остаётся буфером
+
 ### Week wrap + Sanctum LOOK (2026-08-22)
 - Неделя 19–25.08: E4 / Explore W3 / UI A–D / Identity 1–3 закрыты по коду; след. неделя = **Sanctum/Resonant LOOK**
 - После синтеза: toast имя + удар слота 1; status имя + `vid #ParentIds[1]` + 3 навыка (`*` на 1); ростер `[R]`; preview ядро-родитель

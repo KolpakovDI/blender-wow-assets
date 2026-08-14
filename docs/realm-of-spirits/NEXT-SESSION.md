@@ -1,31 +1,32 @@
 # NEXT SESSION
 
-**Статус:** 2026-08-14 вечер — **пауза на буфере**. LOOK + E1 3/3 + MCP V/Keypad в SoT.  
-**Цель следующей сессии:** по указанию ведущего (не AI mesh / не PvP). Опционально: E1 глазами ×N (всё ещё CONDITIONAL).
+**Статус:** 2026-08-14 — буфер закрыт **планом недели**. LOOK + E1 3/3 + V/Keypad в SoT.  
+**Цель следующей сессии:** старт **W1 friction** по `WEEK-PLAN-2026-08-26.md` (лут E без костыля → бой F/V). Не AI mesh / не PvP.
 
+План: `WEEK-PLAN-2026-08-26.md`  
 E1: `SESSION-2026-08-14-e1-e2e.md`  
-LOOK: `SESSION-2026-08-14-sanctum-look-sot.md`  
-День: `SESSION-2026-08-14.md` (вечерний чекпоинт внизу)
+LOOK: `SESSION-2026-08-14-sanctum-look-sot.md`
 
 ## Вердикт
 
 | Item | Status |
 |------|--------|
-| Sanctum LOOK UI + parent mesh | PASS в SoT |
+| Sanctum LOOK | PASS в SoT |
 | Identity 1–3 | PASS в SoT |
-| E1 live e2e | **3 цикла PASS** / CONDITIONAL (нет ×N руками) |
-| MCP бой/навыки | **V** + **Keypad1–3** (smoke PASS); игрок F/1/2 |
-| E4 Social 2p | PASS (user, ранее) |
-| AI mesh online | deferred |
+| E1 live e2e | **3 цикла PASS** / CONDITIONAL ×N руками |
+| MCP V + Keypad | smoke PASS |
+| Неделя 26.08–01.09 | план готов — тема **Resonant loop + P0 friction** |
+| AI mesh / PvP | deferred |
 
 ## Старт сессии (порядок жёсткий)
 
-1. Открыть SoT `C:\Mimo\RealmOfSpirits\RealmOfSpirits second.rbxl` (сохранён ~22:05 14.08 — после V-алиаса)  
-2. Не online AI mesh; не PvP  
-3. Взять задачу у ведущего **или** буфер (E1 глазами / план недели)
+1. Открыть SoT `C:\Mimo\RealmOfSpirits\RealmOfSpirits second.rbxl`  
+2. Прочитать `WEEK-PLAN-2026-08-26.md` (W1)  
+3. Не online AI mesh; не PvP  
+4. Play: Q7 манга **E** (проверить prompt) → бой **F** или MCP **V** + Keypad1/2  
 
 ## Studio SoT
 
 `C:\\Mimo\\RealmOfSpirits\\RealmOfSpirits second.rbxl`
 
-Модули этой дуги: `ClientController` (F|V), `UIController` (Keypad note), Kami Sanctum LOOK (ранее).
+После правок Source — **Ctrl+S** + git commit docs/mirrors.

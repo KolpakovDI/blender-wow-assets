@@ -37,7 +37,7 @@ Entry skill for all Realm of Spirits agent work.
 - Prefer shared catalogs in `ReplicatedStorage.RealmOfSpirits`:
   - `SkillCatalog`, `EffectCatalog`, `ItemCatalog`, `SpiritDatabase`, `ZoneConfig`
 - After Studio `ModuleScript` Source edits: bust require cache (Destroy + recreate ModuleScript) before `require` / `Build()`.
-- Never commit `.rbxl`. Never `git config`. Commit only when user asks.
+- Never commit `.rbxl` or secrets. **Always commit** meaningful docs/skills/mirrors after a coherent chunk; do not push unless asked.
 - Russian UI strings stay Russian; agent chat with user in Russian when they write Russian.
 
 ## Session open checklist

@@ -7,7 +7,7 @@ Git holds docs + Cursor infra + tooling; the `.rbxl` is **not** in git. After me
 
 ## Start here every session
 
-1. Read [`docs/realm-of-spirits/NEXT-SESSION.md`](docs/realm-of-spirits/NEXT-SESSION.md) — **current:** week wrap after Identity 1–3 PASS (`SESSION-2026-08-21-checkpoint.md`)
+1. Read [`docs/realm-of-spirits/NEXT-SESSION.md`](docs/realm-of-spirits/NEXT-SESSION.md) — **current:** week plan 26.08–01.09 Resonant loop + P0 friction (`WEEK-PLAN-2026-08-26.md`)
 2. Load skill **realm-orchestrator** (`.cursor/skills/realm-orchestrator/SKILL.md`)
 3. Confirm Studio MCP `user-Roblox_Studio` if place edits are needed
 
