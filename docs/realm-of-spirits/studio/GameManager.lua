@@ -243,6 +243,44 @@ local function GetSpirit(id)
 	return SpiritDatabase.Get(id)
 end
 
+-- Resonant / custom roster entries are not in SpiritDatabase (Id 9xxx).
+local function ResolveBattleSpiritInfo(playerSpirit)
+	if type(playerSpirit) ~= "table" then
+		return nil
+	end
+	local info = GetSpirit(playerSpirit.Id)
+	if info then
+		return info
+	end
+	local kind = tostring(playerSpirit.Kind or "")
+	local idNum = tonumber(playerSpirit.Id) or 0
+	if kind ~= "Resonant" and idNum < 9000 then
+		return nil
+	end
+	local parentId = nil
+	if type(playerSpirit.ParentIds) == "table" then
+		parentId = tonumber(playerSpirit.ParentIds[1])
+	end
+	local parent = parentId and GetSpirit(parentId) or nil
+	local base = (parent and parent.BaseStats) or { HP = 100, Attack = 20, Defense = 10, Speed = 10 }
+	local el = playerSpirit.PrimaryElement or playerSpirit.HybridPrimary or playerSpirit.Element
+		or (parent and (parent.PrimaryElement or parent.Element)) or "Fire"
+	return {
+		Id = playerSpirit.Id,
+		Name = playerSpirit.Name or "Kami",
+		BaseStats = {
+			HP = tonumber(base.HP) or 100,
+			Attack = tonumber(base.Attack) or 20,
+			Defense = tonumber(base.Defense) or 10,
+			Speed = tonumber(base.Speed) or 10,
+		},
+		SkillIds = playerSpirit.SkillIds,
+		PrimaryElement = el,
+		Element = el,
+		Kind = "Resonant",
+	}
+end
+
 -- RemoteEvents (используем папку RealmOfSpirits)
 local CatchSpiritEvent = GetRemoteEvent("CatchSpirit")
 local BattleEvent = GetRemoteEvent("Battle")
@@ -1664,7 +1702,7 @@ BattleEvent.OnServerEvent:Connect(function(player, action, data)
 		local playerSpirit = spirits[idx]
 		playerData.CurrentSpiritId = playerSpirit.Id
 
-		local spiritInfo = GetSpirit(playerSpirit.Id)
+		local spiritInfo = ResolveBattleSpiritInfo(playerSpirit)
 		local enemyInfo = GetSpirit(enemyId)
 
 		if not spiritInfo or not enemyInfo then return end
