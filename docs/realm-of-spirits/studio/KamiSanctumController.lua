@@ -359,6 +359,13 @@ remote.OnClientEvent:Connect(function(action, data)
 	data = type(data) == "table" and data or {}
 	if action == "Open" then
 		openUi()
+		do
+			local g = ensureGui()
+			if g and g:FindFirstChild("Main") and g.Main:FindFirstChild("Status") then
+				-- Clear sticky Error (e.g. too_far) after successful Open
+				g.Main.Status.Text = "Выберите 2–6 духов · Осколок Ками (301)"
+			end
+		end
 	elseif action == "PreviewSynthesize" then
 		local g = ensureGui()
 		local st = g.Main.Status
@@ -435,7 +442,12 @@ remote.OnClientEvent:Connect(function(action, data)
 			_G.__KamiSanctumRefresh()
 		end
 	elseif action == "Error" then
-		notify("Ошибка: " .. tostring(data.Error))
+		local msg = data.Message or data.Error or "unknown"
+		notify("Ошибка: " .. tostring(msg))
+		local g = ensureGui()
+		if g and g:FindFirstChild("Main") and g.Main:FindFirstChild("Status") then
+			g.Main.Status.Text = "Ошибка: " .. tostring(msg)
+		end
 	end
 end)
 

@@ -1,26 +1,28 @@
 # NEXT SESSION
 
-**Статус:** 2026-08-14 — hands-цикл Ками **PASS** (MCP live-like).  
-**Цель следующей сессии (опционально):** один проход **руками** (F/1/2/E, без ForceCatch) **или** soft polish Dex для Resonant. Не AI mesh / не PvP.
+**Статус:** 2026-08-15 — фаза 1 completion **код PASS** (Dex Resonant + Sanctum Status + `PROJECT-COMPLETION.md`).  
+**Цель следующей сессии:** hands e2e / Kami без ForceCatch (буфер) **или** фаза 2 DataStore. Не AI mesh / не PvP.
 
-Цикл: `SESSION-2026-08-14g-kami-hands-loop.md`  
-Wrap: `SESSION-2026-08-14f-week-wrap.md`
+План завершения: `PROJECT-COMPLETION.md`
 
 ## Вердикт
 
 | Item | Status |
 |------|--------|
-| W1–W4 week plan | **PASS** |
-| Hands-цикл Ками (MCP) | **PASS** — synth→бой→Care/Temper→Sanctum `[R]` |
-| Hands глазами (F/E) | optional buffer |
-| LOOK / E1 3/3 / V+Keypad | PASS (ранее) |
+| W1–W4 / hands MCP | PASS (ранее) |
+| Dex Resonant (ParentIds) | **PASS** |
+| Sanctum sticky Status | **PASS** (Open clears) |
+| Hands e2e n≥10 | буфер |
+| Фаза 2 DataStore | next optional |
 
 ## Старт сессии (порядок жёсткий)
 
 1. SoT `C:\Mimo\RealmOfSpirits\RealmOfSpirits second.rbxl`  
-2. По желанию: полный цикл руками **или** `GetDexBonus` для Resonant (Id 9xxx)  
+2. Hands smoke (F/1/2/E) **или** DataStore `UpdateAsync` / publish  
 3. Не AI mesh; не PvP  
 
 ## Studio SoT
 
 `C:\\Mimo\\RealmOfSpirits\\RealmOfSpirits second.rbxl`
+
+Touched: `ReplicatedStorage.RealmOfSpirits.SpiritResonance`, `StarterPlayerScripts.KamiSanctumController`.

@@ -6,6 +6,12 @@
 
 ## [Unreleased]
 
+### Project completion phase 1 (2026-08-15)
+- Roadmap: `PROJECT-COMPLETION.md` — shippable demo (фаза 1); soft-launch / scale = фазы 2–3
+- **Dex Resonant**: `SpiritResonance.GetDexBonus` резолвит элемент через roster / `ParentIds[1]` (Id 9xxx не `"Unknown"`)
+- **Sanctum UX**: успешный `Open` сбрасывает sticky Status «Ошибка: …» → idle hint
+- Буфер: hands e2e n≥10 / Kami без ForceCatch; не AI mesh / не PvP
+
 ### Week wrap 26.08–01.09 (2026-08-14f, досрочно)
 - **W1–W4 PASS** — Resonant loop + P0 friction закрыты; SoT Ctrl+S ~22:55 — `SESSION-2026-08-14f-week-wrap.md`
 - След. фраза: **hands-цикл Ками** (синтез→бой→уход→Sanctum) + e2e глазами; E1 ×N буфер; не AI mesh / не PvP
