@@ -8,6 +8,7 @@
 
 ### Week plan 26.08–01.09 (2026-08-14)
 - Тема: **Resonant loop + P0 friction** (Ками в бою и Care/Temper; лут E без костыля) — `WEEK-PLAN-2026-08-26.md`
+- **W1 PASS**: Crystal_120 **E** без ручного Enabled; бой **V**+Keypad1/2 победа — `SESSION-2026-08-14c-w1-friction.md`
 - Не AI mesh / не PvP; E1 ×N руками остаётся буфером
 
 ### Week wrap + Sanctum LOOK (2026-08-22)
