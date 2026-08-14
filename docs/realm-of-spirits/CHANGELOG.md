@@ -9,6 +9,7 @@
 ### Week wrap 26.08–01.09 (2026-08-14f, досрочно)
 - **W1–W4 PASS** — Resonant loop + P0 friction закрыты; SoT Ctrl+S ~22:55 — `SESSION-2026-08-14f-week-wrap.md`
 - След. фраза: **hands-цикл Ками** (синтез→бой→уход→Sanctum) + e2e глазами; E1 ×N буфер; не AI mesh / не PvP
+- **Hands-цикл MCP PASS** (2026-08-14g): Ками-Глыба → удар «Огненный коготь» → Care+Temper → Sanctum `[R]` — `SESSION-2026-08-14g-kami-hands-loop.md`
 
 ### Week plan 26.08–01.09 (2026-08-14)
 - Тема: **Resonant loop + P0 friction** (Ками в бою и Care/Temper; лут E без костыля) — `WEEK-PLAN-2026-08-26.md`
