@@ -28,14 +28,14 @@
 
 ## Фаза 2 — Soft-launch
 
-| Gate | Смысл |
-|------|--------|
-| Publish + API Services | Реальный DataStore round-trip (не только in-memory Studio) |
-| `DataStoreManager` | Session lock / `UpdateAsync` (gap 2026-08-11) |
-| Hub funnel | Лёгкая инструментация Mika/Exit (не опросники) |
-| Fair combat | `quality_gate.py` зелёный на mirrors |
+| Gate | Смысл | Статус |
+|------|--------|--------|
+| Publish + API Services | Реальный DataStore round-trip (не только in-memory Studio) | **ops** (нужен publish place) |
+| `DataStoreManager` | Session lock + `UpdateAsync` | **PASS** 2026-08-15 — `studio/DataStoreManager.lua` |
+| Hub funnel | Лёгкая инструментация Mika/Exit (не опросники) | pending |
+| Fair combat | `quality_gate.py` зелёный на mirrors | pending check |
 
-Старт только после фазы 1 кода + хотя бы одного hands smoke.
+Старт кода фазы 2: session lock done. Publish — вручную в Creator Dashboard.
 
 ---
 

@@ -1,6 +1,7 @@
 -- ============================================
 -- Realm of Spirits - DataStore Manager
 -- Сохранение и загрузка данных игроков
+-- Session lock + UpdateAsync (фаза 2 soft-launch)
 -- ============================================
 
 local DataStoreService = game:GetService("DataStoreService")
@@ -15,6 +16,8 @@ local SpiritDatabase = require(ReplicatedStorage:WaitForChild("RealmOfSpirits"):
 local DATA_STORE_NAME = "RealmOfSpirits_v2"
 local AUTO_SAVE_INTERVAL = 300 -- 5 минут
 local MAX_RETRIES = 3
+-- Soft session lock: another server cannot overwrite while lock is fresh.
+local SESSION_LOCK_TIMEOUT = 1800 -- 30 мин
 
 -- ============================================
 -- DataStore Manager
@@ -22,6 +25,49 @@ local MAX_RETRIES = 3
 
 local DataStoreManager = {}
 DataStoreManager.__index = DataStoreManager
+
+local function DeepCopy(value)
+	if type(value) ~= "table" then
+		return value
+	end
+	local copy = {}
+	for k, v in pairs(value) do
+		copy[k] = DeepCopy(v)
+	end
+	return copy
+end
+
+local function PlayerKey(userId: number): string
+	return "Player_" .. tostring(userId)
+end
+
+local function MakeSessionMeta()
+	return {
+		JobId = game.JobId,
+		PlaceId = game.PlaceId,
+		Time = os.time(),
+	}
+end
+
+local function IsForeignLockHeld(session): boolean
+	if type(session) ~= "table" then
+		return false
+	end
+	if session.JobId == game.JobId then
+		return false
+	end
+	local lockedAt = tonumber(session.Time) or 0
+	return (os.time() - lockedAt) < SESSION_LOCK_TIMEOUT
+end
+
+local function StripEphemeral(data)
+	if type(data) ~= "table" then
+		return data
+	end
+	local out = DeepCopy(data)
+	out._DoNotSave = nil
+	return out
+end
 
 local function NormalizeCurrency(data)
 	local c = tonumber(data.CopperCoins) or 0
@@ -151,6 +197,8 @@ function DataStoreManager.new()
 	self.PlayerData = {}
 	self.SaveQueue = {}
 	self.IsSaving = {}
+	self.LoadFailed = {}
+	self.SessionOwned = {}
 
 	_instance = self
 	return self
@@ -239,45 +287,80 @@ end
 
 function DataStoreManager:LoadData(player)
 	local userId = player.UserId
+	local key = PlayerKey(userId)
 	local success = false
 	local data = nil
 	local attempts = 0
+	local lockDenied = false
 
 	if not self.DataStore then
 		success = true
+		data = nil
 	else
 		while not success and attempts < MAX_RETRIES do
 			attempts = attempts + 1
+			local transformDenied = false
 			local ok, result = pcall(function()
-				return self.DataStore:GetAsync("Player_" .. userId)
+				return self.DataStore:UpdateAsync(key, function(old)
+					if IsForeignLockHeld(old and old._Session) then
+						transformDenied = true
+						return nil
+					end
+					local out
+					if type(old) == "table" then
+						out = DeepCopy(old)
+						out.LastLogin = os.time()
+						out.TotalJoins = (tonumber(out.TotalJoins) or 0) + 1
+					else
+						out = self:GetDefaultData()
+						out.FirstJoin = os.time()
+						out.TotalJoins = 1
+					end
+					out._DoNotSave = nil
+					out._Session = MakeSessionMeta()
+					return out
+				end)
 			end)
-			if ok then
+			if transformDenied then
+				lockDenied = true
+				break
+			end
+			if ok and type(result) == "table" then
 				success = true
 				data = result
 			else
 				warn("DataStore Load Attempt " .. attempts .. " failed for " .. player.Name .. ": " .. tostring(result))
-				task.wait(1)
+				task.wait(0.5 * attempts)
 			end
 		end
 	end
 
-	-- Если GetAsync упал — не создаём «нового игрока» (иначе SaveData затрёт сейв)
-	if self.DataStore and not success then
+	if lockDenied then
+		warn(player.Name .. " - session lock held elsewhere; DoNotSave")
+		data = self:GetDefaultData()
+		data.FirstJoin = os.time()
+		data.TotalJoins = 1
+		data._DoNotSave = true
+		self.LoadFailed[userId] = true
+		self.SessionOwned[userId] = false
+	elseif self.DataStore and not success then
 		warn(player.Name .. " - DataStore load FAILED; session marked DoNotSave")
 		data = self:GetDefaultData()
 		data.FirstJoin = os.time()
 		data.TotalJoins = 1
 		data._DoNotSave = true
-		self.LoadFailed = self.LoadFailed or {}
 		self.LoadFailed[userId] = true
+		self.SessionOwned[userId] = false
 	elseif not data then
+		-- Unpublished / memory-only: no lock in DataStore
 		data = self:GetDefaultData()
 		data.FirstJoin = os.time()
 		data.TotalJoins = 1
+		data._Session = MakeSessionMeta()
+		self.SessionOwned[userId] = true
 		print(player.Name .. " - новые данные созданы")
 	else
-		data.LastLogin = os.time()
-		data.TotalJoins = (data.TotalJoins or 0) + 1
+		self.SessionOwned[userId] = true
 		print(player.Name .. " - данные загружены (уровень: " .. tostring(data.Level) .. ")")
 	end
 
@@ -287,14 +370,15 @@ function DataStoreManager:LoadData(player)
 	return data
 end
 
-function DataStoreManager:SaveData(player)
+-- releaseSession: clear _Session after write (leave / BindToClose)
+function DataStoreManager:SaveData(player, releaseSession)
 	local userId = player.UserId
 	local data = self.PlayerData[userId]
 	if not data then
 		warn("No data to save for " .. player.Name)
 		return false
 	end
-	if data._DoNotSave or (self.LoadFailed and self.LoadFailed[userId]) then
+	if data._DoNotSave or self.LoadFailed[userId] then
 		warn("Skip save for " .. player.Name .. " (load failed / DoNotSave)")
 		return false
 	end
@@ -304,25 +388,52 @@ function DataStoreManager:SaveData(player)
 	self.IsSaving[userId] = true
 	local success = false
 	local attempts = 0
+	local key = PlayerKey(userId)
+
 	if not self.DataStore then
 		success = true
 	else
 		while not success and attempts < MAX_RETRIES do
 			attempts = attempts + 1
+			local skippedLock = false
 			local ok, err = pcall(function()
-				self.DataStore:SetAsync("Player_" .. userId, data)
+				self.DataStore:UpdateAsync(key, function(old)
+					if IsForeignLockHeld(old and old._Session) then
+						skippedLock = true
+						return nil
+					end
+					-- Prefer our session: if we never owned lock, still allow if unlocked/expired
+					if self.SessionOwned[userId] == false then
+						skippedLock = true
+						return nil
+					end
+					local toSave = StripEphemeral(data)
+					if releaseSession then
+						toSave._Session = nil
+					else
+						toSave._Session = MakeSessionMeta()
+					end
+					return toSave
+				end)
 			end)
-			if ok then
+			if ok and not skippedLock then
 				success = true
+			elseif skippedLock then
+				warn("DataStore Save skipped for " .. player.Name .. " (foreign session lock)")
+				break
 			else
 				warn("DataStore Save Attempt " .. attempts .. " failed for " .. player.Name .. ": " .. tostring(err))
-				task.wait(1)
+				task.wait(0.5 * attempts)
 			end
 		end
 	end
+
 	self.IsSaving[userId] = nil
 	if success then
-		print(player.Name .. " - данные сохранены")
+		if releaseSession then
+			self.SessionOwned[userId] = false
+		end
+		print(player.Name .. " - данные сохранены" .. (releaseSession and " (session released)" or ""))
 	else
 		warn(player.Name .. " - ОШИБКА сохранения после " .. MAX_RETRIES .. " попыток")
 	end
@@ -348,7 +459,7 @@ function DataStoreManager:StartAutoSave()
 			task.wait(AUTO_SAVE_INTERVAL)
 			for _, player in ipairs(Players:GetPlayers()) do
 				task.spawn(function()
-					self:SaveData(player)
+					self:SaveData(player, false)
 				end)
 			end
 			print("Auto-save completed for " .. #Players:GetPlayers() .. " players")
@@ -357,21 +468,30 @@ function DataStoreManager:StartAutoSave()
 end
 
 function DataStoreManager:OnPlayerRemoving(player)
-	self:SaveData(player)
 	local userId = player.UserId
+	-- Wait for in-flight save, then final save with session release
 	local waitTime = 0
 	while self.IsSaving[userId] and waitTime < 10 do
 		task.wait(0.1)
 		waitTime = waitTime + 0.1
 	end
+	self:SaveData(player, true)
+	waitTime = 0
+	while self.IsSaving[userId] and waitTime < 10 do
+		task.wait(0.1)
+		waitTime = waitTime + 0.1
+	end
+	self.SaveQueue[userId] = nil
 	self.PlayerData[userId] = nil
+	self.SessionOwned[userId] = nil
+	self.LoadFailed[userId] = nil
 end
 
 function DataStoreManager:BindToClose()
 	game:BindToClose(function()
 		print("Game closing - saving all players...")
 		for _, player in ipairs(Players:GetPlayers()) do
-			self:SaveData(player)
+			self:SaveData(player, true)
 		end
 		local waitTime = 0
 		local anySaving = true

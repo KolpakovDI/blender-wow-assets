@@ -12,6 +12,11 @@
 - **Sanctum UX**: успешный `Open` сбрасывает sticky Status «Ошибка: …» → idle hint
 - Буфер: hands e2e n≥10 / Kami без ForceCatch; не AI mesh / не PvP
 
+### DataStore session lock (2026-08-15b)
+- `DataStoreManager`: load/save через **`UpdateAsync`** + soft `_Session` lock (JobId/Time, 30 мин); leave/BindToClose release
+- Нет `SetAsync` на player key; DoNotSave при чужом lock / load fail — `SESSION-2026-08-15b-datastore-session-lock.md`
+- Publish + API Services для live round-trip — ещё ops
+
 ### Week wrap 26.08–01.09 (2026-08-14f, досрочно)
 - **W1–W4 PASS** — Resonant loop + P0 friction закрыты; SoT Ctrl+S ~22:55 — `SESSION-2026-08-14f-week-wrap.md`
 - След. фраза: **hands-цикл Ками** (синтез→бой→уход→Sanctum) + e2e глазами; E1 ×N буфер; не AI mesh / не PvP
