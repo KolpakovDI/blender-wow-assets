@@ -10,7 +10,8 @@
 - `UIController` TradeFrame: `ShopScroll` / `InventoryScroll` + CanvasSize; списки больше не вылезают за рамку
 - CareRewardCard уезжает под activity bar, если магазин открыт; TradeFrame ZIndex=55 — Play smoke PASS
 - Trade rows: `ItemName` + TextTruncate слева от Купить/Продать; миникарта — точки QuestLocations/ScoutQuestor
-- SeasonPass body → ScrollingFrame (`BodyText`)
+- SeasonPass body → ScrollingFrame (`BodyText`); Actions тоже ScrollingFrame
+- Кнопка **Магазин** в ActionsFrame; GetShop больше не спамит при входе в Genkan; `OpenTrade` открывает панель
 
 ### MCP hands buffer (2026-08-15l)
 - HubFunnel Complete + бой V/Keypad + Kami без ForceCatch + ScoutPost; ExpansionGate locked — `SESSION-2026-08-15l-mcp-hands-buffer.md`

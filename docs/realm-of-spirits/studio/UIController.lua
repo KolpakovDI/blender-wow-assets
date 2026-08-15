@@ -907,8 +907,8 @@ WoWUITheme.StyleActionButton(profileButton)
 -- ============================================
 
 local actionsFrame = CreateFrame(screenGui, "ActionsFrame",
-	UDim2.new(0.5, -275, 1, -96),
-	UDim2.new(0, 550, 0, 54),
+	UDim2.new(0.5, -320, 1, -96),
+	UDim2.new(0, 640, 0, 54),
 	WoWUITheme.Colors.Stone
 )
 WoWUITheme.StylePanel(actionsFrame, "stone")
@@ -943,9 +943,19 @@ local menuButton = CreateTextButton(actionsFrame, "MenuButton",
 	"📜"
 )
 
+-- Магазин (Haven / пьедестал)
+local shopButton = CreateTextButton(actionsFrame, "ShopButton",
+	UDim2.new(0, 304, 0, 5),
+	UDim2.new(0, 88, 0, 44),
+	"Магазин",
+	Color3.fromRGB(180, 140, 70),
+	"🛒"
+)
+
 WoWUITheme.StyleActionButton(catchButton)
 WoWUITheme.StyleActionButton(battleButton)
 WoWUITheme.StyleActionButton(menuButton)
+WoWUITheme.StyleActionButton(shopButton)
 
 -- ============================================
 -- Боевой интерфейс (нижняя панель, не перекрывает центр экрана)
@@ -2620,6 +2630,17 @@ closeTradeButton.MouseButton1Click:Connect(function()
 	tradeFrame.Visible = false
 end)
 
+shopButton.MouseButton1Click:Connect(function()
+	tradeFrame.Visible = true
+	TradeEvent:FireServer("GetShop", {})
+	RefreshTradeInventory()
+	UpdateCoins(
+		tonumber(PlayerData.CopperCoins) or 0,
+		tonumber(PlayerData.SilverCoins) or 0,
+		tonumber(PlayerData.GoldCoins) or 0
+	)
+end)
+
 -- ============================================
 -- Обработка событий от сервера
 -- ============================================
@@ -3089,7 +3110,20 @@ end)
 
 TradeEvent.OnClientEvent:Connect(function(action, data)
 	if action == "ShopList" then
-		RefreshShopList(data.Items)
+		RefreshShopList(data and data.Items)
+		-- Prefetch from zone enter must not force-open; intentional opens set Visible first
+		if tradeFrame.Visible then
+			RefreshTradeInventory()
+			UpdateCoins(
+				tonumber(PlayerData.CopperCoins) or 0,
+				tonumber(PlayerData.SilverCoins) or 0,
+				tonumber(PlayerData.GoldCoins) or 0
+			)
+		end
+	elseif action == "OpenTrade" then
+		tradeFrame.Visible = true
+		TradeEvent:FireServer("GetShop", {})
+		RefreshTradeInventory()
 	elseif action == "TradeResult" then
 		ShowNotification(data.Message or "")
 		if data.Success and tradeFrame.Visible then
@@ -3107,8 +3141,8 @@ UpdateExp(0, 100)
 ShowNotification("Загрузка данных...", 2)
 
 local function HandleShopZoneActivation()
-	local zone = player:GetAttribute("CurrentZone")
-	if zone == "Safe" or zone == "Genkan" then
+	-- Silent refresh only if shop already open (avoid popup spam on Genkan)
+	if tradeFrame.Visible then
 		TradeEvent:FireServer("GetShop", {})
 	end
 end

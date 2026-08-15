@@ -587,15 +587,27 @@ local function ensurePassGui()
 	passBodyText.Text = "Загрузка сезона…"
 	passBodyText.Parent = passBody
 
-	local passActions = Instance.new("Frame")
+	local passActions = Instance.new("ScrollingFrame")
 	passActions.Name = "Actions"
 	passActions.Size = UDim2.new(1, -28, 0, 100)
 	passActions.Position = UDim2.new(0, 14, 1, -110)
 	passActions.BackgroundTransparency = 1
+	passActions.BorderSizePixel = 0
+	passActions.ScrollBarThickness = 5
+	passActions.ScrollBarImageColor3 = Color3.fromRGB(255, 196, 80)
+	passActions.CanvasSize = UDim2.new(0, 0, 0, 0)
+	passActions.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	passActions.ScrollingDirection = Enum.ScrollingDirection.Y
+	passActions.ClipsDescendants = true
 	passActions.Parent = passPanel
 	local lay = Instance.new("UIListLayout")
 	lay.Padding = UDim.new(0, 5)
+	lay.SortOrder = Enum.SortOrder.LayoutOrder
 	lay.Parent = passActions
+	local actPad = Instance.new("UIPadding")
+	actPad.PaddingTop = UDim.new(0, 2)
+	actPad.PaddingBottom = UDim.new(0, 4)
+	actPad.Parent = passActions
 
 	dock.MouseButton1Click:Connect(function()
 		passPanel.Visible = true
