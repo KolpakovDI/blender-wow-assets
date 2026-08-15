@@ -1,5 +1,6 @@
 -- NextStepChip: FTUE one-line objective (UI package B)
 -- Steps: Mika → Exit → funnel loot (E) → hide
+-- Q1 polish: after FTUE (or with active quest), show ZoneHint from QuestCatalog
 -- Client-only; does not change server remotes.
 
 local Players = game:GetService("Players")
@@ -27,6 +28,7 @@ local STEP_TEXT = {
 
 local current = STEP.Mika
 local gui, frame, label
+local zoneHintOverride = nil -- string from active quest ZoneHint
 
 -- Stack under ResonanceActivityBar (Y=8, H=28). Match RealmOfSpiritsUI inset space.
 local CHIP_TOP = 44
@@ -127,6 +129,12 @@ end
 
 local function refresh()
 	ensureGui()
+	-- ZoneHint wins after FTUE Done, or alongside Exit/Loot when quest points somewhere
+	if type(zoneHintOverride) == "string" and zoneHintOverride ~= "" then
+		frame.Visible = true
+		label.Text = "→  " .. zoneHintOverride
+		return
+	end
 	if current == STEP.Done then
 		frame.Visible = false
 		return
@@ -145,6 +153,56 @@ local function setStep(nextStep)
 	end
 	current = nextStep
 	refresh()
+end
+
+local function setZoneHint(hint)
+	if type(hint) == "string" and hint ~= "" then
+		zoneHintOverride = hint
+	else
+		zoneHintOverride = nil
+	end
+	refresh()
+end
+
+local function extractZoneHintFromEntry(entry)
+	if type(entry) ~= "table" then
+		return nil
+	end
+	local quest = entry.Quest or entry
+	if type(quest) ~= "table" then
+		return nil
+	end
+	if type(quest.ZoneHint) == "string" and quest.ZoneHint ~= "" then
+		return quest.ZoneHint
+	end
+	return nil
+end
+
+local function applyActiveQuestHints(data)
+	if type(data) ~= "table" then
+		return
+	end
+	local list = data.Quests or data.Active or data
+	if type(list) ~= "table" then
+		return
+	end
+	-- Prefer first active not ready to turn in
+	for _, entry in ipairs(list) do
+		if type(entry) == "table" and entry.ReadyToTurnIn ~= true then
+			local hint = extractZoneHintFromEntry(entry)
+			if hint then
+				setZoneHint(hint)
+				return
+			end
+		end
+	end
+	for _, entry in ipairs(list) do
+		local hint = extractZoneHintFromEntry(entry)
+		if hint then
+			setZoneHint(hint)
+			return
+		end
+	end
 end
 
 local function inventoryHasFunnelLoot(data)
@@ -184,8 +242,18 @@ player:GetAttributeChangedSignal("CurrentZone"):Connect(function()
 end)
 
 QuestEvent.OnClientEvent:Connect(function(action, data)
-	if action == "QuestAccepted" or action == "OpenQuestUI" then
+	if action == "QuestAccepted" then
 		setStep(STEP.Exit)
+		if type(data) == "table" and type(data.ZoneHint) == "string" then
+			setZoneHint(data.ZoneHint)
+		end
+		return
+	end
+	if action == "OpenQuestUI" then
+		setStep(STEP.Exit)
+		if type(data) == "table" then
+			applyActiveQuestHints(data)
+		end
 		return
 	end
 	if action == "ActiveQuests" or action == "QuestList" then
@@ -193,8 +261,10 @@ QuestEvent.OnClientEvent:Connect(function(action, data)
 		if type(data) == "table" then
 			if type(data.Quests) == "table" then
 				n = #data.Quests
+				applyActiveQuestHints(data)
 			elseif type(data.Active) == "table" then
 				n = #data.Active
+				applyActiveQuestHints(data)
 			else
 				for k, v in pairs(data) do
 					if type(k) == "number" or v == true then
@@ -206,6 +276,12 @@ QuestEvent.OnClientEvent:Connect(function(action, data)
 		if n > 0 then
 			setStep(STEP.Exit)
 		end
+	end
+	if action == "QuestCompleted" or action == "QuestTurnedIn" then
+		-- Refresh from server list next GetActiveQuests
+		zoneHintOverride = nil
+		refresh()
+		QuestEvent:FireServer("GetActiveQuests", {})
 	end
 end)
 
@@ -250,4 +326,4 @@ task.spawn(function()
 	refresh()
 end)
 
-print("[RoS] NextStepChip ready (UI package B)")
+print("[RoS] NextStepChip ready (UI package B + ZoneHint)")

@@ -6,6 +6,11 @@
 
 ## [Unreleased]
 
+### Q1 ZoneHint UI + VisitZone smoke (2026-08-15j)
+- QuestUI / NextStepChip / QuestTrackerHud показывают ZoneHint; QuestAccepted несёт hint
+- Список квестов: subtitle ZoneHint; ZoneController баннеры QuestLocations (ScoutPost…)
+- Play: quest 8 FrostRidge + quest 107 ScoutPost VisitZone PASS — `SESSION-2026-08-15j-zonehint-ui.md`
+
 ### Risk mitigation year expansion (2026-08-15i)
 - `ExpansionGate` (defaults false) + ProfileService / SpiritMesh stubs + Guild fail-closed
 - `validate_quest_catalog.py` in quality_gate; no QuestSystem `continue`; Scout → `_G.RoS_OpenQuestUI`

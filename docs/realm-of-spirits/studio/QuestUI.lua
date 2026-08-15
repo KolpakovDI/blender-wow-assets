@@ -818,6 +818,22 @@ local function showQuestDetail(quest, isActive, progress, readyToTurnIn)
 	typeLbl.TextXAlignment = Enum.TextXAlignment.Left
 	typeLbl.Parent = questDetailFrame
 
+	-- ZoneHint (Q1 polish): where to go next
+	if type(quest.ZoneHint) == "string" and quest.ZoneHint ~= "" then
+		local hintLbl = Instance.new("TextLabel")
+		hintLbl.Name = "ZoneHint"
+		hintLbl.Size = UDim2.new(1, 0, 0, 16)
+		hintLbl.BackgroundTransparency = 1
+		hintLbl.Text = "→ " .. quest.ZoneHint
+		hintLbl.TextColor3 = COLORS.Accent
+		hintLbl.Font = Enum.Font.GothamBold
+		hintLbl.TextScaled = false
+		hintLbl.TextSize = 12
+		hintLbl.TextXAlignment = Enum.TextXAlignment.Left
+		hintLbl.TextWrapped = true
+		hintLbl.Parent = questDetailFrame
+	end
+
 	-- Описание
 	local descLbl = Instance.new("TextLabel")
 	descLbl.Size = UDim2.new(1, 0, 0, 0)
@@ -869,6 +885,9 @@ local function showQuestDetail(quest, isActive, progress, readyToTurnIn)
 			elseif obj.Type == "CareSpirit" then objText = "Уход за духом: " .. (progress.Current or 0) .. "/" .. (obj.Count or 1)
 			elseif obj.Type == "TemperSpirit" then objText = "Закалка духа: " .. (progress.Current or 0) .. "/" .. (obj.Count or 1)
 			elseif obj.Type == "FindChests" then objText = "Найти сундуки: " .. obj.Count
+			elseif obj.Type == "VisitZone" then
+				local where = obj.ZoneDetail or quest.TargetZone or quest.ZoneHint or "зону"
+				objText = "Посетить: " .. tostring(where)
 			end
 
 			if isActive and progress and progress[i] then
@@ -1040,11 +1059,16 @@ local function createQuestEntry(quest, isActive, progress, order, readyToTurnIn)
 	if readyToTurnIn then
 		infoLbl.Text = "Готов к сдаче у квестора!"
 		infoLbl.TextColor3 = COLORS.Gold
+	elseif isActive and type(quest.ZoneHint) == "string" and quest.ZoneHint ~= "" then
+		infoLbl.Text = "→ " .. quest.ZoneHint
+		infoLbl.TextColor3 = COLORS.Accent
 	elseif isActive then
 		infoLbl.Text = "Ур. " .. (quest.Level or 1) .. " · В процессе"
 	elseif quest._completed then
 		infoLbl.Text = "Выполнено"
 		infoLbl.TextColor3 = COLORS.Complete
+	elseif type(quest.ZoneHint) == "string" and quest.ZoneHint ~= "" then
+		infoLbl.Text = "Ур. " .. (quest.Level or 1) .. " · " .. quest.ZoneHint
 	else
 		infoLbl.Text = "Ур. " .. (quest.Level or 1) .. " · " .. (quest.Type == "Story" and "Сюжетный" or "Побочный")
 	end

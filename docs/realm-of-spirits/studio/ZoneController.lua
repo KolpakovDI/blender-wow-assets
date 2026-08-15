@@ -124,6 +124,12 @@ local MESSAGES = {
 	MagmaFissure = "Лавовый разлом — Лавовый Краб",
 	FogBasin = "Туманная низина — Туманный Дух",
 	SkyRidge = "Небесный хребет — Небесный Сокол",
+	ScoutPost = "Лагерь разведки — квесты локаций",
+	Waystone = "Каменный алтарь — путевая метка",
+	ChestCluster = "Сундучный грот — охота за сундуками",
+	ElementShrine = "Святилище стихий — у Морозного хребта",
+	Overlook = "Обзорный утёс — вид на арену",
+	TrailCamp = "Придорожный стан — короткий привал",
 }
 
 local HABITAT_BANNERS = {
@@ -144,6 +150,12 @@ local HABITAT_BANNERS = {
 	MagmaFissure = {Title = "Лавовый разлом", Color = Color3.fromRGB(255, 90, 40)},
 	FogBasin = {Title = "Туманная низина", Color = Color3.fromRGB(160, 190, 220)},
 	SkyRidge = {Title = "Небесный хребет", Color = Color3.fromRGB(180, 210, 255)},
+	ScoutPost = {Title = "Лагерь разведки", Color = Color3.fromRGB(90, 140, 200)},
+	Waystone = {Title = "Каменный алтарь", Color = Color3.fromRGB(160, 150, 130)},
+	ChestCluster = {Title = "Сундучный грот", Color = Color3.fromRGB(200, 160, 60)},
+	ElementShrine = {Title = "Святилище стихий", Color = Color3.fromRGB(140, 200, 255)},
+	Overlook = {Title = "Обзорный утёс", Color = Color3.fromRGB(180, 120, 90)},
+	TrailCamp = {Title = "Придорожный стан", Color = Color3.fromRGB(100, 160, 90)},
 }
 
 local SLIPPER_COLOR = Color3.fromRGB(255, 170, 200)

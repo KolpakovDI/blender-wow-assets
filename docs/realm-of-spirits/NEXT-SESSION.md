@@ -1,14 +1,13 @@
 # NEXT SESSION
 
-**Статус:** 2026-08-15 — Risks купированы (`SESSION-2026-08-15i-risk-mitigation`) · C+A scaffolding + ExpansionGate.  
-**План:** [`YEAR-PLAN-2026-10.md`](YEAR-PLAN-2026-10.md) · [`RISKS-MITIGATION.md`](RISKS-MITIGATION.md)
+**Статус:** 2026-08-15 — Q1 ZoneHint + Q2 location banners PASS (`15j`) · risks gated.  
+**План:** [`YEAR-PLAN-2026-10.md`](YEAR-PLAN-2026-10.md)
 
 ## Сейчас
 
-1. SoT **Ctrl+S** (ExpansionGate + gated stubs + Quest*/WorldSpawner/PvP/Guild)  
-2. Play smoke: квест **8** → VisitZone FrostRidge; `/expansiongate` → all false  
-3. Q1 polish: ZoneHint в QuestUI; hands E1 буфер  
-4. **Не** ставить `AllowGuilds` / `AllowProfileService` / `AllowAiMeshOnline` / `AllowNewPvPFeatures` без E1/skip  
+1. SoT **Ctrl+S**  
+2. Hands E1 буфер (глазами) **или** Q2 visual pads smoke (ScoutPost marker)  
+3. **Не** Allow* / AI mesh / ProfileService  
 
 ## Studio SoT
 

@@ -68,6 +68,9 @@ local function objectiveName(obj)
 		return "Закалка духа"
 	elseif objType == "FindChests" then
 		return "Сундуки (E · зоны)"
+	elseif objType == "VisitZone" then
+		local where = obj.ZoneDetail or "зону"
+		return "Посетить: " .. tostring(where)
 	end
 	return objType ~= "" and objType or "Цель"
 end

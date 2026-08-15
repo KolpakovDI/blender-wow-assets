@@ -164,7 +164,13 @@ function QuestSystem:AcceptQuest(questId)
 		end
 	end
 
-	QuestEvent:FireClient(self.Player, "QuestAccepted", {QuestId = questId})
+	local acceptedQuest = QuestCatalog.Quests[questId]
+	QuestEvent:FireClient(self.Player, "QuestAccepted", {
+		QuestId = questId,
+		QuestName = acceptedQuest and acceptedQuest.Name or nil,
+		ZoneHint = acceptedQuest and acceptedQuest.ZoneHint or nil,
+		TargetZone = acceptedQuest and acceptedQuest.TargetZone or nil,
+	})
 
 	return true, "Квест принят!"
 end
