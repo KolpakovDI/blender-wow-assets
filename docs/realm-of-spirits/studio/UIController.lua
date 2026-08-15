@@ -1542,6 +1542,7 @@ local skillsFrame = CreateFrame(levelingFrame, "SkillsFrame",
 	UDim2.new(0.9, 0, 0, 100),
 	Color3.fromRGB(40, 40, 50)
 )
+skillsFrame.ClipsDescendants = true
 
 local skillsTitle = CreateTextLabel(skillsFrame, "SkillsTitle",
 	UDim2.new(0, 10, 0, 5),
@@ -1551,13 +1552,33 @@ local skillsTitle = CreateTextLabel(skillsFrame, "SkillsTitle",
 	12
 )
 
-local skillsListLabel = CreateTextLabel(skillsFrame, "SkillsListLabel",
-	UDim2.new(0, 10, 0, 25),
-	UDim2.new(0.9, 0, 0.9, 0),
-	"- Касание Призрака (ур. 1)\n- Удар силой (ур. 3)\n- Первая помощь (ур. 5)",
-	Color3.fromRGB(200, 200, 200),
-	11
-)
+local skillsScroll = Instance.new("ScrollingFrame")
+skillsScroll.Name = "SkillsScroll"
+skillsScroll.Position = UDim2.new(0, 6, 0, 26)
+skillsScroll.Size = UDim2.new(1, -12, 1, -32)
+skillsScroll.BackgroundTransparency = 1
+skillsScroll.BorderSizePixel = 0
+skillsScroll.ScrollBarThickness = 5
+skillsScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+skillsScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+skillsScroll.ScrollingDirection = Enum.ScrollingDirection.Y
+skillsScroll.ClipsDescendants = true
+skillsScroll.Parent = skillsFrame
+
+local skillsListLabel = Instance.new("TextLabel")
+skillsListLabel.Name = "SkillsListLabel"
+skillsListLabel.Size = UDim2.new(1, -8, 0, 0)
+skillsListLabel.AutomaticSize = Enum.AutomaticSize.Y
+skillsListLabel.BackgroundTransparency = 1
+skillsListLabel.Font = Enum.Font.Gotham
+skillsListLabel.TextSize = 11
+skillsListLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+skillsListLabel.TextXAlignment = Enum.TextXAlignment.Left
+skillsListLabel.TextYAlignment = Enum.TextYAlignment.Top
+skillsListLabel.TextWrapped = true
+skillsListLabel.Text = "- Касание Призрака (ур. 1)\n- Удар силой (ур. 3)\n- Первая помощь (ур. 5)"
+skillsListLabel.Parent = skillsScroll
+
 
 -- Следующее разблокирование
 local nextUnlockLabel = CreateTextLabel(levelingFrame, "NextUnlockLabel",
@@ -3163,7 +3184,7 @@ task.spawn(function()
 
 		local character = player.Character
 		local hrp = character and character:FindFirstChild("HumanoidRootPart")
-		if not hrp then continue end
+		if hrp then
 
 		local playerPos = hrp.Position
 		local absSize = minimapContainer.AbsoluteSize
@@ -3262,6 +3283,7 @@ task.spawn(function()
 
 			table.insert(dotPool, dot)
 		end
+		end -- hrp
 	end
 end)
 

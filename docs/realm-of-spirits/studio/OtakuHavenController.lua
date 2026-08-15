@@ -685,9 +685,22 @@ local function refreshPassPanel(state)
 			end)
 		end
 	end
-	btn("Сезонная форма — 50 жетонов", Color3.fromRGB(160, 110, 50), function()
-		havenEvent:FireServer("BuySeasonOffer", { OfferId = "seasonal_form" })
-	end)
+	-- EventShop offers (tokens) — full catalog, not only seasonal_form
+	local shop = state.EventShop or {}
+	for _, offer in ipairs(shop) do
+		local id = tostring(offer.Id or "")
+		local name = tostring(offer.Name or id)
+		local cost = tonumber(offer.CostTokens) or 0
+		local canAfford = tokens >= cost
+		local label = string.format("%s — %d жетонов", name, cost)
+		local color = canAfford and Color3.fromRGB(160, 110, 50) or Color3.fromRGB(70, 60, 55)
+		btn(label, color, function()
+			if id == "" then
+				return
+			end
+			havenEvent:FireServer("BuySeasonOffer", { OfferId = id })
+		end)
+	end
 end
 
 havenEvent.OnClientEvent:Connect(function(action, data)
