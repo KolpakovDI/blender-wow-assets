@@ -258,6 +258,7 @@ local function ensureGui()
 	descLabel.Font = Enum.Font.Gotham
 	descLabel.TextSize = 13
 	descLabel.TextWrapped = true
+	descLabel.TextTruncate = Enum.TextTruncate.AtEnd
 	descLabel.TextColor3 = Color3.fromRGB(190, 200, 220)
 	descLabel.TextXAlignment = Enum.TextXAlignment.Left
 	descLabel.Text = DESCS.Idle

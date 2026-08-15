@@ -2402,6 +2402,9 @@ UpdateBattleLog = function(text)
 	task.defer(function()
 		local canvasH = battleLogLabel.AbsoluteSize.Y
 		local viewH = battleLogScroll.AbsoluteWindowSize.Y
+		if viewH <= 0 then
+			viewH = battleLogScroll.AbsoluteSize.Y
+		end
 		battleLogScroll.CanvasPosition = Vector2.new(0, math.max(0, canvasH - viewH))
 	end)
 end
