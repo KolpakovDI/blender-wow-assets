@@ -214,6 +214,7 @@ local function applyFlexVisual(player)
 	label.Font = Enum.Font.GothamBold
 	label.TextSize = 14
 	label.TextStrokeTransparency = 0.5
+	label.TextTruncate = Enum.TextTruncate.AtEnd
 	label.Text = tostring(cosmetic.Name or "Cosmetic") .. " (" .. tostring(cosmetic.Rarity or "Common") .. ")"
 	label.TextColor3 = rarityColor(cosmetic.Rarity)
 	label.Parent = billboard

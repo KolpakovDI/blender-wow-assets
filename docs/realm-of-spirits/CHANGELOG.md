@@ -23,6 +23,7 @@
 - ActivityBar + ProfileRank TextTruncate
 - RankFrame: `RequirementsScroll` для длинного списка требований
 - BattleLog auto-scroll fallback AbsoluteSize; PlayerInteract Desc TextTruncate
+- FlexBillboard (косметика над головой) TextTruncate
 
 ### MCP hands buffer (2026-08-15l)
 - HubFunnel Complete + бой V/Keypad + Kami без ForceCatch + ScoutPost; ExpansionGate locked — `SESSION-2026-08-15l-mcp-hands-buffer.md`
