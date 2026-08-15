@@ -2111,22 +2111,25 @@ end
 -- ============================================
 
 local notificationFrame = CreateFrame(screenGui, "NotificationFrame",
-	UDim2.new(0.5, -210, 0, 88),
-	UDim2.new(0, 420, 0, 44),
+	UDim2.new(0.5, -230, 0, 88),
+	UDim2.new(0, 460, 0, 48),
 	Color3.fromRGB(40, 40, 50)
 )
 notificationFrame.BackgroundTransparency = 1
 notificationFrame.Visible = false
 notificationFrame.ZIndex = 40
+notificationFrame.ClipsDescendants = true
 
 local notificationLabel = CreateTextLabel(notificationFrame, "NotificationLabel",
 	UDim2.new(0, 10, 0, 0),
-	UDim2.new(0.9, 0, 1, 0),
+	UDim2.new(1, -20, 1, 0),
 	"",
 	Color3.fromRGB(255, 230, 120),
 	16
 )
 notificationLabel.ZIndex = 41
+notificationLabel.TextWrapped = true
+notificationLabel.TextTruncate = Enum.TextTruncate.AtEnd
 notificationLabel.TextStrokeTransparency = 0.35
 notificationLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
 

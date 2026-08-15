@@ -46,10 +46,11 @@ local function ensureFallback()
 		frame.AnchorPoint = Vector2.new(0.5, 0)
 		-- Below ResonanceActivityBar + NextStepChip top stack
 		frame.Position = UDim2.new(0.5, 0, 0, 88)
-		frame.Size = UDim2.new(0, 420, 0, 44)
+		frame.Size = UDim2.new(0, 460, 0, 48)
 		frame.BackgroundColor3 = Color3.fromRGB(28, 24, 40)
 		frame.BackgroundTransparency = 1
 		frame.BorderSizePixel = 0
+		frame.ClipsDescendants = true
 		frame.Visible = false
 		frame.Parent = gui
 
@@ -59,7 +60,8 @@ local function ensureFallback()
 
 		local label = Instance.new("TextLabel")
 		label.Name = "ToastLabel"
-		label.Size = UDim2.fromScale(1, 1)
+		label.Size = UDim2.new(1, -16, 1, 0)
+		label.Position = UDim2.new(0, 8, 0, 0)
 		label.BackgroundTransparency = 1
 		label.Font = Enum.Font.GothamBold
 		label.TextSize = 16
@@ -67,6 +69,8 @@ local function ensureFallback()
 		label.TextStrokeTransparency = 0.35
 		label.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
 		label.TextWrapped = true
+		label.TextTruncate = Enum.TextTruncate.AtEnd
+		label.TextXAlignment = Enum.TextXAlignment.Center
 		label.Parent = frame
 
 		fallbackGui = gui
@@ -92,6 +96,11 @@ function ToastRouter.Bind(frame, label)
 		boundLabel.BackgroundTransparency = 1
 		boundLabel.TextStrokeTransparency = 0.35
 		boundLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+		boundLabel.TextWrapped = true
+		boundLabel.TextTruncate = Enum.TextTruncate.AtEnd
+	end
+	if boundFrame then
+		boundFrame.ClipsDescendants = true
 	end
 	task.defer(pump)
 end
