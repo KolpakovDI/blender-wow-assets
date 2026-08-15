@@ -501,6 +501,7 @@ local function ShowCareRewardFeedback(payload)
 	card.BackgroundColor3 = Color3.fromRGB(24, 16, 36)
 	card.BackgroundTransparency = 0.05
 	card.BorderSizePixel = 0
+	card.ClipsDescendants = true
 	card.ZIndex = 90
 	card.Parent = screenGui
 	careRewardCard = card
@@ -522,6 +523,7 @@ local function ShowCareRewardFeedback(payload)
 	title.TextSize = 20
 	title.TextColor3 = Color3.fromRGB(255, 230, 150)
 	title.TextXAlignment = Enum.TextXAlignment.Left
+	title.TextTruncate = Enum.TextTruncate.AtEnd
 	title.Text = payload.FromPedestal and "✦ Уход у пьедестала" or "✦ Уход выполнен"
 	title.ZIndex = 81
 	title.Parent = card
@@ -539,6 +541,7 @@ local function ShowCareRewardFeedback(payload)
 	progLabel.TextSize = 13
 	progLabel.TextColor3 = Color3.fromRGB(230, 220, 200)
 	progLabel.TextXAlignment = Enum.TextXAlignment.Left
+	progLabel.TextTruncate = Enum.TextTruncate.AtEnd
 	progLabel.Text = string.format("Резонанс Bond %d  ·  +%d XP  (%d/%d)", bond, xpGained, bondXp, bondNeed)
 	progLabel.ZIndex = 81
 	progLabel.Parent = card
@@ -583,6 +586,7 @@ local function ShowCareRewardFeedback(payload)
 		row.TextSize = 13
 		row.TextColor3 = Color3.fromRGB(160, 255, 190)
 		row.TextXAlignment = Enum.TextXAlignment.Left
+		row.TextTruncate = Enum.TextTruncate.AtEnd
 		row.Text = string.format("★ %s — %s", tostring(ach.Title or ""), tostring(ach.Detail or ""))
 		row.ZIndex = 81
 		row.Parent = card
@@ -620,7 +624,7 @@ local function PlayCareClientVfx()
 end
 
 pcall(function()
-	QuestTrackerHud.init(screenGui, { Width = 210, Height = 160, Position = UDim2.new(1, -220, 0, 220) })
+	QuestTrackerHud.init(screenGui, { Width = 210, Height = 200, Position = UDim2.new(1, -220, 0, 220) })
 	QuestTrackerHud.bind(QuestEvent)
 end)
 
@@ -995,7 +999,7 @@ local battleTitle = CreateTextLabel(battleFrame, "BattleTitle",
 
 local battleElementTip = CreateTextLabel(battleFrame, "BattleElementTip",
 	UDim2.new(0, 110, 0, 5),
-	UDim2.new(0, 280, 0, 25),
+	UDim2.new(0, 220, 0, 25),
 	"",
 	Color3.fromRGB(255, 220, 140),
 	12
@@ -1034,14 +1038,47 @@ local function PulseBattleAgency(kind)
 	end)
 end
 
--- Лог боя (центр сверху панели)
-local battleLogLabel = CreateTextLabel(battleFrame, "BattleLogLabel",
-	UDim2.new(0.3, 0, 0, 5),
-	UDim2.new(0.4, 0, 0, 25),
+-- Лог боя (справа, скролл истории — не пересекается с ElementTip)
+local battleLogLines = {}
+local BATTLE_LOG_MAX = 14
+local battleLogScroll = Instance.new("ScrollingFrame")
+battleLogScroll.Name = "BattleLogScroll"
+battleLogScroll.Position = UDim2.new(1, -310, 0, 8)
+battleLogScroll.Size = UDim2.fromOffset(295, 100)
+battleLogScroll.BackgroundColor3 = Color3.fromRGB(22, 20, 28)
+battleLogScroll.BackgroundTransparency = 0.35
+battleLogScroll.BorderSizePixel = 0
+battleLogScroll.ScrollBarThickness = 5
+battleLogScroll.ScrollBarImageColor3 = Color3.fromRGB(200, 160, 100)
+battleLogScroll.ScrollingDirection = Enum.ScrollingDirection.Y
+battleLogScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+battleLogScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+battleLogScroll.ClipsDescendants = true
+battleLogScroll.ZIndex = 5
+battleLogScroll.Parent = battleFrame
+do
+	local c = Instance.new("UICorner")
+	c.CornerRadius = UDim.new(0, 8)
+	c.Parent = battleLogScroll
+	local pad = Instance.new("UIPadding")
+	pad.PaddingTop = UDim.new(0, 4)
+	pad.PaddingBottom = UDim.new(0, 4)
+	pad.PaddingLeft = UDim.new(0, 6)
+	pad.PaddingRight = UDim.new(0, 6)
+	pad.Parent = battleLogScroll
+end
+local battleLogLabel = CreateTextLabel(battleLogScroll, "BattleLogLabel",
+	UDim2.new(0, 0, 0, 0),
+	UDim2.new(1, -4, 0, 0),
 	"",
 	Color3.fromRGB(200, 200, 200),
-	14
+	12
 )
+battleLogLabel.AutomaticSize = Enum.AutomaticSize.Y
+battleLogLabel.TextWrapped = true
+battleLogLabel.TextXAlignment = Enum.TextXAlignment.Left
+battleLogLabel.TextYAlignment = Enum.TextYAlignment.Top
+battleLogLabel.ZIndex = 6
 
 -- HP/MP игрока (только в режиме боя)
 local battleStatsFrame = CreateFrame(battleFrame, "BattleStatsFrame",
@@ -1694,6 +1731,9 @@ local requirementsLabel = CreateTextLabel(rankFrame, "RequirementsLabel",
 	Color3.fromRGB(200, 200, 200),
 	12
 )
+requirementsLabel.TextWrapped = true
+requirementsLabel.TextYAlignment = Enum.TextYAlignment.Top
+requirementsLabel.TextXAlignment = Enum.TextXAlignment.Left
 
 -- Прогресс бар
 local rankProgressBg = CreateFrame(rankFrame, "RankProgressBg",
@@ -2326,7 +2366,22 @@ ShowNotification = function(text, duration, priority)
 end
 
 UpdateBattleLog = function(text)
-	battleLogLabel.Text = text
+	if type(text) ~= "string" or text == "" then
+		table.clear(battleLogLines)
+		battleLogLabel.Text = ""
+		battleLogScroll.CanvasPosition = Vector2.new(0, 0)
+		return
+	end
+	table.insert(battleLogLines, text)
+	while #battleLogLines > BATTLE_LOG_MAX do
+		table.remove(battleLogLines, 1)
+	end
+	battleLogLabel.Text = table.concat(battleLogLines, "\n")
+	task.defer(function()
+		local canvasH = battleLogLabel.AbsoluteSize.Y
+		local viewH = battleLogScroll.AbsoluteWindowSize.Y
+		battleLogScroll.CanvasPosition = Vector2.new(0, math.max(0, canvasH - viewH))
+	end)
 end
 
 local function SetBattleSkillButton(button, defaultText, skillData, playerMP, hotkey)

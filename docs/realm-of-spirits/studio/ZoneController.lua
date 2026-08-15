@@ -30,6 +30,7 @@ banner.TextColor3 = Color3.fromRGB(255, 235, 245)
 banner.Text = ""
 banner.TextSize = 28
 banner.Font = Enum.Font.GothamBold
+banner.TextTruncate = Enum.TextTruncate.AtEnd
 banner.Visible = false
 banner.Parent = gui
 

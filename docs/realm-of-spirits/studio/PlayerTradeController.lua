@@ -102,7 +102,9 @@ local function refreshInvList()
 			btn.Font = Enum.Font.Gotham
 			btn.TextSize = 13
 			btn.TextColor3 = Color3.fromRGB(240, 230, 255)
-			btn.Text = string.format("%s x%d", itemName(id), qty)
+			btn.TextXAlignment = Enum.TextXAlignment.Left
+			btn.TextTruncate = Enum.TextTruncate.AtEnd
+			btn.Text = string.format("  %s x%d", itemName(id), qty)
 			btn.Parent = invList
 			local corner = Instance.new("UICorner")
 			corner.CornerRadius = UDim.new(0, 6)
@@ -140,9 +142,11 @@ local function refreshCosList()
 			btn.Font = Enum.Font.Gotham
 			btn.TextSize = 13
 			btn.TextColor3 = Color3.fromRGB(220, 235, 255)
+			btn.TextXAlignment = Enum.TextXAlignment.Left
+			btn.TextTruncate = Enum.TextTruncate.AtEnd
 			local nm = entry.Name or id
 			local rarity = entry.Rarity
-			btn.Text = rarity and string.format("%s (%s)", tostring(nm), tostring(rarity)) or tostring(nm)
+			btn.Text = rarity and string.format("  %s (%s)", tostring(nm), tostring(rarity)) or ("  " .. tostring(nm))
 			btn.Parent = cosList
 			local corner = Instance.new("UICorner")
 			corner.CornerRadius = UDim.new(0, 6)
@@ -272,6 +276,7 @@ local function ensureGui()
 	invList.BorderSizePixel = 0
 	invList.ScrollBarThickness = 6
 	invList.CanvasSize = UDim2.new(0, 0, 0, 0)
+	invList.ClipsDescendants = true
 	invList.Parent = panel
 	local invCorner = Instance.new("UICorner")
 	invCorner.CornerRadius = UDim.new(0, 8)
@@ -296,6 +301,7 @@ local function ensureGui()
 	cosList.BorderSizePixel = 0
 	cosList.ScrollBarThickness = 6
 	cosList.CanvasSize = UDim2.new(0, 0, 0, 0)
+	cosList.ClipsDescendants = true
 	cosList.Parent = panel
 	local cosCorner = Instance.new("UICorner")
 	cosCorner.CornerRadius = UDim.new(0, 8)
