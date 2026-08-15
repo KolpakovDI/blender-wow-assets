@@ -62,7 +62,7 @@ def main() -> int:
         fail("validate_quest_catalog: ProfileServiceAdapter must consult ExpansionGate")
 
     # Exploration quests 8-15 present
-    for qid in range(8, 16):
+    for qid in range(8, 17):
         if f"[{qid}] =" not in cat and f"[{qid}]=" not in cat:
             fail(f"validate_quest_catalog: missing quest Id {qid}")
 

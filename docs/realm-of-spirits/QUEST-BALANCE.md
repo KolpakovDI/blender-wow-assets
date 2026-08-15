@@ -51,6 +51,8 @@ Objective `VisitZone` + `{ ZoneDetail = "FrostRidge" }` закрывается �
 | 13 | Луг рассвета | DawnMeadow | VisitZone |
 | 14 | Прибрежный зов | MistPond | VisitZone |
 | 15 | Ветряной утёс | GaleCliff | VisitZone |
+| 16 | Моховая поляна | MossGlade | VisitZone |
+| 107 | Разведка лагеря | ScoutPost | VisitZone |
 
 Hunt 201–218 → `SpiritHabitats` labels (без изменений порядка 4×4).
 

@@ -17,4 +17,9 @@ Quest 8 accept (prereq 7+1 seeded) → `VisitZone` FrostRidge → Current=1, Rea
 - ZoneController MESSAGES/HABITAT_BANNERS для ScoutPost…TrailCamp
 - ZoneSystem DETAIL_PRIORITY GaleCliff/MossGlade
 - Play smoke quest **107** ScoutPost VisitZone 1/1
+- Play physical: QuestLocations×6 + ScoutQuestor; teleport → ZoneDetail=ScoutPost
+- Quest **16** Моховая поляна (MossGlade) in Catalog + Studio
 
+## Owner
+
+**Ctrl+S** SoT. Не unlock ExpansionGate.

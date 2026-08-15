@@ -14,8 +14,8 @@ flowchart LR
 
 | Q | Окно | Фокус | Exit |
 |---|------|--------|------|
-| **Q1** | мес 1–3 | QuestCatalog, баланс, ZoneHint, +exploration квесты | Catalog live; ≥6 новых квестов |
-| **Q2** | мес 4–6 | Ландшафт + QuestLocations | +4–6 локаций с квестами |
+| **Q1** | мес 1–3 | QuestCatalog, баланс, ZoneHint, +exploration квесты | Catalog live; ≥6 новых квестов — **scaffolding PASS** (8–16 + UI ZoneHint, 2026-08-15j) |
+| **Q2** | мес 4–6 | Ландшафт + QuestLocations | +4–6 локаций с квестами — **pads PASS** (×6 + banners, 2026-08-15j) |
 | **Q3** | мес 7–9 | PvP fair + Haven décor | playable duel slice |
 | **Q4** | мес 10–12 | AI mesh, ProfileService, guilds | live или CONDITIONAL |
 

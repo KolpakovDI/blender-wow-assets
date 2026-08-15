@@ -929,6 +929,28 @@ QuestCatalog.Quests = {
 		},
 		Prerequisites = {14}
 	},
+	[16] = {
+		Id = 16,
+		Name = "Моховая поляна",
+		Description = "Посетите Моховую поляну (MossGlade) — тихий лес южнее StoneBasin",
+		Type = "Story",
+		Level = 5,
+		ZoneHint = "Моховая поляна · юг",
+		TargetZone = "MossGlade",
+		Objectives = {
+			{Type = "VisitZone", ZoneDetail = "MossGlade", Count = 1}
+		},
+		Rewards = {
+			Experience = 210,
+			CopperCoins = 115,
+			SilverCoins = 5,
+			GoldCoins = 0,
+			Reputation = 25,
+			UniqueItems = {},
+			Items = {{Id = 1, Quantity = 2}}
+		},
+		Prerequisites = {15}
+	},
 	[107] = {
 		Id = 107,
 		Name = "Разведка лагеря",
