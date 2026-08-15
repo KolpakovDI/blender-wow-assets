@@ -12,6 +12,7 @@
 - **W1 PASS** 15.08d: M1.1 PlaceId=`130832500076229`; M1.2 DS rejoin (ForceCatch→Stop→Play spirits/Exp); M1.3 quality_gate; M1.4 MCP бой+HubFunnel — `SESSION-2026-08-15d-month-w1-ops.md`
 - **W2 PASS CONDITIONAL** 15.08e: HubFunnel Complete; 5× MCP бой win; `RequestWardrobe`→`MarkHubPrep` в SoT — `SESSION-2026-08-15e-month-w2.md`
 - **W3 PASS** 15.08f: Kami без ForceCatch (Ками-Корни `#9384`); Care/Temper; Sanctum `[R]`; agency Keypad1+2 — `SESSION-2026-08-15f-month-w3.md`
+- **W4 PASS** 15.08g: soft-launch wrap; E1 CONDITIONAL + план рук; октябрь = hands E1 n≥10; фаза 3 gated — `SESSION-2026-08-15g-month-w4-wrap.md`
 
 ### Project completion phase 1 (2026-08-15)
 - Roadmap: `PROJECT-COMPLETION.md` — shippable demo (фаза 1); soft-launch / scale = фазы 2–3

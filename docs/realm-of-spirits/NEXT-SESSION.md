@@ -1,26 +1,29 @@
 # NEXT SESSION
 
-**Статус:** 2026-08-15 — Month **W3 PASS** (M3.1–M3.3).  
-**Цель следующей сессии:** **W4 soft-launch wrap** — таблица M1–M3, E1 вердикт/план, фраза на октябрь + gate фазы 3. Не AI mesh / не PvP.
+**Статус:** 2026-08-15 — Month plan **M1–M4 PASS** (E1 hands = CONDITIONAL).  
+**Цель следующей сессии (октябрьская фраза):** закрыть честный hands E1 (n≥10, ≥90%) и обнулить open P0 из лога; **не** стартовать фазу 3 (PvP / AI mesh), пока KR1–KR2 не зелёные глазами.
 
-План: `MONTH-PLAN-2026-08-15.md`  
-W3: `SESSION-2026-08-15f-month-w3.md`
+Wrap: `SESSION-2026-08-15g-month-w4-wrap.md`  
+План месяца: `MONTH-PLAN-2026-08-15.md` (закрыт)
 
-## Вердикт
+## Вердикт месяца
 
-| Item | Status |
+| Gate | Status |
 |------|--------|
-| M3.1 friction close | **PASS** |
-| M3.2 Kami без ForceCatch | **PASS** (Ками-Корни `[R]`) |
-| M3.3 agency 2+ skills | **PASS** |
+| M1 Publish + DS | **PASS** |
+| M2 HubFunnel + sample | **PASS CONDITIONAL** |
+| M3 Kami + agency | **PASS** |
+| M4 Wrap | **PASS** |
+| E1 hands n≥10 | **CONDITIONAL** → октябрь |
+| Фаза 3 PvP/AI mesh | **не стартовать** |
 
 ## Старт сессии (порядок жёсткий)
 
-1. SoT + Ctrl+S при необходимости  
-2. W4 wrap SESSION: статусы M1–M3 + soft-launch вердикт  
-3. E1: CONDITIONAL + план к n≥10 **или** честный gate  
-4. Фраза на октябрь; PvP/AI mesh только если KR1–KR2 OK  
-5. Не начинать фазу 3 кодом  
+1. SoT + Ctrl+S  
+2. Hands-only цикл Haven→квест→лут/лов→бой→Ками (F/E/1/2, без TP/BF)  
+3. Лог PASS/FAIL → копить к n≥10  
+4. Новые P0 только из глаз → чинить точечно  
+5. Не AI mesh; не PvP  
 
 ## Studio SoT
 

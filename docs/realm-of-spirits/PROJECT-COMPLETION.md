@@ -18,7 +18,7 @@
 | 1.2 | Sanctum Status не sticky после успешного Open | **PASS** 2026-08-15 — `KamiSanctumController` |
 | 1.3 | Этот документ + NEXT/CHANGELOG/GOALS | **PASS** |
 | 1.4 | Hands e2e ≥90% n≥10 (F/1/2/E) | **буфер** (процесс; не блокер кода фазы 1) |
-| 1.5 | Hands-цикл Ками без ForceCatch | **буфер** (MCP PASS в `SESSION-2026-08-14g`) |
+| 1.5 | Hands-цикл Ками без ForceCatch | **PASS** MCP 2026-08-15f — `SESSION-2026-08-15f-month-w3.md` (руки WASD — буфер) |
 
 **Out of scope фазы 1:** PvP feature work, online AI mesh, Haven décor, новые зоны, DataStore `UpdateAsync`.
 
@@ -30,12 +30,13 @@
 
 | Gate | Смысл | Статус |
 |------|--------|--------|
-| Publish + API Services | Реальный DataStore round-trip (не только in-memory Studio) | **ops** (нужен publish place) |
+| Publish + API Services | Реальный DataStore round-trip (не только in-memory Studio) | **PASS** 2026-08-15d — PlaceId=`130832500076229` |
 | `DataStoreManager` | Session lock + `UpdateAsync` | **PASS** 2026-08-15 — `studio/DataStoreManager.lua` |
-| Hub funnel | Лёгкая инструментация Mika/Exit | **PASS** 2026-08-15c — `HubFunnel` + hooks |
-| Fair combat | `quality_gate.py` зелёный на mirrors | pending check |
+| Hub funnel | Лёгкая инструментация Mika/Prep/Exit | **PASS** 2026-08-15c + день Complete 15e |
+| Fair combat | `quality_gate.py` зелёный на mirrors | **PASS** 2026-08-15d |
+| Month wrap | M1–M4 + октябрьская фраза | **PASS** 2026-08-15g — `SESSION-2026-08-15g-month-w4-wrap.md` |
 
-Старт кода фазы 2: session lock done. Publish — вручную в Creator Dashboard.
+Hands E1 ≥90% n≥10 — **буфер / CONDITIONAL** (не блокер soft-launch backend). Фаза 3 не стартовать до KR1–KR2 глазами.
 
 ---
 

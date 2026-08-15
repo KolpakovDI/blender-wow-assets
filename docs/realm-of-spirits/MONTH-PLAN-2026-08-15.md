@@ -14,7 +14,7 @@
 - DataStore `UpdateAsync` + session lock  
 - `HubFunnel` (Mika / Prep / ExitCombat)
 
-Остаётся **продукт**, не фичи: W2 hands KR, friction из реальной игры. W1 soft-launch ops **закрыт** (publish + live DS).
+Остаётся **продукт глазами:** честный hands E1 n≥10 (октябрь). Месяц soft-launch ops **M1–M4 закрыт** досрочно 15.08.
 
 ---
 
@@ -53,7 +53,7 @@ flowchart LR
 | **M1** | Publish + DS round-trip + quality_gate + 1 hands smoke | **PASS** 15.08d — PlaceId=`130832500076229`; DS rejoin OK |
 | **M2** | E1 sample ≥5 рук + HubFunnel день + backlog friction | **PASS CONDITIONAL** 15.08e — 5× MCP бой + HubFunnel Complete; backlog 3 |
 | **M3** | Топ-3 P0 закрыты + Kami hands без ForceCatch + agency 2+ skills | **PASS** 15.08f — `SESSION-2026-08-15f-month-w3.md` |
-| **M4** | Month wrap + E1 вердикт + фраза на октябрь + gate фазы 3 | pending |
+| **M4** | Month wrap + E1 вердикт + фраза на октябрь + gate фазы 3 | **PASS** 15.08g — E1 CONDITIONAL; фаза 3 не стартовать; `SESSION-2026-08-15g-month-w4-wrap.md` |
 
 ---
 
@@ -98,9 +98,9 @@ flowchart LR
 
 | # | Exit | Как проверить |
 |---|------|----------------|
-| **M4.1** | Таблица M1–M3 + вердикт soft-launch | SESSION month-wrap |
-| **M4.2** | E1: ≥90% n≥10 **или** честный CONDITIONAL + план | не раздувать scope |
-| **M4.3** | Фраза на октябрь + gate фазы 3 | PvP/AI mesh только если KR1–KR2 OK |
+| **M4.1** | Таблица M1–M3 + вердикт soft-launch | **PASS** — backend PASS; hands E1 CONDITIONAL |
+| **M4.2** | E1: ≥90% n≥10 **или** честный CONDITIONAL + план | **CONDITIONAL** + план рук в октябре |
+| **M4.3** | Фраза на октябрь + gate фазы 3 | **PASS** — PvP/AI mesh только после KR1–KR2 руками |
 
 **Done when:** wrap в git; `NEXT-SESSION.md` указывает на октябрьскую фразу.
 

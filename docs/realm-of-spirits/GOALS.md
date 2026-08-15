@@ -120,4 +120,5 @@
 8. ~~Неделя 26.08–01.09 Resonant loop + P0 friction~~ — **W1–W4 PASS** досрочно 14.08 (`SESSION-2026-08-14f-week-wrap.md`).
 9. ~~Hands-цикл Ками (MCP)~~ — PASS 14.08g; ~~фаза 1 completion code~~ — Dex Resonant + Sanctum Status 15.08 (`PROJECT-COMPLETION.md`).
 10. ~~Hub funnel / DS session lock / phase-1 completion~~ — PASS 15.08.
-11. **Next (месяц 15.08–14.09):** soft-launch + play-test KR — `MONTH-PLAN-2026-08-15.md`; старт **M1.1 publish**; AI mesh **deferred**; PvP не стартовать до gate W4.
+11. ~~Месяц 15.08–14.09 soft-launch~~ — **M1–M4 PASS** 15.08g (`SESSION-2026-08-15g-month-w4-wrap.md`); E1 hands CONDITIONAL.
+12. **Next (октябрь):** честный hands E1 n≥10 ≥90% + 0 open P0; AI mesh / PvP **не стартовать** до KR1–KR2 глазами.
