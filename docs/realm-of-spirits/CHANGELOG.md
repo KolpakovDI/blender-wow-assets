@@ -6,6 +6,11 @@
 
 ## [Unreleased]
 
+### Month plan 15.08–14.09 (2026-08-15)
+- Тема: **soft-launch + play-test KR** (publish/DS → hands sample → friction/Kami → wrap) — `MONTH-PLAN-2026-08-15.md`
+- Вне scope: AI mesh, новая PvP/guilds, декор Haven, ProfileService rewrite
+- Старт сессии: **M1.1** publish + API Services
+
 ### Project completion phase 1 (2026-08-15)
 - Roadmap: `PROJECT-COMPLETION.md` — shippable demo (фаза 1); soft-launch / scale = фазы 2–3
 - **Dex Resonant**: `SpiritResonance.GetDexBonus` резолвит элемент через roster / `ParentIds[1]` (Id 9xxx не `"Unknown"`)

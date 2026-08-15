@@ -62,6 +62,7 @@
 
 ## Ссылки
 
+- Месяц: `MONTH-PLAN-2026-08-15.md` (15.08–14.09 soft-launch + play-test)  
 - План недели (закрыт): `WEEK-PLAN-2026-08-26.md`  
 - Hands MCP: `SESSION-2026-08-14g-kami-hands-loop.md`  
 - Автоматизация: `AUTOMATION.md` / `python scripts/quality_gate.py`
