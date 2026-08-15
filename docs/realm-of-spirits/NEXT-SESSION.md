@@ -5,10 +5,9 @@
 
 ## Сейчас
 
-1. SoT **Ctrl+S** если ещё не сохраняли после 15k  
+1. SoT **Ctrl+S** (Trade UI scroll в UIController)  
 2. **Честный E1** глазами (Haven→квест→лут→лов→бой→Ками, F/E/1/2) — лог в новый SESSION  
-3. Опционально: починить `OtakuHavenService` hookPlayerFlex nil  
-4. **Не** Allow* / AI mesh / ProfileService без E1/skip  
+3. **Не** Allow* / AI mesh / ProfileService без E1/skip  
 
 ## Studio SoT
 
