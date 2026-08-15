@@ -1208,11 +1208,13 @@ end
 -- ============================================
 
 local spiritDetailFrame = CreateFrame(screenGui, "SpiritDetailFrame",
-	UDim2.new(0.5, -200, 0.5, -210),
-	UDim2.new(0, 400, 0, 420),
+	UDim2.new(0.5, -200, 0.5, -230),
+	UDim2.new(0, 400, 0, 450),
 	Color3.fromRGB(30, 30, 40)
 )
 spiritDetailFrame.Visible = false
+spiritDetailFrame.ClipsDescendants = true
+spiritDetailFrame.ZIndex = 50
 
 local spiritDetailTitle = CreateTextLabel(spiritDetailFrame, "SpiritDetailTitle",
 	UDim2.new(0, 10, 0, 10),
@@ -1258,28 +1260,52 @@ local detailSpiritStatus = CreateTextLabel(spiritDetailFrame, "DetailSpiritStatu
 	13
 )
 
--- Навыки духа
-local detailSpiritSkills = CreateTextLabel(spiritDetailFrame, "DetailSpiritSkills",
-	UDim2.new(0, 10, 0, 195),
-	UDim2.new(0.9, 0, 0, 50),
-	"Навыки:\n- Базовая атака (ур. 1)",
-	Color3.fromRGB(200, 200, 200),
-	12
-)
+-- Навыки духа (scroll — каталог может быть длинным)
+local detailSkillsScroll = Instance.new("ScrollingFrame")
+detailSkillsScroll.Name = "DetailSkillsScroll"
+detailSkillsScroll.Position = UDim2.new(0, 10, 0, 190)
+detailSkillsScroll.Size = UDim2.new(1, -20, 0, 56)
+detailSkillsScroll.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+detailSkillsScroll.BorderSizePixel = 0
+detailSkillsScroll.ScrollBarThickness = 5
+detailSkillsScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+detailSkillsScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+detailSkillsScroll.ScrollingDirection = Enum.ScrollingDirection.Y
+detailSkillsScroll.ClipsDescendants = true
+detailSkillsScroll.Parent = spiritDetailFrame
+do
+	local c = Instance.new("UICorner")
+	c.CornerRadius = UDim.new(0, 8)
+	c.Parent = detailSkillsScroll
+end
+
+local detailSpiritSkills = Instance.new("TextLabel")
+detailSpiritSkills.Name = "DetailSpiritSkills"
+detailSpiritSkills.Size = UDim2.new(1, -10, 0, 0)
+detailSpiritSkills.AutomaticSize = Enum.AutomaticSize.Y
+detailSpiritSkills.BackgroundTransparency = 1
+detailSpiritSkills.Font = Enum.Font.Gotham
+detailSpiritSkills.TextSize = 12
+detailSpiritSkills.TextColor3 = Color3.fromRGB(200, 200, 200)
+detailSpiritSkills.TextXAlignment = Enum.TextXAlignment.Left
+detailSpiritSkills.TextYAlignment = Enum.TextYAlignment.Top
+detailSpiritSkills.TextWrapped = true
+detailSpiritSkills.Text = "Навыки:\n- Базовая атака (ур. 1)"
+detailSpiritSkills.Parent = detailSkillsScroll
 
 -- Кнопка эволюции (активна если достаточно прокачаны скилы)
 local evolveButtonEnabled = false
 local detailEvolveButton = CreateTextButton(spiritDetailFrame, "DetailEvolveButton",
-	UDim2.new(0.5, -100, 0, 290),
-	UDim2.new(0, 200, 0, 40),
+	UDim2.new(0.5, -100, 0, 318),
+	UDim2.new(0, 200, 0, 36),
 	"ЭВОЛЮЦИЯ",
 	Color3.fromRGB(80, 80, 80),
 	"🧬"
 )
 
 local detailEvoProgressLabel = CreateTextLabel(spiritDetailFrame, "DetailEvoProgress",
-	UDim2.new(0, 10, 0, 248),
-	UDim2.new(0.9, 0, 0, 40),
+	UDim2.new(0, 10, 0, 278),
+	UDim2.new(0.9, 0, 0, 36),
 	"Эволюция: —",
 	Color3.fromRGB(255, 220, 140),
 	12
@@ -1291,15 +1317,16 @@ if detailEvoProgressLabel then
 end
 
 local detailResonanceLabel = CreateTextLabel(spiritDetailFrame, "DetailResonance",
-	UDim2.new(0, 10, 0, 220),
-	UDim2.new(0.9, 0, 0, 28),
+	UDim2.new(0, 10, 0, 250),
+	UDim2.new(0.9, 0, 0, 26),
 	"Резонанс: Bond 0 | Temper —",
 	Color3.fromRGB(180, 220, 255),
 	13
 )
+detailResonanceLabel.TextTruncate = Enum.TextTruncate.AtEnd
 
 local detailCareButton = CreateTextButton(spiritDetailFrame, "DetailCareButton",
-	UDim2.new(0.5, -185, 0, 335),
+	UDim2.new(0.5, -185, 0, 360),
 	UDim2.new(0, 170, 0, 34),
 	"УХОД",
 	Color3.fromRGB(70, 140, 90),
@@ -1307,7 +1334,7 @@ local detailCareButton = CreateTextButton(spiritDetailFrame, "DetailCareButton",
 )
 
 local detailTemperButton = CreateTextButton(spiritDetailFrame, "DetailTemperButton",
-	UDim2.new(0.5, 15, 0, 335),
+	UDim2.new(0.5, 15, 0, 360),
 	UDim2.new(0, 170, 0, 34),
 	"ЗАКАЛКА",
 	Color3.fromRGB(70, 100, 160),
@@ -1316,7 +1343,7 @@ local detailTemperButton = CreateTextButton(spiritDetailFrame, "DetailTemperButt
 
 -- Кнопка закрытия
 local detailCloseButton = CreateTextButton(spiritDetailFrame, "DetailCloseButton",
-	UDim2.new(0.5, -60, 0, 372),
+	UDim2.new(0.5, -60, 0, 400),
 	UDim2.new(0, 120, 0, 32),
 	"Закрыть",
 	Color3.fromRGB(100, 100, 100),
