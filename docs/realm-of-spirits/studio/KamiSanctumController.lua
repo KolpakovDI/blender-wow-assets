@@ -70,6 +70,10 @@ local function showLookMesh(spiritOrId)
 	local dist = math.max(size.X, size.Y, size.Z) * 1.8 + 1
 	cam.CFrame = CFrame.new(cf.Position + Vector3.new(dist * 0.7, dist * 0.35, dist * 0.7), cf.Position)
 	vp.Visible = true
+	local cap = main:FindFirstChild("LookCaption")
+	if cap then
+		cap.Visible = true
+	end
 end
 
 local function rebuildList(scroll, onPick)
@@ -90,6 +94,7 @@ local function rebuildList(scroll, onPick)
 		btn.Font = Enum.Font.Gotham
 		btn.TextSize = 14
 		btn.TextXAlignment = Enum.TextXAlignment.Left
+		btn.TextTruncate = Enum.TextTruncate.AtEnd
 		local mark = ""
 		if mode == "Synthesize" and table.find(selected, i) then
 			mark = "✓ "
@@ -179,12 +184,41 @@ local function ensureGui()
 
 	local scroll = Instance.new("ScrollingFrame")
 	scroll.Name = "SpiritList"
-	scroll.Size = UDim2.new(1, -24, 0, 200)
+	scroll.Size = UDim2.new(1, -120, 0, 200)
 	scroll.Position = UDim2.fromOffset(12, 88)
 	scroll.BackgroundColor3 = Color3.fromRGB(16, 12, 28)
 	scroll.BorderSizePixel = 0
 	scroll.ScrollBarThickness = 6
+	scroll.ClipsDescendants = true
 	scroll.Parent = frame
+
+	local lookVp = Instance.new("ViewportFrame")
+	lookVp.Name = "LookPreview"
+	lookVp.Size = UDim2.fromOffset(88, 88)
+	lookVp.Position = UDim2.new(1, -100, 0, 88)
+	lookVp.BackgroundColor3 = Color3.fromRGB(16, 12, 28)
+	lookVp.BorderSizePixel = 0
+	lookVp.Visible = false
+	lookVp.Parent = frame
+	local lookCorner = Instance.new("UICorner")
+	lookCorner.CornerRadius = UDim.new(0, 8)
+	lookCorner.Parent = lookVp
+	local lookCam = Instance.new("Camera")
+	lookCam.Name = "LookCam"
+	lookCam.Parent = lookVp
+	lookVp.CurrentCamera = lookCam
+
+	local lookCap = Instance.new("TextLabel")
+	lookCap.Name = "LookCaption"
+	lookCap.Size = UDim2.fromOffset(88, 20)
+	lookCap.Position = UDim2.new(1, -100, 0, 180)
+	lookCap.BackgroundTransparency = 1
+	lookCap.Text = "LOOK"
+	lookCap.TextColor3 = Color3.fromRGB(170, 150, 200)
+	lookCap.Font = Enum.Font.Gotham
+	lookCap.TextSize = 11
+	lookCap.Visible = false
+	lookCap.Parent = frame
 
 	local hint = Instance.new("TextLabel")
 	hint.Name = "Hint"
@@ -231,23 +265,8 @@ local function ensureGui()
 	status.TextSize = 13
 	status.TextWrapped = true
 	status.TextXAlignment = Enum.TextXAlignment.Left
+	status.TextTruncate = Enum.TextTruncate.AtEnd
 	status.Parent = frame
-
-	local lookVp = Instance.new("ViewportFrame")
-	lookVp.Name = "LookPreview"
-	lookVp.Size = UDim2.fromOffset(88, 88)
-	lookVp.Position = UDim2.new(1, -100, 1, -132)
-	lookVp.BackgroundColor3 = Color3.fromRGB(16, 12, 28)
-	lookVp.BorderSizePixel = 0
-	lookVp.Visible = false
-	lookVp.Parent = frame
-	local lookCorner = Instance.new("UICorner")
-	lookCorner.CornerRadius = UDim.new(0, 8)
-	lookCorner.Parent = lookVp
-	local lookCam = Instance.new("Camera")
-	lookCam.Name = "LookCam"
-	lookCam.Parent = lookVp
-	lookVp.CurrentCamera = lookCam
 
 	local function refresh()
 		rebuildList(scroll, function(i)
