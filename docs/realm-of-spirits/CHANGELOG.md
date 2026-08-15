@@ -6,6 +6,9 @@
 
 ## [Unreleased]
 
+### Trade UI scroll (2026-08-15)
+- `UIController` TradeFrame: `ShopScroll` / `InventoryScroll` + CanvasSize; списки больше не вылезают за рамку
+
 ### MCP hands buffer (2026-08-15l)
 - HubFunnel Complete + бой V/Keypad + Kami без ForceCatch + ScoutPost; ExpansionGate locked — `SESSION-2026-08-15l-mcp-hands-buffer.md`
 - E1 глазами n≥10 всё ещё CONDITIONAL (не закрыт этим буфером)

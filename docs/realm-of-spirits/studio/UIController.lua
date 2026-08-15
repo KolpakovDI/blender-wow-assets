@@ -1761,6 +1761,7 @@ local shopListFrame = CreateFrame(tradeFrame, "ShopListFrame",
 	UDim2.new(0.45, -15, 0, 250),
 	Color3.fromRGB(40, 40, 50)
 )
+shopListFrame.ClipsDescendants = true
 
 CreateTextLabel(shopListFrame, "ShopListTitle",
 	UDim2.new(0, 5, 0, 5),
@@ -1770,11 +1771,27 @@ CreateTextLabel(shopListFrame, "ShopListTitle",
 	14
 )
 
+local shopScroll = Instance.new("ScrollingFrame")
+shopScroll.Name = "ShopScroll"
+shopScroll.Position = UDim2.new(0, 4, 0, 28)
+shopScroll.Size = UDim2.new(1, -8, 1, -34)
+shopScroll.BackgroundTransparency = 1
+shopScroll.BorderSizePixel = 0
+shopScroll.ScrollBarThickness = 6
+shopScroll.ScrollBarImageColor3 = Color3.fromRGB(180, 160, 120)
+shopScroll.ScrollingDirection = Enum.ScrollingDirection.Y
+shopScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+shopScroll.AutomaticCanvasSize = Enum.AutomaticSize.None
+shopScroll.ClipsDescendants = true
+shopScroll.ZIndex = 2
+shopScroll.Parent = shopListFrame
+
 local inventoryListFrame = CreateFrame(tradeFrame, "InventoryListFrame",
 	UDim2.new(0.55, 5, 0, 75),
 	UDim2.new(0.45, -15, 0, 250),
 	Color3.fromRGB(40, 40, 50)
 )
+inventoryListFrame.ClipsDescendants = true
 
 CreateTextLabel(inventoryListFrame, "InventoryListTitle",
 	UDim2.new(0, 5, 0, 5),
@@ -1784,6 +1801,21 @@ CreateTextLabel(inventoryListFrame, "InventoryListTitle",
 	14
 )
 
+local inventoryScroll = Instance.new("ScrollingFrame")
+inventoryScroll.Name = "InventoryScroll"
+inventoryScroll.Position = UDim2.new(0, 4, 0, 28)
+inventoryScroll.Size = UDim2.new(1, -8, 1, -34)
+inventoryScroll.BackgroundTransparency = 1
+inventoryScroll.BorderSizePixel = 0
+inventoryScroll.ScrollBarThickness = 6
+inventoryScroll.ScrollBarImageColor3 = Color3.fromRGB(180, 160, 120)
+inventoryScroll.ScrollingDirection = Enum.ScrollingDirection.Y
+inventoryScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+inventoryScroll.AutomaticCanvasSize = Enum.AutomaticSize.None
+inventoryScroll.ClipsDescendants = true
+inventoryScroll.ZIndex = 2
+inventoryScroll.Parent = inventoryListFrame
+
 local closeTradeButton = CreateTextButton(tradeFrame, "CloseTradeButton",
 	UDim2.new(0.5, -60, 0, 335),
 	UDim2.new(0, 120, 0, 35),
@@ -1791,6 +1823,7 @@ local closeTradeButton = CreateTextButton(tradeFrame, "CloseTradeButton",
 	Color3.fromRGB(100, 100, 100),
 	"❌"
 )
+closeTradeButton.ZIndex = 5
 
 local shopItemButtons = {}
 local inventoryItemButtons = {}
@@ -1828,32 +1861,34 @@ local function ItemDef(itemId)
 end
 
 local function RefreshTradeInventory()
-	ClearTradeButtons(inventoryListFrame, inventoryItemButtons)
-	local y = 30
+	ClearTradeButtons(inventoryScroll, inventoryItemButtons)
+	local y = 4
 	for _, item in ipairs(PlayerData.Inventory or {}) do
 		local def = ItemDef(item.Id)
 		local itemName = (def and def.Name) or ("Предмет #" .. item.Id)
 		local canSell = ItemCatalog.CanSell(item.Id)
 		local sellPriceText = canSell and FormatCopperPrice(def.SellPrice or 0) or "—"
-		local btn = CreateTextButton(inventoryListFrame, "InvItem" .. item.Id,
-			UDim2.new(0, 5, 0, y),
-			UDim2.new(1, -10, 0, 45),
-			itemName .. " x" .. item.Quantity .. " • Продажа: " .. sellPriceText,
+		local btn = CreateTextButton(inventoryScroll, "InvItem" .. item.Id,
+			UDim2.new(0, 2, 0, y),
+			UDim2.new(1, -14, 0, 45),
+			itemName .. " x" .. item.Quantity,
 			Color3.fromRGB(70, 100, 140),
 			nil
 		)
+		btn.ClipsDescendants = true
 		local sellBtn = CreateTextButton(btn, "SellBtn",
-			UDim2.new(1, -75, 0, 5),
-			UDim2.new(0, 70, 0, 35),
+			UDim2.new(1, -72, 0, 5),
+			UDim2.new(0, 68, 0, 35),
 			"Продать",
 			Color3.fromRGB(180, 100, 70),
 			nil
 		)
 		sellBtn.Text = canSell and ("Продать\n" .. sellPriceText) or "Нельзя"
+		sellBtn.TextScaled = true
 		sellBtn.Active = canSell
 		sellBtn.AutoButtonColor = canSell
 		local useBtn = CreateTextButton(btn, "UseBtn",
-			UDim2.new(1, -150, 0, 5),
+			UDim2.new(1, -146, 0, 5),
 			UDim2.new(0, 70, 0, 35),
 			"Исп.",
 			Color3.fromRGB(100, 180, 100),
@@ -1876,22 +1911,25 @@ local function RefreshTradeInventory()
 		table.insert(inventoryItemButtons, btn)
 		y = y + 50
 	end
+	inventoryScroll.CanvasSize = UDim2.new(0, 0, 0, math.max(y, 4))
+	inventoryScroll.CanvasPosition = Vector2.zero
 end
 
 local function RefreshShopList(items)
-	ClearTradeButtons(shopListFrame, shopItemButtons)
-	local y = 30
+	ClearTradeButtons(shopScroll, shopItemButtons)
+	local y = 4
 	for _, item in ipairs(items or {}) do
-		local btn = CreateTextButton(shopListFrame, "ShopItem" .. item.Id,
-			UDim2.new(0, 5, 0, y),
-			UDim2.new(1, -10, 0, 45),
+		local btn = CreateTextButton(shopScroll, "ShopItem" .. item.Id,
+			UDim2.new(0, 2, 0, y),
+			UDim2.new(1, -14, 0, 45),
 			item.Name .. " — " .. FormatShopPrice(item),
 			Color3.fromRGB(70, 130, 180),
 			nil
 		)
+		btn.ClipsDescendants = true
 		local buyBtn = CreateTextButton(btn, "BuyBtn",
-			UDim2.new(1, -75, 0, 5),
-			UDim2.new(0, 70, 0, 35),
+			UDim2.new(1, -72, 0, 5),
+			UDim2.new(0, 68, 0, 35),
 			"Купить",
 			Color3.fromRGB(70, 180, 70),
 			nil
@@ -1903,6 +1941,8 @@ local function RefreshShopList(items)
 		table.insert(shopItemButtons, btn)
 		y = y + 50
 	end
+	shopScroll.CanvasSize = UDim2.new(0, 0, 0, math.max(y, 4))
+	shopScroll.CanvasPosition = Vector2.zero
 end
 
 -- ============================================
