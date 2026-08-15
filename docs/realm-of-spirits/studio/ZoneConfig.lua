@@ -165,6 +165,13 @@ ZoneConfig.Music = {
 	MagmaFissure = {SoundId = "9047105584", Volume = 0.38},
 	FogBasin = {SoundId = "9047105584", Volume = 0.36},
 	SkyRidge = {SoundId = "9047105584", Volume = 0.36},
+	-- Q2 QuestLocations (reuse combat bed; distinct keys so MusicController can resolve)
+	ScoutPost = {SoundId = "9047105584", Volume = 0.34},
+	Waystone = {SoundId = "9047104571", Volume = 0.33},
+	ChestCluster = {SoundId = "9047105584", Volume = 0.35},
+	ElementShrine = {SoundId = "9043887091", Volume = 0.33},
+	Overlook = {SoundId = "9047105584", Volume = 0.34},
+	TrailCamp = {SoundId = "9047104571", Volume = 0.32},
 }
 
 ZoneConfig.GachaRobuxProductId = 0

@@ -780,17 +780,60 @@ local function createRewardLabel(parent, icon, text, color)
 	textLabel.Parent = frame
 end
 
+local QUEST_ACTIVE_DIALOGUE = {
+	[7] = "Мика: Хулиганы из банды Shadow разгромили склад в Сеуле и украли партию редкой манги! Верни коробку у выхода в Akihabara — награжу билетом и монетами!",
+	[1] = "Мика: Манга спасена! Теперь выйди в Акихабару и поймай первого дикого духа — это твои Первые шаги!",
+	[2] = "Мика: Тренировка! Найди дикого духа и жми F — или зайди на арену. Нужно 5 побед!",
+	[3] = "Мика: Коллекционер! Поймай 3 разных типа духов (E). Разные виды — в счёт!",
+	[4] = "Мика: Боевое испытание! 10 побед — F по диким или арена. Я жду у стойки!",
+	[5] = "Мика: Мастер Духов! Прокачай любого духа до 10 ур. — бои F качают активный слот.",
+	[6] = "Мика: Легендарный Мастер! Собери 6 разных типов духов (E) — финал сюжета!",
+	[8] = "Мика: Морозный хребет на северо-западе — отметь путь, потом сдашь мне!",
+	[9] = "Мика: Пепельный сад на востоке — сходи, вдохни жар зоны!",
+	[10] = "Мика: Каменный бассейн на юго-западе — тяжёлая земля, лёгкий шаг!",
+	[11] = "Мика: Теневая лощина южнее арены — осторожно, там тени!",
+	[12] = "Мика: Грозовой шпиль — вверх по грозе, не стой под молнией!",
+	[13] = "Мика: Луг рассвета — светлый путь, отметь точку!",
+	[14] = "Мика: Прибрежный зов — MistPond у воды, E если увидишь лут!",
+	[15] = "Мика: Ветряной утёс западнее хребта — ветер в лицо, курс верный!",
+	[16] = "Мика: Моховая поляна — тихий лес южнее StoneBasin. Сходи и вернись!",
+	[101] = "Мика: Помощь торговцу! У EmberCourt (огненная зона) собери 5 кристаллов — E.",
+	[102] = "Мика: Охотник за сокровищами! Ищи золотые сундуки у троп — E, нужно 3.",
+	[103] = "Мика: Тренер духов! 20 побед — F по диким или арена.",
+	[104] = "Мика: Хранитель мира! Поймай 5 духов (E) — любые виды.",
+	[105] = "Мика: Легенда о Мастере! Финал побочек — 50 побед (F).",
+	[106] = "Мика: Цикл стихий! По 2 кристалла: Огонь/Земля/Ветер/Вода (E) — зоны на карте.",
+	[107] = "Мика: Разведчик у ScoutPost — найди лагерь у Exit/Combat!",
+	[108] = "Мика: Waystone у StoneBasin — каменный алтарь на карте!",
+	[109] = "Мика: ChestCluster восточнее Exit — сундучный грот!",
+	[110] = "Мика: ElementShrine у FrostRidge — святилище стихий!",
+	[111] = "Мика: Overlook — обзорный утёс, вид на арену!",
+	[112] = "Мика: TrailCamp — придорожный стан, короткий привал!",
+}
+
+local function dialogueForQuest(quest, readyToTurnIn, isActive)
+	if readyToTurnIn then
+		return "Мика: Ого, ты уже всё сделал? Давай сдадим квест!"
+	end
+	local id = tonumber(quest and quest.Id)
+	if id and QUEST_ACTIVE_DIALOGUE[id] then
+		return QUEST_ACTIVE_DIALOGUE[id]
+	end
+	if isActive and type(quest) == "table" and type(quest.ZoneHint) == "string" and quest.ZoneHint ~= "" then
+		return "Мика: Держи курс — " .. quest.ZoneHint .. ". Я жду у стойки!"
+	end
+	if isActive then
+		return "Мика: Удачи с заданием! Я буду ждать у стойки."
+	end
+	return nil
+end
+
 local function showQuestDetail(quest, isActive, progress, readyToTurnIn)
 	clearDetail()
 
-	if tonumber(quest.Id) == 7 then
-		dialogueLabel.Text = "Мика: Хулиганы из банды Shadow разгромили склад в Сеуле и украли партию редкой манги! Верни коробку у выхода в Akihabara — награжу билетом и монетами!"
-	elseif tonumber(quest.Id) == 1 then
-		dialogueLabel.Text = "Мика: Манга спасена! Теперь выйди в Акихабару и поймай первого дикого духа — это твои Первые шаги!"
-	elseif readyToTurnIn then
-		dialogueLabel.Text = "Мика: Ого, ты уже всё сделал? Давай сдадим квест!"
-	elseif isActive then
-		dialogueLabel.Text = "Мика: Удачи с заданием! Я буду ждать у стойки."
+	local line = dialogueForQuest(quest, readyToTurnIn, isActive)
+	if line then
+		dialogueLabel.Text = line
 	end
 
 	-- Название
@@ -1181,37 +1224,13 @@ QuestEvent.OnClientEvent:Connect(function(action, data)
 		end
 		if readyCount > 0 then
 			dialogueLabel.Text = "Мика: Ого, ты уже всё сделал? Давай сдадим квест!"
+		elseif data.Source == "ScoutQuestor" then
+			dialogueLabel.Text = "Разведчик: квесты локаций и охоты — ScoutPost, Waystone, сундуки. Смотри список!"
 		elseif #(data.Active or {}) > 0 then
-			local activeId = data.Active[1] and data.Active[1].Quest and data.Active[1].Quest.Id
-			if tonumber(activeId) == 7 then
-				dialogueLabel.Text = "Мика: Банда Shadow разгромила склад в Сеуле и украли партию редкой манги! Верни коробку — я щедро награжу!"
-			elseif tonumber(activeId) == 1 then
-				dialogueLabel.Text = "Мика: Через Exit в Акихабару — поймай первого дикого духа!"
-			elseif tonumber(activeId) == 2 then
-				dialogueLabel.Text = "Мика: Тренировка! Найди дикого духа и жми F — или зайди на арену. Нужно 5 побед!"
-			elseif tonumber(activeId) == 3 then
-				dialogueLabel.Text = "Мика: Коллекционер! Поймай 3 разных типа духов (E). Разные виды — в счёт!"
-			elseif tonumber(activeId) == 4 then
-				dialogueLabel.Text = "Мика: Боевое испытание! 10 побед — F по диким или арена. Я жду у стойки!"
-			elseif tonumber(activeId) == 5 then
-				dialogueLabel.Text = "Мика: Мастер Духов! Прокачай любого духа до 10 ур. — бои F качают активный слот."
-			elseif tonumber(activeId) == 6 then
-				dialogueLabel.Text = "Мика: Легендарный Мастер! Собери 6 разных типов духов (E) — финал сюжета!"
-			elseif tonumber(activeId) == 101 then
-				dialogueLabel.Text = "Мика: Помощь торговцу! У EmberCourt (огненная зона) собери 5 кристаллов — E."
-			elseif tonumber(activeId) == 102 then
-				dialogueLabel.Text = "Мика: Охотник за сокровищами! Ищи золотые сундуки у троп — E, нужно 3."
-			elseif tonumber(activeId) == 103 then
-				dialogueLabel.Text = "Мика: Тренер духов! 20 побед — F по диким или арена."
-			elseif tonumber(activeId) == 104 then
-				dialogueLabel.Text = "Мика: Хранитель мира! Поймай 5 духов (E) — любые виды."
-			elseif tonumber(activeId) == 105 then
-				dialogueLabel.Text = "Мика: Легенда о Мастере! Финал побочек — 50 побед (F)."
-			elseif tonumber(activeId) == 106 then
-				dialogueLabel.Text = "Мика: Цикл стихий! По 2 кристалла: Огонь/Земля/Ветер/Вода (E) — зоны на карте."
-			else
-				dialogueLabel.Text = "Мика: Удачи с заданием! Я буду ждать у стойки."
-			end
+			local activeQuest = data.Active[1] and data.Active[1].Quest
+			local activeId = activeQuest and activeQuest.Id
+			local line = dialogueForQuest(activeQuest or { Id = activeId }, false, true)
+			dialogueLabel.Text = line or "Мика: Удачи с заданием! Я буду ждать у стойки."
 		else
 			local hasManga = false
 			for _, q in ipairs(data.Available or {}) do
@@ -1262,7 +1281,17 @@ QuestEvent.OnClientEvent:Connect(function(action, data)
 									if hasLegend then
 										dialogueLabel.Text = "Мика: Ты почти легенда! Легендарный Мастер — 6 разных духов (E)!"
 									else
-										dialogueLabel.Text = "Мика: Добро пожаловать в Otaku Haven! О боже, ты выглядишь как настоящий герой!"
+										-- Prefer first available with ZoneHint (exploration / locations)
+										local hintLine = nil
+										for _, q in ipairs(data.Available or {}) do
+											local d = dialogueForQuest(q, false, true)
+											if d and QUEST_ACTIVE_DIALOGUE[tonumber(q.Id)] then
+												hintLine = d
+												break
+											end
+										end
+										dialogueLabel.Text = hintLine
+											or "Мика: Добро пожаловать в Otaku Haven! О боже, ты выглядишь как настоящий герой!"
 									end
 								end
 							end

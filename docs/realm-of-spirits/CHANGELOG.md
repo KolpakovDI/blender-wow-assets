@@ -6,6 +6,10 @@
 
 ## [Unreleased]
 
+### Q2 music + exploration dialogue (2026-08-15k)
+- ZoneConfig/MusicController: BGM keys для QuestLocations
+- QuestUI: реплики 8–16 / 107–112 + ScoutQuestor; Play MossGlade VisitZone PASS — `SESSION-2026-08-15k-q2-music-dialogue.md`
+
 ### Q1 ZoneHint UI + VisitZone smoke (2026-08-15j)
 - QuestUI / NextStepChip / QuestTrackerHud показывают ZoneHint; QuestAccepted несёт hint
 - Список квестов: subtitle ZoneHint; ZoneController баннеры QuestLocations (ScoutPost…)

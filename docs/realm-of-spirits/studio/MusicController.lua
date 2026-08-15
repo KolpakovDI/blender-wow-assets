@@ -148,6 +148,12 @@ local HABITAT_MUSIC_KEYS = {
 	MagmaFissure = true,
 	FogBasin = true,
 	SkyRidge = true,
+	ScoutPost = true,
+	Waystone = true,
+	ChestCluster = true,
+	ElementShrine = true,
+	Overlook = true,
+	TrailCamp = true,
 }
 
 local function resolveZoneKey(zoneType, detail)
