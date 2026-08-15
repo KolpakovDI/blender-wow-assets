@@ -1203,6 +1203,7 @@ local hintText = CreateTextLabel(hintFrame, "HintText",
 	16
 )
 hintText.TextWrapped = true
+hintText.TextTruncate = Enum.TextTruncate.AtEnd
 hintText.ZIndex = 41
 
 -- ============================================

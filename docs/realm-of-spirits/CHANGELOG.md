@@ -18,6 +18,7 @@
 - DexPanel: `DexScroll` для списка стихий; BagContentUI: скролл длинного описания предмета
 - BattleLogScroll справа (история ходов); CareReward TextTruncate; QuestTracker H=200; P2P trade TextTruncate
 - NextStepChip шире + TextTruncate; Season HowBodyScroll; имена слотов духов Truncate
+- Haven wardrobe/pass TextTruncate; HintFrame TextTruncate
 
 ### MCP hands buffer (2026-08-15l)
 - HubFunnel Complete + бой V/Keypad + Kami без ForceCatch + ScoutPost; ExpansionGate locked — `SESSION-2026-08-15l-mcp-hands-buffer.md`

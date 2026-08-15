@@ -235,6 +235,7 @@ local function ensureFlexWardrobe()
 	list.ScrollBarThickness = 6
 	list.CanvasSize = UDim2.new(0, 0, 0, 0)
 	list.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	list.ClipsDescendants = true
 	list.Parent = panel
 	local listCorner = Instance.new("UICorner")
 	listCorner.CornerRadius = UDim.new(0, 8)
@@ -349,6 +350,7 @@ local function showFlexWardrobe(data)
 			label.Font = Enum.Font.Gotham
 			label.TextSize = 15
 			label.TextXAlignment = Enum.TextXAlignment.Left
+			label.TextTruncate = Enum.TextTruncate.AtEnd
 			label.TextColor3 = Color3.fromRGB(235, 230, 255)
 			label.Text = name .. " (" .. rarity .. ")"
 			label.Parent = row
@@ -686,6 +688,7 @@ local function refreshPassPanel(state)
 		b.Font = Enum.Font.GothamBold
 		b.TextSize = 13
 		b.TextColor3 = Color3.fromRGB(255, 245, 220)
+		b.TextTruncate = Enum.TextTruncate.AtEnd
 		b.Parent = actions
 		do local c = Instance.new("UICorner") c.CornerRadius = UDim.new(0, 6) c.Parent = b end
 		b.MouseButton1Click:Connect(cb)
