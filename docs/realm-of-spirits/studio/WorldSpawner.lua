@@ -723,8 +723,14 @@ local function SetupScoutQuestor()
 	prompt.RequiresLineOfSight = false
 	prompt.Parent = body
 	prompt.Triggered:Connect(function(player)
+		-- Same server path as Mika: open full quest UI (not a bare FireClient toast)
+		if type(_G.RoS_OpenQuestUI) == "function" then
+			_G.RoS_OpenQuestUI(player)
+			return
+		end
 		local QuestEvent = RealmFolder:FindFirstChild("Quest")
 		if QuestEvent then
+			-- Fallback: request list then UI (client QuestUI listens)
 			QuestEvent:FireClient(player, "OpenQuestUI", {
 				Source = "ScoutQuestor",
 				Message = "Разведчик: квесты локаций и охоты",

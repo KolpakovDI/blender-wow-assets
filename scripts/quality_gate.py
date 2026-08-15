@@ -30,6 +30,7 @@ def run_check(script_name: str) -> tuple[bool, str]:
 def main() -> int:
     checks = [
         "validate_spirit_database.py",
+        "validate_quest_catalog.py",
         "battle_sanity_check.py",
         "fair_combat_check.py",
         "pvp_sanity_check.py",

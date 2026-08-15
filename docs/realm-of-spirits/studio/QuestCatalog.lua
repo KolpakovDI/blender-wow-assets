@@ -1076,4 +1076,22 @@ function QuestCatalog.GetAll()
 	return QuestCatalog.Quests
 end
 
+-- Risk mitigation: every QuestLocations key must be a VisitZone target of ≥1 non-deprecated quest
+function QuestCatalog.CollectVisitZoneDetails()
+	local set = {}
+	for _, quest in pairs(QuestCatalog.Quests) do
+		if not quest.Deprecated then
+			for _, obj in ipairs(quest.Objectives or {}) do
+				if obj.Type == "VisitZone" and obj.ZoneDetail then
+					set[tostring(obj.ZoneDetail)] = true
+				end
+			end
+			if quest.TargetZone then
+				-- TargetZone may be habitat/Combat; VisitZone keys are authoritative for locations
+			end
+		end
+	end
+	return set
+end
+
 return QuestCatalog

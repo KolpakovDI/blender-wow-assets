@@ -21,4 +21,12 @@ flowchart LR
 
 **Gate:** PvP/mesh/ProfileService не раньше hands E1 ≥90% n≥10 **или** явный skip владельца.
 
+## Риски → купирование
+
+См. [`RISKS-MITIGATION.md`](RISKS-MITIGATION.md). Кратко:
+
+1. **Монолит квестов** → только `QuestCatalog` + CI `validate_quest_catalog.py`  
+2. **Пустой ландшафт** → orphan `QuestLocations` = fail gate  
+3. **Ранний mesh/ProfileService/guilds** → `ExpansionGate` defaults false + stub services refuse  
+
 Связь: soft-launch wrap `SESSION-2026-08-15g-month-w4-wrap.md` · SoT `RealmOfSpirits second.rbxl`.

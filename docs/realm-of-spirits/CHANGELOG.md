@@ -6,6 +6,11 @@
 
 ## [Unreleased]
 
+### Risk mitigation year expansion (2026-08-15i)
+- `ExpansionGate` (defaults false) + ProfileService / SpiritMesh stubs + Guild fail-closed
+- `validate_quest_catalog.py` in quality_gate; no QuestSystem `continue`; Scout → `_G.RoS_OpenQuestUI`
+- Docs: `RISKS-MITIGATION.md` · SESSION `15i-risk-mitigation`
+
 ### Year expansion C+A (2026-08-15h)
 - Roadmap: `YEAR-PLAN-2026-10.md` · баланс: `QUEST-BALANCE.md`
 - **QuestCatalog** ModuleScript + `VisitZone`; Story 1–3/7 ZoneHint; exploration 8–15; side 107–112

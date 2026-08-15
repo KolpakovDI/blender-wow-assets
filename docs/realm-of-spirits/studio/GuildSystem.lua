@@ -29,6 +29,13 @@ function GuildSystem.GetMembership(player)
 end
 
 function GuildSystem.CreateOrJoin(player, guildName, tag)
+	local okGate, ExpansionGate = pcall(function()
+		return require(RealmFolder:WaitForChild("ExpansionGate", 5))
+	end)
+	-- Fail-closed: missing gate = blocked
+	if not okGate or not ExpansionGate or not ExpansionGate.AssertGuildsAllowed() then
+		return false, "Гильдии закрыты ExpansionGate (Q4)"
+	end
 	guildName = tostring(guildName or ""):sub(1, 24)
 	tag = tostring(tag or ""):upper():gsub("[^A-Z0-9]", ""):sub(1, 4)
 	if #guildName < 2 or #tag < 2 then
@@ -89,7 +96,23 @@ function GuildSystem.Start()
 		Players.PlayerAdded:Connect(function(plr)
 			plr.Chatted:Connect(function(msg)
 				local lower = string.lower(msg)
-				if string.sub(lower, 1, 6) == "/guild" then
+				if lower == "/expansiongate" then
+					local ok, ExpansionGate = pcall(function()
+						return require(RealmFolder:WaitForChild("ExpansionGate"))
+					end)
+					if ok and ExpansionGate then
+						ExpansionGate.PrintStatus()
+					end
+					return
+				end
+					if string.sub(lower, 1, 6) == "/guild" then
+					local okGate, ExpansionGate = pcall(function()
+						return require(RealmFolder:WaitForChild("ExpansionGate", 5))
+					end)
+					if not okGate or not ExpansionGate or not ExpansionGate.AssertGuildsAllowed() then
+						warn("[Guild] blocked — set SSS.RealmOfSpirits.AllowGuilds=true after E1")
+						return
+					end
 					local tag = string.match(msg, "/guild%s+(%S+)") or "ROS"
 					local name = string.match(msg, "/guild%s+%S+%s+(.+)") or "Realm Scouts"
 					local ok, err = GuildSystem.CreateOrJoin(plr, name, tag)

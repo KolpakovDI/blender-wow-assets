@@ -24,6 +24,19 @@ local CHALLENGE_TTL = 30
 local REMATCH_TTL = 20
 local FAIR_COMBAT = true -- skills/spirits only; no Robux power
 
+local function pvpExtraAllowed()
+	local ok, ExpansionGate = pcall(function()
+		return require(RealmFolder:WaitForChild("ExpansionGate"))
+	end)
+	if not ok or not ExpansionGate then
+		return false
+	end
+	ExpansionGate.RefreshFromAttributes()
+	return ExpansionGate.AllowNewPvPFeatures == true
+end
+
+-- Rated / season PvP hooks must call pvpExtraAllowed() before granting power
+
 local duelEvent = RealmFolder:FindFirstChild("PvPDuel")
 if not duelEvent then
 	duelEvent = Instance.new("RemoteEvent")

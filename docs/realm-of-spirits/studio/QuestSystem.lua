@@ -535,19 +535,18 @@ end
 local function BuildAvailableQuests(questSystem)
 	local availableQuests = {}
 	for questId, quest in pairs(QuestCatalog.Quests) do
-		if quest.Deprecated then
-			continue
-		end
-		if not hasQuestFlag(questSystem.ActiveQuests, questId) and not hasQuestFlag(questSystem.CompletedQuests, questId) then
-			local canTake = true
-			for _, prereqId in ipairs(quest.Prerequisites or {}) do
-				if not hasQuestFlag(questSystem.CompletedQuests, prereqId) then
-					canTake = false
-					break
+		if not quest.Deprecated then
+			if not hasQuestFlag(questSystem.ActiveQuests, questId) and not hasQuestFlag(questSystem.CompletedQuests, questId) then
+				local canTake = true
+				for _, prereqId in ipairs(quest.Prerequisites or {}) do
+					if not hasQuestFlag(questSystem.CompletedQuests, prereqId) then
+						canTake = false
+						break
+					end
 				end
-			end
-			if canTake then
-				table.insert(availableQuests, quest)
+				if canTake then
+					table.insert(availableQuests, quest)
+				end
 			end
 		end
 	end
@@ -832,6 +831,12 @@ end
 
 -- Экспортируем для других скриптов
 _G.UpdateQuestProgress = updateQuestProgress
+_G.RoS_OpenQuestUI = function(player)
+	local qs = GetOrCreateQuestSystem(player)
+	if qs then
+		OpenQuestUIForPlayer(player, qs)
+	end
+end
 
 if game:GetService("RunService"):IsStudio() then
 	_G.GetOrCreateQuestSystem = GetOrCreateQuestSystem
