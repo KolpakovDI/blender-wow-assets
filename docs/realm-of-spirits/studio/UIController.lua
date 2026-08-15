@@ -476,11 +476,17 @@ local function ShowCareRewardFeedback(payload)
 	local card = Instance.new("Frame")
 	card.Name = "CareRewardCard"
 	card.Size = UDim2.fromOffset(320, 168)
-	card.Position = UDim2.new(0.5, -160, 0.28, 0)
+	-- Keep clear of TradeFrame (shop) when open — pin under activity bar
+	local tradeOpen = screenGui:FindFirstChild("TradeFrame")
+	if tradeOpen and tradeOpen.Visible then
+		card.Position = UDim2.new(0.5, -160, 0, 48)
+	else
+		card.Position = UDim2.new(0.5, -160, 0.14, 0)
+	end
 	card.BackgroundColor3 = Color3.fromRGB(24, 16, 36)
 	card.BackgroundTransparency = 0.05
 	card.BorderSizePixel = 0
-	card.ZIndex = 80
+	card.ZIndex = 90
 	card.Parent = screenGui
 	careRewardCard = card
 	do
@@ -1747,6 +1753,8 @@ local tradeFrame = CreateFrame(screenGui, "TradeFrame",
 	Color3.fromRGB(30, 30, 40)
 )
 tradeFrame.Visible = false
+tradeFrame.ZIndex = 55
+tradeFrame.ClipsDescendants = false
 
 local tradeCoinsLabel = CreateTextLabel(tradeFrame, "TradeCoinsLabel",
 	UDim2.new(0, 10, 0, 45),
