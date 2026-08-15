@@ -1663,6 +1663,37 @@ function OtakuHavenBuilder.Build()
 	})
 	buildCity(haven, center, half)
 
+	-- Q3 Haven brand accent: lantern posts at Genkan / Exit approach
+	do
+		local accents = Instance.new("Folder")
+		accents.Name = "BrandAccents"
+		accents.Parent = decor
+		for i, off in ipairs({
+			Vector3.new(-18, 0, -half + 4),
+			Vector3.new(18, 0, -half + 4),
+			Vector3.new(-10, 0, half - 6),
+			Vector3.new(10, 0, half - 6),
+		}) do
+			local post = makePart({
+				Name = "LanternPost" .. i,
+				Size = Vector3.new(0.6, 8, 0.6),
+				Position = center + off + Vector3.new(0, 4, 0),
+				Color = Color3.fromRGB(60, 45, 80),
+				Material = Enum.Material.Metal,
+				Parent = accents,
+			})
+			makePart({
+				Name = "LanternGlow" .. i,
+				Size = Vector3.new(1.4, 1.4, 1.4),
+				Position = post.Position + Vector3.new(0, 4.2, 0),
+				Color = Color3.fromRGB(255, 200, 120),
+				Material = Enum.Material.Neon,
+				CanCollide = false,
+				Parent = accents,
+			})
+		end
+	end
+
 	return haven
 end
 

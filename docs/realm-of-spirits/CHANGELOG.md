@@ -6,6 +6,14 @@
 
 ## [Unreleased]
 
+### Year expansion C+A (2026-08-15h)
+- Roadmap: `YEAR-PLAN-2026-10.md` · баланс: `QUEST-BALANCE.md`
+- **QuestCatalog** ModuleScript + `VisitZone`; Story 1–3/7 ZoneHint; exploration 8–15; side 107–112
+- **Q2:** `ZoneConfig.QuestLocations` ×6 + WorldSpawner pads/landscape + ScoutQuestor
+- **Q3:** PvP fair `WIN_COPPER=0`; Haven `BrandAccents` lanterns
+- **Q4 stubs:** `ProfileServiceAdapter`, `GuildSystem` thin (`/guild`), AI mesh gated to Q4 in `SPIRIT-AI-MESH.md`
+- SESSION: `SESSION-2026-08-15h-year-expansion.md`
+
 ### Month plan 15.08–14.09 (2026-08-15)
 - Тема: **soft-launch + play-test KR** (publish/DS → hands sample → friction/Kami → wrap) — `MONTH-PLAN-2026-08-15.md`
 - Вне scope: AI mesh, новая PvP/guilds, декор Haven, ProfileService rewrite

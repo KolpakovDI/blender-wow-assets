@@ -34,8 +34,14 @@ local DETAIL_PRIORITY = {
 	CrystalCaves = 45,
 	MagmaFissure = 45,
 	FogBasin = 45,
-	SkyRidge = 45,
-	Exit = 30,
+		SkyRidge = 45,
+		ScoutPost = 50,
+		Waystone = 50,
+		ChestCluster = 50,
+		ElementShrine = 50,
+		Overlook = 50,
+		TrailCamp = 50,
+		Exit = 30,
 	Genkan = 20,
 	Safe = 10,
 	Spawn = 0,
@@ -59,6 +65,10 @@ local function setPlayerZone(player, zoneType, detail)
 		if ok and HubFunnel and HubFunnel.MarkPlayer then
 			HubFunnel.MarkPlayer(player, "ExitCombat")
 		end
+	end
+	-- Q1: VisitZone quest objectives (ZoneDetail key)
+	if detail and _G.UpdateQuestProgress then
+		_G.UpdateQuestProgress(player, "VisitZone", { ZoneDetail = detail, Count = 1 })
 	end
 end
 
@@ -84,6 +94,14 @@ local function classifyDetail(detail)
 		MagmaFissure = true,
 		FogBasin = true,
 		SkyRidge = true,
+		GaleCliff = true,
+		MossGlade = true,
+		ScoutPost = true,
+		Waystone = true,
+		ChestCluster = true,
+		ElementShrine = true,
+		Overlook = true,
+		TrailCamp = true,
 	}
 	if combatDetails[detail] then
 		if detail == "Combat" then

@@ -7,6 +7,18 @@ Place SoT: `C:\Mimo\RealmOfSpirits\RealmOfSpirits second.rbxl`
 
 ---
 
+## Year plan Q4 (2026-10 roadmap)
+
+См. [`YEAR-PLAN-2026-10.md`](YEAR-PLAN-2026-10.md). Online AI mesh — **Q4 only**, после:
+
+1. Hands E1 ≥90% n≥10 **или** явный skip владельца  
+2. Q1–Q2 quest/landscape exit  
+3. Фраза владельца: **«разморозить AI mesh»**
+
+До разморозки: офлайн 4×4 + `SpiritMeshResolve` placeholder. Код online path не стартовать в Q1–Q3.
+
+---
+
 ## Когда размораживать online (очередь развития)
 
 Не раньше, чем:

@@ -635,6 +635,135 @@ local function BuildSpiritHabitats()
 	print("Realm of Spirits - SpiritHabitats built (…/StoneBasin/AshGarden)")
 end
 
+-- Q2: named quest locations + landscape markers
+local function BuildQuestLocations()
+	local existing = workspace:FindFirstChild("QuestLocations")
+	if existing then
+		existing:Destroy()
+	end
+	local folder = Instance.new("Folder")
+	folder.Name = "QuestLocations"
+	local locs = ZoneConfig.QuestLocations or {}
+	for key, cfg in pairs(locs) do
+		local model = Instance.new("Model")
+		model.Name = key
+		local ground = Instance.new("Part")
+		ground.Name = "Pad"
+		ground.Anchored = true
+		ground.Size = Vector3.new(math.max(12, cfg.Size.X * 0.45), 1.2, math.max(12, cfg.Size.Z * 0.45))
+		ground.Position = Vector3.new(cfg.Center.X, 0.6, cfg.Center.Z)
+		ground.Color = cfg.Color or Color3.fromRGB(120, 120, 140)
+		ground.Material = Enum.Material.Slate
+		ground.Parent = model
+		local pillar = Instance.new("Part")
+		pillar.Name = "Marker"
+		pillar.Anchored = true
+		pillar.Size = Vector3.new(2.5, 10, 2.5)
+		pillar.Position = Vector3.new(cfg.Center.X, 5.5, cfg.Center.Z)
+		pillar.Color = cfg.Color or Color3.fromRGB(140, 160, 200)
+		pillar.Material = Enum.Material.Neon
+		pillar.CanCollide = false
+		pillar.Parent = model
+		local zone = Instance.new("Part")
+		zone.Name = key .. "Zone"
+		zone.Anchored = true
+		zone.Transparency = 1
+		zone.CanCollide = false
+		zone.CanQuery = true
+		zone.Size = cfg.Size
+		zone.Position = cfg.Center
+		zone:SetAttribute("ZoneType", key)
+		zone.Parent = model
+		local bill = Instance.new("BillboardGui")
+		bill.Name = "Label"
+		bill.Size = UDim2.fromOffset(180, 36)
+		bill.StudsOffset = Vector3.new(0, 8, 0)
+		bill.AlwaysOnTop = true
+		bill.Parent = pillar
+		local t = Instance.new("TextLabel")
+		t.Size = UDim2.fromScale(1, 1)
+		t.BackgroundTransparency = 1
+		t.Text = tostring(cfg.Label or key)
+		t.TextColor3 = Color3.fromRGB(240, 230, 255)
+		t.Font = Enum.Font.GothamBold
+		t.TextSize = 16
+		t.TextStrokeTransparency = 0.4
+		t.Parent = bill
+		model.PrimaryPart = ground
+		model.Parent = folder
+	end
+	folder.Parent = workspace
+	print("Realm of Spirits - QuestLocations built count=", #folder:GetChildren())
+end
+
+-- Second questor near ScoutPost (Q1 optional)
+local function SetupScoutQuestor()
+	local existing = workspace:FindFirstChild("ScoutQuestor")
+	if existing then
+		existing:Destroy()
+	end
+	local cfg = ZoneConfig.QuestLocations and ZoneConfig.QuestLocations.ScoutPost
+	local pos = cfg and cfg.Center or Vector3.new(40, 0, 55)
+	local model = Instance.new("Model")
+	model.Name = "ScoutQuestor"
+	local body = Instance.new("Part")
+	body.Name = "HumanoidRootPart"
+	body.Size = Vector3.new(2, 5, 1)
+	body.Anchored = true
+	body.CanCollide = true
+	body.Color = Color3.fromRGB(70, 110, 160)
+	body.Position = Vector3.new(pos.X + 4, 3, pos.Z)
+	body.Parent = model
+	model.PrimaryPart = body
+	local prompt = Instance.new("ProximityPrompt")
+	prompt.ActionText = "Квесты разведки"
+	prompt.ObjectText = "Разведчик"
+	prompt.HoldDuration = 0
+	prompt.MaxActivationDistance = 12
+	prompt.RequiresLineOfSight = false
+	prompt.Parent = body
+	prompt.Triggered:Connect(function(player)
+		local QuestEvent = RealmFolder:FindFirstChild("Quest")
+		if QuestEvent then
+			QuestEvent:FireClient(player, "OpenQuestUI", {
+				Source = "ScoutQuestor",
+				Message = "Разведчик: квесты локаций и охоты",
+			})
+		end
+	end)
+	model.Parent = workspace
+	print("Realm of Spirits - ScoutQuestor ready")
+end
+
+local function BuildCombatLandscapeAccent()
+	local existing = workspace:FindFirstChild("CombatLandscape")
+	if existing then
+		existing:Destroy()
+	end
+	local folder = Instance.new("Folder")
+	folder.Name = "CombatLandscape"
+	local combat = ZoneConfig.Zones and ZoneConfig.Zones.Combat
+	local c = combat and combat.Center or Vector3.new(105, 1, 45)
+	-- ridge walls to read as larger Akihabara footprint
+	for i, offset in ipairs({
+		Vector3.new(-40, 0, 0),
+		Vector3.new(40, 0, 0),
+		Vector3.new(0, 0, -40),
+		Vector3.new(0, 0, 40),
+	}) do
+		local wall = Instance.new("Part")
+		wall.Name = "Ridge" .. i
+		wall.Anchored = true
+		wall.Size = Vector3.new(8, 14, 55)
+		wall.Position = c + offset + Vector3.new(0, 7, 0)
+		wall.Color = Color3.fromRGB(85, 70, 60)
+		wall.Material = Enum.Material.Rock
+		wall.Parent = folder
+	end
+	folder.Parent = workspace
+	print("Realm of Spirits - CombatLandscape accent built")
+end
+
 local function CreateWorld()
 	-- Single ground Baseplate (top Y=0); destroy elevated duplicates
 	local mainBp, bestArea = nil, -1
@@ -696,8 +825,11 @@ local function CreateWorld()
 	OtakuHavenBuilder.Build()
 	BuildMistPond()
 	BuildSpiritHabitats()
+	BuildQuestLocations()
+	BuildCombatLandscapeAccent()
 	SetupSpawn()
 	SetupQuestMaster()
+	SetupScoutQuestor()
 end
 
 CreateWorld()

@@ -604,3 +604,12 @@ task.defer(function()
 		warn("[OtakuHaven] PvPDuelSystem failed: ", err)
 	end
 end)
+
+task.defer(function()
+	local ok, err = pcall(function()
+		require(script.Parent:WaitForChild("GuildSystem")).Start()
+	end)
+	if not ok then
+		warn("[OtakuHaven] GuildSystem failed: ", err)
+	end
+end)

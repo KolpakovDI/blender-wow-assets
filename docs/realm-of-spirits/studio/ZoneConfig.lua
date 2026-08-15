@@ -9,8 +9,8 @@ ZoneConfig.Zones = {
 	-- Safe увеличен на юг под Мику дальше от фасада
 	Safe = {Center = Vector3.new(-25, 1, 28), Size = Vector3.new(100, 28, 160)},
 	Exit = {Center = Vector3.new(-25, 1, 62), Size = Vector3.new(14, 10, 6)},
-	-- Akihabara Combat (стартовый дух #1 Огненный Кот)
-	Combat = {Center = Vector3.new(105, 1, 45), Size = Vector3.new(90, 20, 90)},
+	-- Akihabara Combat (стартовый дух #1 Огненный Кот) — Q2 enlarged footprint
+	Combat = {Center = Vector3.new(105, 1, 45), Size = Vector3.new(110, 24, 110)},
 	-- PvE-карманы духов (разнесены для hunt-квестов)
 	-- Водный Карп: прибрежное море (CoastalShowcase), не пруд у Combat
 	MistPond = {Center = Vector3.new(30, 2, -880), Size = Vector3.new(120, 24, 100)},
@@ -93,6 +93,46 @@ ZoneConfig.SpiritHabitats = {
 	[14] = {ZoneKey = "MagmaFissure", Label = "Лавовый разлом", HuntOrder = 16, Element = "Magma"},
 	[44] = {ZoneKey = "FogBasin", Label = "Туманная низина", HuntOrder = 17, Element = "Mist"},
 	[34] = {ZoneKey = "SkyRidge", Label = "Небесный хребет", HuntOrder = 18, Element = "Sky"},
+}
+
+-- Q2: named quest locations (VisitZone TargetZone) — each has ≥1 quest
+ZoneConfig.QuestLocations = {
+	ScoutPost = {
+		Center = Vector3.new(40, 1, 55),
+		Size = Vector3.new(24, 16, 24),
+		Label = "Лагерь разведки",
+		Color = Color3.fromRGB(90, 140, 200),
+	},
+	Waystone = {
+		Center = Vector3.new(-70, 1, -100),
+		Size = Vector3.new(20, 18, 20),
+		Label = "Каменный алтарь",
+		Color = Color3.fromRGB(160, 150, 130),
+	},
+	ChestCluster = {
+		Center = Vector3.new(130, 1, 20),
+		Size = Vector3.new(28, 14, 28),
+		Label = "Сундучный грот",
+		Color = Color3.fromRGB(200, 160, 60),
+	},
+	ElementShrine = {
+		Center = Vector3.new(25, 1, 145),
+		Size = Vector3.new(22, 16, 22),
+		Label = "Святилище стихий",
+		Color = Color3.fromRGB(140, 200, 255),
+	},
+	Overlook = {
+		Center = Vector3.new(200, 1, 160),
+		Size = Vector3.new(26, 16, 26),
+		Label = "Обзорный утёс",
+		Color = Color3.fromRGB(180, 120, 90),
+	},
+	TrailCamp = {
+		Center = Vector3.new(90, 1, -50),
+		Size = Vector3.new(24, 14, 24),
+		Label = "Придорожный стан",
+		Color = Color3.fromRGB(100, 160, 90),
+	},
 }
 
 function ZoneConfig.GetSpiritSpawnPositions()

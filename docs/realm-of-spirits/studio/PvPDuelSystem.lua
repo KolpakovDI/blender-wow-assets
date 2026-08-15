@@ -19,9 +19,10 @@ local ARENA_BBOX_PAD = 30
 local HAVEN_BBOX_PAD = 50
 local CHALLENGE_FROM_ARENA = 300 -- Haven center ~257 from arena
 local MAX_DISTANCE = 80
-local WIN_COPPER = 15
+local WIN_COPPER = 0 -- Q3 fair-combat: cosmetic glory only (no copper power drip)
 local CHALLENGE_TTL = 30
 local REMATCH_TTL = 20
+local FAIR_COMBAT = true -- skills/spirits only; no Robux power
 
 local duelEvent = RealmFolder:FindFirstChild("PvPDuel")
 if not duelEvent then
@@ -1130,7 +1131,7 @@ function PvPDuelSystem.Start()
 			plr.Chatted:Connect(function(msg)
 				local lower = string.lower(msg)
 				if lower == "/pvp" then
-					toast(plr, "PvP: дуэль ДУХОВ. Плиты = стойка. Навыки внизу. Реванш с плит ок.")
+					toast(plr, "PvP fair: дуэль ДУХОВ. Медь за победу = 0. Плиты = стойка. Реванш ок.")
 				elseif lower == "/pvpqa" then
 					local hrp = getHRP(plr)
 					if not hrp then
