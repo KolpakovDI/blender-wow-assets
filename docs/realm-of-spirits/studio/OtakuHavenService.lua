@@ -541,6 +541,9 @@ havenEvent.OnServerEvent:Connect(function(player, action, payload)
 end)
 
 local function hookPlayerFlex(player)
+	if typeof(player) ~= "Instance" or not player:IsA("Player") then
+		return
+	end
 	player.CharacterAdded:Connect(function()
 		task.wait(0.5)
 		applyFlexVisual(player)

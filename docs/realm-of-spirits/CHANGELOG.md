@@ -6,6 +6,10 @@
 
 ## [Unreleased]
 
+### MCP hands buffer (2026-08-15l)
+- HubFunnel Complete + бой V/Keypad + Kami без ForceCatch + ScoutPost; ExpansionGate locked — `SESSION-2026-08-15l-mcp-hands-buffer.md`
+- E1 глазами n≥10 всё ещё CONDITIONAL (не закрыт этим буфером)
+
 ### Q2 music + exploration dialogue (2026-08-15k)
 - ZoneConfig/MusicController: BGM keys для QuestLocations
 - QuestUI: реплики 8–16 / 107–112 + ScoutQuestor; Play MossGlade VisitZone PASS — `SESSION-2026-08-15k-q2-music-dialogue.md`
