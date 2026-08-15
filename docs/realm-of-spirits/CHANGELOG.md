@@ -21,6 +21,7 @@
 - Haven wardrobe/pass TextTruncate; HintFrame TextTruncate
 - Toast/NotificationFrame шире + TextTruncate/ClipsDescendants
 - ActivityBar + ProfileRank TextTruncate
+- RankFrame: `RequirementsScroll` для длинного списка требований
 
 ### MCP hands buffer (2026-08-15l)
 - HubFunnel Complete + бой V/Keypad + Kami без ForceCatch + ScoutPost; ExpansionGate locked — `SESSION-2026-08-15l-mcp-hands-buffer.md`

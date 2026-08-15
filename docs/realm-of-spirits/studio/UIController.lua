@@ -1728,13 +1728,27 @@ local nextRankLabel = CreateTextLabel(rankFrame, "NextRankLabel",
 )
 
 -- Требования
-local requirementsLabel = CreateTextLabel(rankFrame, "RequirementsLabel",
-	UDim2.new(0, 10, 0, 130),
-	UDim2.new(0.9, 0, 0, 100),
+local requirementsScroll = Instance.new("ScrollingFrame")
+requirementsScroll.Name = "RequirementsScroll"
+requirementsScroll.Position = UDim2.new(0, 10, 0, 130)
+requirementsScroll.Size = UDim2.new(0.9, 0, 0, 100)
+requirementsScroll.BackgroundTransparency = 1
+requirementsScroll.BorderSizePixel = 0
+requirementsScroll.ScrollBarThickness = 5
+requirementsScroll.ScrollBarImageColor3 = Color3.fromRGB(180, 160, 100)
+requirementsScroll.ScrollingDirection = Enum.ScrollingDirection.Y
+requirementsScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+requirementsScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+requirementsScroll.ClipsDescendants = true
+requirementsScroll.Parent = rankFrame
+local requirementsLabel = CreateTextLabel(requirementsScroll, "RequirementsLabel",
+	UDim2.new(0, 0, 0, 0),
+	UDim2.new(1, -6, 0, 0),
 	"Требования:\n- Уровень: 11 (текущий: 1)\n- Победы: 20 (текущие: 0)\n- Духи: 5 (текущие: 0)\n- Квесты: 3 (текущие: 0)",
 	Color3.fromRGB(200, 200, 200),
 	12
 )
+requirementsLabel.AutomaticSize = Enum.AutomaticSize.Y
 requirementsLabel.TextWrapped = true
 requirementsLabel.TextYAlignment = Enum.TextYAlignment.Top
 requirementsLabel.TextXAlignment = Enum.TextXAlignment.Left
