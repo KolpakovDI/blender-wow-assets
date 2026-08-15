@@ -278,6 +278,7 @@ activityLabel.TextXAlignment = Enum.TextXAlignment.Center
 activityLabel.TextColor3 = Color3.fromRGB(255, 230, 170)
 activityLabel.Text = "День 0/4 · Уход ○ · Закалка ○ · Бой ○ · Лут ○"
 activityLabel.TextSize = 12
+activityLabel.TextTruncate = Enum.TextTruncate.AtEnd
 activityLabel.ZIndex = 21
 activityLabel.Parent = activityBar
 
@@ -1801,6 +1802,7 @@ local profileRankLabel = CreateTextLabel(profileFrame, "ProfileRank",
 	14
 )
 profileRankLabel.TextXAlignment = Enum.TextXAlignment.Left
+profileRankLabel.TextTruncate = Enum.TextTruncate.AtEnd
 
 local profileLevelLabel = CreateTextLabel(profileFrame, "ProfileLevel",
 	UDim2.new(0, 12, 0, 74),

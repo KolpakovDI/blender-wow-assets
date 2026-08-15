@@ -20,6 +20,7 @@
 - NextStepChip шире + TextTruncate; Season HowBodyScroll; имена слотов духов Truncate
 - Haven wardrobe/pass TextTruncate; HintFrame TextTruncate
 - Toast/NotificationFrame шире + TextTruncate/ClipsDescendants
+- ActivityBar + ProfileRank TextTruncate
 
 ### MCP hands buffer (2026-08-15l)
 - HubFunnel Complete + бой V/Keypad + Kami без ForceCatch + ScoutPost; ExpansionGate locked — `SESSION-2026-08-15l-mcp-hands-buffer.md`
