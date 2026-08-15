@@ -52,7 +52,7 @@ flowchart LR
 |---|----------|--------|
 | **M1** | Publish + DS round-trip + quality_gate + 1 hands smoke | **PASS** 15.08d — PlaceId=`130832500076229`; DS rejoin OK |
 | **M2** | E1 sample ≥5 рук + HubFunnel день + backlog friction | **PASS CONDITIONAL** 15.08e — 5× MCP бой + HubFunnel Complete; backlog 3 |
-| **M3** | Топ-3 P0 закрыты + Kami hands без ForceCatch + agency 2+ skills | pending |
+| **M3** | Топ-3 P0 закрыты + Kami hands без ForceCatch + agency 2+ skills | **PASS** 15.08f — `SESSION-2026-08-15f-month-w3.md` |
 | **M4** | Month wrap + E1 вердикт + фраза на октябрь + gate фазы 3 | pending |
 
 ---
@@ -86,9 +86,9 @@ flowchart LR
 
 | # | Exit | Как проверить |
 |---|------|----------------|
-| **M3.1** | Топ-3 P0 из W2 закрыты в SoT | Studio + mirror + Ctrl+S + commit |
-| **M3.2** | Kami hands-цикл без ForceCatch | синтез→бой слот1→Care→Sanctum `[R]` |
-| **M3.3** | Agency: ≥1 бой с 2+ SkillIndex в hands log | GOALS KR3 soft |
+| **M3.1** | Топ-3 P0 из W2 закрыты в SoT | **PASS** — Wardrobe Prep fixed; nav MCP-limit; ShortGrass ignore |
+| **M3.2** | Kami hands-цикл без ForceCatch | **PASS** — Ками-Корни `#9384` → бой → Care/Temper → Sanctum `[R]` |
+| **M3.3** | Agency: ≥1 бой с 2+ SkillIndex в hands log | **PASS** — Keypad1+2 vs Лунный Кролик win |
 
 **Done when:** M3.1–M3.3 PASS в SESSION.
 

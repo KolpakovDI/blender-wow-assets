@@ -1,26 +1,26 @@
 # NEXT SESSION
 
-**Статус:** 2026-08-15 — Month **W2 PASS CONDITIONAL** (M2.1–M2.3).  
-**Цель следующей сессии:** **W3 friction + Kami hands** — закрыть топ P0, Kami без ForceCatch, agency 2+ skills. Не AI mesh / не PvP.
+**Статус:** 2026-08-15 — Month **W3 PASS** (M3.1–M3.3).  
+**Цель следующей сессии:** **W4 soft-launch wrap** — таблица M1–M3, E1 вердикт/план, фраза на октябрь + gate фазы 3. Не AI mesh / не PvP.
 
 План: `MONTH-PLAN-2026-08-15.md`  
-W2: `SESSION-2026-08-15e-month-w2.md`
+W3: `SESSION-2026-08-15f-month-w3.md`
 
 ## Вердикт
 
 | Item | Status |
 |------|--------|
-| M2.1 E1 ≥5 | **PASS CONDITIONAL** (MCP live-like, не WASD) |
-| M2.2 HubFunnel день | **PASS** |
-| M2.3 friction backlog | **PASS** (3; Wardrobe Prep fixed in SoT) |
+| M3.1 friction close | **PASS** |
+| M3.2 Kami без ForceCatch | **PASS** (Ками-Корни `[R]`) |
+| M3.3 agency 2+ skills | **PASS** |
 
 ## Старт сессии (порядок жёсткий)
 
-1. SoT + **Ctrl+S** если не сохраняли после `OtakuHavenService` MarkHubPrep  
-2. W3: топ P0 из backlog (nav/MCP notes; ShortGrass ignore)  
-3. Kami hands-цикл без ForceCatch (синтез→бой слот1→Care→Sanctum `[R]`)  
-4. Agency: ≥1 бой с 2+ SkillIndex в логе  
-5. Не AI mesh; не PvP  
+1. SoT + Ctrl+S при необходимости  
+2. W4 wrap SESSION: статусы M1–M3 + soft-launch вердикт  
+3. E1: CONDITIONAL + план к n≥10 **или** честный gate  
+4. Фраза на октябрь; PvP/AI mesh только если KR1–KR2 OK  
+5. Не начинать фазу 3 кодом  
 
 ## Studio SoT
 
