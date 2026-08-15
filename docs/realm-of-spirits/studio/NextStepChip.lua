@@ -71,7 +71,7 @@ local function layoutChip()
 	end
 	frame.AnchorPoint = Vector2.new(0.5, 0)
 	frame.Position = UDim2.new(0.5, 0, 0, top)
-	frame.Size = UDim2.new(0, 360, 0, 36)
+	frame.Size = UDim2.new(0, 420, 0, 36)
 	frame.BackgroundTransparency = 0.05
 end
 
@@ -98,10 +98,11 @@ local function ensureGui()
 	frame.Name = "Chip"
 	frame.AnchorPoint = Vector2.new(0.5, 0)
 	frame.Position = UDim2.new(0.5, 0, 0, CHIP_TOP)
-	frame.Size = UDim2.new(0, 360, 0, 36)
+	frame.Size = UDim2.new(0, 420, 0, 36)
 	frame.BackgroundColor3 = Color3.fromRGB(32, 28, 44)
 	frame.BackgroundTransparency = 0.05
 	frame.BorderSizePixel = 0
+	frame.ClipsDescendants = true
 	frame.Parent = gui
 
 	local corner = Instance.new("UICorner")
@@ -116,11 +117,14 @@ local function ensureGui()
 
 	label = Instance.new("TextLabel")
 	label.Name = "Label"
-	label.Size = UDim2.fromScale(1, 1)
+	label.Size = UDim2.new(1, -16, 1, 0)
+	label.Position = UDim2.new(0, 8, 0, 0)
 	label.BackgroundTransparency = 1
 	label.Font = Enum.Font.GothamBold
 	label.TextSize = 15
 	label.TextColor3 = Color3.fromRGB(245, 235, 215)
+	label.TextTruncate = Enum.TextTruncate.AtEnd
+	label.TextXAlignment = Enum.TextXAlignment.Left
 	label.Text = STEP_TEXT[STEP.Mika]
 	label.Parent = frame
 

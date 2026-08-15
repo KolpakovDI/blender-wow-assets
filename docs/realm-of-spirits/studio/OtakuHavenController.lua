@@ -548,9 +548,23 @@ local function ensurePassGui()
 	howTitle.TextColor3 = Color3.fromRGB(255, 210, 120)
 	howTitle.Text = "Как получить жетоны"
 	howTitle.Parent = howBox
+	local howBodyScroll = Instance.new("ScrollingFrame")
+	howBodyScroll.Name = "HowBodyScroll"
+	howBodyScroll.Size = UDim2.new(1, -16, 0, 48)
+	howBodyScroll.Position = UDim2.new(0, 10, 0, 26)
+	howBodyScroll.BackgroundTransparency = 1
+	howBodyScroll.BorderSizePixel = 0
+	howBodyScroll.ScrollBarThickness = 4
+	howBodyScroll.ScrollBarImageColor3 = Color3.fromRGB(255, 196, 80)
+	howBodyScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+	howBodyScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	howBodyScroll.ScrollingDirection = Enum.ScrollingDirection.Y
+	howBodyScroll.ClipsDescendants = true
+	howBodyScroll.Parent = howBox
 	local howBody = Instance.new("TextLabel")
-	howBody.Size = UDim2.new(1, -16, 0, 48)
-	howBody.Position = UDim2.new(0, 10, 0, 26)
+	howBody.Name = "HowBody"
+	howBody.Size = UDim2.new(1, -6, 0, 0)
+	howBody.AutomaticSize = Enum.AutomaticSize.Y
 	howBody.BackgroundTransparency = 1
 	howBody.Font = Enum.Font.Gotham
 	howBody.TextSize = 12
@@ -559,7 +573,7 @@ local function ensurePassGui()
 	howBody.TextColor3 = Color3.fromRGB(235, 220, 200)
 	howBody.TextWrapped = true
 	howBody.Text = "• Уход за духом  → +2\n• Закалка (Temper) → +3\n• Победа в бою / лут → +1 (+ Daily Board)"
-	howBody.Parent = howBox
+	howBody.Parent = howBodyScroll
 
 	local passBody = Instance.new("ScrollingFrame")
 	passBody.Name = "Body"

@@ -701,6 +701,8 @@ for i = 1, 4 do
 	spiritNameLabel.Text = tostring(i)
 	spiritNameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 	spiritNameLabel.TextSize = 9
+	spiritNameLabel.TextTruncate = Enum.TextTruncate.AtEnd
+	spiritNameLabel.TextXAlignment = Enum.TextXAlignment.Center
 	spiritNameLabel.Parent = slot
 
 	-- TextButton поверх слота для перехвата кликов мыши
