@@ -14,7 +14,7 @@
 - DataStore `UpdateAsync` + session lock  
 - `HubFunnel` (Mika / Prep / ExitCombat)
 
-Остаётся **продукт**, не фичи: publish, hands KR, friction из реальной игры.
+Остаётся **продукт**, не фичи: W2 hands KR, friction из реальной игры. W1 soft-launch ops **закрыт** (publish + live DS).
 
 ---
 
@@ -50,7 +50,7 @@ flowchart LR
 
 | # | Критерий | Статус |
 |---|----------|--------|
-| **M1** | Publish + DS round-trip + quality_gate + 1 hands smoke | **PARTIAL** 15.08d — M1.3+M1.4 PASS; M1.1–M1.2 BLOCKED (PlaceId=0) |
+| **M1** | Publish + DS round-trip + quality_gate + 1 hands smoke | **PASS** 15.08d — PlaceId=`130832500076229`; DS rejoin OK |
 | **M2** | E1 sample ≥5 рук + HubFunnel день + backlog friction | pending |
 | **M3** | Топ-3 P0 закрыты + Kami hands без ForceCatch + agency 2+ skills | pending |
 | **M4** | Month wrap + E1 вердикт + фраза на октябрь + gate фазы 3 | pending |
@@ -61,8 +61,8 @@ flowchart LR
 
 | # | Exit | Как проверить |
 |---|------|----------------|
-| **M1.1** | Place **published** + API Services | **BLOCKED** — PlaceId=0; publish вручную |
-| **M1.2** | DataStore round-trip | **BLOCKED** (ждёт M1.1); Studio = memory only |
+| **M1.1** | Place **published** + API Services | **PASS** — PlaceId=`130832500076229` GameId=`10713581476` |
+| **M1.2** | DataStore round-trip | **PASS** — ForceCatch→Stop→Play; spirits=2 Exp=50 |
 | **M1.3** | `quality_gate.py` зелёный | **PASS** 2026-08-15d |
 | **M1.4** | 1 hands smoke (не n≥10) | **PASS live-like MCP** — бой победа + HubFunnel Mika/Exit; `SESSION-2026-08-15d-month-w1-ops.md` |
 

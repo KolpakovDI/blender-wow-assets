@@ -9,7 +9,7 @@
 ### Month plan 15.08–14.09 (2026-08-15)
 - Тема: **soft-launch + play-test KR** (publish/DS → hands sample → friction/Kami → wrap) — `MONTH-PLAN-2026-08-15.md`
 - Вне scope: AI mesh, новая PvP/guilds, декор Haven, ProfileService rewrite
-- **W1 PARTIAL** 15.08d: M1.3 quality_gate PASS; M1.4 MCP бой+HubFunnel PASS; M1.1–M1.2 BLOCKED (PlaceId=0) — `SESSION-2026-08-15d-month-w1-ops.md`
+- **W1 PASS** 15.08d: M1.1 PlaceId=`130832500076229`; M1.2 DS rejoin (ForceCatch→Stop→Play spirits/Exp); M1.3 quality_gate; M1.4 MCP бой+HubFunnel — `SESSION-2026-08-15d-month-w1-ops.md`
 
 ### Project completion phase 1 (2026-08-15)
 - Roadmap: `PROJECT-COMPLETION.md` — shippable demo (фаза 1); soft-launch / scale = фазы 2–3
