@@ -11,6 +11,7 @@
 - Список квестов: subtitle ZoneHint; ZoneController баннеры QuestLocations (ScoutPost…)
 - Play: quest 8 FrostRidge + quest 107 ScoutPost VisitZone PASS; pads×6 + ScoutQuestor
 - Quest **16** Моховая поляна (MossGlade) — `SESSION-2026-08-15j-zonehint-ui.md`
+- Haven **BrandAccents** lanterns in SoT + `OtakuHavenBuilder.Build`
 
 ### Risk mitigation year expansion (2026-08-15i)
 - `ExpansionGate` (defaults false) + ProfileService / SpiritMesh stubs + Guild fail-closed
