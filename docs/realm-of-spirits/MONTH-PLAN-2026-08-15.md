@@ -50,7 +50,7 @@ flowchart LR
 
 | # | Критерий | Статус |
 |---|----------|--------|
-| **M1** | Publish + DS round-trip + quality_gate + 1 hands smoke | pending |
+| **M1** | Publish + DS round-trip + quality_gate + 1 hands smoke | **PARTIAL** 15.08d — M1.3+M1.4 PASS; M1.1–M1.2 BLOCKED (PlaceId=0) |
 | **M2** | E1 sample ≥5 рук + HubFunnel день + backlog friction | pending |
 | **M3** | Топ-3 P0 закрыты + Kami hands без ForceCatch + agency 2+ skills | pending |
 | **M4** | Month wrap + E1 вердикт + фраза на октябрь + gate фазы 3 | pending |
@@ -61,10 +61,10 @@ flowchart LR
 
 | # | Exit | Как проверить |
 |---|------|----------------|
-| **M1.1** | Place **published** + API Services | Creator Dashboard |
-| **M1.2** | DataStore round-trip | rejoin: level / spirits / `HubFunnel` сохраняются |
-| **M1.3** | `quality_gate.py` зелёный | `python scripts/quality_gate.py` / CI |
-| **M1.4** | 1 hands smoke (не n≥10) | F/1/2/E без ForceCatch; SESSION-заметка |
+| **M1.1** | Place **published** + API Services | **BLOCKED** — PlaceId=0; publish вручную |
+| **M1.2** | DataStore round-trip | **BLOCKED** (ждёт M1.1); Studio = memory only |
+| **M1.3** | `quality_gate.py` зелёный | **PASS** 2026-08-15d |
+| **M1.4** | 1 hands smoke (не n≥10) | **PASS live-like MCP** — бой победа + HubFunnel Mika/Exit; `SESSION-2026-08-15d-month-w1-ops.md` |
 
 **Done when:** M1.1–M1.4 отмечены PASS или явный блокер ops.
 
