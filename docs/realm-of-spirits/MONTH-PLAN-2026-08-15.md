@@ -51,7 +51,7 @@ flowchart LR
 | # | Критерий | Статус |
 |---|----------|--------|
 | **M1** | Publish + DS round-trip + quality_gate + 1 hands smoke | **PASS** 15.08d — PlaceId=`130832500076229`; DS rejoin OK |
-| **M2** | E1 sample ≥5 рук + HubFunnel день + backlog friction | pending |
+| **M2** | E1 sample ≥5 рук + HubFunnel день + backlog friction | **PASS CONDITIONAL** 15.08e — 5× MCP бой + HubFunnel Complete; backlog 3 |
 | **M3** | Топ-3 P0 закрыты + Kami hands без ForceCatch + agency 2+ skills | pending |
 | **M4** | Month wrap + E1 вердикт + фраза на октябрь + gate фазы 3 | pending |
 
@@ -74,9 +74,9 @@ flowchart LR
 
 | # | Exit | Как проверить |
 |---|------|----------------|
-| **M2.1** | E1 sample ≥5 рук (к ≥90% n≥10 — позже) | честный лог в SESSION |
-| **M2.2** | HubFunnel: Mika+Prep+ExitCombat за день | snapshot / Output `[HubFunnel]` |
-| **M2.3** | Список P0 friction из hands | backlog → W3 |
+| **M2.1** | E1 sample ≥5 рук (к ≥90% n≥10 — позже) | **PASS CONDITIONAL** — 5× MCP live-like бой; `SESSION-2026-08-15e-month-w2.md` |
+| **M2.2** | HubFunnel: Mika+Prep+ExitCombat за день | **PASS** Complete=true |
+| **M2.3** | Список P0 friction из hands | **PASS** — 3 пункта (Wardrobe Prep fixed) |
 
 **Done when:** ≥5 проходов залогированы + backlog из 3+ пунктов или «friction не найден».
 
