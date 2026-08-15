@@ -1288,6 +1288,8 @@ local detailSpiritName = CreateTextLabel(spiritDetailFrame, "DetailSpiritName",
 	Color3.fromRGB(255, 255, 255),
 	18
 )
+detailSpiritName.TextXAlignment = Enum.TextXAlignment.Left
+detailSpiritName.TextTruncate = Enum.TextTruncate.AtEnd
 
 -- Уровень
 local detailSpiritLevel = CreateTextLabel(spiritDetailFrame, "DetailSpiritLevel",
