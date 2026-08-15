@@ -1875,15 +1875,35 @@ local function RefreshTradeInventory()
 		local def = ItemDef(item.Id)
 		local itemName = (def and def.Name) or ("Предмет #" .. item.Id)
 		local canSell = ItemCatalog.CanSell(item.Id)
-		local sellPriceText = canSell and FormatCopperPrice(def.SellPrice or 0) or "—"
+		local sellPriceText = canSell and FormatCopperPrice((def and def.SellPrice) or 0) or "—"
+		local showUse = (item.Id == 3 or item.Id == 203)
+		local rightPad = showUse and 150 or 76
+
 		local btn = CreateTextButton(inventoryScroll, "InvItem" .. item.Id,
 			UDim2.new(0, 2, 0, y),
 			UDim2.new(1, -14, 0, 45),
-			itemName .. " x" .. item.Quantity,
+			"",
 			Color3.fromRGB(70, 100, 140),
 			nil
 		)
+		btn.Text = ""
+		btn.TextTransparency = 1
 		btn.ClipsDescendants = true
+
+		local nameLbl = Instance.new("TextLabel")
+		nameLbl.Name = "ItemName"
+		nameLbl.BackgroundTransparency = 1
+		nameLbl.Position = UDim2.new(0, 8, 0, 0)
+		nameLbl.Size = UDim2.new(1, -rightPad, 1, 0)
+		nameLbl.Font = Enum.Font.GothamBold
+		nameLbl.TextSize = 13
+		nameLbl.TextColor3 = Color3.fromRGB(245, 240, 230)
+		nameLbl.TextXAlignment = Enum.TextXAlignment.Left
+		nameLbl.TextTruncate = Enum.TextTruncate.AtEnd
+		nameLbl.Text = itemName .. " x" .. tostring(item.Quantity or 1)
+		nameLbl.ZIndex = (btn.ZIndex or 1) + 1
+		nameLbl.Parent = btn
+
 		local sellBtn = CreateTextButton(btn, "SellBtn",
 			UDim2.new(1, -72, 0, 5),
 			UDim2.new(0, 68, 0, 35),
@@ -1902,7 +1922,7 @@ local function RefreshTradeInventory()
 			Color3.fromRGB(100, 180, 100),
 			nil
 		)
-		if item.Id ~= 3 and item.Id ~= 203 then useBtn.Visible = false end
+		useBtn.Visible = showUse
 		if item.Id == 203 then useBtn.Text = "Имя" end
 		local itemId = item.Id
 		sellBtn.MouseButton1Click:Connect(function()
@@ -1930,11 +1950,28 @@ local function RefreshShopList(items)
 		local btn = CreateTextButton(shopScroll, "ShopItem" .. item.Id,
 			UDim2.new(0, 2, 0, y),
 			UDim2.new(1, -14, 0, 45),
-			item.Name .. " — " .. FormatShopPrice(item),
+			"",
 			Color3.fromRGB(70, 130, 180),
 			nil
 		)
+		btn.Text = ""
+		btn.TextTransparency = 1
 		btn.ClipsDescendants = true
+
+		local nameLbl = Instance.new("TextLabel")
+		nameLbl.Name = "ItemName"
+		nameLbl.BackgroundTransparency = 1
+		nameLbl.Position = UDim2.new(0, 8, 0, 0)
+		nameLbl.Size = UDim2.new(1, -80, 1, 0)
+		nameLbl.Font = Enum.Font.GothamBold
+		nameLbl.TextSize = 13
+		nameLbl.TextColor3 = Color3.fromRGB(245, 240, 230)
+		nameLbl.TextXAlignment = Enum.TextXAlignment.Left
+		nameLbl.TextTruncate = Enum.TextTruncate.AtEnd
+		nameLbl.Text = tostring(item.Name or ("#" .. tostring(item.Id))) .. " — " .. FormatShopPrice(item)
+		nameLbl.ZIndex = (btn.ZIndex or 1) + 1
+		nameLbl.Parent = btn
+
 		local buyBtn = CreateTextButton(btn, "BuyBtn",
 			UDim2.new(1, -72, 0, 5),
 			UDim2.new(0, 68, 0, 35),
@@ -3126,6 +3163,32 @@ task.spawn(function()
 				color = Color3.fromRGB(100, 255, 100),
 				size = 5,
 			})
+		end
+
+		-- Q2 QuestLocations (pads / markers)
+		local qlFolder = workspace:FindFirstChild("QuestLocations")
+		if qlFolder then
+			for _, loc in ipairs(qlFolder:GetChildren()) do
+				local pad = loc:FindFirstChild("Pad") or loc:FindFirstChild("Marker") or loc.PrimaryPart
+				if pad and pad:IsA("BasePart") then
+					table.insert(targets, {
+						pos = pad.Position,
+						color = Color3.fromRGB(120, 190, 255),
+						size = 5,
+					})
+				end
+			end
+		end
+		local scout = workspace:FindFirstChild("ScoutQuestor")
+		if scout then
+			local root = scout:FindFirstChild("HumanoidRootPart") or scout.PrimaryPart
+			if root and root:IsA("BasePart") then
+				table.insert(targets, {
+					pos = root.Position,
+					color = Color3.fromRGB(255, 200, 80),
+					size = 6,
+				})
+			end
 		end
 
 		-- Обновляем пул точек

@@ -561,19 +561,31 @@ local function ensurePassGui()
 	howBody.Text = "• Уход за духом  → +2\n• Закалка (Temper) → +3\n• Победа в бою / лут → +1 (+ Daily Board)"
 	howBody.Parent = howBox
 
-	local passBody = Instance.new("TextLabel")
+	local passBody = Instance.new("ScrollingFrame")
 	passBody.Name = "Body"
 	passBody.Size = UDim2.new(1, -28, 0, 140)
 	passBody.Position = UDim2.new(0, 14, 0, 136)
 	passBody.BackgroundTransparency = 1
-	passBody.Font = Enum.Font.Gotham
-	passBody.TextSize = 13
-	passBody.TextXAlignment = Enum.TextXAlignment.Left
-	passBody.TextYAlignment = Enum.TextYAlignment.Top
-	passBody.TextColor3 = Color3.fromRGB(220, 225, 240)
-	passBody.TextWrapped = true
-	passBody.Text = "Загрузка сезона…"
+	passBody.BorderSizePixel = 0
+	passBody.ScrollBarThickness = 5
+	passBody.ScrollBarImageColor3 = Color3.fromRGB(255, 196, 80)
+	passBody.CanvasSize = UDim2.new(0, 0, 0, 0)
+	passBody.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	passBody.ScrollingDirection = Enum.ScrollingDirection.Y
 	passBody.Parent = passPanel
+	local passBodyText = Instance.new("TextLabel")
+	passBodyText.Name = "BodyText"
+	passBodyText.Size = UDim2.new(1, -8, 0, 0)
+	passBodyText.AutomaticSize = Enum.AutomaticSize.Y
+	passBodyText.BackgroundTransparency = 1
+	passBodyText.Font = Enum.Font.Gotham
+	passBodyText.TextSize = 13
+	passBodyText.TextXAlignment = Enum.TextXAlignment.Left
+	passBodyText.TextYAlignment = Enum.TextYAlignment.Top
+	passBodyText.TextColor3 = Color3.fromRGB(220, 225, 240)
+	passBodyText.TextWrapped = true
+	passBodyText.Text = "Загрузка сезона…"
+	passBodyText.Parent = passBody
 
 	local passActions = Instance.new("Frame")
 	passActions.Name = "Actions"
@@ -603,7 +615,8 @@ end
 local function refreshPassPanel(state)
 	local gui = ensurePassGui()
 	local panel = gui.PassPanelFrame
-	local body = panel.Body
+	local bodyScroll = panel:FindFirstChild("Body")
+	local body = bodyScroll and bodyScroll:FindFirstChild("BodyText") or bodyScroll
 	local title = panel.Title
 	local actions = panel.Actions
 	for _, ch in ipairs(actions:GetChildren()) do
@@ -635,7 +648,9 @@ local function refreshPassPanel(state)
 		local mark = claimed and "✓" or ((tonumber(sp.Xp) or 0) >= (tonumber(row.Need) or 0) and "★" or "·")
 		table.insert(lines, string.format("%s L%d (нужно %d XP) — %s", mark, i, tonumber(row.Need) or 0, (row.Reward and row.Reward.Note) or ""))
 	end
-	body.Text = table.concat(lines, "\n")
+	if body then
+		body.Text = table.concat(lines, "\n")
+	end
 	title.Text = "Сезонный пропуск"
 	local function btn(text, color, cb)
 		local b = Instance.new("TextButton")
