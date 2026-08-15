@@ -350,10 +350,24 @@ dexClose.ZIndex = 62
 dexClose.Parent = dexPanel
 do local c = Instance.new("UICorner") c.CornerRadius = UDim.new(0, 6) c.Parent = dexClose end
 dexClose.MouseButton1Click:Connect(function() dexPanel.Visible = false end)
+local dexScroll = Instance.new("ScrollingFrame")
+dexScroll.Name = "DexScroll"
+dexScroll.Size = UDim2.new(1, -24, 1, -90)
+dexScroll.Position = UDim2.new(0, 12, 0, 44)
+dexScroll.BackgroundTransparency = 1
+dexScroll.BorderSizePixel = 0
+dexScroll.ScrollBarThickness = 6
+dexScroll.ScrollBarImageColor3 = Color3.fromRGB(180, 140, 220)
+dexScroll.ScrollingDirection = Enum.ScrollingDirection.Y
+dexScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+dexScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+dexScroll.ClipsDescendants = true
+dexScroll.ZIndex = 61
+dexScroll.Parent = dexPanel
 local dexBody = Instance.new("TextLabel")
 dexBody.Name = "DexBody"
-dexBody.Size = UDim2.new(1, -24, 1, -90)
-dexBody.Position = UDim2.new(0, 12, 0, 44)
+dexBody.Size = UDim2.new(1, -8, 0, 0)
+dexBody.AutomaticSize = Enum.AutomaticSize.Y
 dexBody.BackgroundTransparency = 1
 dexBody.Font = Enum.Font.Gotham
 dexBody.TextSize = 14
@@ -362,8 +376,8 @@ dexBody.TextYAlignment = Enum.TextYAlignment.Top
 dexBody.TextColor3 = Color3.fromRGB(220, 210, 240)
 dexBody.TextWrapped = true
 dexBody.Text = "Соберите 3 / 6 / 12 духов одной Primary-стихии (Огонь · Земля · Ветер · Вода)."
-dexBody.ZIndex = 61
-dexBody.Parent = dexPanel
+dexBody.ZIndex = 62
+dexBody.Parent = dexScroll
 local dexHint = Instance.new("TextLabel")
 dexHint.Size = UDim2.new(1, -24, 0, 36)
 dexHint.Position = UDim2.new(0, 12, 1, -44)
@@ -414,6 +428,7 @@ RefreshDexPanel = function(dex)
 	table.insert(lines, "")
 	table.insert(lines, string.format("Бонус боя: ATK +%s%%  DEF +%s%%", tostring(atk), tostring(def)))
 	dexBody.Text = table.concat(lines, "\n")
+	dexScroll.CanvasPosition = Vector2.new(0, 0)
 end
 
 local function OpenDexPanel()

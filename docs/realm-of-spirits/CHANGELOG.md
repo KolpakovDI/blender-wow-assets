@@ -15,6 +15,7 @@
 - SeasonPass **EventShop** ×5 офферов (не только seasonal_form); SkillsScroll; minimap без `continue`
 - SpiritDetail: `DetailSkillsScroll` + разведены Resonance/Evo/кнопки (высота 450)
 - KamiSanctum: LookPreview справа от списка (не поверх Превью/Слить/Status); TextTruncate имён
+- DexPanel: `DexScroll` для списка стихий; BagContentUI: скролл длинного описания предмета
 
 ### MCP hands buffer (2026-08-15l)
 - HubFunnel Complete + бой V/Keypad + Kami без ForceCatch + ScoutPost; ExpansionGate locked — `SESSION-2026-08-15l-mcp-hands-buffer.md`

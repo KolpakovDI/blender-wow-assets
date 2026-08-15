@@ -82,9 +82,23 @@ function BagContentUI.Mount(screenGui, deps)
 		"", Color3.fromRGB(200, 200, 210), 12)
 	detailQty.TextXAlignment = Enum.TextXAlignment.Left
 
-	local detailDesc = CreateTextLabel(detail, "DetailDesc",
-		UDim2.new(0, 8, 0, 78), UDim2.new(1, -16, 1, -86),
+	local detailDescScroll = Instance.new("ScrollingFrame")
+	detailDescScroll.Name = "DetailDescScroll"
+	detailDescScroll.Position = UDim2.new(0, 8, 0, 78)
+	detailDescScroll.Size = UDim2.new(1, -16, 1, -86)
+	detailDescScroll.BackgroundTransparency = 1
+	detailDescScroll.BorderSizePixel = 0
+	detailDescScroll.ScrollBarThickness = 5
+	detailDescScroll.ScrollBarImageColor3 = Color3.fromRGB(180, 160, 120)
+	detailDescScroll.ScrollingDirection = Enum.ScrollingDirection.Y
+	detailDescScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+	detailDescScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	detailDescScroll.ClipsDescendants = true
+	detailDescScroll.Parent = detail
+	local detailDesc = CreateTextLabel(detailDescScroll, "DetailDesc",
+		UDim2.new(0, 0, 0, 0), UDim2.new(1, -6, 0, 0),
 		"Клик по ячейке — описание из каталога.", Color3.fromRGB(220, 210, 200), 12)
+	detailDesc.AutomaticSize = Enum.AutomaticSize.Y
 	detailDesc.TextXAlignment = Enum.TextXAlignment.Left
 	detailDesc.TextYAlignment = Enum.TextYAlignment.Top
 	detailDesc.TextWrapped = true
@@ -113,6 +127,7 @@ function BagContentUI.Mount(screenGui, deps)
 		detailWhy.Text = ""
 		detailQty.Text = ""
 		detailDesc.Text = "Клик по ячейке — описание из каталога."
+		detailDescScroll.CanvasPosition = Vector2.new(0, 0)
 	end
 
 	local function showDetail(item)
@@ -126,6 +141,7 @@ function BagContentUI.Mount(screenGui, deps)
 		detailWhy.Text = why and ("· " .. why) or ""
 		detailQty.Text = string.format("Стак: ×%d", tonumber(item.Quantity) or 1)
 		detailDesc.Text = item.Description or ""
+		detailDescScroll.CanvasPosition = Vector2.new(0, 0)
 	end
 
 	local function buildPacked(inventory, bags)
