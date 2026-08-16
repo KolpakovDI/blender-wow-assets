@@ -1,14 +1,14 @@
 # NEXT SESSION
 
-**Статус:** 2026-08-16 — **E1 OWNER SKIP** (formal n≥10 не требуется). Friction #1–6 + shop/Kami slots закрыты.  
-**План:** [`YEAR-PLAN-2026-10.md`](YEAR-PLAN-2026-10.md) — Q1/Q2 scaffolding уже PASS; дальше **Q3** (PvP fair / Haven) или дожим Q1 квестов — по выбору.  
-**Лог:** [`E1-HANDS-LOG.md`](E1-HANDS-LOG.md) · [`SESSION-2026-08-16e-e1-owner-skip.md`](SESSION-2026-08-16e-e1-owner-skip.md)
+**Статус:** 2026-08-16 — **Q3 Slice 1** (fair duel harden): Resonant в дуэли, glory toast, host Billboard. E1 OWNER SKIP.  
+**План:** [`YEAR-PLAN-2026-10.md`](YEAR-PLAN-2026-10.md) · сессия [`SESSION-2026-08-16f-q3-duel.md`](SESSION-2026-08-16f-q3-duel.md)
 
 ## Сейчас
 
-1. SoT **Ctrl+S** (если SoT с сегодняшними фиксами ещё не сохранён)  
-2. Выбрать трек: **Q3 PvP fair** / дожим QuestCatalog / точечный polish  
-3. `ExpansionGate` Allow* **не** включать, пока не скажешь unlock (skip E1 ≠ auto-Allow)
+1. SoT **Ctrl+S** (`PvPDuelSystem`)  
+2. **Local Server 2p** smoke — чеклист в SESSION-2026-08-16f (вкл. Ками vs обычный)  
+3. `AllowNewPvPFeatures` / Guilds / ProfileService / AiMesh — **не** включать без явного unlock  
+4. Дальше Q3: rematch polish / Haven décor slice 2 — после smoke  
 
 ## Studio SoT
 

@@ -6,6 +6,11 @@
 
 ## [Unreleased]
 
+### Q3 Slice 1: fair duel harden (2026-08-16)
+- `PvPDuelSystem.resolveDuelSpiritInfo` — Resonant/Ками (9xxx) больше не «Ошибка духа» на старте дуэли
+- Победа при `WIN_COPPER=0`: toast «(слава)», без начисления меди / «+0 🥉»
+- `PvPDuelHost` Billboard: «Дуэль · Y / Interact» (обновляет существующий хост)
+
 ### Meta: E1 OWNER SKIP (2026-08-16)
 - Formal hands n≥10 пропущен владельцем («всё работает»); friction #1–6 закрыты кодом
 - Year-plan gate E1 снят; `ExpansionGate` Allow* не трогали (нужен явный unlock)

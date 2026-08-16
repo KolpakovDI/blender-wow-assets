@@ -36,7 +36,9 @@
 - Cosmetics и materials — да; будущие pay-locked exclusives — по отдельному whitelist.
 
 ### 6. PvP / гильдии
-- **PvP Arena duel slice allowed** after Social PASS; rules: no Robux power, potions disabled in duel, reward copper-only, same skill formula both sides.
+- **PvP Arena duel slice allowed** after Social PASS / E1 skip; rules: no Robux power, potions disabled in duel, **WIN_COPPER=0** (glory only), same skill formula both sides.
+- Resonant/Ками: resolve через instance SkillIds (Q3 Slice 1, 2026-08-16f).
+- Rated / season / copper power drip — только при `ExpansionGate.AllowNewPvPFeatures`.
 
 ---
 

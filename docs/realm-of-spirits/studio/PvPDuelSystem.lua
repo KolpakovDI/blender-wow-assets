@@ -37,6 +37,67 @@ end
 
 -- Rated / season PvP hooks must call pvpExtraAllowed() before granting power
 
+-- Resonant / Kami (Id 9xxx) отсутствуют в SpiritDatabase — как ResolveBattleSpiritInfo
+local function resolveDuelSpiritInfo(playerSpirit)
+	if type(playerSpirit) ~= "table" then
+		return nil
+	end
+	local catalog = SpiritDatabase.Get(playerSpirit.Id)
+	if catalog then
+		local skillIds = catalog.SkillIds
+		if type(playerSpirit.SkillIds) == "table" and #playerSpirit.SkillIds > 0 then
+			skillIds = playerSpirit.SkillIds
+		end
+		return {
+			Id = catalog.Id or playerSpirit.Id,
+			Name = playerSpirit.Name or catalog.Name,
+			BaseStats = catalog.BaseStats or { HP = 100, Attack = 20, Defense = 10, Speed = 10 },
+			SkillIds = skillIds,
+			UniqueSkill = playerSpirit.UniqueSkill,
+			PrimaryElement = catalog.PrimaryElement or catalog.Element,
+			Element = catalog.Element or catalog.PrimaryElement,
+			BonusAttack = playerSpirit.BonusAttack,
+			BonusDefense = playerSpirit.BonusDefense,
+			BonusHP = playerSpirit.BonusHP,
+			BonusSpeed = playerSpirit.BonusSpeed,
+			Kind = playerSpirit.Kind,
+		}
+	end
+	local kind = tostring(playerSpirit.Kind or "")
+	local idNum = tonumber(playerSpirit.Id) or 0
+	if kind ~= "Resonant" and idNum < 9000 then
+		return nil
+	end
+	local parentId = nil
+	if type(playerSpirit.ParentIds) == "table" then
+		parentId = tonumber(playerSpirit.ParentIds[1])
+	end
+	local parent = parentId and SpiritDatabase.Get(parentId) or nil
+	local base = (parent and parent.BaseStats) or { HP = 100, Attack = 20, Defense = 10, Speed = 10 }
+	local el = playerSpirit.PrimaryElement or playerSpirit.HybridPrimary or playerSpirit.Element
+		or (parent and (parent.PrimaryElement or parent.Element)) or "Fire"
+	return {
+		Id = playerSpirit.Id,
+		Name = playerSpirit.Name or "Ками",
+		BaseStats = {
+			HP = tonumber(base.HP) or 100,
+			Attack = tonumber(base.Attack) or 20,
+			Defense = tonumber(base.Defense) or 10,
+			Speed = tonumber(base.Speed) or 10,
+		},
+		SkillIds = playerSpirit.SkillIds,
+		UniqueSkill = playerSpirit.UniqueSkill,
+		PrimaryElement = el,
+		Element = el,
+		BonusAttack = playerSpirit.BonusAttack,
+		BonusDefense = playerSpirit.BonusDefense,
+		BonusHP = playerSpirit.BonusHP,
+		BonusSpeed = playerSpirit.BonusSpeed,
+		Kind = "Resonant",
+		ParentIds = playerSpirit.ParentIds,
+	}
+end
+
 local duelEvent = RealmFolder:FindFirstChild("PvPDuel")
 if not duelEvent then
 	duelEvent = Instance.new("RemoteEvent")
@@ -656,7 +717,7 @@ local function endDuel(duel, absoluteWinner, reason)
 	local rewards = {}
 	if winnerPlr and winnerPlr.Parent then
 		local data = getPlayerData(winnerPlr)
-		if data then
+		if data and WIN_COPPER > 0 then
 			data.CopperCoins = (tonumber(data.CopperCoins) or 0) + WIN_COPPER
 			rewards.CopperCoins = WIN_COPPER
 			local dataEvent = RealmFolder:FindFirstChild("DataSync")
@@ -686,7 +747,11 @@ local function endDuel(duel, absoluteWinner, reason)
 	end
 
 	if winnerPlr then
-		toast(winnerPlr, "✓ Дуэль духов: победа! +" .. WIN_COPPER .. " 🥉")
+		if WIN_COPPER > 0 then
+			toast(winnerPlr, "✓ Дуэль духов: победа! +" .. WIN_COPPER .. " 🥉")
+		else
+			toast(winnerPlr, "✓ Дуэль духов: победа! (слава)")
+		end
 	end
 	if loserPlr then
 		toast(loserPlr, "Дуэль духов: поражение")
@@ -749,10 +814,17 @@ startDuel = function(challenger, target, savedOrigins)
 
 	local spiritA = dataA.Spirits[tonumber(dataA.ActiveSpiritIndex) or 1] or dataA.Spirits[1]
 	local spiritB = dataB.Spirits[tonumber(dataB.ActiveSpiritIndex) or 1] or dataB.Spirits[1]
-	local infoA = SpiritDatabase.Get(spiritA.Id)
-	local infoB = SpiritDatabase.Get(spiritB.Id)
+	local infoA = resolveDuelSpiritInfo(spiritA)
+	local infoB = resolveDuelSpiritInfo(spiritB)
 	if not infoA or not infoB then
 		toast(challenger, "Ошибка духа")
+		if not infoA then
+			toast(challenger, "Ваш дух недоступен для дуэли")
+		end
+		if not infoB then
+			toast(challenger, "Дух соперника недоступен для дуэли")
+			toast(target, "Ваш дух недоступен для дуэли")
+		end
 		return
 	end
 
@@ -1023,6 +1095,39 @@ local function cancelChallenge(player)
 	end
 end
 
+local function ensureDuelHostLabel(host)
+	if not host then
+		return
+	end
+	local billboard = host:FindFirstChild("Label")
+	if not billboard then
+		billboard = Instance.new("BillboardGui")
+		billboard.Name = "Label"
+		billboard.Size = UDim2.new(0, 280, 0, 52)
+		billboard.StudsOffset = Vector3.new(0, 3, 0)
+		billboard.AlwaysOnTop = true
+		billboard.Parent = host
+	end
+	local label = billboard:FindFirstChildWhichIsA("TextLabel")
+	if not label then
+		label = Instance.new("TextLabel")
+		label.Size = UDim2.new(1, 0, 1, 0)
+		label.BackgroundTransparency = 1
+		label.Font = Enum.Font.GothamBold
+		label.TextSize = 18
+		label.TextColor3 = Color3.fromRGB(255, 240, 200)
+		label.TextWrapped = true
+		label.Parent = billboard
+	end
+	label.Text = "Дуэль · Y / Interact"
+	local prompt = host:FindFirstChild("PvPDuelHostPrompt")
+	if prompt and prompt:IsA("ProximityPrompt") then
+		prompt.ActionText = "Вызвать ближайшего"
+		prompt.ObjectText = "Дуэль духов"
+		prompt.KeyboardKeyCode = Enum.KeyCode.Y
+	end
+end
+
 local function ensureDuelHost()
 	local arena = workspace:FindFirstChild("BattleArena")
 	if not arena then
@@ -1030,6 +1135,7 @@ local function ensureDuelHost()
 	end
 	local host = arena:FindFirstChild("PvPDuelHost")
 	if host then
+		ensureDuelHostLabel(host)
 		return
 	end
 	host = Instance.new("Part")
@@ -1042,20 +1148,7 @@ local function ensureDuelHost()
 	host.CFrame = CFrame.new(arenaCenter() + Vector3.new(0, 1.2, 0))
 	host.Parent = arena
 
-	local billboard = Instance.new("BillboardGui")
-	billboard.Name = "Label"
-	billboard.Size = UDim2.new(0, 260, 0, 48)
-	billboard.StudsOffset = Vector3.new(0, 3, 0)
-	billboard.AlwaysOnTop = true
-	billboard.Parent = host
-	local label = Instance.new("TextLabel")
-	label.Size = UDim2.new(1, 0, 1, 0)
-	label.BackgroundTransparency = 1
-	label.Font = Enum.Font.GothamBold
-	label.TextSize = 18
-	label.TextColor3 = Color3.fromRGB(255, 240, 200)
-	label.Text = "PvP ДУЭЛЬ ДУХОВ (Y)"
-	label.Parent = billboard
+	ensureDuelHostLabel(host)
 
 	local prompt = Instance.new("ProximityPrompt")
 	prompt.Name = "PvPDuelHostPrompt"
@@ -1078,6 +1171,7 @@ local function ensureDuelHost()
 		end
 		requestChallenge(who, other.UserId)
 	end)
+	ensureDuelHostLabel(host)
 end
 
 function PvPDuelSystem.Start()
