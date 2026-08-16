@@ -161,6 +161,8 @@ local function CreateScreenGui()
 	screenGui.Name = "RealmOfSpiritsUI"
 	screenGui.ResetOnSpawn = false
 	screenGui.DisplayOrder = 100
+	-- Sibling: иначе Global + parent.ZIndex=50 прячет детей (пустой SpiritDetail без Закрыть)
+	screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 	screenGui.Parent = playerGui
 
 	return screenGui
@@ -1407,6 +1409,15 @@ local detailCloseButton = CreateTextButton(spiritDetailFrame, "DetailCloseButton
 	Color3.fromRGB(100, 100, 100),
 	"❌"
 )
+-- На случай Global: дети должны быть выше фона панели
+do
+	local baseZ = spiritDetailFrame.ZIndex
+	for _, d in ipairs(spiritDetailFrame:GetDescendants()) do
+		if d:IsA("GuiObject") then
+			d.ZIndex = math.max(d.ZIndex, baseZ + 1)
+		end
+	end
+end
 
 -- Identity slice 3: evo progress on spirit card (lvl/bond/wins/crystals + skill teaser)
 local function countInventoryItem(itemId)

@@ -6,6 +6,10 @@
 
 ## [Unreleased]
 
+### Fix: SpiritDetail empty unclosable panel (E1 FAIL #2, 2026-08-16)
+- `RealmOfSpiritsUI` был `ZIndexBehavior.Global` + `SpiritDetailFrame.ZIndex=50` → фон рисовался поверх детей (пустое окно, «Закрыть» не кликался)
+- `ZIndexBehavior.Sibling` + bump ZIndex детей панели
+
 ### Fix: QuestUI Accept button missing (E1 FAIL #1, 2026-08-16)
 - `CareSpirit`/`TemperSpirit` в `showQuestDetail` падали на `progress.Current` при Available → кнопка «Принять» не создавалась
 - Автовыбор квеста при открытии списка (приоритет Q7 «Украденная манга»); футер Accept крупнее
