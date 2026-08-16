@@ -10,7 +10,31 @@ local ItemCatalog = require(realm:WaitForChild("ItemCatalog"))
 local SpiritMeshResolve = require(realm:WaitForChild("SpiritMeshResolve"))
 
 local PlayerData = nil
-local mode = "Synthesize" -- or Disintegrate
+local function formatKamiError(data)
+	data = type(data) == "table" and data or {}
+	local err = tostring(data.Error or data.Message or "unknown")
+	if err == "copper" then
+		local need = tonumber(data.Need) or 0
+		local have = tonumber(data.Have)
+		if have then
+			return string.format("Недостаточно монет: нужно %d меди (есть %d)", need, have)
+		end
+		return string.format("Недостаточно монет: нужно %d меди (считаются медь+серебро+золото)", need)
+	elseif err == "need_shard" then
+		return "Нужен Осколок Ками (предмет #301)"
+	elseif err == "level" then
+		return "Нужен уровень " .. tostring(data.Need or "?")
+	elseif err == "count" then
+		return string.format("Выберите от %d до %d духов", data.Min or 2, data.Max or 6)
+	elseif err == "daily_cap" then
+		return "Дневной лимит слияний исчерпан (" .. tostring(data.Cap or "?") .. ")"
+	elseif err == "last_spirit" then
+		return "Нельзя разобрать последнего духа"
+	elseif err == "too_far" then
+		return "Подойдите ближе к святилищу"
+	end
+	return err
+end
 local selected = {} -- indices for synth
 local disIndex = nil
 local gui = nil
@@ -400,7 +424,7 @@ remote.OnClientEvent:Connect(function(action, data)
 			st.Text = st.Text .. " | vid " .. tostring(data.CoreParentName or data.NameHint or "-")
 			showLookMesh({ Id = data.CoreParentId, Name = data.CoreParentName, ParentIds = { data.CoreParentId } })
 		else
-			st.Text = "Превью: " .. tostring(data.Error)
+			st.Text = "Превью: " .. formatKamiError(data)
 		end
 	elseif action == "PreviewDisintegrate" then
 		local g = ensureGui()
@@ -412,7 +436,7 @@ remote.OnClientEvent:Connect(function(action, data)
 			end
 			st.Text = "Возможный лут: " .. table.concat(names, ", ")
 		else
-			st.Text = "Превью: " .. tostring(data.Error)
+			st.Text = "Превью: " .. formatKamiError(data)
 		end
 	elseif action == "SynthesizeResult" then
 		selected = {}
@@ -461,11 +485,11 @@ remote.OnClientEvent:Connect(function(action, data)
 			_G.__KamiSanctumRefresh()
 		end
 	elseif action == "Error" then
-		local msg = data.Message or data.Error or "unknown"
-		notify("Ошибка: " .. tostring(msg))
+		local msg = formatKamiError(data)
+		notify("Ошибка: " .. msg)
 		local g = ensureGui()
 		if g and g:FindFirstChild("Main") and g.Main:FindFirstChild("Status") then
-			g.Main.Status.Text = "Ошибка: " .. tostring(msg)
+			g.Main.Status.Text = "Ошибка: " .. msg
 		end
 	end
 end)

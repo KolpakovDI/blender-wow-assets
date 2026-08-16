@@ -9,6 +9,21 @@ local ItemCatalog = require(realm:WaitForChild("ItemCatalog"))
 
 local KamiSanctumSystem = {}
 
+local function getTotalCopper(data)
+	local c = tonumber(data and data.CopperCoins) or 0
+	local s = tonumber(data and data.SilverCoins) or 0
+	local g = tonumber(data and data.GoldCoins) or 0
+	return c + s * 100 + g * 10000
+end
+
+local function setTotalCopper(data, total)
+	total = math.max(0, math.floor(tonumber(total) or 0))
+	data.GoldCoins = math.floor(total / 10000)
+	total = total % 10000
+	data.SilverCoins = math.floor(total / 100)
+	data.CopperCoins = total % 100
+end
+
 local function invQty(data, itemId)
 	itemId = tonumber(itemId)
 	if not data or type(data.Inventory) ~= "table" then
@@ -186,8 +201,9 @@ function KamiSanctumSystem.PreviewSynthesize(data, spiritIndices, components)
 		end
 	end
 	local copper = KamiSanctumConfig.CopperCost(n)
-	if (tonumber(data.CopperCoins) or 0) < copper then
-		return {Ok = false, Error = "copper", Need = copper}
+	local haveCopper = getTotalCopper(data)
+	if haveCopper < copper then
+		return {Ok = false, Error = "copper", Need = copper, Have = haveCopper}
 	end
 
 	local qualities = {}
@@ -243,9 +259,9 @@ function KamiSanctumSystem.Synthesize(data, spiritIndices, components, rng)
 	local comps = normalizeComponents(components)
 	local n = #donors
 
-	-- Consume copper
+	-- Consume copper (total: медь + серебро×100 + золото×10000)
 	local copper = preview.CopperCost
-	data.CopperCoins = (tonumber(data.CopperCoins) or 0) - copper
+	setTotalCopper(data, getTotalCopper(data) - copper)
 
 	-- Consume components specified + 1 shard minimum
 	local shardFromComp = comps[KamiSanctumConfig.ShardId] or 0
@@ -482,9 +498,9 @@ function KamiSanctumSystem.Disintegrate(data, spiritIndex, rng)
 		giveItem(data, bonus.Id, bonus.Quantity)
 		table.insert(granted, bonus)
 	end
-	-- copper crumbs
+	-- copper crumbs (в общую казну, не только CopperCoins 0–99)
 	local copperGain = 15 + math.floor(KamiSanctumConfig.SpiritQuality(sp, SpiritDatabase) * 40)
-	data.CopperCoins = (tonumber(data.CopperCoins) or 0) + copperGain
+	setTotalCopper(data, getTotalCopper(data) + copperGain)
 
 	local daily = KamiSanctumConfig.EnsureDaily(data)
 	daily.SanctumDisintegrate += 1

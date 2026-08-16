@@ -48,7 +48,8 @@
 | 3 | 2026-08-16 | | ☐ | FAIL | Q301 Уход не закрывался после Care — UpdateQuestProgressBF UserId; fix |
 | 4 | 2026-08-16 | | ☐ | FAIL | Закалка: нет OpenTemperPicker на клиенте; добавлен TemperPicker |
 | 5 | 2026-08-16 | | ☐ | FAIL | Поражение сбрасывало UI/прогресс (LoadCharacter+StarterGui); SoftRespawn |
-| 6 | | | ☐ | | |
+| 6 | 2026-08-16 | | ☐ | FAIL | Kami слияние Error copper — считалась только медь 0–99; total wallet |
+| 7 | | | ☐ | | |
 | 3 | | | ☐ | | |
 | 4 | | | ☐ | | |
 | 5 | | | ☐ | | |

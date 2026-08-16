@@ -6,6 +6,10 @@
 
 ## [Unreleased]
 
+### Fix: Kami synthesize Error "copper" (2026-08-16)
+- Слияние смотрело только `CopperCoins` (0–99 после нормализации), игнорируя серебро/золото → ложный отказ
+- Оплата/проверка по сумме меди; UI: «Недостаточно монет…» вместо сырого `copper`
+
 ### Fix: battle defeat wiped spirits/loot/skills UI (2026-08-16)
 - Поражение звало `LoadCharacter` → `StarterGui` клонировал `UIController` заново с пустым `PlayerData`
 - SoftRespawn (хил + TP на спавн) без смерти; `UIController` → `StarterPlayerScripts`; `ResetPlayerGuiOnSpawn=false`; FullSync после смерти/поражения
