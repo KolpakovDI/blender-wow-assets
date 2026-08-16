@@ -6,6 +6,10 @@
 
 ## [Unreleased]
 
+### Meta: E1 OWNER SKIP (2026-08-16)
+- Formal hands n≥10 пропущен владельцем («всё работает»); friction #1–6 закрыты кодом
+- Year-plan gate E1 снят; `ExpansionGate` Allow* не трогали (нужен явный unlock)
+
 ### Fix: Resonant Kami missing from spirit slots after synth (2026-08-16)
 - FullSync / деталь духа требовали запись в `SpiritDatabase` — Id 9xxx Resonant отбрасывался → пустые слоты после слияния всех
 - `ResolveOwnedSpiritDisplay`: имя/элемент с инстанса; слоты + SpiritDetail; soft-fill списка Ками если FullSync ещё пуст

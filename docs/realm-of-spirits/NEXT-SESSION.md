@@ -1,17 +1,15 @@
 # NEXT SESSION
 
-**Статус:** 2026-08-16 вечер — friction FAIL#1–6 + shop + Resonant slots; руки подтвердили «всё работает». E1 formal n≥10 ещё **не** в таблице (#7+ пусто). Gate locked.  
-**План:** [`YEAR-PLAN-2026-10.md`](YEAR-PLAN-2026-10.md)  
-**Лог:** [`E1-HANDS-LOG.md`](E1-HANDS-LOG.md) · сессия [`SESSION-2026-08-16d-e1-friction-kami.md`](SESSION-2026-08-16d-e1-friction-kami.md)
+**Статус:** 2026-08-16 — **E1 OWNER SKIP** (formal n≥10 не требуется). Friction #1–6 + shop/Kami slots закрыты.  
+**План:** [`YEAR-PLAN-2026-10.md`](YEAR-PLAN-2026-10.md) — Q1/Q2 scaffolding уже PASS; дальше **Q3** (PvP fair / Haven) или дожим Q1 квестов — по выбору.  
+**Лог:** [`E1-HANDS-LOG.md`](E1-HANDS-LOG.md) · [`SESSION-2026-08-16e-e1-owner-skip.md`](SESSION-2026-08-16e-e1-owner-skip.md)
 
 ## Сейчас
 
-1. SoT **Ctrl+S** (если ещё не сохранял сегодняшний SoT)  
-2. Честные e2e → заполнить [`E1-HANDS-LOG.md`](E1-HANDS-LOG.md) с **#7** (цель n≥10, ≥90% PASS)  
-3. Пока лог не зелёный — **не** AllowGuilds / ProfileService / AiMesh / NewPvP  
+1. SoT **Ctrl+S** (если SoT с сегодняшними фиксами ещё не сохранён)  
+2. Выбрать трек: **Q3 PvP fair** / дожим QuestCatalog / точечный polish  
+3. `ExpansionGate` Allow* **не** включать, пока не скажешь unlock (skip E1 ≠ auto-Allow)
 
 ## Studio SoT
 
 `C:\\Mimo\\RealmOfSpirits\\RealmOfSpirits second.rbxl`
-
-Затронуто сегодня (в place): `UIController`, `TradePanelUI`, `KamiSanctumController`, `ItemCatalog`, + ранее Quest/Temper/SoftRespawn/Kami copper.
