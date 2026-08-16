@@ -6,6 +6,11 @@
 
 ## [Unreleased]
 
+### Fix: Care quest 301 not completing after Resonance (2026-08-16)
+- Studio: `UpdateQuestProgressBF:Invoke(player, …)` вместо `UserId` → BF возвращал `no player`, а `pcall` считал успех — прогресс CareSpirit не писал
+- `pushCareQuest` / Temper: сначала `_G.UpdateQuestProgress`, BF с `player.UserId` + проверка `result == true`
+- `QuestQaBF.resolvePlayer` принимает Player или UserId
+
 ### Fix: SpiritDetail empty unclosable panel (E1 FAIL #2, 2026-08-16)
 - `RealmOfSpiritsUI` был `ZIndexBehavior.Global` + `SpiritDetailFrame.ZIndex=50` → фон рисовался поверх детей (пустое окно, «Закрыть» не кликался)
 - `ZIndexBehavior.Sibling` + bump ZIndex детей панели

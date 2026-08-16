@@ -1895,8 +1895,16 @@ ResonanceEvent.OnServerEvent:Connect(function(player, action, data)
 		local useTreat = data and data.UseTreat == true
 		local ok, msg = SpiritResonance.Care(playerData, idx, useTreat)
 		if ok then
+			-- Prefer _G; Studio UpdateQuestProgressBF expects UserId (not Player)
 			if _G.UpdateQuestProgress then
 				_G.UpdateQuestProgress(player, "CareSpirit", {Count = 1})
+			else
+				local qbf = script.Parent:FindFirstChild("UpdateQuestProgressBF")
+				if qbf and qbf:IsA("BindableFunction") then
+					pcall(function()
+						qbf:Invoke(player.UserId, "CareSpirit", {Count = 1})
+					end)
+				end
 			end
 			ResonanceEvent:FireClient(player, "CareSuccess", {Message = msg, Snapshot = SpiritResonance.GetClientSnapshot(playerData)})
 			DataEvent:FireClient(player, "FullSync", playerData)
@@ -1913,6 +1921,13 @@ ResonanceEvent.OnServerEvent:Connect(function(player, action, data)
 		if ok then
 			if _G.UpdateQuestProgress then
 				_G.UpdateQuestProgress(player, "TemperSpirit", {Count = 1})
+			else
+				local qbf = script.Parent:FindFirstChild("UpdateQuestProgressBF")
+				if qbf and qbf:IsA("BindableFunction") then
+					pcall(function()
+						qbf:Invoke(player.UserId, "TemperSpirit", {Count = 1})
+					end)
+				end
 			end
 			ResonanceEvent:FireClient(player, "TemperSuccess", {Message = msg, Snapshot = SpiritResonance.GetClientSnapshot(playerData)})
 			DataEvent:FireClient(player, "FullSync", playerData)
