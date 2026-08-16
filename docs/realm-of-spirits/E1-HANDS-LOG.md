@@ -46,7 +46,8 @@
 | 1 | 2026-08-16 | | ☐ | FAIL | Нет «Принять» у Мики — QuestUI crash CareSpirit/nil progress; fix + auto-select Q7 |
 | 2 | 2026-08-16 | | ☐ | FAIL | Клик по слоту духа → пустое окно без Закрыть (Global ZIndex); fix Sibling |
 | 3 | 2026-08-16 | | ☐ | FAIL | Q301 Уход не закрывался после Care — UpdateQuestProgressBF UserId; fix |
-| 4 | | | ☐ | | |
+| 4 | 2026-08-16 | | ☐ | FAIL | Закалка: нет OpenTemperPicker на клиенте; добавлен TemperPicker |
+| 5 | | | ☐ | | |
 | 3 | | | ☐ | | |
 | 4 | | | ☐ | | |
 | 5 | | | ☐ | | |

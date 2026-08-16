@@ -1419,6 +1419,81 @@ do
 	end
 end
 
+-- Пикер закалки (пьедестал шлёт OpenTemperPicker; кнопка ЗАКАЛКА тоже)
+local temperPickerFrame = CreateFrame(screenGui, "TemperPickerFrame",
+	UDim2.new(0.5, -170, 0.5, -120),
+	UDim2.new(0, 340, 0, 240),
+	Color3.fromRGB(28, 32, 48)
+)
+temperPickerFrame.Visible = false
+temperPickerFrame.ZIndex = 70
+WoWUITheme.StylePanel(temperPickerFrame, "stone")
+
+CreateTextLabel(temperPickerFrame, "TemperPickerTitle",
+	UDim2.new(0, 12, 0, 10),
+	UDim2.new(1, -24, 0, 28),
+	"ЗАКАЛКА · выберите фокус",
+	Color3.fromRGB(180, 210, 255),
+	18
+).TextXAlignment = Enum.TextXAlignment.Left
+
+local temperPickerHint = CreateTextLabel(temperPickerFrame, "TemperPickerHint",
+	UDim2.new(0, 12, 0, 42),
+	UDim2.new(1, -24, 0, 40),
+	"Нужно 15 Stam или камень закалки",
+	Color3.fromRGB(200, 200, 220),
+	13
+)
+temperPickerHint.TextXAlignment = Enum.TextXAlignment.Left
+temperPickerHint.TextWrapped = true
+
+local function OpenTemperPicker()
+	if not selectedSpiritIndex then
+		selectedSpiritIndex = (PlayerData and tonumber(PlayerData.ActiveSpiritIndex)) or 1
+	end
+	local stam = (PlayerData and tonumber(PlayerData.SpiritStamina)) or 0
+	local stones = 0
+	for _, inv in ipairs((PlayerData and PlayerData.Inventory) or {}) do
+		if tonumber(inv.Id) == 5 then
+			stones = tonumber(inv.Quantity) or 0
+			break
+		end
+	end
+	temperPickerHint.Text = string.format(
+		"Слот %d · Stam %d/15 · камней закалки: %d\nАтака / Защита / Дух",
+		selectedSpiritIndex, stam, stones
+	)
+	temperPickerFrame.Visible = true
+end
+
+do
+	local focuses = {
+		{ Key = "Attack", Label = "АТАКА", Color = Color3.fromRGB(180, 70, 70), Pos = UDim2.new(0, 16, 0, 95) },
+		{ Key = "Defense", Label = "ЗАЩИТА", Color = Color3.fromRGB(70, 120, 180), Pos = UDim2.new(0, 16, 0, 138) },
+		{ Key = "Spirit", Label = "ДУХ", Color = Color3.fromRGB(120, 80, 180), Pos = UDim2.new(0, 16, 0, 181) },
+	}
+	for _, f in ipairs(focuses) do
+		local btn = CreateTextButton(temperPickerFrame, "TemperFocus_" .. f.Key,
+			f.Pos, UDim2.new(1, -32, 0, 36), f.Label, f.Color, nil)
+		btn.MouseButton1Click:Connect(function()
+			local idx = selectedSpiritIndex or (PlayerData and PlayerData.ActiveSpiritIndex) or 1
+			temperPickerFrame.Visible = false
+			ResonanceEvent:FireServer("Temper", { SpiritIndex = idx, Focus = f.Key })
+		end)
+	end
+	local closeTemper = CreateTextButton(temperPickerFrame, "TemperPickerClose",
+		UDim2.new(1, -44, 0, 8), UDim2.new(0, 32, 0, 28), "X", Color3.fromRGB(90, 90, 100), nil)
+	closeTemper.MouseButton1Click:Connect(function()
+		temperPickerFrame.Visible = false
+	end)
+	local baseZ = temperPickerFrame.ZIndex
+	for _, d in ipairs(temperPickerFrame:GetDescendants()) do
+		if d:IsA("GuiObject") then
+			d.ZIndex = math.max(d.ZIndex, baseZ + 1)
+		end
+	end
+end
+
 -- Identity slice 3: evo progress on spirit card (lvl/bond/wins/crystals + skill teaser)
 local function countInventoryItem(itemId)
 	local have = 0
@@ -2488,15 +2563,23 @@ detailCareButton.MouseButton1Click:Connect(function()
 end)
 
 detailTemperButton.MouseButton1Click:Connect(function()
-	if not selectedSpiritIndex then return end
-	ResonanceEvent:FireServer("Temper", {SpiritIndex = selectedSpiritIndex, Focus = "Attack"})
+	if not selectedSpiritIndex then
+		selectedSpiritIndex = (PlayerData and tonumber(PlayerData.ActiveSpiritIndex)) or 1
+	end
+	OpenTemperPicker()
 end)
 
 ResonanceEvent.OnClientEvent:Connect(function(action, data)
+	if action == "OpenTemperPicker" then
+		OpenTemperPicker()
+		return
+	end
 	if action == "CareSuccess" or action == "TemperSuccess" then
 		ShowNotification((data and data.Message) or "Готово")
 		if action == "CareSuccess" then
 			PlayCareClientVfx()
+			ShowCareRewardFeedback(data)
+		elseif action == "TemperSuccess" and data then
 			ShowCareRewardFeedback(data)
 		end
 		if data and data.Snapshot then
@@ -2506,6 +2589,9 @@ ResonanceEvent.OnClientEvent:Connect(function(action, data)
 		pcall(function()
 			QuestEvent:FireServer("GetActiveQuests", {})
 		end)
+		if temperPickerFrame then
+			temperPickerFrame.Visible = false
+		end
 	elseif action == "CareFailed" or action == "TemperFailed" then
 		ShowNotification((data and data.Reason) or "Не удалось")
 	elseif action == "DexBonus" and data then

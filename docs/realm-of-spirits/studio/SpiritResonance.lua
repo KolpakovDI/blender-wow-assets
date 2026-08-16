@@ -309,7 +309,7 @@ function SpiritResonance.Temper(playerData, spiritIndex, focus)
 		if consumeItem(playerData, SpiritResonance.TEMPER_ITEM_ID, 1) then
 			usedItem = true
 		else
-			return false, "Мало выносливости духа (нужно 15) или камень закалки"
+			return false, "Мало Stam (нужно 15) или купите камень закалки в магазине"
 		end
 	else
 		playerData.SpiritStamina = playerData.SpiritStamina - SpiritResonance.TEMPER_STAMINA_COST

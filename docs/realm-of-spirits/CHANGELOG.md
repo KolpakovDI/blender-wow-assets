@@ -6,6 +6,11 @@
 
 ## [Unreleased]
 
+### Fix: Temper (Закалка) no UI / pedestal dead (2026-08-16)
+- Пьедестал слал `OpenTemperPicker`, клиент не обрабатывал → «Закалка не работает»
+- `TemperPickerFrame`: Атака / Защита / Дух; кнопка ЗАКАЛКА и пьедестал открывают пикер
+- Яснее fail: мало Stam / нужен камень закалки
+
 ### Fix: Care quest 301 not completing after Resonance (2026-08-16)
 - Studio: `UpdateQuestProgressBF:Invoke(player, …)` вместо `UserId` → BF возвращал `no player`, а `pcall` считал успех — прогресс CareSpirit не писал
 - `pushCareQuest` / Temper: сначала `_G.UpdateQuestProgress`, BF с `player.UserId` + проверка `result == true`
