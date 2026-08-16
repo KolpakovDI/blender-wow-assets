@@ -1,14 +1,14 @@
 # NEXT SESSION
 
-**Статус:** 2026-08-16 — MCP буферы PASS (бой + Kami Care/Temper). Gate locked.  
+**Статус:** 2026-08-16 — MCP буферы закрыты; ждём честный E1. Gate locked.  
 **План:** [`YEAR-PLAN-2026-10.md`](YEAR-PLAN-2026-10.md)  
-**Сессии:** locals · [`16b-buffer`](SESSION-2026-08-16b-mcp-hands-buffer.md) · [`16c-kami`](SESSION-2026-08-16c-kami-care-temper.md)
+**Лог рук:** [`E1-HANDS-LOG.md`](E1-HANDS-LOG.md)
 
 ## Сейчас
 
 1. SoT **Ctrl+S**  
-2. **Честный E1** глазами (F/E/1/2), цель n≥10 — главный открытый пункт  
-3. MCP live-like буфер закрыт по коду/Play  
+2. Заполнить [`E1-HANDS-LOG.md`](E1-HANDS-LOG.md) — **n≥10** руками (F/E/1/2)  
+3. При FAIL/P0 — писать заметку в лог (можно чинить в следующей сессии агента)  
 4. **Не** Allow* / AI mesh / ProfileService  
 
 ## Studio SoT

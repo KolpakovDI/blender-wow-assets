@@ -11,6 +11,7 @@
 - Smoke PASS: `UI Controller загружен!` + TradeFrame/BattleLogScroll/DexPanel на клиенте
 - MCP hands buffer post-fix: HubFunnel Complete + бой V/Keypad vs Огненный Кот + ScoutPost — `SESSION-2026-08-16b-mcp-hands-buffer.md`
 - Kami без ForceCatch: SeedQA → Care/Temper → Sanctum Open — `SESSION-2026-08-16c-kami-care-temper.md`
+- Шаблон честного E1: `E1-HANDS-LOG.md` (n≥10, F/E/1/2, без MCP-читов)
 
 ### Trade UI scroll (2026-08-15)
 - `UIController` TradeFrame: `ShopScroll` / `InventoryScroll` + CanvasSize; списки больше не вылезают за рамку
