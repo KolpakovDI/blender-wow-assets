@@ -6,6 +6,10 @@
 
 ## [Unreleased]
 
+### Fix: UIController 200 locals (2026-08-16)
+- Play: `Out of local registers … HandleShopZoneActivation` — магазин вынесен в `TradePanelUI` ModuleScript
+- Smoke PASS: `UI Controller загружен!` + TradeFrame/BattleLogScroll/DexPanel на клиенте
+
 ### Trade UI scroll (2026-08-15)
 - `UIController` TradeFrame: `ShopScroll` / `InventoryScroll` + CanvasSize; списки больше не вылезают за рамку
 - CareRewardCard уезжает под activity bar, если магазин открыт; TradeFrame ZIndex=55 — Play smoke PASS
