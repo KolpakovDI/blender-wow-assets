@@ -10,6 +10,7 @@
 - Play: `Out of local registers … HandleShopZoneActivation` — магазин вынесен в `TradePanelUI` ModuleScript
 - Smoke PASS: `UI Controller загружен!` + TradeFrame/BattleLogScroll/DexPanel на клиенте
 - MCP hands buffer post-fix: HubFunnel Complete + бой V/Keypad vs Огненный Кот + ScoutPost — `SESSION-2026-08-16b-mcp-hands-buffer.md`
+- Kami без ForceCatch: SeedQA → Care/Temper → Sanctum Open — `SESSION-2026-08-16c-kami-care-temper.md`
 
 ### Trade UI scroll (2026-08-15)
 - `UIController` TradeFrame: `ShopScroll` / `InventoryScroll` + CanvasSize; списки больше не вылезают за рамку
