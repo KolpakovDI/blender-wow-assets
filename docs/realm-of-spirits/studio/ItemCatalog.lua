@@ -34,7 +34,7 @@ ItemCatalog.ById = {
 	[118] = {Id = 118, Name = "Небесный кристалл", Category = "Material", Element = "Sky", SellPrice = 0, Unsellable = true, Description = "Материал эволюции небесных духов", CombatUtility = false},
 	[120] = {Id = 120, Name = "Коробка редкой манги", Category = "Quest", SellPrice = 0, Unsellable = true, WhyTag = "квест Мики", Description = "Украденная партия манги для Мики (квест)", CombatUtility = false},
 	-- Kami Sanctum materials
-	[301] = {Id = 301, Name = "Осколок Ками", Category = "SanctumMaterial", SellPrice = 0, Unsellable = true, Description = "Базовый катализатор синтеза в Святилище Ками", CombatUtility = false},
+	[301] = {Id = 301, Name = "Осколок Ками", Category = "SanctumMaterial", Price = 120, SellPrice = 0, Unsellable = true, DailyBuyCap = 5, WhyTag = "синтез Ками", Description = "Базовый катализатор синтеза в Святилище Ками (магазин / дезинтеграция)", CombatUtility = false},
 	[302] = {Id = 302, Name = "Камень Гармонии", Category = "SanctumMaterial", SellPrice = 0, Unsellable = true, Description = "Стабилизирует Primary при синтезе", CombatUtility = false},
 	[303] = {Id = 303, Name = "Ядро Разлома", Category = "SanctumMaterial", SellPrice = 0, Unsellable = true, Description = "Усиливает Unique при разнородных донорах", CombatUtility = false},
 	[304] = {Id = 304, Name = "Печать Мики", Category = "SanctumMaterial", SellPrice = 0, Unsellable = true, Description = "Ивент/квест: шанс Rare+ Unique", CombatUtility = false},
@@ -47,8 +47,8 @@ ItemCatalog.ById = {
 	[323] = {Id = 323, Name = "Эссенция Воды", Category = "SanctumMaterial", Element = "Water", SellPrice = 0, Unsellable = true, Description = "Дезинтеграция / квесты Святилища", CombatUtility = false},
 }
 
--- Copper shop + gold sinks (201–203)
-ItemCatalog.ShopIds = {1, 2, 3, 4, 5, 201, 202, 203}
+-- Copper shop + gold sinks (201–203) + Kami shard for Sanctum loop
+ItemCatalog.ShopIds = {1, 2, 3, 4, 5, 301, 201, 202, 203}
 
 function ItemCatalog.Get(id)
 	local n = tonumber(id)

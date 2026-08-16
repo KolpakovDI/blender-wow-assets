@@ -441,6 +441,15 @@ remote.OnClientEvent:Connect(function(action, data)
 	elseif action == "SynthesizeResult" then
 		selected = {}
 		local sp = data.Spirit
+		-- Если FullSync ещё не пришёл и список пуст (слили всех) — покажем Ками сразу
+		if type(sp) == "table" and data.Ok ~= false then
+			PlayerData = PlayerData or {}
+			if type(PlayerData.Spirits) ~= "table" or #PlayerData.Spirits == 0 then
+				PlayerData.Spirits = { sp }
+				PlayerData.ActiveSpiritIndex = 1
+				PlayerData.CurrentSpiritId = sp.Id
+			end
+		end
 		local skills = {}
 		if type(sp) == "table" then
 			local names = type(sp.Skills) == "table" and sp.Skills or {}

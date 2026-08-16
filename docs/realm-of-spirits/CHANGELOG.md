@@ -6,6 +6,19 @@
 
 ## [Unreleased]
 
+### Fix: Resonant Kami missing from spirit slots after synth (2026-08-16)
+- FullSync / деталь духа требовали запись в `SpiritDatabase` — Id 9xxx Resonant отбрасывался → пустые слоты после слияния всех
+- `ResolveOwnedSpiritDisplay`: имя/элемент с инстанса; слоты + SpiritDetail; soft-fill списка Ками если FullSync ещё пуст
+
+### Fix: shop prices truncated / unaffordable unclear (2026-08-16)
+- Цена была в одной строке с именем → `TextTruncate` срезал её в узкой колонке
+- Отдельная строка «Цена: …», дубль на кнопке «Купить»; зелёный / красный + «(мало)» по кошельку
+- После Buy/Sell/FullSync `RefreshAfford` пересчитывает цвета, пока панель открыта
+
+### Added: Осколок Ками в магазине (2026-08-16)
+- Item `301` в `ShopIds`: цена 120 меди, DailyBuyCap 5 — без MCP-grant для Sanctum loop
+- E1-HANDS-LOG: таблица #1–6 FAIL починена (дубликаты убраны)
+
 ### Fix: Kami synthesize Error "copper" (2026-08-16)
 - Слияние смотрело только `CopperCoins` (0–99 после нормализации), игнорируя серебро/золото → ложный отказ
 - Оплата/проверка по сумме меди; UI: «Недостаточно монет…» вместо сырого `copper`

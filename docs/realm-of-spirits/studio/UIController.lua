@@ -35,6 +35,60 @@ local function GetSpiritInfo(id)
 	return SpiritDatabaseModule.GetDisplay(id) or SpiritDatabaseModule.Get(id)
 end
 
+-- Resonant (Ками, Id 9xxx) нет в SpiritDatabase — display из инстанса (как ResolveBattleSpiritInfo)
+local function ResolveOwnedSpiritDisplay(spirit)
+	if type(spirit) ~= "table" then
+		return nil
+	end
+	local info = GetSpiritInfo(spirit.Id)
+	if info then
+		return {
+			Id = spirit.Id,
+			Name = spirit.Name or info.Name,
+			Element = info.Element or spirit.Element,
+			PrimaryElement = info.PrimaryElement or spirit.PrimaryElement or spirit.HybridPrimary,
+			Aspect = info.Aspect,
+			ElementLabel = info.ElementLabel
+				or SpiritDatabaseModule.FormatElementLabel and SpiritDatabaseModule.FormatElementLabel(spirit),
+			Rarity = info.Rarity or "-",
+			Kind = spirit.Kind,
+			ParentIds = spirit.ParentIds,
+		}
+	end
+	local kind = tostring(spirit.Kind or "")
+	local idNum = tonumber(spirit.Id) or 0
+	if kind ~= "Resonant" and idNum < 9000 then
+		return nil
+	end
+	local parentId = nil
+	if type(spirit.ParentIds) == "table" then
+		parentId = tonumber(spirit.ParentIds[1])
+	end
+	local parent = parentId and GetSpiritInfo(parentId) or nil
+	local el = spirit.PrimaryElement or spirit.HybridPrimary or spirit.Element
+		or (parent and (parent.PrimaryElement or parent.Element)) or "Fire"
+	local elLabel = el
+	if SpiritDatabaseModule.FormatElementLabel then
+		elLabel = SpiritDatabaseModule.FormatElementLabel({
+			PrimaryElement = el,
+			Aspect = el,
+			Element = el,
+		}) or el
+	end
+	return {
+		Id = spirit.Id,
+		Name = spirit.Name or "Ками",
+		Element = el,
+		PrimaryElement = el,
+		HybridPrimary = spirit.HybridPrimary or el,
+		Aspect = el,
+		ElementLabel = elLabel,
+		Rarity = "Resonant",
+		Kind = "Resonant",
+		ParentIds = spirit.ParentIds,
+	}
+end
+
 -- Маппинг числового ранга в буквенный
 local RankNames = {[1] = "D", [2] = "C", [3] = "B", [4] = "A", [5] = "S", [6] = "SS", [7] = "SSS"}
 
@@ -1572,11 +1626,11 @@ OpenSpiritDetail = function(index)
 		return
 	end
 
-	local spiritInfo = GetSpiritInfo(spirit.Id)
+	local spiritInfo = ResolveOwnedSpiritDisplay(spirit)
 	if not spiritInfo then return end
 
 	-- Заполняем информацию
-	detailSpiritName.Text = "Имя: " .. spiritInfo.Name
+	detailSpiritName.Text = "Имя: " .. tostring(spiritInfo.Name)
 	detailSpiritLevel.Text = "Уровень: " .. (spirit.Level or 1)
 	detailSpiritElement.Text = "Элемент: "
 		.. (spiritInfo.ElementLabel or spiritInfo.Element or "-")
@@ -2689,15 +2743,20 @@ DataEvent.OnClientEvent:Connect(function(action, data)
 			UpdateRank(rankNameStr, data.RankTitle, rankColor)
 		end
 
-		-- Обновляем слоты духов
+		-- Обновляем слоты духов (вкл. Resonant / Ками без записи в каталоге)
 		local spiritDisplayData = {}
 		for i, spirit in ipairs(data.Spirits or {}) do
-			local spiritInfo = GetSpiritInfo(spirit.Id)
+			local spiritInfo = ResolveOwnedSpiritDisplay(spirit)
 			if spiritInfo then
 				table.insert(spiritDisplayData, {
 					Id = spirit.Id,
 					Name = spiritInfo.Name,
-					Level = spirit.Level
+					Level = spirit.Level,
+					Kind = spirit.Kind,
+					PrimaryElement = spiritInfo.PrimaryElement,
+					HybridPrimary = spirit.HybridPrimary,
+					Element = spiritInfo.Element,
+					ParentIds = spirit.ParentIds,
 				})
 			end
 		end
@@ -2717,6 +2776,7 @@ DataEvent.OnClientEvent:Connect(function(action, data)
 		UpdateTraps(trapCount)
 		if tradeUI.IsVisible() then
 			RefreshTradeInventory()
+			tradeUI.RefreshAfford()
 		end
 		RefreshProfileSummary()
 
@@ -2960,12 +3020,17 @@ EvolutionEvent.OnClientEvent:Connect(function(action, data)
 		if PlayerData and PlayerData.Spirits then
 			local spiritDisplayData = {}
 			for i, spirit in ipairs(PlayerData.Spirits) do
-				local spiritInfo = GetSpiritInfo(spirit.Id)
+				local spiritInfo = ResolveOwnedSpiritDisplay(spirit)
 				local name = (spiritInfo and spiritInfo.Name) or spirit.Name or ("Дух " .. tostring(spirit.Id))
 				table.insert(spiritDisplayData, {
 					Id = spirit.Id,
 					Name = name,
 					Level = spirit.Level,
+					Kind = spirit.Kind,
+					PrimaryElement = spiritInfo and spiritInfo.PrimaryElement,
+					HybridPrimary = spirit.HybridPrimary,
+					Element = spiritInfo and spiritInfo.Element,
+					ParentIds = spirit.ParentIds,
 				})
 			end
 			UpdateSpiritSlots(spiritDisplayData)
@@ -3138,6 +3203,7 @@ TradeEvent.OnClientEvent:Connect(function(action, data)
 		ShowNotification(data.Message or "")
 		if data.Success and tradeUI.IsVisible() then
 			RefreshTradeInventory()
+			tradeUI.RefreshAfford()
 		end
 	end
 end)
