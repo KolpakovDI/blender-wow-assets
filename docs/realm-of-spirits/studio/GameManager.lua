@@ -654,6 +654,30 @@ end
 -- ============================================
 local deathDebounce = {}
 
+-- Soft respawn: keep PlayerGui / progress (no LoadCharacter wipe)
+local function SoftRespawnAtSpawn(player, reason)
+	local character = player.Character
+	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+	local hrp = character and character:FindFirstChild("HumanoidRootPart")
+	local spawn = workspace:FindFirstChildOfClass("SpawnLocation")
+	if humanoid and hrp and spawn then
+		humanoid.Health = humanoid.MaxHealth
+		local pos = spawn.Position + Vector3.new(0, 4, 0)
+		character:PivotTo(CFrame.lookAt(pos, pos + Vector3.new(0, 0, 20)))
+		hrp.AssemblyLinearVelocity = Vector3.zero
+		hrp.AssemblyAngularVelocity = Vector3.zero
+	elseif player.Parent then
+		player:LoadCharacter()
+	end
+	local data = GetPlayerData(player)
+	if data then
+		DataEvent:FireClient(player, "FullSync", data)
+	end
+	if reason then
+		print("[RoS] SoftRespawn", player.Name, reason)
+	end
+end
+
 HandlePlayerDeath = function(player)
 	if deathDebounce[player.UserId] then return end
 	deathDebounce[player.UserId] = true
@@ -663,6 +687,10 @@ HandlePlayerDeath = function(player)
 		if player.Parent then
 			player:LoadCharacter()
 		end
+		task.defer(function()
+			local data = GetPlayerData(player)
+			if data then DataEvent:FireClient(player, "FullSync", data) end
+		end)
 		deathDebounce[player.UserId] = nil
 		return
 	end
@@ -681,6 +709,10 @@ HandlePlayerDeath = function(player)
 		deathDebounce[player.UserId] = nil
 		if player.Parent then
 			player:LoadCharacter()
+			task.defer(function()
+				local data = GetPlayerData(player)
+				if data then DataEvent:FireClient(player, "FullSync", data) end
+			end)
 		end
 	end)
 end
@@ -925,8 +957,12 @@ local function EndBattle(player, winner, battle)
 			Winner = "Enemy",
 			Rewards = {Experience = 0, Coins = 0}
 		})
-		-- Запускаем анимацию падения и респавн через 1.5 сек
-		HandlePlayerDeath(player)
+		-- Не LoadCharacter: иначе StarterGui/UI сбрасывает прогресс на клиенте
+		SoftRespawnAtSpawn(player, "battle_defeat")
+		local loseData = GetPlayerData(player)
+		if loseData then
+			DataEvent:FireClient(player, "FullSync", loseData)
+		end
 	end
 end
 

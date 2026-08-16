@@ -2691,7 +2691,7 @@ DataEvent.OnClientEvent:Connect(function(action, data)
 
 		-- Обновляем слоты духов
 		local spiritDisplayData = {}
-		for i, spirit in ipairs(data.Spirits) do
+		for i, spirit in ipairs(data.Spirits or {}) do
 			local spiritInfo = GetSpiritInfo(spirit.Id)
 			if spiritInfo then
 				table.insert(spiritDisplayData, {
@@ -2702,7 +2702,7 @@ DataEvent.OnClientEvent:Connect(function(action, data)
 			end
 		end
 		UpdateSpiritSlots(spiritDisplayData)
-		UpdateBagSlots(data.Bags)
+		UpdateBagSlots(data.Bags or {})
 
 		-- Обновляем количество ловушек
 		local trapCount = 0
@@ -2856,7 +2856,7 @@ BattleEvent.OnClientEvent:Connect(function(action, data)
 			if rewards.GoldCoins and rewards.GoldCoins > 0 then rewardText = rewardText .. ", +" .. rewards.GoldCoins .. " 🥇" end
 			ShowNotification(rewardText, 4.5)
 		elseif data.Winner == "Enemy" then
-			ShowNotification("Поражение... Дух повержен", 4)
+			ShowNotification("Поражение — прогресс сохранён. Отдыхай у спавна.", 4.5)
 		else
 			ShowNotification("Бой окончен", 3)
 		end

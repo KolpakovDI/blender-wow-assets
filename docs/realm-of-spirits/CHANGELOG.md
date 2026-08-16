@@ -6,6 +6,10 @@
 
 ## [Unreleased]
 
+### Fix: battle defeat wiped spirits/loot/skills UI (2026-08-16)
+- Поражение звало `LoadCharacter` → `StarterGui` клонировал `UIController` заново с пустым `PlayerData`
+- SoftRespawn (хил + TP на спавн) без смерти; `UIController` → `StarterPlayerScripts`; `ResetPlayerGuiOnSpawn=false`; FullSync после смерти/поражения
+
 ### Fix: Temper (Закалка) no UI / pedestal dead (2026-08-16)
 - Пьедестал слал `OpenTemperPicker`, клиент не обрабатывал → «Закалка не работает»
 - `TemperPickerFrame`: Атака / Защита / Дух; кнопка ЗАКАЛКА и пьедестал открывают пикер

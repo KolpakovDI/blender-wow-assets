@@ -6,6 +6,11 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 
+-- Persist PlayerGui across respawn (UIController progress)
+pcall(function()
+	game:GetService("StarterGui").ResetPlayerGuiOnSpawn = false
+end)
+
 local RealmFolder = ReplicatedStorage:WaitForChild("RealmOfSpirits")
 local ZoneConfig = require(RealmFolder:WaitForChild("ZoneConfig"))
 local OtakuHavenBuilder = require(ServerScriptService.RealmOfSpirits.OtakuHavenBuilder)
