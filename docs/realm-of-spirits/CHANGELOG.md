@@ -6,6 +6,10 @@
 
 ## [Unreleased]
 
+### Fix: QuestUI Accept button missing (E1 FAIL #1, 2026-08-16)
+- `CareSpirit`/`TemperSpirit` в `showQuestDetail` падали на `progress.Current` при Available → кнопка «Принять» не создавалась
+- Автовыбор квеста при открытии списка (приоритет Q7 «Украденная манга»); футер Accept крупнее
+
 ### Fix: UIController 200 locals (2026-08-16)
 - Play: `Out of local registers … HandleShopZoneActivation` — магазин вынесен в `TradePanelUI` ModuleScript
 - Smoke PASS: `UI Controller загружен!` + TradeFrame/BattleLogScroll/DexPanel на клиенте

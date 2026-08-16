@@ -573,12 +573,16 @@ questDetailFrame.ClipsDescendants = true
 
 local actionFooter = Instance.new("Frame")
 actionFooter.Name = "ActionFooter"
-actionFooter.Size = UDim2.new(1, -20, 0, 22)
-actionFooter.Position = UDim2.new(0, 10, 1, -24)
-actionFooter.BackgroundTransparency = 1
+actionFooter.Size = UDim2.new(1, -20, 0, 28)
+actionFooter.Position = UDim2.new(0, 10, 1, -30)
+actionFooter.BackgroundColor3 = COLORS.Panel
+actionFooter.BackgroundTransparency = 0.25
 actionFooter.ZIndex = 8
 actionFooter.Visible = false
 actionFooter.Parent = questPanel
+local footerCorner = Instance.new("UICorner")
+footerCorner.CornerRadius = UDim.new(0, 6)
+footerCorner.Parent = actionFooter
 
 -- Переменные для данных
 local readyToTurnInIds = {}
@@ -925,8 +929,8 @@ local function showQuestDetail(quest, isActive, progress, readyToTurnIn)
 				end
 				objText = "Собрать " .. itemName .. ": " .. (obj.Count or 1)
 			elseif obj.Type == "LevelUpSpirit" then objText = "Прокачать духа до уровня: " .. (obj.TargetLevel or obj.Count or 10)
-			elseif obj.Type == "CareSpirit" then objText = "Уход за духом: " .. (progress.Current or 0) .. "/" .. (obj.Count or 1)
-			elseif obj.Type == "TemperSpirit" then objText = "Закалка духа: " .. (progress.Current or 0) .. "/" .. (obj.Count or 1)
+			elseif obj.Type == "CareSpirit" then objText = "Уход за духом ×" .. (obj.Count or 1)
+			elseif obj.Type == "TemperSpirit" then objText = "Закалка духа ×" .. (obj.Count or 1)
 			elseif obj.Type == "FindChests" then objText = "Найти сундуки: " .. obj.Count
 			elseif obj.Type == "VisitZone" then
 				local where = obj.ZoneDetail or quest.TargetZone or quest.ZoneHint or "зону"
@@ -1038,7 +1042,7 @@ local function showQuestDetail(quest, isActive, progress, readyToTurnIn)
 		acceptBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 		acceptBtn.Font = Enum.Font.GothamBold
 		acceptBtn.TextScaled = false
-		acceptBtn.TextSize = 12
+		acceptBtn.TextSize = 14
 		acceptBtn.Parent = footer or questDetailFrame
 
 		local acceptCorner = Instance.new("UICorner")
@@ -1136,19 +1140,52 @@ function showQuestList(tabName)
 	clearQuestList()
 	clearDetail()
 
+	-- E1: кнопка Принять/Сдать только в showQuestDetail — без автовыбора панель «пустая»
+	local autoQuest = nil
+	local autoIsActive = false
+	local autoProgress = nil
+	local autoReady = false
+
 	if tabName == "Available" then
 		for i, quest in ipairs(currentQuestData.Available) do
 			createQuestEntry(quest, false, nil, i)
+			-- Стартовый сюжет (манга) важнее daily 301 сверху списка
+			if tonumber(quest.Id) == 7 then
+				autoQuest = quest
+			end
+		end
+		if not autoQuest then
+			autoQuest = currentQuestData.Available[1]
 		end
 	elseif tabName == "Active" then
 		for i, questData in ipairs(currentQuestData.Active) do
 			createQuestEntry(questData.Quest, true, questData.Progress, i, questData.ReadyToTurnIn)
+			if questData.ReadyToTurnIn and not autoReady then
+				autoQuest = questData.Quest
+				autoIsActive = true
+				autoProgress = questData.Progress
+				autoReady = true
+			elseif not autoQuest then
+				autoQuest = questData.Quest
+				autoIsActive = true
+				autoProgress = questData.Progress
+				autoReady = questData.ReadyToTurnIn == true
+			end
 		end
 	elseif tabName == "Completed" then
 		for i, quest in ipairs(currentQuestData.Completed) do
 			quest._completed = true
 			createQuestEntry(quest, false, nil, i)
 		end
+		autoQuest = currentQuestData.Completed[1]
+		if autoQuest then
+			autoQuest._completed = true
+		end
+	end
+
+	if autoQuest then
+		selectedQuest = autoQuest
+		showQuestDetail(autoQuest, autoIsActive, autoProgress, autoReady)
 	end
 end
 
