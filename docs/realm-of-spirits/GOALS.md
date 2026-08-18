@@ -121,4 +121,4 @@
 9. ~~Hands-цикл Ками (MCP)~~ — PASS 14.08g; ~~фаза 1 completion code~~ — Dex Resonant + Sanctum Status 15.08 (`PROJECT-COMPLETION.md`).
 10. ~~Hub funnel / DS session lock / phase-1 completion~~ — PASS 15.08.
 11. ~~Месяц 15.08–14.09 soft-launch~~ — **M1–M4 PASS** 15.08g (`SESSION-2026-08-15g-month-w4-wrap.md`); E1 hands CONDITIONAL.
-12. **Next (год C+A):** `YEAR-PLAN-2026-10.md` — Q1/Q2 scaffolding PASS; **E1 OWNER SKIP** 16.08; **Q3 Slice 1 2p duel PASS** 18.08; дальше Slice 2 Haven décor; Allow* только явным unlock.
+12. **Next (год C+A):** Q1/Q2 PASS; E1 OWNER SKIP; **Q3 Slice 1 2p PASS** + **Slice 2 wayfind** 18.08; Allow* только явным unlock.

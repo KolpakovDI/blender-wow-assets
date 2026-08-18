@@ -1694,7 +1694,87 @@ function OtakuHavenBuilder.Build()
 		end
 	end
 
+	-- Q3 Slice 2: Exit wayfind → арена / дуэль (читается из хаба)
+	OtakuHavenBuilder.EnsureDuelWayfind(haven)
+
 	return haven
+end
+
+function OtakuHavenBuilder.EnsureDuelWayfind(haven)
+	haven = haven or workspace:FindFirstChild("OtakuHaven")
+	if not haven then
+		return nil
+	end
+	local old = haven:FindFirstChild("DuelWayfind")
+	if old then
+		old:Destroy()
+	end
+	local folder = Instance.new("Folder")
+	folder.Name = "DuelWayfind"
+	folder.Parent = haven
+
+	local exitC = ZoneConfig.Zones.Exit.Center
+	local arenaP = ZoneConfig.BattleArenaPosition
+	local look = Vector3.new(arenaP.X - exitC.X, 0, arenaP.Z - exitC.Z)
+	if look.Magnitude < 1 then
+		look = Vector3.new(1, 0, 0)
+	end
+	look = look.Unit
+	local pos = Vector3.new(exitC.X, 0.2, exitC.Z) + look * 6 + Vector3.new(0, 0, 0)
+
+	local pole = makePart({
+		Name = "DuelWayfindPole",
+		Size = Vector3.new(0.35, 5.2, 0.35),
+		Position = pos + Vector3.new(0, 2.6, 0),
+		Color = Color3.fromRGB(50, 40, 70),
+		Material = Enum.Material.Metal,
+		CanCollide = false,
+		Parent = folder,
+	})
+	local board = makePart({
+		Name = "DuelWayfindBoard",
+		Size = Vector3.new(7.2, 2.1, 0.28),
+		CFrame = CFrame.lookAt(pole.Position + Vector3.new(0, 2.15, 0) + look * 0.25, pole.Position + Vector3.new(0, 2.15, 0) + look),
+		Color = Color3.fromRGB(40, 28, 55),
+		Material = Enum.Material.SmoothPlastic,
+		CanCollide = false,
+		Parent = folder,
+	})
+	local gui = Instance.new("SurfaceGui")
+	gui.Name = "Face"
+	gui.Face = Enum.NormalId.Front
+	gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+	gui.PixelsPerStud = 40
+	gui.Parent = board
+	local text = Instance.new("TextLabel")
+	text.Size = UDim2.fromScale(1, 1)
+	text.BackgroundTransparency = 1
+	text.Text = "Дуэль → арена"
+	text.TextColor3 = Color3.fromRGB(255, 220, 120)
+	text.Font = Enum.Font.GothamBold
+	text.TextScaled = true
+	text.Parent = gui
+
+	local bb = Instance.new("BillboardGui")
+	bb.Name = "DuelWayfindBillboard"
+	bb.Size = UDim2.new(0, 260, 0, 48)
+	bb.StudsOffset = Vector3.new(0, 3.4, 0)
+	bb.AlwaysOnTop = true
+	bb.MaxDistance = 160
+	bb.Parent = board
+	local lbl = Instance.new("TextLabel")
+	lbl.Size = UDim2.fromScale(1, 1)
+	lbl.BackgroundColor3 = Color3.fromRGB(30, 22, 40)
+	lbl.BackgroundTransparency = 0.2
+	lbl.Text = "Дуэль · дорога к арене"
+	lbl.TextColor3 = Color3.fromRGB(255, 230, 160)
+	lbl.Font = Enum.Font.GothamBold
+	lbl.TextScaled = true
+	lbl.Parent = bb
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 8)
+	corner.Parent = lbl
+	return folder
 end
 
 function OtakuHavenBuilder.BuildDirtRoadToArena()
@@ -1942,9 +2022,9 @@ function OtakuHavenBuilder.BuildDirtRoadToArena()
 		text.TextScaled = true
 		text.Parent = gui
 	end
-	waySign("SignHaven", 0.08, "← HAVEN")
-	waySign("SignArena", 0.55, "ARENA →")
-	waySign("SignArenaNear", 0.92, "ARENA →")
+	waySign("SignHaven", 0.08, "← Haven")
+	waySign("SignArena", 0.55, "Арена → дуэль")
+	waySign("SignArenaNear", 0.92, "Дуэль →")
 
 	model:SetAttribute("From", "OtakuHavenExit")
 	model:SetAttribute("To", "BattleArenaEntrance")

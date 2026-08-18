@@ -6,6 +6,10 @@
 
 ## [Unreleased]
 
+### Q3 Slice 2: Haven duel wayfind (2026-08-18)
+- У Exit: указатель «Дуэль → арена» (`EnsureDuelWayfind`) + жёлтая плита `PvPDuelHostHaven` (Y / Interact)
+- Знаки дороги Haven↔арена на русском; хост дуэли вызывается и из хаба
+
 ### Q3 Slice 1: fair duel harden (2026-08-16)
 - `PvPDuelSystem.resolveDuelSpiritInfo` — Resonant/Ками (9xxx) больше не «Ошибка духа» на старте дуэли
 - Победа при `WIN_COPPER=0`: toast «(слава)», без начисления меди / «+0 🥉»

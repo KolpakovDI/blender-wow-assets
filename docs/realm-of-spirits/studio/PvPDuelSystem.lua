@@ -1128,50 +1128,84 @@ local function ensureDuelHostLabel(host)
 	end
 end
 
+local function attachDuelHostPrompt(host)
+	if not host then
+		return
+	end
+	ensureDuelHostLabel(host)
+	if host:GetAttribute("PromptWired") == true and host:FindFirstChild("PvPDuelHostPrompt") then
+		return
+	end
+	local prompt = host:FindFirstChild("PvPDuelHostPrompt")
+	if not prompt then
+		prompt = Instance.new("ProximityPrompt")
+		prompt.Name = "PvPDuelHostPrompt"
+		prompt.HoldDuration = 0
+		prompt.MaxActivationDistance = 28
+		prompt.RequiresLineOfSight = false
+		prompt.Parent = host
+	end
+	prompt.ActionText = "Вызвать ближайшего"
+	prompt.ObjectText = "Дуэль духов"
+	prompt.KeyboardKeyCode = Enum.KeyCode.Y
+	if host:GetAttribute("PromptWired") ~= true then
+		prompt.Triggered:Connect(function(who)
+			if not inChallengeZone(who) then
+				toast(who, "Дуэль: у Haven / по дороге / у арены")
+				return
+			end
+			local other = findNearestOpponent(who)
+			if not other then
+				toast(who, "Рядом нет соперника для дуэли")
+				return
+			end
+			requestChallenge(who, other.UserId)
+		end)
+		host:SetAttribute("PromptWired", true)
+	end
+end
+
+local function makeDuelHostPart(name, parent, worldPos)
+	local host = Instance.new("Part")
+	host.Name = name
+	host.Size = Vector3.new(8, 1.2, 8)
+	host.Anchored = true
+	host.CanCollide = false
+	host.Material = Enum.Material.Neon
+	host.Color = Color3.fromRGB(255, 200, 80)
+	host.CFrame = CFrame.new(worldPos)
+	host.Parent = parent
+	return host
+end
+
 local function ensureDuelHost()
 	local arena = workspace:FindFirstChild("BattleArena")
 	if not arena then
 		return
 	end
 	local host = arena:FindFirstChild("PvPDuelHost")
-	if host then
-		ensureDuelHostLabel(host)
+	if not host then
+		host = makeDuelHostPart("PvPDuelHost", arena, arenaCenter() + Vector3.new(0, 1.2, 0))
+	end
+	attachDuelHostPrompt(host)
+end
+
+local function ensureHavenDuelHost()
+	local haven = workspace:FindFirstChild("OtakuHaven")
+	if not haven then
 		return
 	end
-	host = Instance.new("Part")
-	host.Name = "PvPDuelHost"
-	host.Size = Vector3.new(8, 1.2, 8)
-	host.Anchored = true
-	host.CanCollide = false
-	host.Material = Enum.Material.Neon
-	host.Color = Color3.fromRGB(255, 200, 80)
-	host.CFrame = CFrame.new(arenaCenter() + Vector3.new(0, 1.2, 0))
-	host.Parent = arena
-
-	ensureDuelHostLabel(host)
-
-	local prompt = Instance.new("ProximityPrompt")
-	prompt.Name = "PvPDuelHostPrompt"
-	prompt.ActionText = "Вызвать ближайшего"
-	prompt.ObjectText = "Дуэль духов"
-	prompt.HoldDuration = 0
-	prompt.MaxActivationDistance = 28
-	prompt.RequiresLineOfSight = false
-	prompt.KeyboardKeyCode = Enum.KeyCode.Y
-	prompt.Parent = host
-	prompt.Triggered:Connect(function(who)
-		if not inChallengeZone(who) then
-			toast(who, "Дуэль: у Haven / по дороге / у арены")
-			return
-		end
-		local other = findNearestOpponent(who)
-		if not other then
-			toast(who, "Рядом нет соперника для дуэли")
-			return
-		end
-		requestChallenge(who, other.UserId)
-	end)
-	ensureDuelHostLabel(host)
+	local host = haven:FindFirstChild("PvPDuelHostHaven")
+	if not host then
+		local exitC = ZoneConfig.Zones and ZoneConfig.Zones.Exit and ZoneConfig.Zones.Exit.Center
+		local pos = exitC or (ZoneConfig.HavenCenter + Vector3.new(0, 0, 34))
+		host = makeDuelHostPart("PvPDuelHostHaven", haven, Vector3.new(pos.X + 8, 1.2, pos.Z + 4))
+	end
+	attachDuelHostPrompt(host)
+	local label = host:FindFirstChild("Label") and host.Label:FindFirstChildWhichIsA("TextLabel")
+	if label then
+		label.Text = "Дуэль · Y / Interact · Haven"
+	end
 end
 
 function PvPDuelSystem.Start()
@@ -1184,6 +1218,7 @@ function PvPDuelSystem.Start()
 	_G.PvPDuelIsBusy = PvPDuelSystem.IsBusy
 
 	ensureDuelHost()
+	ensureHavenDuelHost()
 
 	duelEvent.OnServerEvent:Connect(function(player, action, data)
 		if typeof(action) ~= "string" then
