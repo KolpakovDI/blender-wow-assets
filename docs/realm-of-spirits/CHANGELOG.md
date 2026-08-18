@@ -10,6 +10,7 @@
 - `PvPDuelSystem.resolveDuelSpiritInfo` — Resonant/Ками (9xxx) больше не «Ошибка духа» на старте дуэли
 - Победа при `WIN_COPPER=0`: toast «(слава)», без начисления меди / «+0 🥉»
 - `PvPDuelHost` Billboard: «Дуэль · Y / Interact» (обновляет существующий хост)
+- Hands: Local Server 2p дуэль **PASS** 2026-08-18
 
 ### Meta: E1 OWNER SKIP (2026-08-16)
 - Formal hands n≥10 пропущен владельцем («всё работает»); friction #1–6 закрыты кодом

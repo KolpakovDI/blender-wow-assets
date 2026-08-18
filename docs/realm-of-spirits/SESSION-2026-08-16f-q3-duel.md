@@ -25,11 +25,13 @@
 
 | # | Шаг | PASS/FAIL | Заметка |
 |---|-----|-----------|---------|
-| 1 | Challenge+accept | | |
-| 2 | KO + glory toast | | |
-| 3 | Rematch/decline | | |
-| 4 | Kami vs normal | | |
+| 1 | Challenge+accept | **PASS** | 2026-08-18 владелец: дуэль прошла |
+| 2 | KO + glory toast | **PASS** | вместе с полным циклом дуэли |
+| 3 | Rematch/decline | не отдельно | не блокирует Slice 1 |
+| 4 | Kami vs normal | не отдельно | код resolve на месте; не требовали повтор |
+
+**Итог Slice 1:** playable 2p duel **PASS** (руки).
 
 ## Next
 
-После smoke → Q3 slice 2 или точечный polish. Не Allow*.
+Q3 Slice 2: Haven décor / указатель к арене. Не Allow*.
