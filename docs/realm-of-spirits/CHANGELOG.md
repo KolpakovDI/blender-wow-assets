@@ -6,6 +6,12 @@
 
 ## [Unreleased]
 
+### Sync: docs mirrors → Studio SoT (2026-08-19)
+- Studio place синхронизирован с docs mirrors по Q3/E1 правкам: `ExpansionGate`, `TradePanelUI`, `OtakuHavenBuilder`, `PvPDuelSystem`, `GameManager`, `KamiSanctumSystem`, `KamiSanctumController`
+- `UIController` приведён к актуальному варианту с `TradePanelUI` wiring (`shopButton`, `RefreshAfford`, zone-silent refresh) и перенесён в `StarterPlayerScripts`
+- `StarterGui.UIController` удалён, `StarterGui.ResetPlayerGuiOnSpawn = false`
+- Play smoke (MCP) после sync: wayfind/host в Haven, `resolveDuelSpiritInfo`, soft-respawn, TradePanel wiring — PASS
+
 ### Q3 Slice 2: Haven duel wayfind (2026-08-18)
 - У Exit: указатель «Дуэль → арена» (`EnsureDuelWayfind`) + жёлтая плита `PvPDuelHostHaven` (Y / Interact)
 - Знаки дороги Haven↔арена на русском; хост дуэли вызывается и из хаба
