@@ -1,7 +1,7 @@
 -- KamiSanctumConfig — synthesis 2–6 + disintegrate weights
 local KamiSanctumConfig = {}
 
-KamiSanctumConfig.MinPlayerLevel = 10
+KamiSanctumConfig.MinPlayerLevel = 2
 KamiSanctumConfig.MinDonors = 2
 KamiSanctumConfig.MaxDonors = 6
 KamiSanctumConfig.DailySynthCap = 3

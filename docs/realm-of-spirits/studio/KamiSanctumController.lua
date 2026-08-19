@@ -20,8 +20,8 @@ local function formatKamiError(data)
 			return string.format("Недостаточно монет: нужно %d меди (есть %d)", need, have)
 		end
 		return string.format("Недостаточно монет: нужно %d меди (считаются медь+серебро+золото)", need)
-	elseif err == "need_shard" then
-		return "Нужен Осколок Ками (предмет #301)"
+	elseif err == "need_shard" or err == "shard_take" then
+		return "Нужен Осколок Ками (#301). Купите в Магазине Haven (120 меди) или получите из квеста «Звёзды трансформации»"
 	elseif err == "level" then
 		return "Нужен уровень " .. tostring(data.Need or "?")
 	elseif err == "count" then
@@ -35,6 +35,43 @@ local function formatKamiError(data)
 	end
 	return err
 end
+local function formatDisintegratePreview(data)
+	local shard, stars, essences, other = {}, {}, {}, {}
+	for _, row in ipairs(data.LootTable or {}) do
+		local id = tonumber(row.Id) or 0
+		local line = string.format("%s×%d", row.Name or ("#" .. id), row.Quantity or 1)
+		if id == 301 then
+			table.insert(shard, line)
+		elseif id >= 310 and id <= 312 then
+			table.insert(stars, line)
+		elseif id >= 320 and id <= 323 then
+			table.insert(essences, line)
+		else
+			table.insert(other, line)
+		end
+	end
+	local parts = {}
+	if #shard > 0 then
+		table.insert(parts, "Осколок: " .. table.concat(shard, ", "))
+	end
+	if #stars > 0 then
+		table.insert(parts, "Звёзды: " .. table.concat(stars, ", "))
+	end
+	if #essences > 0 then
+		table.insert(parts, "Эссенции: " .. table.concat(essences, ", "))
+	end
+	if #other > 0 then
+		table.insert(parts, table.concat(other, ", "))
+	end
+	local body = (#parts > 0) and table.concat(parts, " · ") or "—"
+	local daily = tonumber(data.DailyLeft)
+	if daily then
+		body = body .. string.format(" | осталось %d", daily)
+	end
+	return body
+end
+
+local DEFAULT_STATUS = "Выберите 2–6 духов · Осколок Ками (301)"
 local selected = {} -- indices for synth
 local disIndex = nil
 local gui = nil
@@ -406,7 +443,7 @@ remote.OnClientEvent:Connect(function(action, data)
 			local g = ensureGui()
 			if g and g:FindFirstChild("Main") and g.Main:FindFirstChild("Status") then
 				-- Clear sticky Error (e.g. too_far) after successful Open
-				g.Main.Status.Text = "Выберите 2–6 духов · Осколок Ками (301)"
+				g.Main.Status.Text = DEFAULT_STATUS
 			end
 		end
 	elseif action == "PreviewSynthesize" then
@@ -430,11 +467,7 @@ remote.OnClientEvent:Connect(function(action, data)
 		local g = ensureGui()
 		local st = g.Main.Status
 		if data.Ok then
-			local names = {}
-			for _, row in ipairs(data.LootTable or {}) do
-				table.insert(names, string.format("%s×%d", row.Name, row.Quantity))
-			end
-			st.Text = "Возможный лут: " .. table.concat(names, ", ")
+			st.Text = "Возможный лут: " .. formatDisintegratePreview(data)
 		else
 			st.Text = "Превью: " .. formatKamiError(data)
 		end
@@ -489,7 +522,7 @@ remote.OnClientEvent:Connect(function(action, data)
 		end
 		notify("Дезинтеграция: " .. table.concat(parts, ", "))
 		local g = ensureGui()
-		g.Main.Status.Text = "Получено: " .. table.concat(parts, ", ") .. " +" .. tostring(data.CopperGain) .. "c"
+		g.Main.Status.Text = DEFAULT_STATUS
 		if _G.__KamiSanctumRefresh then
 			_G.__KamiSanctumRefresh()
 		end

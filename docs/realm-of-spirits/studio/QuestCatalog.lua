@@ -729,9 +729,10 @@ QuestCatalog.Quests = {
 	[304] = {
 		Id = 304,
 		Name = "Звёзды трансформации",
-		Description = "Откройте Святилище Ками у Мики (E). С 10 ур. — синтез и дезинтеграция; Звёзды усиливают Unique.",
+		Description = "Откройте Святилище Ками у Мики (E). С 2 ур. игрока — синтез и дезинтеграция; Звёзды усиливают Unique.",
 		Type = "Side",
-		Level = 10,
+		Level = 3,
+		ZoneHint = "Святилище Ками у Мики (E)",
 		Objectives = {
 			{Type = "OpenKamiSanctum", Count = 1}
 		},
@@ -747,7 +748,7 @@ QuestCatalog.Quests = {
 				{Id = 301, Quantity = 1},
 			},
 		},
-		Prerequisites = {5}
+		Prerequisites = {1}
 	},
 
 	-- ============================================

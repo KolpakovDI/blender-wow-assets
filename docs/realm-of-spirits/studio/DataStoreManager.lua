@@ -263,6 +263,7 @@ function DataStoreManager:GetDefaultData()
 			{Id = 2, Quantity = 3},
 			{Id = 4, Quantity = 3},
 			{Id = 5, Quantity = 2},
+			{Id = 301, Quantity = 1}, -- Осколок Ками: первый синтез без похода в магазин
 		},
 		UniqueItems = {},
 		Buffs = {},

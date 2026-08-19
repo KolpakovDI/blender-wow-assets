@@ -78,6 +78,88 @@ SkillCatalog.ById = {
 	[307] = {Id = 307, Name = "Разлом духа", Element = "Wind", Type = "Attack", Damage = 58, Cost = 34, Cooldown = 7.0, Effect = {Type = "DebuffDefense", Value = 0.28, Duration = 2}, Unique = true},
 }
 
+-- Range: Melee | Ranged
+-- DamageKind: Physical (melee or ranged weapon: sword, claw, bow, gun, bolt) | Spell (elemental magic)
+SkillCatalog.CombatMeta = {
+	[1] = {Range = "Melee", DamageKind = "Physical"},
+	[2] = {Range = "Ranged", DamageKind = "Spell"},
+	[3] = {Range = "Ranged", DamageKind = "Spell"},
+	[11] = {Range = "Ranged", DamageKind = "Physical"},
+	[12] = {Range = "Ranged", DamageKind = "Spell"},
+	[13] = {Range = "Ranged", DamageKind = "Spell"},
+	[21] = {Range = "Melee", DamageKind = "Physical"},
+	[22] = {Range = "Ranged", DamageKind = "Spell"},
+	[23] = {Range = "Ranged", DamageKind = "Spell"},
+	[31] = {Range = "Melee", DamageKind = "Spell"},
+	[32] = {Range = "Ranged", DamageKind = "Spell"},
+	[33] = {Range = "Ranged", DamageKind = "Spell"},
+	[41] = {Range = "Ranged", DamageKind = "Spell"},
+	[42] = {Range = "Ranged", DamageKind = "Spell"},
+	[43] = {Range = "Ranged", DamageKind = "Spell"},
+	[51] = {Range = "Ranged", DamageKind = "Spell"},
+	[52] = {Range = "Ranged", DamageKind = "Spell"},
+	[53] = {Range = "Ranged", DamageKind = "Spell"},
+	[61] = {Range = "Melee", DamageKind = "Physical"},
+	[62] = {Range = "Ranged", DamageKind = "Spell"},
+	[63] = {Range = "Ranged", DamageKind = "Spell"},
+	[71] = {Range = "Melee", DamageKind = "Physical"},
+	[72] = {Range = "Ranged", DamageKind = "Spell"},
+	[73] = {Range = "Ranged", DamageKind = "Spell"},
+	[81] = {Range = "Ranged", DamageKind = "Spell"},
+	[82] = {Range = "Ranged", DamageKind = "Spell"},
+	[83] = {Range = "Ranged", DamageKind = "Spell"},
+	[91] = {Range = "Ranged", DamageKind = "Spell"},
+	[92] = {Range = "Ranged", DamageKind = "Spell"},
+	[93] = {Range = "Ranged", DamageKind = "Spell"},
+	[101] = {Range = "Ranged", DamageKind = "Spell"},
+	[102] = {Range = "Ranged", DamageKind = "Spell"},
+	[103] = {Range = "Ranged", DamageKind = "Spell"},
+	[111] = {Range = "Melee", DamageKind = "Physical"},
+	[112] = {Range = "Ranged", DamageKind = "Spell"},
+	[113] = {Range = "Ranged", DamageKind = "Spell"},
+	[114] = {Range = "Melee", DamageKind = "Physical"},
+	[115] = {Range = "Ranged", DamageKind = "Spell"},
+	[116] = {Range = "Ranged", DamageKind = "Spell"},
+	[117] = {Range = "Melee", DamageKind = "Physical"},
+	[118] = {Range = "Ranged", DamageKind = "Spell"},
+	[119] = {Range = "Melee", DamageKind = "Physical"},
+	[120] = {Range = "Melee", DamageKind = "Physical"},
+	[121] = {Range = "Ranged", DamageKind = "Spell"},
+	[122] = {Range = "Ranged", DamageKind = "Spell"},
+	[123] = {Range = "Melee", DamageKind = "Physical"},
+	[124] = {Range = "Ranged", DamageKind = "Spell"},
+	[125] = {Range = "Ranged", DamageKind = "Spell"},
+	[126] = {Range = "Melee", DamageKind = "Spell"},
+	[127] = {Range = "Ranged", DamageKind = "Spell"},
+	[128] = {Range = "Ranged", DamageKind = "Spell"},
+	[129] = {Range = "Melee", DamageKind = "Physical"},
+	[130] = {Range = "Ranged", DamageKind = "Spell"},
+	[131] = {Range = "Ranged", DamageKind = "Spell"},
+	[300] = {Range = "Ranged", DamageKind = "Spell"},
+	[301] = {Range = "Ranged", DamageKind = "Spell"},
+	[302] = {Range = "Ranged", DamageKind = "Spell"},
+	[303] = {Range = "Melee", DamageKind = "Spell"},
+	[304] = {Range = "Ranged", DamageKind = "Spell"},
+	[305] = {Range = "Ranged", DamageKind = "Spell"},
+	[306] = {Range = "Ranged", DamageKind = "Spell"},
+	[307] = {Range = "Ranged", DamageKind = "Spell"},
+}
+
+function SkillCatalog.GetCombatMeta(idOrSkill)
+	local id = type(idOrSkill) == "table" and idOrSkill.Id or tonumber(idOrSkill)
+	if id and SkillCatalog.CombatMeta[id] then
+		return SkillCatalog.CombatMeta[id]
+	end
+	local s = type(idOrSkill) == "table" and idOrSkill or SkillCatalog.Get(id)
+	if s and s.Type == "Heal" then
+		return {Range = "Ranged", DamageKind = "Spell"}
+	end
+	if s and s.Type == "Attack" then
+		return {Range = "Ranged", DamageKind = "Spell"}
+	end
+	return nil
+end
+
 SkillCatalog.ByName = {}
 for id, skill in pairs(SkillCatalog.ById) do
 	SkillCatalog.ByName[skill.Name] = skill
@@ -177,6 +259,11 @@ function SkillCatalog.GetClone(idOrName)
 	local clone = table.clone(src)
 	if src.Effect then
 		clone.Effect = table.clone(src.Effect)
+	end
+	local meta = SkillCatalog.GetCombatMeta(clone)
+	if meta then
+		clone.Range = meta.Range
+		clone.DamageKind = meta.DamageKind
 	end
 	return clone
 end

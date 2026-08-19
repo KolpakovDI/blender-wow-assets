@@ -7,6 +7,8 @@ local realm = ReplicatedStorage:WaitForChild("RealmOfSpirits")
 local sssRealm = ServerScriptService:WaitForChild("RealmOfSpirits")
 
 local KamiSanctumSystem = require(sssRealm:WaitForChild("KamiSanctumSystem"))
+local KamiSanctumConfig = require(realm:WaitForChild("KamiSanctumConfig"))
+local ItemCatalog = require(realm:WaitForChild("ItemCatalog"))
 
 local remote = realm:FindFirstChild("KamiSanctum")
 if not remote then
@@ -170,6 +172,43 @@ local function playerData(player)
 	return nil
 end
 
+local function invQty(data, itemId)
+	itemId = tonumber(itemId)
+	if not data or type(data.Inventory) ~= "table" or not itemId then
+		return 0
+	end
+	for _, inv in ipairs(data.Inventory) do
+		if tonumber(inv.Id) == itemId then
+			return tonumber(inv.Quantity) or 0
+		end
+	end
+	return 0
+end
+
+local function ensureStarterShard(player, data)
+	if not player or not data then
+		return false
+	end
+	local shardId = KamiSanctumConfig.ShardId
+	if invQty(data, shardId) >= 1 then
+		return false
+	end
+	if type(data.KamiSanctumMeta) ~= "table" then
+		data.KamiSanctumMeta = {}
+	end
+	if data.KamiSanctumMeta.StarterShardGranted then
+		return false
+	end
+	if _G.AddInventoryItem then
+		_G.AddInventoryItem(player, shardId, 1)
+	else
+		data.Inventory = data.Inventory or {}
+		table.insert(data.Inventory, { Id = shardId, Quantity = 1 })
+	end
+	data.KamiSanctumMeta.StarterShardGranted = true
+	return true
+end
+
 local function sync(player)
 	local data = playerData(player)
 	local DataEvent = realm:FindFirstChild("DataSync")
@@ -196,6 +235,17 @@ openSanctum = function(player)
 		return
 	end
 	lastOpen[uid] = now
+	local data = playerData(player)
+	if data and ensureStarterShard(player, data) then
+		sync(player)
+		local item = ItemCatalog.Get(KamiSanctumConfig.ShardId)
+		local DataEvent = realm:FindFirstChild("DataSync")
+		if DataEvent then
+			DataEvent:FireClient(player, "Toast", {
+				Text = "Стартовый " .. (item and item.Name or "Осколок Ками") .. " · хватит на первый синтез",
+			})
+		end
+	end
 	remote:FireClient(player, "Open", {})
 	if _G.UpdateQuestProgress then
 		_G.UpdateQuestProgress(player, "OpenKamiSanctum", {Count = 1})

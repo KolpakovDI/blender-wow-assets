@@ -11,9 +11,25 @@ local RunService = game:GetService("RunService")
 
 local realmFolder = ReplicatedStorage:WaitForChild("RealmOfSpirits")
 local ItemCatalog = nil
+local QuestCatalog = nil
 do
 	local ok, mod = pcall(require, realmFolder:WaitForChild("ItemCatalog"))
 	if ok then ItemCatalog = mod end
+end
+do
+	local qc = realmFolder:FindFirstChild("QuestCatalog")
+	if qc then
+		local ok, mod = pcall(require, qc)
+		if ok then QuestCatalog = mod end
+	end
+end
+local QuestUIChain = nil
+do
+	local mod = realmFolder:FindFirstChild("QuestUIChain")
+	if mod then
+		local ok, chain = pcall(require, mod)
+		if ok then QuestUIChain = chain end
+	end
 end
 
 local UniqueItemNames = {
@@ -813,6 +829,7 @@ local QUEST_ACTIVE_DIALOGUE = {
 	[110] = "Мика: ElementShrine у FrostRidge — святилище стихий!",
 	[111] = "Мика: Overlook — обзорный утёс, вид на арену!",
 	[112] = "Мика: TrailCamp — придорожный стан, короткий привал!",
+	[304] = "Мика: Святилище у E — осколок (#301) и Звёзды (#310) усилят синтез. Открой реактор, попробуй превью!",
 }
 
 local function dialogueForQuest(quest, readyToTurnIn, isActive)
@@ -1057,6 +1074,25 @@ end
 
 local selectedQuest = nil
 
+local function renderGroupedQuestList(items, mode, onEntry)
+	if QuestUIChain then
+		QuestUIChain.renderGroupedList(items, mode, {
+			questListFrame = questListFrame,
+			colors = COLORS,
+			createEntry = function(quest, isActive, progress, order, ready)
+				onEntry(quest, order, isActive, progress, ready)
+			end,
+		}, QuestCatalog, currentQuestData)
+		return
+	end
+	for i, item in ipairs(items) do
+		local q = (mode == "Active") and item.Quest or item
+		local ready = (mode == "Active") and item.ReadyToTurnIn
+		local prog = (mode == "Active") and item.Progress
+		onEntry(q, i, mode == "Active", prog, ready)
+	end
+end
+
 local function createQuestEntry(quest, isActive, progress, order, readyToTurnIn)
 	local questName = (typeof(quest) == "table" and (quest.Name or quest.Title)) or "Квест"
 	local entry = Instance.new("TextButton")
@@ -1147,37 +1183,40 @@ function showQuestList(tabName)
 	local autoReady = false
 
 	if tabName == "Available" then
-		for i, quest in ipairs(currentQuestData.Available) do
-			createQuestEntry(quest, false, nil, i)
-			-- Стартовый сюжет (манга) важнее daily 301 сверху списка
+		renderGroupedQuestList(currentQuestData.Available, "Available", function(quest, order, isActive, progress, ready)
+			createQuestEntry(quest, isActive, progress, order, ready)
 			if tonumber(quest.Id) == 7 then
 				autoQuest = quest
+			elseif not autoQuest and quest.Type == "Story" then
+				autoQuest = quest
 			end
-		end
+		end)
 		if not autoQuest then
 			autoQuest = currentQuestData.Available[1]
 		end
 	elseif tabName == "Active" then
-		for i, questData in ipairs(currentQuestData.Active) do
-			createQuestEntry(questData.Quest, true, questData.Progress, i, questData.ReadyToTurnIn)
-			if questData.ReadyToTurnIn and not autoReady then
-				autoQuest = questData.Quest
+		renderGroupedQuestList(currentQuestData.Active, "Active", function(quest, order, isActive, progress, ready)
+			createQuestEntry(quest, isActive, progress, order, ready)
+			if ready and not autoReady then
+				autoQuest = quest
 				autoIsActive = true
-				autoProgress = questData.Progress
+				autoProgress = progress
 				autoReady = true
 			elseif not autoQuest then
-				autoQuest = questData.Quest
+				autoQuest = quest
 				autoIsActive = true
-				autoProgress = questData.Progress
-				autoReady = questData.ReadyToTurnIn == true
+				autoProgress = progress
+				autoReady = ready == true
 			end
-		end
+		end)
 	elseif tabName == "Completed" then
-		for i, quest in ipairs(currentQuestData.Completed) do
+		renderGroupedQuestList(currentQuestData.Completed, "Completed", function(quest, order)
 			quest._completed = true
-			createQuestEntry(quest, false, nil, i)
-		end
-		autoQuest = currentQuestData.Completed[1]
+			createQuestEntry(quest, false, nil, order)
+			if not autoQuest then
+				autoQuest = quest
+			end
+		end)
 		if autoQuest then
 			autoQuest._completed = true
 		end

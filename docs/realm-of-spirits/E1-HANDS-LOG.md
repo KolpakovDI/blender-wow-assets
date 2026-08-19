@@ -40,8 +40,10 @@ Formal n≥10 не заполнялся; smoke + friction #1–6 закрыты 
 | 5 | 2026-08-16 | | ☐ | FAIL | SoftRespawn UI wipe; fix |
 | 6 | 2026-08-16 | | ☐ | FAIL | Kami copper wallet; fix |
 | 7 | 2026-08-16 | — | — | **OWNER SKIP** | Skip formal e2e; «всё работает» |
-| 8–10 | — | — | — | SKIP | вместе с #7 |
+| 8 | 2026-08-19 | | ☑ | **PASS** | post-sync; Q7→Q1; F+1/2; сдача без P0 (user) |
+| 9 | — | | ☐ | | опц. повтор W2 |
+| 10 | — | | ☐ | | опц. повтор W2 |
 
-**Итог:** formal PASS n/a · **E1 = OWNER SKIP** · P0 friction #1–6 fixed
+**Итог:** formal n≥10 n/a · **E1 = OWNER SKIP + 1× hands PASS 19.08** · P0 friction #1–6 fixed · W2 **1/2–3** (буфер открыт)
 
 **Закрытие E1:** OWNER SKIP 2026-08-16 (вместо ≥90% n≥10).

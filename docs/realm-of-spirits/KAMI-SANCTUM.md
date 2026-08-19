@@ -1,6 +1,6 @@
 # Святилище Ками (Kami Sanctum)
 
-Anime-синто + sci-fi реактор в Otaku Haven. С **10 уровня игрока**: синтез 2–6 духов и дезинтеграция в компоненты.
+Anime-синто + sci-fi реактор в Otaku Haven. С **2 уровня игрока**: синтез 2–6 духов и дезинтеграция в компоненты.
 
 ## Режимы
 
@@ -29,7 +29,7 @@ Anime-синто + sci-fi реактор в Otaku Haven. С **10 уровня и
 |----|-----|------|---------|
 | 304 | Звёзды трансформации | `OpenKamiSanctum` (E у shrine) | 2×310 + 1×301 |
 
-Prereq: story **5**. Прогресс типов: `OpenKamiSanctum`, `KamiSynthesize`, `KamiDisintegrate`.
+Prereq: квест **1** (Первые шаги). `ZoneHint`: «Святилище Ками у Мики (E)». Прогресс типов: `OpenKamiSanctum`, `KamiSynthesize`, `KamiDisintegrate`.
 
 Studio QA: `KamiSanctumBF` → `SeedQA` (Lv10 + copper + 301/310); smoke synth→disintegrate **PASS** 2026-08-01.
 

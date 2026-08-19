@@ -100,6 +100,8 @@
 | ElementPassives | 2 × 4 Primary = 8 | `SkillCatalog.ElementPassives` — пассив боя |
 | Unique per line | 3 × 16 = 48 | `SpiritSkills[base/evo]` — action bar (max 3) |
 
+Полная таблица дух → слоты → статы: [`SPIRIT-SKILLS.md`](SPIRIT-SKILLS.md).
+
 ### 3.3 Leveling (max 100)
 XP = level × 100. Бонусы: +100 coins/lvl, +1 crystal/5 lvl, stat growth.
 

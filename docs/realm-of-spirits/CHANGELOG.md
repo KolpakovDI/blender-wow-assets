@@ -6,6 +6,48 @@
 
 ## [Unreleased]
 
+### Combat animations — cat.1 analysis (2026-08-19)
+- **`COMBAT-ANIMATIONS.md`**: матрица 4 категорий; категория **Melee + Physical** — proposal `522635514` (slash) + `522638767` (lunge для #119); Studio wiring — след. сессия
+- Checkpoint: [`SESSION-2026-08-19-combat-animations-checkpoint.md`](SESSION-2026-08-19-combat-animations-checkpoint.md)
+
+### Docs: таблица умений духов (2026-08-19)
+- **`SPIRIT-SKILLS.md`**: канон 4×4 — дух → слоты 1–3, статы 48 линейных навыков, пассивы Primary, пул Kami unique; ссылка из `GDD.md` §3.2
+- **`SkillCatalog.CombatMeta`**: `Range` (Melee/Ranged) + `DamageKind` (Physical/Spell); Physical = melee **и** ranged оружие (лук, ружьё, стрела)
+
+### Dev month plan + Week 1 Sanctum kickoff (2026-08-19)
+- **`MONTH-PLAN-2026-09-dev.md`**: dev-first месяц 01–28.09 — W1 Sanctum slice · W2 Explore side chain · W3 Identity/Resonant depth · W4 один vertical slice; правила 80/20 dev/smoke и integrity
+- **`NEXT-SESSION.md`**: фокус **W1 Sanctum** — Quest 304 раньше, stars/shard onboarding, disintegrate UX; первые 3 задачи в порядке
+- Docs mirror prep: Quest **304** Level **10→3**, prereq **{5}→{1}**, Description под `MinPlayerLevel` **2** (Studio sync — след. сессия)
+
+### Week 1 Sanctum follow-up (2026-08-19)
+- **Studio SoT:** Quest **304** synced — Level **3**, prereq **{1}**, `ZoneHint`, Description «с 2 ур.»
+- **QuestUI:** реплики Мики для **304** (available/active/turn-in) + activeId branch
+- **KamiSanctumController:** disintegrate preview группирует **301 / 310–312 / эссенции**; Status сбрасывается после успеха
+- **`KAMI-SANCTUM.md`:** порог **2 ур.**, prereq **Q1**, ZoneHint
+- **W1 smoke MCP PASS:** Q1 seed → 304 Accept → Open → Preview Synth/Dis · `SESSION-2026-08-19-w1-sanctum-smoke.md`
+- **Hands UI PASS:** Mika E → Accept 304; fix `QuestAccepted` + `ZoneHint` в Studio `QuestSystem`; sync `NextStepChip` ZoneHint
+- **QuestUI:** группировка списков по цепочкам (Story → Hunt → Side), заголовки chain на всех вкладках
+
+### Fix: Sanctum need_shard blocks first synth (2026-08-19)
+- Синтез требует предмет **#301 Осколок Ками** в инвентаре (не только level)
+- Новым игрокам: **1×301** в стартовом инвентаре (`DataStoreManager`)
+- Существующим: при первом Open Sanctum выдаётся стартовый осколок + toast (`KamiSanctumService`)
+- Порог уровня Sanctum уже снижен **10 → 2**
+
+### Resonant live loop MCP smoke (2026-08-19)
+- Synth → **Ками-Глыба** active → бой SkillIndex 1+2 win → Care → Sanctum `[R]` — `SESSION-2026-08-19-resonant-live-loop.md`
+- Sanctum unlock lowered: `KamiSanctumConfig.MinPlayerLevel` **10 → 2** after hands feedback (`недостаточен уровень игрока`)
+- След.: один **hands** цикл без SeedQA/ForceCatch на финале
+
+### Week wrap 19–25.08 + Sanctum LOOK post-sync (2026-08-19)
+- W1 E4 / W3 Explore / UI A–D / Identity 1–3 / LOOK — закрыты; W2 E1 hands **#8 PASS** (user)
+- LOOK smoke в post-sync SoT: `Ками-Глыба vid #… | … * | …`; `ActiveSpiritName` — `SESSION-2026-08-19-sanctum-look-smoke.md`
+- След. неделя: **Resonant live loop** (hands Ками) — `SESSION-2026-08-19-week-wrap.md`, `WEEK-PLAN-2026-08-26.md`
+
+### E1 hands loop (2026-08-19)
+- Post-sync audit OK; чеклист `SESSION-2026-08-19-e1-hands.md`
+- **Hands PASS #8** (user): Q7→Exit/лут→Q1 catch→бой F+1/2→сдача без P0 — `E1-HANDS-LOG.md`
+
 ### Sync: docs mirrors → Studio SoT (2026-08-19)
 - Studio place синхронизирован с docs mirrors по Q3/E1 правкам: `ExpansionGate`, `TradePanelUI`, `OtakuHavenBuilder`, `PvPDuelSystem`, `GameManager`, `KamiSanctumSystem`, `KamiSanctumController`
 - `UIController` приведён к актуальному варианту с `TradePanelUI` wiring (`shopButton`, `RefreshAfford`, zone-silent refresh) и перенесён в `StarterPlayerScripts`
