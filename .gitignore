@@ -6,3 +6,11 @@ docs/realm-of-spirits/assets/meshes/*.fbx
 docs/realm-of-spirits/assets/meshes/*.glb
 docs/realm-of-spirits/assets/meshes/*.gltf
 docs/realm-of-spirits/assets/meshes/ENV.local
+
+# Local temp artifacts (Cursor/Studio sync scratch)
+.tmp_*.txt
+.tmp_extract/
+
+# Generated chunk/hex dumps for Studio transfer
+docs/realm-of-spirits/studio/_haven_chunks/
+docs/realm-of-spirits/studio/_haven_hex/
