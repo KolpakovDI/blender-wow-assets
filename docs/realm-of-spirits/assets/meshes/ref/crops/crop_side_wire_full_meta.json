@@ -1,0 +1,57 @@
+{
+  "crop_abs": [
+    340,
+    46,
+    1022,
+    267
+  ],
+  "BODY_THR": 178,
+  "TIP_THR": 145,
+  "FAINT_THR": 125,
+  "PAD": 20,
+  "content_bbox_noseR": [
+    20,
+    20,
+    682,
+    201
+  ],
+  "roof_row": 20,
+  "ground_row": 201,
+  "front_hub": {
+    "cx": 539,
+    "cy": 116,
+    "r": 27,
+    "score": 129.8
+  },
+  "rear_hub": {
+    "cx": 185,
+    "cy": 117,
+    "r": 25,
+    "score": 125.19
+  },
+  "wb_px": 354,
+  "px_per_m": 129.1970802919708,
+  "front_overhang_px": 143,
+  "rear_overhang_px": 165,
+  "front_expected_px": 122.73722627737224,
+  "rear_expected_px": 126.61313868613138,
+  "nose_tip_looks_complete": true,
+  "rear_tip_looks_complete": true,
+  "files": {
+    "crop_side_wire_full.png": {
+      "wh": [
+        683,
+        222
+      ],
+      "bytes": 160882
+    },
+    "crop_side_wire_full_noseR.png": {
+      "wh": [
+        683,
+        222
+      ],
+      "bytes": 161982
+    },
+    "annotate_bytes": 162897
+  }
+}
