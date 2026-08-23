@@ -6,6 +6,13 @@
 
 ## [Unreleased]
 
+### Phase 2 W2 — scout side 108 Waystone + 110 ElementShrine PASS (2026-08-23)
+- **MCP smoke Play/Server:** seed Q10 → accept **108** → VisitZone **Waystone** → turn-in **PASS**; seed Q8 → accept **110** → VisitZone **ElementShrine** → turn-in **PASS**; regress accept **115** **PASS**
+- **Wayfind Ensure* StoneBasin/FrostRidge:** не нужны (MCP PASS без hints)
+- **Mirror sync Studio→docs:** `ZoneSystem` · `WorldSpawner` · `ZoneConfig` · `QuestUI`; `QuestSystem` git-mirror оставлен на `QuestCatalog` (SoT Play = inline DB; иначе quality_gate red); **108/110** уже в `QuestCatalog`
+- **`quality_gate.py`:** **PASS** (python3.12)
+- **Tracker:** [`SESSION-2026-08-23-phase2-scout-side.md`](SESSION-2026-08-23-phase2-scout-side.md) · **NEXT:** F2 W3 smoke **111** + **112**
+
 ### Phase 2 W1 — scout side quest 109 ChestCluster PASS (2026-08-23)
 - **Track:** side **108–112** scout line — W1 deliverable **109** «Сундучный грот» VisitZone **ChestCluster**
 - **SoT Studio:** `ZoneConfig.QuestLocations` (6 pads); `WorldSpawner.BuildQuestLocations()`; `ZoneSystem` VisitZone + detail keys; inline quests **107–112** в `QuestSystem`; `EnsureChestClusterWayfind` у Exit; QuestUI Mika 107–109

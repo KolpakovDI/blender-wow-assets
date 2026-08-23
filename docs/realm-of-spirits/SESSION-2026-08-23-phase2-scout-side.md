@@ -14,8 +14,8 @@
 
 | # | Критерий | Статус |
 |---|----------|--------|
-| 1 | 1 side chain Accept→TurnIn PASS | ☐ W1: **109 PASS** MCP; полная линия 108–112 — W2–W4 |
-| 2 | Регресс W2 (113→114, 115→116) не красный | ☑ **PASS** spot-check 115 accept MCP W1 |
+| 1 | 1 side chain Accept→TurnIn PASS | ☑ W1 **109** · W2 **108**+**110** MCP; полная линия — W3–W4 |
+| 2 | Регресс W2 (113→114, 115→116) не красный | ☑ **PASS** spot-check 115 accept MCP W1+W2 |
 | 3 | QuestLocations + VisitZone hooks в SoT | ☑ W1 |
 
 ---
@@ -55,17 +55,48 @@
 - `ServerScriptService.RealmOfSpirits.OtakuHavenBuilder` — `EnsureChestClusterWayfind`
 - `StarterPlayer.StarterPlayerScripts.QuestUI` — Mika lines 107–109
 
-**Mirror sync:** `OtakuHavenBuilder.lua` (EnsureChestClusterWayfind); `QuestCatalog.lua` уже содержал 108–112.
+**Mirror sync (W1):** `OtakuHavenBuilder.lua` (EnsureChestClusterWayfind); `QuestCatalog.lua` уже содержал 108–112.
 
 ---
 
-## W2 — Quest 108 + 110 (VisitZone polish)
+## W2 — Quest 108 + 110 (VisitZone polish) — **PASS MCP (2026-08-23)**
 
-| # | Задача | Exit |
-|---|--------|------|
-| 1 | Hands/MCP smoke **108** Waystone (prereq Q10) | Accept→VisitZone→TurnIn PASS |
-| 2 | Hands/MCP smoke **110** ElementShrine (prereq Q8) | PASS |
-| 3 | Wayfind optional: StoneBasin / FrostRidge hints | Ensure* только при hands FAIL |
+| # | Задача | Exit | Статус |
+|---|--------|------|--------|
+| 1 | Hands/MCP smoke **108** Waystone (prereq Q10) | Accept→VisitZone→TurnIn PASS | ☑ **PASS MCP** |
+| 2 | Hands/MCP smoke **110** ElementShrine (prereq Q8) | PASS | ☑ **PASS MCP** |
+| 3 | Wayfind optional: StoneBasin / FrostRidge hints | Ensure* только при hands FAIL | ☑ **SKIP** — MCP PASS без Ensure* |
+| 4 | Mirror sync W1 SoT modules | Studio → docs/studio | ☑ |
+| 5 | Non-regress **115** accept | PASS | ☑ **PASS** |
+
+### MCP smoke (Play/Server)
+
+| Шаг | Результат |
+|-----|-----------|
+| `QuestSeedCompletedBF(player, {10})` | **PASS** |
+| Accept **108** | **PASS** («Квест принят!») |
+| `UpdateQuestProgressBF` VisitZone **Waystone** | **PASS** (ReadyToTurnIn via `QuestGetActiveBF`) |
+| TurnIn **108** | **PASS** («Квест сдан!») |
+| `QuestSeedCompletedBF(player, {8})` | **PASS** |
+| Accept **110** | **PASS** |
+| `UpdateQuestProgressBF` VisitZone **ElementShrine** | **PASS** (ReadyToTurnIn) |
+| TurnIn **110** | **PASS** |
+| Seed **114** + Accept **115** (regress) | **PASS** |
+| `QuestLocations` Waystone + ElementShrine present (count=6) | **PASS** |
+
+### Mirror sync (W2)
+
+Studio → `docs/realm-of-spirits/studio/`:
+
+- `ZoneSystem.lua` ☑
+- `WorldSpawner.lua` ☑
+- `ZoneConfig.lua` ☑
+- `QuestUI.lua` ☑
+- `QuestSystem.lua` — **не перезаписан dump’ом Studio**: SoT Play = inline `QuestDatabase`; git mirror остаётся на `QuestCatalog` (иначе `validate_quest_catalog` red). Квесты **108/110** уже в `QuestCatalog.lua`.
+
+### Wayfind Ensure*
+
+Не добавлялись (`EnsureStoneBasin*` / `EnsureFrostRidge*`) — smoke Accept→VisitZone→TurnIn зелёный без world hints.
 
 ---
 
@@ -90,15 +121,14 @@
 
 ---
 
-## Hands verify (owner, W1)
+## Hands verify (owner)
 
 1. **Ctrl+S** place.
-2. Q1 сдан → принять **109** «Сундучный грот» у Мики.
-3. Выйти Exit → следовать знаку «ChestCluster · восток от Exit» → войти в зону «Сундучный грот» (marker).
-4. Сдать **109** у Мики.
-5. Опц.: регресс **115** после **114** — синие знаки обхода.
+2. W1: Q1 сдан → **109** у Мики → ChestCluster → turn-in.
+3. W2 опц.: prereq Q10 → **108** Waystone; prereq Q8 → **110** ElementShrine.
+4. Опц.: регресс **115** после **114**.
 
 ## Next
 
-- **W2:** smoke **108** + **110**; hands wayfind StoneBasin / FrostRidge
+- **W3:** smoke **111** + **112**
 - Не параллелить **106 polish** track

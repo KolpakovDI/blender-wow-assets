@@ -9,8 +9,8 @@ ZoneConfig.Zones = {
 	-- Safe увеличен на юг под Мику дальше от фасада
 	Safe = {Center = Vector3.new(-25, 1, 28), Size = Vector3.new(100, 28, 160)},
 	Exit = {Center = Vector3.new(-25, 1, 62), Size = Vector3.new(14, 10, 6)},
-	-- Akihabara Combat (стартовый дух #1 Огненный Кот) — Q2 enlarged footprint
-	Combat = {Center = Vector3.new(105, 1, 45), Size = Vector3.new(110, 24, 110)},
+	-- Akihabara Combat (стартовый дух #1 Огненный Кот)
+	Combat = {Center = Vector3.new(105, 1, 45), Size = Vector3.new(90, 20, 90)},
 	-- PvE-карманы духов (разнесены для hunt-квестов)
 	-- Водный Карп: прибрежное море (CoastalShowcase), не пруд у Combat
 	MistPond = {Center = Vector3.new(30, 2, -880), Size = Vector3.new(120, 24, 100)},
@@ -47,7 +47,7 @@ ZoneConfig.CounterPosition = Vector3.new(-30, 0, 0)
 -- Мика снаружи, ещё ~20 studs от фасада (юг)
 ZoneConfig.QuestMasterPosition = Vector3.new(-12, 0, -38)
 ZoneConfig.QuestMasterHeightOffset = 0.25
--- Пол Haven (ближе к центру Safe / магазину)
+-- Genkan / вход Haven (не у Мики снаружи на Z=-45)
 ZoneConfig.SpawnPosition = Vector3.new(-2, 0, -38) -- снаружи у земли, 10 стад напротив Мики (FaceDir +X)
 ZoneConfig.BattleArenaPosition = Vector3.new(236, 0, 40)
 ZoneConfig.MistPondCenter = Vector3.new(30, 1, -880)

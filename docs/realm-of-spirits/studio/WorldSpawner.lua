@@ -6,11 +6,6 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 
--- Persist PlayerGui across respawn (UIController progress)
-pcall(function()
-	game:GetService("StarterGui").ResetPlayerGuiOnSpawn = false
-end)
-
 local RealmFolder = ReplicatedStorage:WaitForChild("RealmOfSpirits")
 local ZoneConfig = require(RealmFolder:WaitForChild("ZoneConfig"))
 local OtakuHavenBuilder = require(ServerScriptService.RealmOfSpirits.OtakuHavenBuilder)
@@ -101,6 +96,16 @@ local function GetQuestMasterExtents(model)
 			end
 		end
 	end
+	-- AI mesh Mika: measure visible MeshParts only (ignore QuestInteractAnchor)
+	if footBottom == math.huge or headTop == -math.huge then
+		for _, desc in ipairs(model:GetDescendants()) do
+			if desc:IsA("MeshPart") or (desc:IsA("BasePart") and desc.Name ~= "QuestInteractAnchor" and desc.Transparency < 1) then
+				local minY, maxY = GetPartWorldMinMaxY(desc)
+				if minY < footBottom then footBottom = minY end
+				if maxY > headTop then headTop = maxY end
+			end
+		end
+	end
 	if footBottom == math.huge or headTop == -math.huge then
 		local boxCf, boxSize = model:GetBoundingBox()
 		footBottom = boxCf.Position.Y - boxSize.Y * 0.5
@@ -109,25 +114,160 @@ local function GetQuestMasterExtents(model)
 	return footBottom, headTop, math.max(0.1, headTop - footBottom)
 end
 
-local function BuildQuestMasterCFrame(pos, faceDir)
-	local dir = Vector3.new(faceDir.X, 0, faceDir.Z)
-	if dir.Magnitude < 0.01 then
-		dir = Vector3.new(1, 0, 0) -- смотрит к магазину с улицы слева
-	else
-		dir = dir.Unit
+local function GetQuestMasterMeshMinY(model)
+	local minY = math.huge
+	for _, desc in ipairs(model:GetDescendants()) do
+		if desc:IsA("BasePart") and desc.Name ~= "QuestInteractAnchor" then
+			local cf = desc.CFrame
+			local half = desc.Size * 0.5
+			for _, ox in ipairs({-half.X, half.X}) do
+				for _, oy in ipairs({-half.Y, half.Y}) do
+					for _, oz in ipairs({-half.Z, half.Z}) do
+						minY = math.min(minY, cf:PointToWorldSpace(Vector3.new(ox, oy, oz)).Y)
+					end
+				end
+			end
+		end
 	end
-	return CFrame.lookAt(pos, pos + dir, Vector3.yAxis)
+	return minY
+end
+
+-- Procedural Mika: CFrame.lookAt ломает риг. Ставим самую длинную ось AABB → world Y.
+local function GetQuestMasterAABB(model)
+	local minV = Vector3.new(math.huge, math.huge, math.huge)
+	local maxV = Vector3.new(-math.huge, -math.huge, -math.huge)
+	for _, desc in ipairs(model:GetDescendants()) do
+		if desc:IsA("BasePart") and desc.Name ~= "QuestInteractAnchor" then
+			local cf = desc.CFrame
+			local half = desc.Size * 0.5
+			for _, ox in ipairs({-half.X, half.X}) do
+				for _, oy in ipairs({-half.Y, half.Y}) do
+					for _, oz in ipairs({-half.Z, half.Z}) do
+						local w = cf:PointToWorldSpace(Vector3.new(ox, oy, oz))
+						minV = Vector3.new(math.min(minV.X, w.X), math.min(minV.Y, w.Y), math.min(minV.Z, w.Z))
+						maxV = Vector3.new(math.max(maxV.X, w.X), math.max(maxV.Y, w.Y), math.max(maxV.Z, w.Z))
+					end
+				end
+			end
+		end
+	end
+	return minV, maxV
+end
+
+local function MakeQuestMasterBodyUpright(model)
+	for _ = 1, 4 do
+		local minV, maxV = GetQuestMasterAABB(model)
+		if minV.X > maxV.X then
+			return false
+		end
+		local span = maxV - minV
+		local center = (minV + maxV) * 0.5
+		-- уже стоит (рост по Y заметно больше ширины)
+		if span.Y >= span.X * 1.08 and span.Y >= span.Z * 1.08 then
+			return true
+		end
+		local pivot = model:GetPivot()
+		local rot
+		if span.X >= span.Z and span.X >= span.Y then
+			-- длина вдоль X → крутим вокруг Z, берём знак с большим span.Y
+			local cand = {
+				CFrame.Angles(0, 0, math.rad(-90)),
+				CFrame.Angles(0, 0, math.rad(90)),
+			}
+			local best, bestSy = nil, -1
+			for _, r in ipairs(cand) do
+				model:PivotTo(CFrame.new(center) * r * CFrame.new(-center) * pivot)
+				local mn, mx = GetQuestMasterAABB(model)
+				local sy = (mx - mn).Y
+				if sy > bestSy then
+					bestSy = sy
+					best = r
+				end
+				model:PivotTo(pivot)
+			end
+			rot = best or cand[1]
+		elseif span.Z >= span.X and span.Z >= span.Y then
+			local cand = {
+				CFrame.Angles(math.rad(-90), 0, 0),
+				CFrame.Angles(math.rad(90), 0, 0),
+			}
+			local best, bestSy = nil, -1
+			for _, r in ipairs(cand) do
+				model:PivotTo(CFrame.new(center) * r * CFrame.new(-center) * pivot)
+				local mn, mx = GetQuestMasterAABB(model)
+				local sy = (mx - mn).Y
+				if sy > bestSy then
+					bestSy = sy
+					best = r
+				end
+				model:PivotTo(pivot)
+			end
+			rot = best or cand[1]
+		else
+			-- Y уже max но недостаточно — переворот
+			rot = CFrame.Angles(math.pi, 0, 0)
+		end
+		model:PivotTo(CFrame.new(center) * rot * CFrame.new(-center) * pivot)
+	end
+	return true
+end
+
+local function YawQuestMasterToFace(model, pos, faceDir)
+	local flat = Vector3.new(faceDir.X, 0, faceDir.Z)
+	if flat.Magnitude < 0.01 then
+		flat = Vector3.new(1, 0, 0)
+	else
+		flat = flat.Unit
+	end
+	local pivot = model:GetPivot()
+	local look = Vector3.new(pivot.LookVector.X, 0, pivot.LookVector.Z)
+	local eye = model:FindFirstChild("LeftEye", true)
+	if eye then
+		local el = Vector3.new(eye.CFrame.LookVector.X, 0, eye.CFrame.LookVector.Z)
+		if el.Magnitude > 0.01 then
+			look = el
+		end
+	end
+	if look.Magnitude < 0.01 then
+		look = Vector3.new(0, 0, -1)
+	else
+		look = look.Unit
+	end
+	local angNow = math.atan2(look.X, look.Z)
+	local angWant = math.atan2(flat.X, flat.Z)
+	local delta = angWant - angNow
+	local rot = pivot - pivot.Position
+	model:PivotTo(CFrame.new(pos) * CFrame.Angles(0, delta, 0) * rot)
 end
 
 local function PinQuestMasterFeetToGround(model, groundY)
-	local footBottom, _, fullHeight = GetQuestMasterExtents(model)
-	local targetFootY = groundY + 0.05
-	local delta = targetFootY - footBottom
-	if math.abs(delta) > 0.001 then
-		model:PivotTo(model:GetPivot() + Vector3.new(0, delta, 0))
+	local targetFootY = groundY + 0.02
+	local minY = GetQuestMasterMeshMinY(model)
+	if minY < math.huge then
+		local delta = targetFootY - minY
+		if math.abs(delta) > 0.001 then
+			model:PivotTo(model:GetPivot() + Vector3.new(0, delta, 0))
+		end
 	end
+	local _, _, fullHeight = GetQuestMasterExtents(model)
 	model:SetAttribute("FullHeight", fullHeight)
 	model:SetAttribute("FootGroundY", targetFootY)
+end
+
+local function EnsureBaseplateLevel()
+	local bp = workspace:FindFirstChild("Baseplate")
+	if bp and bp:IsA("BasePart") then
+		if bp.Size.X < 800 or bp.Size.Z < 800 then
+			bp.Size = Vector3.new(800, 1, 800)
+		end
+		-- верх базы = Y 0
+		local top = bp.Position.Y + bp.Size.Y * 0.5
+		if math.abs(top) > 0.05 then
+			bp.Position = Vector3.new(bp.Position.X, -bp.Size.Y * 0.5, bp.Position.Z)
+		end
+		return bp.Position.Y + bp.Size.Y * 0.5
+	end
+	return 0
 end
 
 local function AlignModelToGround(model, targetPos)
@@ -144,11 +284,15 @@ local function AlignModelToGround(model, targetPos)
 		if typeof(faceAttr) == "Vector3" then
 			faceDir = faceAttr
 		end
-		-- всегда Baseplate (верх), чтобы не парить из‑за других hit'ов луча
-		local bp = workspace:FindFirstChild("Baseplate")
-		local groundY = bp and (bp.Position.Y + bp.Size.Y * 0.5) or ground.Y
-		model:PivotTo(BuildQuestMasterCFrame(Vector3.new(pos.X, groundY, pos.Z), faceDir))
+		local groundY = EnsureBaseplateLevel()
+		for _ = 1, 3 do
+			MakeQuestMasterBodyUpright(model)
+		end
+		local pivotY = model:GetPivot().Position.Y
+		YawQuestMasterToFace(model, Vector3.new(targetPos.X, pivotY, targetPos.Z), faceDir)
+		MakeQuestMasterBodyUpright(model)
 		PinQuestMasterFeetToGround(model, groundY)
+		model.PrimaryPart = nil
 	else
 		local current = model:GetPivot()
 		local look = current.LookVector
@@ -168,12 +312,6 @@ local function AlignModelToGround(model, targetPos)
 		if lowestY < math.huge then
 			model:PivotTo(model:GetPivot() + Vector3.new(0, ground.Y + 0.05 - lowestY, 0))
 		end
-	end
-
-	if model.Name == "QuestMaster" then
-		-- Skirt как PrimaryPart ломает WorldPivot: риг лежит на боку
-		model.PrimaryPart = nil
-	else
 		local skirt = model:FindFirstChild("Skirt", true)
 		if skirt then model.PrimaryPart = skirt end
 	end
@@ -194,7 +332,6 @@ local function LockQuestMasterPhysics(model)
 	end
 end
 
--- Промпт НЕ на HeadBase внутри Generated: процедурная генерация сносит дочерние инстансы.
 local function EnsureQuestMasterInteract(model)
 	if not model then return end
 	local anchor = model:FindFirstChild("QuestInteractAnchor")
@@ -293,19 +430,27 @@ local function EnsureQuestMasterStable()
 	if not questMaster then return end
 
 	questMaster.PrimaryPart = nil
+	EnsureBaseplateLevel()
 
 	local targetBase = ZoneConfig.QuestMasterPosition or ZoneConfig.CounterPosition
 	local current = questMaster:GetPivot().Position
 	local flatDrift = Vector3.new(current.X - targetBase.X, 0, current.Z - targetBase.Z).Magnitude
 
-	local footBottom, headTop = GetQuestMasterExtents(questMaster)
-	local visualTilted = headTop < footBottom + 2
-	local upTilt = math.deg(math.acos(math.clamp(questMaster:GetPivot().UpVector:Dot(Vector3.yAxis), -1, 1)))
+	local minV, maxV = GetQuestMasterAABB(questMaster)
+	local span = maxV - minV
+	local bodyUpOk = span.Y >= span.X * 1.08 and span.Y >= span.Z * 1.08
+	local meshMin = GetQuestMasterMeshMinY(questMaster)
+	local groundY = EnsureBaseplateLevel()
+	local floating = meshMin < math.huge and math.abs(meshMin - (groundY + 0.02)) > 0.35
 
-	if flatDrift > 4 or visualTilted or upTilt > 25 then
+	-- Всегда чиним позу: lookAt/ProceduralGeneration часто кладут риг на бок
+	if flatDrift > 2 or not bodyUpOk or floating then
 		LockQuestMasterPhysics(questMaster)
 		AlignModelToGround(questMaster, targetBase)
 		LockQuestMasterPhysics(questMaster)
+	else
+		-- лёгкий pin без полного reset
+		PinQuestMasterFeetToGround(questMaster, groundY)
 	end
 	EnsureQuestMasterInteract(questMaster)
 end
@@ -325,13 +470,11 @@ local function SetupSpawn()
 	spawn.Neutral = true
 	spawn.Duration = 0
 	spawn.Transparency = 1
-	-- pad на земле: низ на top земли, центр = groundY + halfH
 	local bp = workspace:FindFirstChild("Baseplate")
 	local groundY = bp and (bp.Position.Y + bp.Size.Y * 0.5) or 0
 	local center = Vector3.new(pos.X, groundY + spawn.Size.Y * 0.5, pos.Z)
 	local mika = ZoneConfig.QuestMasterPosition or (center + Vector3.new(-10, 0, 0))
-	local lookAt = Vector3.new(mika.X, center.Y, mika.Z)
-	spawn.CFrame = CFrame.lookAt(center, lookAt)
+	spawn.CFrame = CFrame.lookAt(center, Vector3.new(mika.X, center.Y, mika.Z))
 end
 
 local function SetupQuestMaster()
@@ -408,7 +551,7 @@ local function BuildMistPond()
 	zone:SetAttribute("ZoneType", "MistPond")
 	zone.Parent = model
 
-	-- Swim volume for Water Carp (SpiritAnimation PondWater bounds) — coastal sea
+	-- Swim volume for Водный Карп (SpiritAnimation PondWater bounds) — in coastal sea
 	local water = part({
 		Name = "PondWater",
 		Size = Vector3.new(95, 2.2, 75),
@@ -437,6 +580,7 @@ local function BuildMistPond()
 	})
 	waterDeep.Parent = model
 
+	-- Small rocky islet / shore edge on north side (toward beach)
 	local islet = part({
 		Name = "SeaIslet",
 		Size = Vector3.new(28, 1.2, 16),
@@ -487,6 +631,7 @@ local function BuildMistPond()
 	model.Parent = workspace
 	print("Realm of Spirits - MistPond built (coastal sea habitat for Water Carp)")
 end
+
 -- Карманы обитания духов (кроме MistPond — у него своя сцена)
 local function BuildSpiritHabitats()
 	local existing = workspace:FindFirstChild("SpiritHabitats")
@@ -547,15 +692,27 @@ local function BuildSpiritHabitats()
 			Material = Enum.Material.Basalt,
 		},
 		{
+			Key = "GaleCliff",
+			Accent = Color3.fromRGB(120, 200, 180),
+			Ground = Color3.fromRGB(70, 95, 100),
+			Material = Enum.Material.Sandstone,
+		},
+		{
+			Key = "MossGlade",
+			Accent = Color3.fromRGB(80, 160, 70),
+			Ground = Color3.fromRGB(55, 90, 45),
+			Material = Enum.Material.Grass,
+		},
+		{
 			Key = "Moonwell",
 			Accent = Color3.fromRGB(180, 195, 255),
-			Ground = Color3.fromRGB(70, 75, 95),
-			Material = Enum.Material.Slate,
+			Ground = Color3.fromRGB(40, 45, 70),
+			Material = Enum.Material.Glacier,
 		},
 		{
 			Key = "VenomHollow",
 			Accent = Color3.fromRGB(90, 180, 60),
-			Ground = Color3.fromRGB(45, 65, 35),
+			Ground = Color3.fromRGB(45, 70, 35),
 			Material = Enum.Material.LeafyGrass,
 		},
 		{
@@ -637,7 +794,7 @@ local function BuildSpiritHabitats()
 	end
 
 	folder.Parent = workspace
-	print("Realm of Spirits - SpiritHabitats built (…/StoneBasin/AshGarden)")
+	print("Realm of Spirits - SpiritHabitats built (FrostRidge/ShadowHollow/StormSpire/DawnMeadow/StoneBasin/AshGarden/GaleCliff/MossGlade/Moonwell/VenomHollow/SandDunes/IronWastes)")
 end
 
 -- Q2: named quest locations + landscape markers
@@ -701,80 +858,6 @@ local function BuildQuestLocations()
 	print("Realm of Spirits - QuestLocations built count=", #folder:GetChildren())
 end
 
--- Second questor near ScoutPost (Q1 optional)
-local function SetupScoutQuestor()
-	local existing = workspace:FindFirstChild("ScoutQuestor")
-	if existing then
-		existing:Destroy()
-	end
-	local cfg = ZoneConfig.QuestLocations and ZoneConfig.QuestLocations.ScoutPost
-	local pos = cfg and cfg.Center or Vector3.new(40, 0, 55)
-	local model = Instance.new("Model")
-	model.Name = "ScoutQuestor"
-	local body = Instance.new("Part")
-	body.Name = "HumanoidRootPart"
-	body.Size = Vector3.new(2, 5, 1)
-	body.Anchored = true
-	body.CanCollide = true
-	body.Color = Color3.fromRGB(70, 110, 160)
-	body.Position = Vector3.new(pos.X + 4, 3, pos.Z)
-	body.Parent = model
-	model.PrimaryPart = body
-	local prompt = Instance.new("ProximityPrompt")
-	prompt.ActionText = "Квесты разведки"
-	prompt.ObjectText = "Разведчик"
-	prompt.HoldDuration = 0
-	prompt.MaxActivationDistance = 12
-	prompt.RequiresLineOfSight = false
-	prompt.Parent = body
-	prompt.Triggered:Connect(function(player)
-		-- Same server path as Mika: open full quest UI (not a bare FireClient toast)
-		if type(_G.RoS_OpenQuestUI) == "function" then
-			_G.RoS_OpenQuestUI(player)
-			return
-		end
-		local QuestEvent = RealmFolder:FindFirstChild("Quest")
-		if QuestEvent then
-			-- Fallback: request list then UI (client QuestUI listens)
-			QuestEvent:FireClient(player, "OpenQuestUI", {
-				Source = "ScoutQuestor",
-				Message = "Разведчик: квесты локаций и охоты",
-			})
-		end
-	end)
-	model.Parent = workspace
-	print("Realm of Spirits - ScoutQuestor ready")
-end
-
-local function BuildCombatLandscapeAccent()
-	local existing = workspace:FindFirstChild("CombatLandscape")
-	if existing then
-		existing:Destroy()
-	end
-	local folder = Instance.new("Folder")
-	folder.Name = "CombatLandscape"
-	local combat = ZoneConfig.Zones and ZoneConfig.Zones.Combat
-	local c = combat and combat.Center or Vector3.new(105, 1, 45)
-	-- ridge walls to read as larger Akihabara footprint
-	for i, offset in ipairs({
-		Vector3.new(-40, 0, 0),
-		Vector3.new(40, 0, 0),
-		Vector3.new(0, 0, -40),
-		Vector3.new(0, 0, 40),
-	}) do
-		local wall = Instance.new("Part")
-		wall.Name = "Ridge" .. i
-		wall.Anchored = true
-		wall.Size = Vector3.new(8, 14, 55)
-		wall.Position = c + offset + Vector3.new(0, 7, 0)
-		wall.Color = Color3.fromRGB(85, 70, 60)
-		wall.Material = Enum.Material.Rock
-		wall.Parent = folder
-	end
-	folder.Parent = workspace
-	print("Realm of Spirits - CombatLandscape accent built")
-end
-
 local function CreateWorld()
 	-- Single ground Baseplate (top Y=0); destroy elevated duplicates
 	local mainBp, bestArea = nil, -1
@@ -802,8 +885,8 @@ local function CreateWorld()
 		baseplate.Parent = workspace
 		mainBp = baseplate
 	else
-		if mainBp.Size.X < 800 or mainBp.Size.Z < 800 then
-			mainBp.Size = Vector3.new(math.max(mainBp.Size.X, 800), 1, math.max(mainBp.Size.Z, 800))
+		if mainBp.Size.X < 700 or mainBp.Size.Z < 700 then
+			mainBp.Size = Vector3.new(math.max(mainBp.Size.X, 700), 1, math.max(mainBp.Size.Z, 700))
 		end
 		mainBp.Position = Vector3.new(mainBp.Position.X, -mainBp.Size.Y * 0.5, mainBp.Position.Z)
 	end
@@ -837,10 +920,8 @@ local function CreateWorld()
 	BuildMistPond()
 	BuildSpiritHabitats()
 	BuildQuestLocations()
-	BuildCombatLandscapeAccent()
 	SetupSpawn()
 	SetupQuestMaster()
-	SetupScoutQuestor()
 end
 
 CreateWorld()
