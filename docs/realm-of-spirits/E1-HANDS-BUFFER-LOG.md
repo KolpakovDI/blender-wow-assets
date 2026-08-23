@@ -2,8 +2,20 @@
 
 **Цель:** ≥90% успешных **полных циклов** при **n≥10**, только руками (WASD / **E** / **F** / **1** / **2**).  
 **Place:** `C:\Mimo\RealmOfSpirits\RealmOfSpirits second.rbxl`  
-**Трек:** **PASS (user hands)** 2026-08-23 — [`SESSION-2026-08-23-e1-hands-buffer.md`](SESSION-2026-08-23-e1-hands-buffer.md) · [`NEXT-SESSION.md`](NEXT-SESSION.md)  
+**Трек:** Phase 1 W1 — [`SESSION-2026-08-23-phase1-stabilization.md`](SESSION-2026-08-23-phase1-stabilization.md) · [`ROADMAP-2026-08-23.md`](ROADMAP-2026-08-23.md)  
+**Предыдущий PASS:** user hands 2026-08-23 — [`SESSION-2026-08-23-e1-hands-buffer.md`](SESSION-2026-08-23-e1-hands-buffer.md)  
 **Связанные логи:** архив friction + OWNER SKIP — [`E1-HANDS-LOG.md`](E1-HANDS-LOG.md)
+
+---
+
+## W1 checklist (Phase 1 — перед каждым run)
+
+- [ ] **Ctrl+S** place → Local Server, 1 игрок → **Play**
+- [ ] Output без красных ошибок при старте
+- [ ] Полный цикл по таблице шагов ниже (шаги 2→6→8)
+- [ ] Отметить Run# в таблице: Date, F→battle, E→exit, skills 1/2, Resonant (опц.), PASS/FAIL, Notes
+- [ ] **Не fabricate** — только реальные прогоны
+- [ ] После 10 runs: PASS rate ≥90% **или** owner skip → SESSION
 
 ---
 
@@ -93,7 +105,7 @@
 - `ExitZone` + `ShopExit` + `BattleArena` **PASS**
 - Server: `QuestSystem` / `GameManager` / `BattleSystem` Scripts live; `PvPDuelSystem` + `PlayerTradeSystem` require **PASS**
 
-Последний MCP smoke: **2026-08-23** — **PASS** (см. [`NEXT-SESSION.md`](NEXT-SESSION.md)).
+Последний MCP smoke: **2026-08-23 Phase 1 W1** — **PASS** (SkillCatalog, ItemCatalog, KamiSanctumSystem, QuestMaster, OtakuHaven, BattleArena, PvP/Trade).
 
 ---
 

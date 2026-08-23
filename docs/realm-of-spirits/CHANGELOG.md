@@ -6,6 +6,14 @@
 
 ## [Unreleased]
 
+### Phase 1 Stabilization — старт (2026-08-23)
+- **Roadmap:** [`ROADMAP-2026-08-23.md`](ROADMAP-2026-08-23.md) — полный анализ проекта, оценки сроков, фазы 0–4
+- **Tracker:** [`SESSION-2026-08-23-phase1-stabilization.md`](SESSION-2026-08-23-phase1-stabilization.md) — W1–W4 checklist
+- **NEXT-SESSION:** top = **Phase 1 Stabilization W1** — E1 buffer n≥10 или owner skip
+- **E1-HANDS-BUFFER-LOG:** W1 checklist + Run#1–10 таблица готова к заполнению
+- **`quality_gate.py`:** **PASS** (python3.12) — spirit DB, quest catalog, battle, fair combat, pvp sanity
+- **MCP core smoke Play/Server:** **PASS** — SkillCatalog, ItemCatalog, KamiSanctumSystem, QuestMaster, OtakuHaven, BattleArena, PvP/Trade require OK
+
 ### W3-B — essences 320–323 bag WhyTag (2026-08-23) **COMPLETE**
 - **`ItemCatalog`:** `WhyTag` для эссенций 320–323 — `эссенция · синтез · огонь/земля/ветер/вода`
 - **`BagContentUI`:** без правок — detail chip через `GetWhyTag` уже wired
