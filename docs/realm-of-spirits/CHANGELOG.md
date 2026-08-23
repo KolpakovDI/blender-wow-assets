@@ -10,12 +10,20 @@
 
 - **Owner decision:** defer **Publish**, live DS rejoin, live Robux, and `AllowProfileService` cutover while project is raw
 - **Valid now:** unpublished Studio Edit+Play · MCP smoke · Mock/shadow ProfileService · `quality_gate` · git mirrors
-- **Deferred (owner unlock):** Publish PlaceId≠0 · live DS stress · DevProduct live **R** · W4 FlipChecklist · live PS on join
-- **Default next (dev-only):** F4 **W5** schema lock + GuildSystem scout/prep — see [`NEXT-SESSION.md`](NEXT-SESSION.md)
+- **Deferred (owner unlock):** Publish PlaceId≠0 · live DS stress · DevProduct live **R** · W4 FlipChecklist · live PS on join · AllowGuilds
+- **Default next (dev-only):** F4 **W7** join restore `data.Guild` → in-memory membership — see [`NEXT-SESSION.md`](NEXT-SESSION.md)
 
-### Phase 4 W5 — schema lock + GuildSystem scout STARTED (2026-08-23)
+### Phase 4 W6 — Guild MVP design + in-memory roster PASS (2026-08-23)
 
-- **Schema lock v1:** 42 keys + optional `Guild`/`_Session` — documented in SESSION W5; no ad-hoc persisted fields
+- **`GuildSystem`:** `GetMvpDesign` · `GetRoster` / `GetGuildRecord` · in-memory `guildsById` · `SmokeGuildRosterMock` · phase `F4-W6-guild-mvp`
+- **Fail-closed:** `CreateOrJoin` / `/guild` still require `AllowGuilds` (untouched, false)
+- **Design:** player `Guild {Id,Name,Tag,Role}` vs future store `RealmOfSpirits_Guilds_v1` (no live DS writes)
+- **MCP Edit smoke:** RosterCount=2 · CreateOrJoinBlocked=true · GateAllows=false · `quality_gate` green
+- **NOT in W6:** AllowGuilds · guild DS · UI panel · bank/warfare · Publish
+
+### Phase 4 W5 — schema lock + GuildSystem scout PASS (2026-08-23)
+
+- **Schema lock v1:** 42 keys + optional `Guild`/`_Session` — documented in SESSION; no ad-hoc top-level fields
 - **`GuildSystem.GetGuildAudit`:** read-only scout (gate, membership count, `data.Guild` shape, remote name)
 - **NOT in W5:** AllowGuilds · roster DS · Publish · AllowProfileService flip
 

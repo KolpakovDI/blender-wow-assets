@@ -2,8 +2,8 @@
 
 > **DEV-ONLY MODE** (owner decision 2026-08-23) — **не публикуем** place и **не включаем** live cutover, пока владелец явно не снимет режим. Проект сырой; публикация отложена **намеренно**, не навсегда.
 
-**Статус:** 2026-08-23 — Фаза 1 **COMPLETE** · Фаза 2 **COMPLETE** · Фаза 3 **COMPLETE CONDITIONAL** · **Фаза 4 W1–W3 PASS** · **Фаза 4 W4 PREP PASS (CONDITIONAL)**
-**Следующий фокус (dev-only default):** **Ф4 schema lock** + **GuildSystem scout/prep (W5)** — без Publish / live DS / Allow* flip
+**Статус:** 2026-08-23 — Фаза 1 **COMPLETE** · Фаза 2 **COMPLETE** · Фаза 3 **COMPLETE CONDITIONAL** · **Фаза 4 W1–W3 PASS** · **W4 PREP PASS (CONDITIONAL)** · **W5 PASS** · **W6 PASS (dev-only)**
+**Следующий фокус (dev-only default):** **Ф4 W7** — restore `data.Guild` → in-memory membership on join (gate OFF = no create) — без Publish / AllowGuilds flip
 
 **Roadmap:** [`ROADMAP-2026-08-23.md`](ROADMAP-2026-08-23.md) · **Phase 4:** [`SESSION-2026-08-23-phase4-scale.md`](SESSION-2026-08-23-phase4-scale.md)
 
@@ -15,16 +15,16 @@
 | Studio MCP smoke / multi_edit | Live **DataStore rejoin** под нагрузкой |
 | Mock / shadow **ProfileService** (gate OFF) | Live **Robux** purchase (DevProduct + Publish) |
 | `quality_gate.py`, git mirrors, docs | **`AllowProfileService`** flip + live PS cutover |
-| Bugfix-only по красному smoke | **`AllowGuilds`** и Guilds expand |
-| Ф4 prep: audit · migrate sample · gated Load/Save | Live ops / store listing / marketing pass |
+| Bugfix-only по красному smoke | **`AllowGuilds`** flip + live guild DS |
+| Ф4 prep: audit · migrate sample · gated Load/Save · Guild in-memory MVP | Live ops / store listing / marketing pass |
 
 **Снять dev-only:** только явная команда владельца («publish», «owner hands», «live cutover») + [`OwnerFlipChecklist`](SESSION-2026-08-23-phase4-scale.md) в SESSION W4.
 
 ## Старт сессии (порядок жёсткий)
 
 1. **Ctrl+S** place → подтвердить SoT
-2. **Приоритет по умолчанию (dev-only):** **Ф4 W5** — schema lock doc + GuildSystem scout/prep
-3. **Bugfix-only** — если что-то красное в play smoke
+2. **Приоритет по умолчанию (dev-only):** **Ф4 W7** — join restore from `data.Guild` (in-memory only)
+3. **Bug fix-only** — если что-то красное в play smoke
 4. **Owner hands / Publish / live cutover** — только по **явной** команде владельца (не default)
 5. **106 / B1 / Haven décor** — только по явной команде
 
@@ -32,8 +32,9 @@
 
 | Команда / намерение | Действие агента |
 |---------------------|-----------------|
-| «дальше» (без уточнения) | **Ф4 W5** schema lock + Guild scout (dev-only safe) |
-| «Guild scout» / «W5» | SESSION W5 · `GetGuildAudit` · gate inventory |
+| «дальше» (без уточнения) | **Ф4 W7** join restore `data.Guild` → membership (dev-only safe) |
+| «W6» / «Guild MVP» | SESSION W6 · already **PASS** — re-smoke if needed |
+| «Guild scout» / «W5» | SESSION W5 · **PASS** |
 | Owner hands / Publish / live DS | Чеклист § Owner unlock · **только явная команда** |
 | «Ф4 W4 cutover» / «AllowProfileService» | OwnerFlipChecklist · live smoke · **owner unlock dev-only** |
 | «106» / «B1» / «Haven décor» | Named backlog · не default |
@@ -43,20 +44,28 @@
 | Область | Состояние |
 |---------|-----------|
 | **Dev-only** | **ACTIVE** — Publish/live cutover deferred by owner |
+| **Фаза 4 W6** | **PASS** — Guild MVP design + in-memory roster; `AllowGuilds=false` |
+| **Фаза 4 W5** | **PASS** — schema lock v1 + `GetGuildAudit` scout |
 | **Фаза 4 W4** | **PREP PASS CONDITIONAL** — Load/Save wired, gates OFF, PlaceId=0 |
 | **Фаза 4 W3** | **PASS** — one-key migrate sample (Mock) |
 | **Фаза 3** | **COMPLETE CONDITIONAL** — live Robux/DS = owner unlock, not default |
 | **Persistence** | Live = `DataStoreManager` · PS path ready behind triple gate |
 | **ExpansionGate** | All Allow*=false (не трогали) |
-| **Schema** | **v1 locked** (42 keys + optional `Guild`, `_Session`) — см. SESSION W5 |
+| **Schema** | **v1 locked** (42 keys + optional `Guild`, `_Session`) — `Guild` may include `Role` |
+
+## Фаза 4 W6 exit (2026-08-23) — PASS (dev-only)
+
+- `GetMvpDesign` persistence plan (player Guild vs future `RealmOfSpirits_Guilds_v1`)
+- In-memory `guildsById` roster + `GetRoster` / `GetGuildRecord`
+- `SmokeGuildRosterMock` — roster=2 · CreateOrJoin blocked · GateAllows=false
+- `CreateOrJoin` / `/guild` still fail-closed
+- **NOT:** AllowGuilds · guild DS · Publish · UI panel · bank/warfare
 
 ## Фаза 4 W4 exit (2026-08-23) — PREP PASS CONDITIONAL
 
 - `LoadPlayerData` / `SavePlayerData` / `SmokeLoadSaveMock` implemented
-- `DataStoreManager:LoadData` / `SaveData` branch on `ShouldUse()` (Enabled + AllowProfileService + UseProfileServiceAdapter)
 - Defaults OFF → zero live behavior change
-- MCP: flags-OFF Play + Mock Load/Save **PASS**; live cutover **blocked** (PlaceId=0 + **dev-only**)
-- **NOT:** Allow* flip · live PS on join · Guilds expand · mesh · B1 · 106
+- **NOT:** Allow* flip · live PS on join · Guilds live
 
 ## Owner unlock (when critical — NOT default next)
 
@@ -73,11 +82,13 @@
 
 | # | Срез | Когда |
 |---|------|-------|
-| **Ф4 W5** | Schema lock + GuildSystem scout/prep | **default next** (dev-only) |
+| **Ф4 W7** | Join restore `data.Guild` → in-memory membership | **default next** (dev-only) |
+| **Ф4 W6** | Guild MVP design + in-memory roster | ☑ **PASS** |
+| **Ф4 W5** | Schema lock + GuildSystem scout | ☑ **PASS** |
 | **Ф4 W4 live** | Owner gate flip + live PS smoke | Owner unlock dev-only |
 | **Ф4 W4 prep** | Gated Load/Save + Mock smoke | ☑ **PREP PASS** |
 | **106 polish** | Alt track | Явная команда |
-| **B1** | PvP slice 3 | После W5 schema lock |
+| **B1** | PvP slice 3 | После W7+ / owner call |
 
 ## Studio SoT
 
@@ -87,8 +98,8 @@
 
 ## Не включать (dev-only + gates)
 
-Publish без owner · Allow* flip без checklist · Guilds expand · AI mesh online · Haven décor · B1 · 106 · два major track
+Publish без owner · Allow* flip без checklist · live Guild DS · AI mesh online · Haven décor · B1 · 106 · два major track
 
 ## Архив
 
-Phase 1–2 **COMPLETE** · Phase 3 **COMPLETE CONDITIONAL** · Phase 4 W1–W3 **PASS** · W4 **PREP PASS CONDITIONAL** · [`SESSION-2026-08-23-phase4-scale.md`](SESSION-2026-08-23-phase4-scale.md)
+Phase 1–2 **COMPLETE** · Phase 3 **COMPLETE CONDITIONAL** · Phase 4 W1–W3 **PASS** · W4 **PREP PASS CONDITIONAL** · W5–W6 **PASS** · [`SESSION-2026-08-23-phase4-scale.md`](SESSION-2026-08-23-phase4-scale.md)

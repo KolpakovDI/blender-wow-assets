@@ -29,7 +29,7 @@
 | `ExpansionGate` | `RS.RealmOfSpirits` | All Allow*=false defaults |
 | `ProfileServiceAdapter` | `SSS.RealmOfSpirits` | Stub → **W1 audit API** |
 | `DataStoreManager` | `SSS.RealmOfSpirits` | Live backend `RealmOfSpirits_v2` + session lock |
-| `GuildSystem` | `SSS.RealmOfSpirits` | Thin `/guild` fail-closed |
+| `GuildSystem` | `SSS.RealmOfSpirits` | W6 in-memory roster + fail-closed CreateOrJoin |
 | `SpiritMeshGenerationService` | `SSS.RealmOfSpirits` | Online path blocked |
 | `PvPDuelSystem` | `SSS.RealmOfSpirits` | Fair duel OK; `pvpExtraAllowed()` for rated |
 
@@ -212,7 +212,7 @@ SmokeLoadSaveMock (Server) → Success=true
 |------|-------|
 | `SchemaVersion` | **1** (bump only with explicit migration plan) |
 | Required top-level keys | **42** — `ProfileServiceAdapter.ExpectedTopLevelKeys` |
-| Optional keys | `Guild` (GuildSystem thin) · `_Session` (ephemeral, stripped on save) |
+| Optional keys | `Guild` (Id, Name, Tag, Role?) · `_Session` (ephemeral, stripped on save) |
 | Validation | `ValidateDataShape` · `GetMigrationAudit` · `ComputeDataChecksum` |
 | Live backend (dev-only) | `DataStoreManager` / `RealmOfSpirits_v2` |
 | PS target (gated) | `RealmOfSpirits_Profiles_v1` behind `ShouldUse()` |
@@ -223,7 +223,7 @@ SmokeLoadSaveMock (Server) → Success=true
 
 ---
 
-## W5 — GuildSystem scout + prep — **STARTED (dev-only, 2026-08-23)**
+## W5 — GuildSystem scout + prep — **PASS (dev-only, 2026-08-23)**
 
 **Scope:** read-only inventory + `GetGuildAudit`; **no** `AllowGuilds` flip · **no** roster DS · **no** Publish.
 
@@ -234,7 +234,7 @@ SmokeLoadSaveMock (Server) → Success=true
 | 3 | `GetGuildAudit()` read-only API (mirror) | ☑ |
 | 4 | Link to schema lock (`Guild` optional key) | ☑ |
 | 5 | Studio sync + MCP smoke | ☑ Edit: `GetGuildAudit` → Phase=F4-W5-guild-scout GateAllows=false |
-| 6 | `quality_gate.py` | ☑ green (python3.12) |
+| 6 | `quality_gate.py` | ☑ green |
 | 7 | Docs: NEXT / ROADMAP / CHANGELOG | ☑ |
 
 **Inventory (W5 scout):**
@@ -242,14 +242,48 @@ SmokeLoadSaveMock (Server) → Success=true
 | Компонент | Состояние |
 |-----------|-----------|
 | `GuildSystem.CreateOrJoin` | Fail-closed · `ExpansionGate.AssertGuildsAllowed()` |
-| Persisted shape | `data.Guild = { Id, Name, Tag }` — optional in schema v1 |
-| Runtime | In-memory `membership` map; attrs `GuildTag` / `GuildName` |
+| Persisted shape | `data.Guild = { Id, Name, Tag [, Role] }` — optional in schema v1 |
+| Runtime | In-memory `membership` + (W6) `guildsById` roster |
 | Remote | `ReplicatedStorage.RealmOfSpirits.GuildEvent` |
 | Studio chat | `/guild`, `/guildleave`, `/expansiongate` (Studio only) |
 
 **W5 NOT in scope:** AllowGuilds flip · guild roster DataStore · bank/warfare · UI panel · B1 · 106 · Haven décor
 
-**Next after W5 scout:** Guild MVP expand design (post schema lock) — still dev-only until owner unlock.
+---
+
+## W6 — Guild MVP design + in-memory roster — **PASS (dev-only, 2026-08-23)**
+
+**Scope:** persistence design doc-in-API + thin in-memory roster; **no** `AllowGuilds` flip · **no** guild DS · **no** Publish.
+
+| # | Задача | Статус |
+|---|--------|--------|
+| 1 | `GetMvpDesign()` — player Guild vs future `RealmOfSpirits_Guilds_v1` | ☑ |
+| 2 | In-memory `guildsById` + `GetRoster` / `GetGuildRecord` | ☑ |
+| 3 | `CreateOrJoin` fills roster when gate allows; still fail-closed | ☑ |
+| 4 | `SmokeGuildRosterMock` (sentinel members, gate OFF) | ☑ |
+| 5 | Remote `GetRoster` action; `/guildleave` before `/guild` match | ☑ |
+| 6 | Studio sync + MCP Edit smoke | ☑ |
+| 7 | `quality_gate.py` | ☑ green |
+| 8 | Docs: NEXT / ROADMAP / CHANGELOG | ☑ |
+
+**MCP smoke (Edit, unpublished):**
+
+```
+GetGuildAudit → Phase=F4-W6-guild-mvp GateAllows=false AllowGuildsAttr=false
+SmokeGuildRosterMock → Success=true RosterCount=2 RosterOk=true CreateOrJoinBlocked=true
+GetMvpDesign → InMemoryOnly=true FutureStore=RealmOfSpirits_Guilds_v1
+```
+
+**Persistence plan (locked design, not live):**
+
+1. Player optional `Guild {Id,Name,Tag,Role}` — no full roster in profile (schema v1)
+2. Future DS `RealmOfSpirits_Guilds_v1` keyed by guild Id — owner unlock + AllowGuilds
+3. Join = upsert roster + set player Guild; Leave = remove / dissolve if empty
+4. W6 = memory only (`guildsById` + `membership`); server restart wipes
+
+**W6 NOT in scope:** AllowGuilds · live guild DS · UI panel · bank/warfare · B1 · 106 · Haven décor
+
+**Next after W6:** W7 join restore `data.Guild` → in-memory membership (still gate OFF = no create).
 
 ---
 
@@ -267,4 +301,4 @@ SmokeLoadSaveMock (Server) → Success=true
 
 ## Explicit NOT in scope
 
-Allow* unlock · ProfileService live · Guilds MVP · AI mesh online · Haven décor · B1 PvP slice 3 · track 106
+Allow* unlock · ProfileService live · live Guild DS · AI mesh online · Haven décor · B1 PvP slice 3 · track 106
