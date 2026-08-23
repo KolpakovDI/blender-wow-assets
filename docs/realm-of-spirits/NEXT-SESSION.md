@@ -1,27 +1,28 @@
 # NEXT SESSION
 
-**Статус:** 2026-08-23 — Фаза 1 **COMPLETE** · **Фаза 2 W2 PASS** (quests **108** + **110** MCP)
-**Следующий фокус:** **Фаза 2 W3** — smoke **111** Overlook + **112** TrailCamp
+**Статус:** 2026-08-23 — Фаза 1 **COMPLETE** · **Фаза 2 W3 PASS** (quests **111** + **112** MCP)
+**Следующий фокус:** **Фаза 2 W4** — full line exit **107–112** + W2 regress **113→116**
 
 **Roadmap:** [`ROADMAP-2026-08-23.md`](ROADMAP-2026-08-23.md) · **Tracker:** [`SESSION-2026-08-23-phase2-scout-side.md`](SESSION-2026-08-23-phase2-scout-side.md)
 
 ## Старт сессии (порядок жёсткий)
 
 1. **Ctrl+S** place → подтвердить SoT
-2. **Фаза 2 W3:** MCP smoke **111** + **112** (prereq Q12 / Q1)
+2. **Фаза 2 W4:** `validate_quest_catalog.py` + MCP full line **107–112** + regress **113→116**
 3. Не начинать B1 PvP / ProfileService / AI mesh / track 106 без явной команды
 
 ## Где остановились
 
 | Область | Состояние |
 |---------|-----------|
-| **Фаза 2 W2** | **PASS MCP (2026-08-23)** — **108** Waystone (seed Q10) + **110** ElementShrine (seed Q8); regress 115 accept OK; mirrors W1 synced |
+| **Фаза 2 W3** | **PASS MCP (2026-08-23)** — **111** Overlook (seed Q12) + **112** TrailCamp (seed Q1); optional **109** repeat PASS; regress **115** accept OK |
+| **Фаза 2 W2** | **PASS MCP** — **108** Waystone + **110** ElementShrine; regress 115 accept OK |
 | **Фаза 2 W1** | **PASS MCP** — quest **109** ChestCluster |
-| **Scout line 107–112** | SoT inline `QuestSystem` ☑ · mirror `QuestCatalog` ☑ · hooks ☑ |
+| **Scout line 107–112** | SoT inline `QuestSystem` ☑ · mirror `QuestCatalog` ☑ · hooks ☑ · MCP smoke **107–112** individual PASS |
 | **Wayfind 109** | `EnsureChestClusterWayfind` у Exit ☑ |
 | **Wayfind 108/110** | Ensure* StoneBasin/FrostRidge — **не нужны** (MCP PASS без hints) |
 | **Фаза 1** | **COMPLETE** |
-| **B2 115→116** | **PASS** — non-regress spot W1+W2 ☑ |
+| **B2 115→116** | **PASS** — non-regress spot W1–W3 ☑ |
 
 ## Owner hands (carry-over)
 
@@ -29,15 +30,14 @@
 |---|----------|-------|
 | 1 | **Ctrl+S** place после Studio-сессии | SoT sync |
 | 2 | Пешком **109:** Exit → ChestCluster → Мика | Hands verify W1 |
-| 3 | Опц.: пешком **108** Waystone / **110** ElementShrine | Hands verify W2 |
+| 3 | Опц.: пешком **111** Overlook / **112** TrailCamp | Hands verify W3 |
 | 4 | Опц.: Publish + live DS (из Фазы 1 W4) | PlaceId≠0 |
 
 ## Backlog (Фаза 2)
 
 | # | Срез | Когда |
 |---|------|-------|
-| **F2-W3** | Smoke **111** + **112** | **NEXT** |
-| **F2-W4** | Full line exit + quality_gate | Phase 2 close |
+| **F2-W4** | Full line exit + quality_gate + hands | **NEXT** |
 | **106 polish** | Альтернативный track | Только по явной команде |
 | **B1** | PvP slice 3 | Только по явной команде |
 

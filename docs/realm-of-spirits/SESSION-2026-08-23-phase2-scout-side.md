@@ -14,7 +14,7 @@
 
 | # | Критерий | Статус |
 |---|----------|--------|
-| 1 | 1 side chain Accept→TurnIn PASS | ☑ W1 **109** · W2 **108**+**110** MCP; полная линия — W3–W4 |
+| 1 | 1 side chain Accept→TurnIn PASS | ☑ W1 **109** · W2 **108**+**110** · W3 **111**+**112** MCP; полная линия — W4 |
 | 2 | Регресс W2 (113→114, 115→116) не красный | ☑ **PASS** spot-check 115 accept MCP W1+W2 |
 | 3 | QuestLocations + VisitZone hooks в SoT | ☑ W1 |
 
@@ -100,13 +100,35 @@ Studio → `docs/realm-of-spirits/studio/`:
 
 ---
 
-## W3 — Quest 111 + 112
+## W3 — Quest 111 + 112 — **PASS MCP (2026-08-23)**
 
-| # | Задача | Exit |
-|---|--------|------|
-| 1 | MCP smoke **111** Overlook (prereq Q12) | PASS |
-| 2 | MCP smoke **112** TrailCamp | PASS |
-| 3 | Mini-chain smoke 109→loot (reuse WorldLoot, optional) | CONDITIONAL |
+| # | Задача | Exit | Статус |
+|---|--------|------|--------|
+| 1 | MCP smoke **111** Overlook (prereq Q12) | Accept→VisitZone→TurnIn PASS | ☑ **PASS MCP** |
+| 2 | MCP smoke **112** TrailCamp (prereq Q1) | PASS | ☑ **PASS MCP** |
+| 3 | Mini-chain smoke 109→loot (reuse WorldLoot, optional) | CONDITIONAL | ☑ **PASS MCP** (109 repeat, no WorldLoot step) |
+| 4 | W2 non-regress **115** accept | PASS | ☑ **PASS MCP** |
+| 5 | `quality_gate.py` | green | ☑ **PASS** (python3.12) |
+
+### MCP smoke (Play/Server)
+
+| Шаг | Результат |
+|-----|-----------|
+| `QuestSeedCompletedBF(player, {12})` | **PASS** |
+| Accept **111** «Обзорный утёс» | **PASS** («Квест принят!») |
+| `UpdateQuestProgressBF` VisitZone **Overlook** | **PASS** |
+| TurnIn **111** | **PASS** («Квест сдан!») |
+| `QuestSeedCompletedBF(player, {1})` | **PASS** |
+| Accept **112** «Придорожный стан» | **PASS** |
+| `UpdateQuestProgressBF` VisitZone **TrailCamp** | **PASS** |
+| TurnIn **112** | **PASS** |
+| Repeat **109** (optional mini-chain) | **PASS** |
+| Seed **114** + Accept **115** (regress) | **PASS** («Квест принят!») |
+| `QuestLocations` Overlook + TrailCamp (count=6) | **PASS** |
+
+### SoT правки
+
+Нет — smoke зелёный на существующих hooks W1–W2.
 
 ---
 
@@ -130,5 +152,5 @@ Studio → `docs/realm-of-spirits/studio/`:
 
 ## Next
 
-- **W3:** smoke **111** + **112**
+- **W4:** full line **107–112** validate + W2 chain **113→116** regress + hands Exit→ChestCluster
 - Не параллелить **106 polish** track

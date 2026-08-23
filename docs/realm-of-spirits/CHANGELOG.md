@@ -6,6 +6,12 @@
 
 ## [Unreleased]
 
+### Phase 2 W3 — scout side 111 Overlook + 112 TrailCamp PASS (2026-08-23)
+- **MCP smoke Play/Server:** seed Q12 → accept **111** → VisitZone **Overlook** → turn-in **PASS**; seed Q1 → accept **112** → VisitZone **TrailCamp** → turn-in **PASS**; optional repeat **109** **PASS**; regress accept **115** **PASS**
+- **SoT правки:** нет — smoke на hooks W1–W2
+- **`quality_gate.py`:** **PASS** (python3.12)
+- **Tracker:** [`SESSION-2026-08-23-phase2-scout-side.md`](SESSION-2026-08-23-phase2-scout-side.md) · **NEXT:** F2 W4 full line exit **107–112**
+
 ### Phase 2 W2 — scout side 108 Waystone + 110 ElementShrine PASS (2026-08-23)
 - **MCP smoke Play/Server:** seed Q10 → accept **108** → VisitZone **Waystone** → turn-in **PASS**; seed Q8 → accept **110** → VisitZone **ElementShrine** → turn-in **PASS**; regress accept **115** **PASS**
 - **Wayfind Ensure* StoneBasin/FrostRidge:** не нужны (MCP PASS без hints)
