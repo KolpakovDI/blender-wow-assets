@@ -2,8 +2,10 @@
 -- Phase 4 W1: read-only audit + schema inventory; live Load/Save still DataStoreManager
 -- Phase 4 W2: ProfileService vendored + shadow dual-read (legacy GetAsync, log only)
 -- Phase 4 W3: one-way migrate sample key (Mock target only; gate locked)
+-- Phase 4 W4: LoadPlayerData/SavePlayerData wired behind triple gate (defaults OFF)
 
 local DataStoreService = game:GetService("DataStoreService")
+local Players = game:GetService("Players")
 
 local ProfileServiceAdapter = {}
 
@@ -13,8 +15,9 @@ ProfileServiceAdapter.StoreName = "RealmOfSpirits_Profiles_v1"
 ProfileServiceAdapter.LegacyDatastoreName = "RealmOfSpirits_v2"
 ProfileServiceAdapter.MigrateFromKeyPrefix = "Player_"
 ProfileServiceAdapter.SchemaVersion = 1
-ProfileServiceAdapter.MigrateSampleUserId = 900000001 -- F4-W3 sentinel; NOT production
+ProfileServiceAdapter.MigrateSampleUserId = 900000001 -- F4-W3/W4 sentinel; NOT production
 ProfileServiceAdapter.MigrateSampleEnabled = true -- W3 sample only; flip false to disable
+ProfileServiceAdapter.LiveLoadSaveReady = true -- W4 code ready; live path still gated by ShouldUse()
 
 -- Top-level keys mirrored from DataStoreManager:GetDefaultData (Phase 4 W1 inventory)
 ProfileServiceAdapter.ExpectedTopLevelKeys = {
@@ -70,6 +73,8 @@ ProfileServiceAdapter.OptionalTopLevelKeys = {
 local SHADOW_MAX_RETRIES = 2
 local MIGRATE_MAX_RETRIES = 3
 local _profileServiceModule: any = nil
+local _profileStore: any = nil
+local _activeProfiles: { [number]: any } = {}
 
 local function legacyKey(userId: number): string
 	return ProfileServiceAdapter.MigrateFromKeyPrefix .. tostring(userId)
@@ -208,6 +213,59 @@ end
 
 function ProfileServiceAdapter.IsProfileServiceVendored(): boolean
 	return getProfileServiceModule() ~= nil
+end
+
+local function getDefaultTemplate(): any
+	local ok, DSM = pcall(function()
+		return require(script.Parent:WaitForChild("DataStoreManager"))
+	end)
+	if not ok or not DSM then
+		return {}
+	end
+	return DSM.new():GetDefaultData()
+end
+
+local function getProfileStore(): any?
+	if _profileStore ~= nil then
+		return _profileStore
+	end
+	local PS = getProfileServiceModule()
+	if not PS then
+		return nil
+	end
+	local template = getDefaultTemplate()
+	_profileStore = PS.GetProfileStore(ProfileServiceAdapter.StoreName, template)
+	return _profileStore
+end
+
+local function syncTableInto(target: any, source: any)
+	if type(target) ~= "table" or type(source) ~= "table" then
+		return
+	end
+	for k in pairs(target) do
+		if source[k] == nil and k ~= "_Session" then
+			target[k] = nil
+		end
+	end
+	for k, v in pairs(source) do
+		if k ~= "_DoNotSave" then
+			target[k] = deepCopy(v)
+		end
+	end
+end
+
+function ProfileServiceAdapter.GetActiveProfile(userId: number): any?
+	return _activeProfiles[userId]
+end
+
+function ProfileServiceAdapter.ReleasePlayer(userId: number)
+	local profile = _activeProfiles[userId]
+	if profile then
+		pcall(function()
+			profile:Release()
+		end)
+		_activeProfiles[userId] = nil
+	end
 end
 
 function ProfileServiceAdapter.GetSchemaInventory()
@@ -561,32 +619,56 @@ function ProfileServiceAdapter.GetMigrationAudit()
 	local gate = gateAllows()
 	local shouldUse = ProfileServiceAdapter.ShouldUse()
 	local vendored = ProfileServiceAdapter.IsProfileServiceVendored()
+	local sss = game:GetService("ServerScriptService"):FindFirstChild("RealmOfSpirits")
+	local useAttr = sss ~= nil and sss:GetAttribute("UseProfileServiceAdapter") == true
 	return {
-		Phase = "F4-W3-migrate",
+		Phase = "F4-W4-prep",
 		LiveBlocked = not shouldUse,
 		GateAllows = gate,
 		Enabled = ProfileServiceAdapter.Enabled,
 		ShouldUse = shouldUse,
+		UseProfileServiceAdapterAttr = useAttr,
+		LiveLoadSaveReady = ProfileServiceAdapter.LiveLoadSaveReady,
 		ShadowReadEnabled = ProfileServiceAdapter.ShadowReadEnabled,
 		MigrateSampleEnabled = ProfileServiceAdapter.MigrateSampleEnabled,
 		MigrateSampleUserId = ProfileServiceAdapter.MigrateSampleUserId,
 		ProfileServiceVendored = vendored,
-		CurrentBackend = "DataStoreManager",
+		PlaceId = game.PlaceId,
+		CurrentBackend = shouldUse and "ProfileServiceAdapter" or "DataStoreManager",
 		TargetBackend = "ProfileService",
 		TargetStore = ProfileServiceAdapter.StoreName,
 		SourceDatastore = ProfileServiceAdapter.LegacyDatastoreName,
 		SourceKeyPrefix = ProfileServiceAdapter.MigrateFromKeyPrefix,
 		SchemaVersion = ProfileServiceAdapter.SchemaVersion,
 		TopLevelKeyCount = #ProfileServiceAdapter.ExpectedTopLevelKeys,
+		ActiveProfileCount = (function()
+			local n = 0
+			for _ in pairs(_activeProfiles) do
+				n += 1
+			end
+			return n
+		end)(),
 		NextSteps = {
-			"W4: flip AllowProfileService + UseProfileServiceAdapter after owner + live DS smoke",
+			"Owner: Publish (PlaceId~=0) + live DS rejoin on DataStoreManager",
+			"Owner flip: AllowProfileService=true + Enabled=true + UseProfileServiceAdapter=true",
+			"Live smoke Load/Save/rejoin — then mark F4-W4 COMPLETE",
+		},
+		OwnerFlipChecklist = {
+			"1. Ctrl+S place SoT",
+			"2. Publish place (PlaceId~=0)",
+			"3. Live rejoin verify legacy DataStoreManager round-trip",
+			"4. SSS.RealmOfSpirits attribute AllowProfileService=true",
+			"5. ProfileServiceAdapter.Enabled=true (Studio + mirror)",
+			"6. SSS attribute UseProfileServiceAdapter=true",
+			"7. Play smoke: [Persistence] backend=ProfileServiceAdapter ShouldUse=true",
+			"8. Leave+rejoin: progress persists on RealmOfSpirits_Profiles_v1",
 		},
 		Rollback = {
-			"Set MigrateSampleEnabled=false in ProfileServiceAdapter (mirror + Studio)",
-			"WipeProfileAsync on mock key Player_900000001 if re-smoking",
-			"Remove ProfileService ModuleScript from SSS.RealmOfSpirits (W2 rollback)",
-			"Set ShadowReadEnabled=false in ProfileServiceAdapter (mirror + Studio)",
-			"DataStoreManager remains live — no Allow* flip required",
+			"Flip UseProfileServiceAdapter=false + Enabled=false + AllowProfileService=false",
+			"Live path immediately returns to DataStoreManager (no dual-write)",
+			"Set MigrateSampleEnabled=false if desired",
+			"WipeProfileAsync mock key Player_900000001 if re-smoking",
+			"W2 rollback still available (remove ProfileService module / ShadowReadEnabled=false)",
 		},
 	}
 end
@@ -595,11 +677,14 @@ function ProfileServiceAdapter.GetStatus()
 	return {
 		Enabled = ProfileServiceAdapter.Enabled,
 		GateAllows = gateAllows(),
+		ShouldUse = ProfileServiceAdapter.ShouldUse(),
+		LiveLoadSaveReady = ProfileServiceAdapter.LiveLoadSaveReady,
 		ShadowReadEnabled = ProfileServiceAdapter.ShadowReadEnabled,
 		ProfileServiceVendored = ProfileServiceAdapter.IsProfileServiceVendored(),
 		StoreName = ProfileServiceAdapter.StoreName,
 		SchemaVersion = ProfileServiceAdapter.SchemaVersion,
-		Note = "Blocked until ExpansionGate.AllowProfileService + Enabled — keep DataStoreManager",
+		PlaceId = game.PlaceId,
+		Note = "Live cutover blocked until ExpansionGate.AllowProfileService + Enabled + UseProfileServiceAdapter — keep DataStoreManager",
 	}
 end
 
@@ -618,20 +703,195 @@ function ProfileServiceAdapter.ShouldUse(): boolean
 	return sss:GetAttribute("UseProfileServiceAdapter") == true
 end
 
-function ProfileServiceAdapter.LoadPlayerData(_userId: number)
+-- W4 live path (only when ShouldUse); returns profile.Data reference for in-place mutation
+function ProfileServiceAdapter.LoadPlayerData(userId: number, player: Player?)
 	if not ProfileServiceAdapter.ShouldUse() then
 		return nil
 	end
-	warn("[ProfileServiceAdapter] Load not implemented — use DataStoreManager")
-	return nil
+	if _activeProfiles[userId] then
+		return _activeProfiles[userId].Data
+	end
+
+	local store = getProfileStore()
+	if not store then
+		warn("[ProfileServiceAdapter] LoadPlayerData: ProfileStore unavailable")
+		return nil
+	end
+
+	local key = legacyKey(userId)
+	local profile = store:LoadProfileAsync(key, "ForceLoad")
+	if profile == nil then
+		warn(string.format("[ProfileServiceAdapter] LoadPlayerData failed user=%d key=%s", userId, key))
+		return nil
+	end
+
+	profile:AddUserId(userId)
+	profile:Reconcile()
+	profile:ListenToRelease(function()
+		_activeProfiles[userId] = nil
+		if player and player.Parent then
+			player:Kick("Данные сессии завершены — перезайдите.")
+		end
+	end)
+
+	if player and not player:IsDescendantOf(Players) then
+		profile:Release()
+		return nil
+	end
+
+	local data = profile.Data
+	if type(data) ~= "table" then
+		profile:Release()
+		return nil
+	end
+
+	data.LastLogin = os.time()
+	data.TotalJoins = (tonumber(data.TotalJoins) or 0) + 1
+	if (tonumber(data.FirstJoin) or 0) == 0 then
+		data.FirstJoin = os.time()
+	end
+	data._DoNotSave = nil
+	data._Session = {
+		JobId = game.JobId,
+		PlaceId = game.PlaceId,
+		Time = os.time(),
+		Backend = "ProfileService",
+	}
+
+	_activeProfiles[userId] = profile
+	print(string.format(
+		"[ProfileServiceAdapter] loaded user=%d key=%s lvl=%s active=%d",
+		userId,
+		key,
+		tostring(data.Level),
+		(function()
+			local n = 0
+			for _ in pairs(_activeProfiles) do
+				n += 1
+			end
+			return n
+		end)()
+	))
+	return data
 end
 
-function ProfileServiceAdapter.SavePlayerData(_userId: number, _data: any): boolean
+-- W4 live path: sync DSM buffer into profile.Data; Release on leave/BindToClose
+function ProfileServiceAdapter.SavePlayerData(userId: number, data: any, releaseSession: boolean?): boolean
 	if not ProfileServiceAdapter.ShouldUse() then
 		return false
 	end
-	warn("[ProfileServiceAdapter] Save not implemented — use DataStoreManager")
-	return false
+	if type(data) ~= "table" then
+		return false
+	end
+	if data._DoNotSave then
+		warn(string.format("[ProfileServiceAdapter] Save skipped user=%d DoNotSave", userId))
+		return false
+	end
+
+	local profile = _activeProfiles[userId]
+	if not profile then
+		warn(string.format("[ProfileServiceAdapter] Save skipped user=%d no active profile", userId))
+		return false
+	end
+
+	if data ~= profile.Data then
+		syncTableInto(profile.Data, data)
+	end
+	profile.Data._DoNotSave = nil
+	if releaseSession then
+		profile.Data._Session = nil
+		profile:Release()
+		_activeProfiles[userId] = nil
+		print(string.format("[ProfileServiceAdapter] released user=%d", userId))
+	else
+		profile.Data._Session = {
+			JobId = game.JobId,
+			PlaceId = game.PlaceId,
+			Time = os.time(),
+			Backend = "ProfileService",
+		}
+		print(string.format("[ProfileServiceAdapter] autosave touch user=%d", userId))
+	end
+	return true
+end
+
+-- W4 prep smoke: Mock Load→mutate→Release→View (gate locked; sentinel only; no production keys)
+function ProfileServiceAdapter.SmokeLoadSaveMock(userId: number?): { [string]: any }
+	local uid = userId or ProfileServiceAdapter.MigrateSampleUserId
+	local audit: { [string]: any } = {
+		Phase = "F4-W4-mock-smoke",
+		UserId = uid,
+		Key = legacyKey(uid),
+		Success = false,
+		MockTarget = true,
+		LoadOk = false,
+		SaveOk = false,
+		ViewOk = false,
+		ShapeOk = false,
+		LevelBefore = nil :: number?,
+		LevelAfter = nil :: number?,
+		Error = nil :: string?,
+	}
+
+	if uid ~= ProfileServiceAdapter.MigrateSampleUserId then
+		audit.Error = "not_whitelisted_user"
+		return audit
+	end
+	if ProfileServiceAdapter.ShouldUse() then
+		audit.Error = "gate_live_cutover"
+		return audit
+	end
+
+	local store = getProfileStore()
+	if not store then
+		audit.Error = "profile_store_unavailable"
+		return audit
+	end
+
+	local mockStore = store.Mock
+	local key = audit.Key
+	pcall(function()
+		mockStore:WipeProfileAsync(key)
+	end)
+
+	local profile = mockStore:LoadProfileAsync(key, "ForceLoad")
+	if not profile then
+		audit.Error = "mock_load_failed"
+		return audit
+	end
+	audit.LoadOk = true
+	profile:AddUserId(uid)
+	profile:Reconcile()
+	audit.LevelBefore = tonumber(profile.Data.Level) or 1
+	profile.Data.Level = 42
+	profile.Data.LastLogin = os.time()
+	profile:Release()
+	audit.SaveOk = true
+
+	local view = mockStore:ViewProfileAsync(key)
+	if not view then
+		audit.Error = "mock_view_failed"
+		return audit
+	end
+	audit.ViewOk = true
+	audit.LevelAfter = tonumber(view.Data.Level)
+	local shapeOk, shapeReason = ProfileServiceAdapter.ValidateDataShape(view.Data)
+	audit.ShapeOk = shapeOk
+	audit.ShapeReason = shapeReason
+	audit.Success = audit.LoadOk and audit.SaveOk and audit.ViewOk and shapeOk and audit.LevelAfter == 42
+
+	print(string.format(
+		"[ProfileServiceAdapter] mock Load/Save smoke user=%d lvl=%s→%s shape=%s success=%s",
+		uid,
+		tostring(audit.LevelBefore),
+		tostring(audit.LevelAfter),
+		tostring(shapeOk),
+		tostring(audit.Success)
+	))
+	if not audit.Success then
+		warn("[ProfileServiceAdapter] SmokeLoadSaveMock FAIL: " .. tostring(shapeReason or audit.Error))
+	end
+	return audit
 end
 
 return ProfileServiceAdapter

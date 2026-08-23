@@ -6,6 +6,26 @@
 
 ## [Unreleased]
 
+### Dev-only mode policy (2026-08-23)
+
+- **Owner decision:** defer **Publish**, live DS rejoin, live Robux, and `AllowProfileService` cutover while project is raw
+- **Valid now:** unpublished Studio Edit+Play · MCP smoke · Mock/shadow ProfileService · `quality_gate` · git mirrors
+- **Deferred (owner unlock):** Publish PlaceId≠0 · live DS stress · DevProduct live **R** · W4 FlipChecklist · live PS on join
+- **Default next (dev-only):** F4 **W5** schema lock + GuildSystem scout/prep — see [`NEXT-SESSION.md`](NEXT-SESSION.md)
+
+### Phase 4 W5 — schema lock + GuildSystem scout STARTED (2026-08-23)
+
+- **Schema lock v1:** 42 keys + optional `Guild`/`_Session` — documented in SESSION W5; no ad-hoc persisted fields
+- **`GuildSystem.GetGuildAudit`:** read-only scout (gate, membership count, `data.Guild` shape, remote name)
+- **NOT in W5:** AllowGuilds · roster DS · Publish · AllowProfileService flip
+
+### Phase 4 W4 — ProfileService Load/Save prep PASS CONDITIONAL (2026-08-23)
+
+- **`ProfileServiceAdapter`:** `LoadPlayerData` / `SavePlayerData` (session + Release) · `SmokeLoadSaveMock` · `LiveLoadSaveReady` · phase `F4-W4-prep` · `OwnerFlipChecklist` in audit
+- **`DataStoreManager`:** Load/Save branch on `ShouldUse()` (Enabled + AllowProfileService + UseProfileServiceAdapter) — defaults OFF = legacy path unchanged
+- **MCP:** flags-OFF Play `[Persistence] backend=DataStoreManager phase=F4-W4-prep` · Mock Load/Save Level 42 PASS · PlaceId=0 blocks live cutover
+- **NOT in W4 prep:** Allow* flip · live PS on join · Guilds · AI mesh · B1 · 106
+
 ### Phase 4 W3 — unpublished migrate sample PASS (2026-08-23)
 
 - **`ProfileServiceAdapter`:** `MigrateSampleUserId=900000001` (sentinel) · `MigrateSampleKey` · `SeedMigrateSampleLegacy` · `ComputeDataChecksum` · phase `F4-W3-migrate`

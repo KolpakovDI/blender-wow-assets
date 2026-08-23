@@ -2,6 +2,7 @@
 
 **Place SoT:** `C:\Mimo\RealmOfSpirits\RealmOfSpirits second.rbxl`  
 **Prior:** Phase 3 **COMPLETE CONDITIONAL** · commit `b8b0622` · clean tree  
+**Update 2026-08-23:** **dev-only mode** — owner deferred Publish/live hands; Ф3 CONDITIONAL items remain valid at **owner unlock**, not default next.  
 **Tracker:** [`SESSION-2026-08-23-phase3-commercial-prep.md`](SESSION-2026-08-23-phase3-commercial-prep.md) — closed
 
 ---
@@ -11,14 +12,14 @@
 | Интерпретация | Вердикт |
 |---------------|---------|
 | Старт **Фазы 4** (ProfileService / Guilds / AI mesh) | **НЕТ** — нет W1 в ROADMAP; gate `ExpansionGate` + E1; нужна явная команда («Фаза 4», «ProfileService», …) |
-| **Owner hands** → снять CONDITIONAL | **ДА** — рекомендованный next по ROADMAP §5 |
-| Session wrap / bugfix-only / backlog по команде | **ДА** — default path после Ф3 exit |
+| **Owner hands** → снять CONDITIONAL | **Owner unlock** — только явная команда; **не default** while **dev-only** |
+| Session wrap / bugfix-only / backlog по команде | **ДА** — default path: Ф4 W5 dev-only |
 
-**Итог:** «дальше» после Phase 3 exit = **checkpoint + owner hands checklist**, не код Ф4.
+**Итог:** «дальше» после Phase 3 exit = **dev-only continuation (Ф4 W5+)**, не Publish. Owner hands = **explicit unlock**.
 
 ---
 
-## Owner hands (lift CONDITIONAL → COMPLETE)
+## Owner unlock (lift CONDITIONAL → COMPLETE — NOT default under dev-only)
 
 | # | Действие | Снимает |
 |---|----------|---------|

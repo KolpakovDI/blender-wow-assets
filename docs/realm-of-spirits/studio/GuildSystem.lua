@@ -28,6 +28,37 @@ function GuildSystem.GetMembership(player)
 	return membership[player.UserId]
 end
 
+function GuildSystem.GetGuildAudit()
+	local gateAllows = false
+	local okGate, ExpansionGate = pcall(function()
+		return require(RealmFolder:WaitForChild("ExpansionGate", 5))
+	end)
+	if okGate and ExpansionGate and type(ExpansionGate.AssertGuildsAllowed) == "function" then
+		gateAllows = ExpansionGate.AssertGuildsAllowed() == true
+	end
+	local memberCount = 0
+	for _ in pairs(membership) do
+		memberCount += 1
+	end
+	return {
+		Phase = "F4-W5-guild-scout",
+		DevOnly = true,
+		GateAllows = gateAllows,
+		AllowGuildsAttr = okGate and ExpansionGate and ExpansionGate.AllowGuilds or false,
+		InMemoryMembershipCount = memberCount,
+		RemoteName = remote.Name,
+		PersistedShape = { "Id", "Name", "Tag" },
+		SchemaOptionalKey = "Guild",
+		ChatCommands = { "/guild", "/guildleave", "/expansiongate" },
+		NextSteps = {
+			"Keep AllowGuilds=false under dev-only",
+			"W5+: roster persistence design (post schema lock v1)",
+			"Owner unlock required before live guild DS",
+		},
+		Note = "Thin stub — CreateOrJoin fail-closed until ExpansionGate.AllowGuilds",
+	}
+end
+
 function GuildSystem.CreateOrJoin(player, guildName, tag)
 	local okGate, ExpansionGate = pcall(function()
 		return require(RealmFolder:WaitForChild("ExpansionGate", 5))

@@ -2,7 +2,7 @@
 
 **Roadmap:** [`ROADMAP-2026-08-23.md`](ROADMAP-2026-08-23.md) · **Фаза 4** · 4–9 мес part-time  
 **Place SoT:** `C:\Mimo\RealmOfSpirits\RealmOfSpirits second.rbxl` — **Ctrl+S** после Studio-правок  
-**Unlock:** явная команда владельца «фаза 4» (2026-08-23) · `ExpansionGate` **остаётся locked** до W4+owner
+**Unlock:** явная команда владельца «фаза 4» (2026-08-23) · `ExpansionGate` **остаётся locked** до owner W4 FlipChecklist
 
 ---
 
@@ -40,7 +40,7 @@
 1. **W1** — audit API + `ValidateDataShape` on `GetDefaultData` · gate locked  
 2. **W2** — vendor ProfileService Roblox module; dual-read shadow (log diff, no write)  
 3. **W3** — unpublished one-key migrate sample `Player_900000001` → `RealmOfSpirits_Profiles_v1` · **PASS**  
-4. **W4** — owner: `AllowProfileService` + `UseProfileServiceAdapter` + live rejoin smoke · **then** cutover
+4. **W4** — Load/Save wired behind gates (**PREP PASS**); owner FlipChecklist + live rejoin → COMPLETE
 
 ---
 
@@ -143,20 +143,125 @@ MigrateSampleKey (Server) → Success=true, ChecksumMatch=true
 
 ---
 
-## W4 — Gate flip + live smoke (planned, owner)
+## W4 — Gate flip + live smoke — **PREP PASS CONDITIONAL (2026-08-23)**
 
-Requires: Ф3 owner hands (Publish + live DS) **recommended** · explicit `AllowProfileService=true` · `UseProfileServiceAdapter=true` · `Enabled=true` in adapter.
+**Scope:** implement Load/Save behind triple gate; **do not** flip Allow* / Enabled / UseProfileServiceAdapter.
+
+| # | Задача | Статус |
+|---|--------|--------|
+| 1 | `LoadPlayerData` / `SavePlayerData` (ProfileService session) | ☑ gated by `ShouldUse()` |
+| 2 | `DataStoreManager` Load/Save branch on `ShouldUse()` | ☑ defaults OFF = DSM path |
+| 3 | `SmokeLoadSaveMock` (sentinel Mock Load→mutate→View) | ☑ PASS |
+| 4 | Keep ExpansionGate / Enabled / Use* OFF | ☑ |
+| 5 | MCP Edit + Play smoke (flags OFF) | ☑ |
+| 6 | Studio sync + mirrors | ☑ |
+| 7 | `quality_gate.py` | ☑ green |
+| 8 | Docs: NEXT / ROADMAP / CHANGELOG | ☑ |
+
+**API (W4 prep):** `LiveLoadSaveReady=true` · `SmokeLoadSaveMock` · `GetActiveProfile` / `ReleasePlayer` · phase `F4-W4-prep` · `OwnerFlipChecklist` in audit.
+
+**Triple gate (`ShouldUse`):** `Enabled` ∧ `ExpansionGate.AllowProfileService` ∧ SSS `UseProfileServiceAdapter` — all still **false**.
+
+**MCP smoke (Edit, unpublished PlaceId=0):**
+
+```
+GetMigrationAudit → phase=F4-W4-prep, liveBlocked=true, ShouldUse=false, LiveLoadSaveReady=true
+ValidateDataShape(GetDefaultData) → PASS
+SmokeLoadSaveMock() → Success=true, LevelAfter=42, ShapeOk=true
+LoadPlayerData / SavePlayerData (gate OFF) → nil / false
+```
+
+**MCP smoke (Play, unpublished):**
+
+```
+[Persistence] backend=DataStoreManager liveBlocked=true gatePS=false … phase=F4-W4-prep
+shadow join unchanged · memory DSM path
+SmokeLoadSaveMock (Server) → Success=true
+```
+
+**Blocked (live cutover):** PlaceId=0 · **dev-only mode** (owner 2026-08-23) · Ф3 Publish + live DS rejoin **deferred** · **no** Allow* flip until owner unlock.
+
+> **Dev-only constraint:** W4 prep code is complete and safe unpublished. Live cutover (Publish → rejoin → FlipChecklist) remains valid but is **not default next** — owner explicitly deferred publish while project is raw.
+
+**OwnerFlipChecklist (live W4 COMPLETE — owner unlock dev-only first):**
+
+1. Ctrl+S place SoT  
+2. Publish (PlaceId≠0)  
+3. Live rejoin verify legacy `DataStoreManager`  
+4. SSS attr `AllowProfileService=true`  
+5. `ProfileServiceAdapter.Enabled=true`  
+6. SSS attr `UseProfileServiceAdapter=true`  
+7. Play: `[Persistence] backend=ProfileServiceAdapter`  
+8. Leave+rejoin on `RealmOfSpirits_Profiles_v1`
+
+**Rollback (gates still OFF — prep only):**
+
+1. Flip any accidental Allow*/Enabled/Use* back to false  
+2. Live path returns to DataStoreManager immediately  
+3. W2/W3 rollback still available  
+
+**NOT in W4 prep:** Allow* unlock · live PS on join · Guilds · B1 · 106 · Haven décor
 
 ---
 
-## Owner hands (unchanged from Ф3)
+## Schema lock (post-W4 prep, dev-only) — **LOCKED v1 (2026-08-23)**
+
+**Scope:** freeze player save shape for Guilds + rated PvP prep; **no** live migration until owner unlock.
+
+| Item | Value |
+|------|-------|
+| `SchemaVersion` | **1** (bump only with explicit migration plan) |
+| Required top-level keys | **42** — `ProfileServiceAdapter.ExpectedTopLevelKeys` |
+| Optional keys | `Guild` (GuildSystem thin) · `_Session` (ephemeral, stripped on save) |
+| Validation | `ValidateDataShape` · `GetMigrationAudit` · `ComputeDataChecksum` |
+| Live backend (dev-only) | `DataStoreManager` / `RealmOfSpirits_v2` |
+| PS target (gated) | `RealmOfSpirits_Profiles_v1` behind `ShouldUse()` |
+
+**Change policy:** new persisted fields → schema v2 + migrate sample + owner review. **Do not** add keys ad-hoc while v1 locked.
+
+**Verify (unpublished):** `GetMigrationAudit().SchemaVersion == 1` · `ValidateDataShape(GetDefaultData())` → PASS.
+
+---
+
+## W5 — GuildSystem scout + prep — **STARTED (dev-only, 2026-08-23)**
+
+**Scope:** read-only inventory + `GetGuildAudit`; **no** `AllowGuilds` flip · **no** roster DS · **no** Publish.
+
+| # | Задача | Статус |
+|---|--------|--------|
+| 1 | Scout thin stub (`/guild`, `GuildEvent`, `data.Guild`) | ☑ |
+| 2 | Document gate deps (`AllowGuilds`, `AssertGuildsAllowed`) | ☑ |
+| 3 | `GetGuildAudit()` read-only API (mirror) | ☑ |
+| 4 | Link to schema lock (`Guild` optional key) | ☑ |
+| 5 | Studio sync + MCP smoke | ☑ Edit: `GetGuildAudit` → Phase=F4-W5-guild-scout GateAllows=false |
+| 6 | `quality_gate.py` | ☑ green (python3.12) |
+| 7 | Docs: NEXT / ROADMAP / CHANGELOG | ☑ |
+
+**Inventory (W5 scout):**
+
+| Компонент | Состояние |
+|-----------|-----------|
+| `GuildSystem.CreateOrJoin` | Fail-closed · `ExpansionGate.AssertGuildsAllowed()` |
+| Persisted shape | `data.Guild = { Id, Name, Tag }` — optional in schema v1 |
+| Runtime | In-memory `membership` map; attrs `GuildTag` / `GuildName` |
+| Remote | `ReplicatedStorage.RealmOfSpirits.GuildEvent` |
+| Studio chat | `/guild`, `/guildleave`, `/expansiongate` (Studio only) |
+
+**W5 NOT in scope:** AllowGuilds flip · guild roster DataStore · bank/warfare · UI panel · B1 · 106 · Haven décor
+
+**Next after W5 scout:** Guild MVP expand design (post schema lock) — still dev-only until owner unlock.
+
+---
+
+## Owner unlock (when critical — NOT default under dev-only)
 
 | # | Действие |
 |---|----------|
-| 1 | **Ctrl+S** place после этой сессии |
+| 0 | Owner: **lift dev-only** explicit command |
+| 1 | **Ctrl+S** place после Studio-правок |
 | 2 | DevProduct → Publish → live Robux |
 | 3 | Live DS rejoin |
-| 4 | **Не** включать Allow* без W4 plan |
+| 4 | W4 OwnerFlipChecklist — **не** включать Allow* без plan |
 
 ---
 

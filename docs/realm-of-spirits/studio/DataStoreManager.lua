@@ -292,6 +292,34 @@ end
 
 function DataStoreManager:LoadData(player)
 	local userId = player.UserId
+
+	-- Phase 4 W4: ProfileService path only when triple gate ShouldUse() (defaults OFF)
+	do
+		local okPS, ProfileServiceAdapter = pcall(function()
+			return require(script.Parent:WaitForChild("ProfileServiceAdapter"))
+		end)
+		if okPS and ProfileServiceAdapter and ProfileServiceAdapter.ShouldUse() then
+			local data = ProfileServiceAdapter.LoadPlayerData(userId, player)
+			if type(data) ~= "table" then
+				warn(player.Name .. " - ProfileService load FAILED; session marked DoNotSave")
+				data = self:GetDefaultData()
+				data.FirstJoin = os.time()
+				data.TotalJoins = 1
+				data._DoNotSave = true
+				self.LoadFailed[userId] = true
+				self.SessionOwned[userId] = false
+			else
+				self.LoadFailed[userId] = nil
+				self.SessionOwned[userId] = true
+				print(player.Name .. " - ProfileService data loaded lvl " .. tostring(data.Level))
+			end
+			NormalizeCurrency(data)
+			NormalizeSpirits(data)
+			self.PlayerData[userId] = data
+			return data
+		end
+	end
+
 	local key = PlayerKey(userId)
 	local success = false
 	local data = nil
@@ -398,6 +426,31 @@ function DataStoreManager:SaveData(player, releaseSession)
 		warn("Skip save for " .. player.Name .. " (load failed / DoNotSave)")
 		return false
 	end
+
+	-- Phase 4 W4: ProfileService save/release only when ShouldUse() (defaults OFF)
+	do
+		local okPS, ProfileServiceAdapter = pcall(function()
+			return require(script.Parent:WaitForChild("ProfileServiceAdapter"))
+		end)
+		if okPS and ProfileServiceAdapter and ProfileServiceAdapter.ShouldUse() then
+			if self.IsSaving[userId] then
+				return false
+			end
+			self.IsSaving[userId] = true
+			local okSave = ProfileServiceAdapter.SavePlayerData(userId, data, releaseSession == true)
+			self.IsSaving[userId] = nil
+			if okSave and releaseSession then
+				self.SessionOwned[userId] = false
+			end
+			if okSave then
+				print(player.Name .. " - ProfileService saved" .. (releaseSession and " (session released)" or ""))
+			else
+				warn(player.Name .. " - ProfileService save FAILED")
+			end
+			return okSave
+		end
+	end
+
 	if self.IsSaving[userId] then
 		return false
 	end

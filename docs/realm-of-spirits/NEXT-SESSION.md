@@ -1,68 +1,83 @@
 # NEXT SESSION
 
-**Статус:** 2026-08-23 — Фаза 1 **COMPLETE** · Фаза 2 **COMPLETE** · Фаза 3 **COMPLETE CONDITIONAL** · **Фаза 4 W1 PASS** · **Фаза 4 W2 PASS** · **Фаза 4 W3 PASS**
-**Следующий фокус:** **Фаза 4 W4** (owner gate flip + live DS smoke) **или** owner hands (снять Ф3 CONDITIONAL)
+> **DEV-ONLY MODE** (owner decision 2026-08-23) — **не публикуем** place и **не включаем** live cutover, пока владелец явно не снимет режим. Проект сырой; публикация отложена **намеренно**, не навсегда.
+
+**Статус:** 2026-08-23 — Фаза 1 **COMPLETE** · Фаза 2 **COMPLETE** · Фаза 3 **COMPLETE CONDITIONAL** · **Фаза 4 W1–W3 PASS** · **Фаза 4 W4 PREP PASS (CONDITIONAL)**
+**Следующий фокус (dev-only default):** **Ф4 schema lock** + **GuildSystem scout/prep (W5)** — без Publish / live DS / Allow* flip
 
 **Roadmap:** [`ROADMAP-2026-08-23.md`](ROADMAP-2026-08-23.md) · **Phase 4:** [`SESSION-2026-08-23-phase4-scale.md`](SESSION-2026-08-23-phase4-scale.md)
+
+## Dev-only policy
+
+| Допустимо сейчас | Отложено (не заблокировано навсегда) |
+|------------------|--------------------------------------|
+| Studio Edit + Play (unpublished, PlaceId=0) | **Publish** place (PlaceId≠0) |
+| Studio MCP smoke / multi_edit | Live **DataStore rejoin** под нагрузкой |
+| Mock / shadow **ProfileService** (gate OFF) | Live **Robux** purchase (DevProduct + Publish) |
+| `quality_gate.py`, git mirrors, docs | **`AllowProfileService`** flip + live PS cutover |
+| Bugfix-only по красному smoke | **`AllowGuilds`** и Guilds expand |
+| Ф4 prep: audit · migrate sample · gated Load/Save | Live ops / store listing / marketing pass |
+
+**Снять dev-only:** только явная команда владельца («publish», «owner hands», «live cutover») + [`OwnerFlipChecklist`](SESSION-2026-08-23-phase4-scale.md) в SESSION W4.
 
 ## Старт сессии (порядок жёсткий)
 
 1. **Ctrl+S** place → подтвердить SoT
-2. **Приоритет по умолчанию:** **Ф4 W4** (owner gate flip + live smoke) — **требует owner hands Ф3**
-3. **Owner hands** — Publish + live DS rejoin **рекомендованы до W4 cutover**
-4. **Bugfix-only** — если что-то красное в play smoke
-5. **106 / B1 / Haven décor** — только по явной команде (не в Ф4 W4 без unlock)
+2. **Приоритет по умолчанию (dev-only):** **Ф4 W5** — schema lock doc + GuildSystem scout/prep
+3. **Bugfix-only** — если что-то красное в play smoke
+4. **Owner hands / Publish / live cutover** — только по **явной** команде владельца (не default)
+5. **106 / B1 / Haven décor** — только по явной команде
 
 ## Выбор владельца (что значит «дальше»)
 
 | Команда / намерение | Действие агента |
 |---------------------|-----------------|
-| «Ф4 W4» / «gate flip» / «ProfileService live» | ROADMAP § Phase 4 W4 · owner Allow* + live DS |
-| «Ф4 W3» / «migrate sample» | **DONE** W3 PASS — see SESSION tracker |
-| Owner hands / Publish / live Robux / DS | Чеклист § Owner hands · не flip Allow* без W4 plan |
-| «Guilds» / «AI mesh» / «B1» | Только после W4 schema lock · named backlog |
-| «дальше» (без уточнения) | **Ф4 W4** (default после W3 PASS) **или** owner hands |
+| «дальше» (без уточнения) | **Ф4 W5** schema lock + Guild scout (dev-only safe) |
+| «Guild scout» / «W5» | SESSION W5 · `GetGuildAudit` · gate inventory |
+| Owner hands / Publish / live DS | Чеклист § Owner unlock · **только явная команда** |
+| «Ф4 W4 cutover» / «AllowProfileService» | OwnerFlipChecklist · live smoke · **owner unlock dev-only** |
+| «106» / «B1» / «Haven décor» | Named backlog · не default |
 
 ## Где остановились
 
 | Область | Состояние |
 |---------|-----------|
-| **Фаза 4 W3** | **PASS** — one-key migrate sample (Mock) · gate locked |
-| **Фаза 4 W2** | **PASS** — ProfileService vendored + shadow read |
-| **Фаза 3** | **COMPLETE CONDITIONAL** — owner hands pending |
-| **Persistence** | Live = `DataStoreManager` · W3 migrate sample on sentinel id only |
+| **Dev-only** | **ACTIVE** — Publish/live cutover deferred by owner |
+| **Фаза 4 W4** | **PREP PASS CONDITIONAL** — Load/Save wired, gates OFF, PlaceId=0 |
+| **Фаза 4 W3** | **PASS** — one-key migrate sample (Mock) |
+| **Фаза 3** | **COMPLETE CONDITIONAL** — live Robux/DS = owner unlock, not default |
+| **Persistence** | Live = `DataStoreManager` · PS path ready behind triple gate |
 | **ExpansionGate** | All Allow*=false (не трогали) |
+| **Schema** | **v1 locked** (42 keys + optional `Guild`, `_Session`) — см. SESSION W5 |
 
-## Фаза 4 W3 exit (2026-08-23)
+## Фаза 4 W4 exit (2026-08-23) — PREP PASS CONDITIONAL
 
-- `ProfileServiceAdapter`: `MigrateSampleUserId=900000001`, `MigrateSampleKey`, `SeedMigrateSampleLegacy`, `ComputeDataChecksum`, phase `F4-W3-migrate`
-- One-way migrate legacy → `RealmOfSpirits_Profiles_v1` via **ProfileStore.Mock** (no production keys)
-- `ValidateDataShape` + checksum match on source/target — **PASS** (unpublished: `synthetic_seed`)
-- **NOT:** Allow* · PS live Load/Save on join · Guilds · mesh · B1 · 106
+- `LoadPlayerData` / `SavePlayerData` / `SmokeLoadSaveMock` implemented
+- `DataStoreManager:LoadData` / `SaveData` branch on `ShouldUse()` (Enabled + AllowProfileService + UseProfileServiceAdapter)
+- Defaults OFF → zero live behavior change
+- MCP: flags-OFF Play + Mock Load/Save **PASS**; live cutover **blocked** (PlaceId=0 + **dev-only**)
+- **NOT:** Allow* flip · live PS on join · Guilds expand · mesh · B1 · 106
 
-## Фаза 4 W2 exit (2026-08-23)
-
-- `SSS.RealmOfSpirits.ProfileService` — MadStudio library 5331689994 (vendored)
-- `ProfileServiceAdapter`: shadow dual-read · rollback in audit
-- **Fix:** `ExpansionGate` Studio `folder:GetAttribute` colon syntax
-
-## Owner hands (carry-over Ф3 + W4 prereq)
+## Owner unlock (when critical — NOT default next)
 
 | # | Действие | Зачем |
 |---|----------|-------|
 | 1 | **Ctrl+S** place | SoT sync |
-| 2 | DevProduct ID → Publish → live **R** | W2 monetization CONDITIONAL |
-| 3 | Live DS rejoin (PlaceId≠0) | DS CONDITIONAL · **нужен до Ф4 W4 cutover** |
-| 4 | **Не** AllowProfileService до W4 explicit plan | ExpansionGate |
+| 2 | Owner: снять **dev-only** явной командой | Policy gate |
+| 3 | DevProduct ID → Publish → live **R** | W2 monetization CONDITIONAL |
+| 4 | Live DS rejoin (PlaceId≠0) | DS CONDITIONAL · prereq W4 live |
+| 5 | OwnerFlipChecklist (SESSION W4) | Allow* + Enabled + UseProfileServiceAdapter |
+| 6 | Live PS Load/Save/rejoin smoke | Mark W4 COMPLETE |
 
 ## Backlog (named tracks)
 
 | # | Срез | Когда |
 |---|------|-------|
-| **Ф4 W4** | Owner gate flip + live PS smoke | **default next** (after owner hands) |
-| **Ф4 W3** | Unpublished one-key migrate sample | ☑ **PASS** |
+| **Ф4 W5** | Schema lock + GuildSystem scout/prep | **default next** (dev-only) |
+| **Ф4 W4 live** | Owner gate flip + live PS smoke | Owner unlock dev-only |
+| **Ф4 W4 prep** | Gated Load/Save + Mock smoke | ☑ **PREP PASS** |
 | **106 polish** | Alt track | Явная команда |
-| **B1** | PvP slice 3 | После W4 schema lock |
+| **B1** | PvP slice 3 | После W5 schema lock |
 
 ## Studio SoT
 
@@ -70,10 +85,10 @@
 
 **Mirror (F4):** `ProfileService` · `ProfileServiceAdapter` · `DataStoreManager` · `ExpansionGate` · `GuildSystem` · `SpiritMeshGenerationService`
 
-## Не включать (до W4 + owner)
+## Не включать (dev-only + gates)
 
-Allow* flip · ProfileService live on join · Guilds expand · AI mesh online · Haven décor · B1 · 106 · два major track
+Publish без owner · Allow* flip без checklist · Guilds expand · AI mesh online · Haven décor · B1 · 106 · два major track
 
 ## Архив
 
-Phase 1–2 **COMPLETE** · Phase 3 **COMPLETE CONDITIONAL** · Phase 4 W1 **PASS** · Phase 4 W2 **PASS** · Phase 4 W3 **PASS** · [`SESSION-2026-08-23-phase4-scale.md`](SESSION-2026-08-23-phase4-scale.md)
+Phase 1–2 **COMPLETE** · Phase 3 **COMPLETE CONDITIONAL** · Phase 4 W1–W3 **PASS** · W4 **PREP PASS CONDITIONAL** · [`SESSION-2026-08-23-phase4-scale.md`](SESSION-2026-08-23-phase4-scale.md)
