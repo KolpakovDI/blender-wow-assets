@@ -6,6 +6,12 @@
 
 ## [Unreleased]
 
+### Phase 1 W2 — core regression MCP PASS (2026-08-23)
+- **W2 regression MCP Play/Server:** **PASS** — Resonant SeedQA+preview+Disintegrate; Q304 OpenKamiSanctum; Q305 KamiDisintegrate; B2 115→116; side 113→114 — [`SESSION-2026-08-23-phase1-stabilization.md`](SESSION-2026-08-23-phase1-stabilization.md)
+- **Trade/duel:** modules require **PASS**; 2p confirm + rematch W/L остаётся **CONDITIONAL** (hands)
+- **`quality_gate.py`:** **PASS** (повтор W2)
+- **NEXT-SESSION:** top = **Phase 1 W3** bugfix buffer
+
 ### Phase 1 W1 — E1 owner skip (2026-08-23)
 - **E1-HANDS-BUFFER-LOG:** секция **Owner skip** — дата 2026-08-23; formal n≥10 / ≥90% **не проводился**; fake Run# rows не добавлены
 - **W1 exit:** **OWNER SKIP** (не formal ≥90% gate); prior self-reported PASS (2026-08-23) принят
