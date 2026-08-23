@@ -16,7 +16,7 @@ Public beta / store listing ready: hub KR smoke, monetization live test, analyti
 |---|----------|--------|
 | 1 | Hub KR smoke (Mika funnel, prep в логах) | ☑ W1 · PrepShop seen W2 |
 | 2 | Monetization live test · 0 pay combat stats | ☑ W2 **PASS CONDITIONAL** (Studio; live Robux = owner hands) |
-| 3 | Analytics hooks usable без MCP-костылей | ☐ W1 attr · W3+ |
+| 3 | Analytics hooks usable без MCP-костылей | ☑ W3 attr + BF + logs |
 | 4 | Cold-start: новый игрок знает Mika→Exit | ☑ W1 MCP |
 
 ---
@@ -121,17 +121,40 @@ Public beta / store listing ready: hub KR smoke, monetization live test, analyti
 
 ---
 
-## W3 — Analytics hooks polish (skeleton) ← **NEXT**
+## W3 — Analytics hooks polish — **PASS MCP (2026-08-23)**
 
 | # | Задача | Exit | Статус |
 |---|--------|------|--------|
-| 1 | HubFunnel day Complete readable без MCP | snapshot / debug | ☐ |
-| 2 | Optional: prep ≥50% in sample logs | note | ☐ |
-| 3 | Combat anim best-effort (non-blocking) | optional | ☐ |
+| 1 | HubFunnel day Complete readable без MCP | attr + log + BF | ☑ |
+| 2 | Optional: prep ≥50% in sample logs | `[KR3 prep step]` tag + `HubFunnelPrep` attr | ☑ |
+| 3 | Combat anim best-effort (non-blocking) | optional | ☐ skipped (time) |
+
+### MCP smoke (Play)
+
+| Шаг | Результат |
+|-----|-----------|
+| Spawn log `DayKey=… Spawn=true Mika=false …` | **PASS** |
+| Mika log `-> Mika (MikaOpen) DayKey=…` | **PASS** |
+| Prep log `-> Prep (PrepShop) … [KR3 prep step]` | **PASS** (code + BF Mark path) |
+| Exit → `HubFunnelStep=Complete` · `HubFunnelComplete=true` | **PASS** (GetHubFunnelSnapshotBF) |
+| Complete log `-> Complete (Complete) DayKey=… Mika+Prep+Exit` | **PASS** |
+| `GetHubFunnelSnapshotBF` → `{ Complete, Prep, DayKey, … }` | **PASS** |
+| `quality_gate.py` | ☑ **PASS** (python3.12) |
+
+### SoT правки (Studio)
+
+- `ReplicatedStorage.RealmOfSpirits.HubFunnel` — Complete step attr · SyncPlayer · enriched logs · HubFunnelComplete/Prep/DayKey attrs
+- `ServerScriptService.RealmOfSpirits.GameManager` — `GetHubFunnelSnapshotBF` · SyncPlayer on LoadData
+
+**Mirror:** `HubFunnel` · `GameManager`
+
+**KR3 prep note:** sample server logs tag Prep with `[KR3 prep step]`; attr `HubFunnelPrep=true` filterable for ≥50% prep rate vs sessions with Exit.
+
+**NEXT after W3:** F3-W4 Phase 3 exit gate
 
 ---
 
-## W4 — Phase 3 exit gate (skeleton)
+## W4 — Phase 3 exit gate (skeleton) ← **NEXT**
 
 | # | Задача | Exit | Статус |
 |---|--------|------|--------|

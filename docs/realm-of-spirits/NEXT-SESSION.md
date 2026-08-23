@@ -1,32 +1,33 @@
 # NEXT SESSION
 
-**Статус:** 2026-08-23 — Фаза 1 **COMPLETE** · Фаза 2 **COMPLETE** · Фаза 3 **IN PROGRESS** (W1 hub **PASS** · W2 monetization **PASS CONDITIONAL**)
-**Следующий фокус:** **Фаза 3 W3** — analytics polish · combat anim best-effort (non-blocking)
+**Статус:** 2026-08-23 — Фаза 1 **COMPLETE** · Фаза 2 **COMPLETE** · Фаза 3 **IN PROGRESS** (W1 hub **PASS** · W2 monetization **PASS CONDITIONAL** · W3 analytics **PASS MCP**)
+**Следующий фокус:** **Фаза 3 W4** — Phase 3 exit gate (hub KR smoke · DS stress · docs)
 
 **Roadmap:** [`ROADMAP-2026-08-23.md`](ROADMAP-2026-08-23.md) · **Tracker:** [`SESSION-2026-08-23-phase3-commercial-prep.md`](SESSION-2026-08-23-phase3-commercial-prep.md)
 
 ## Старт сессии (порядок жёсткий)
 
 1. **Ctrl+S** place → подтвердить SoT
-2. **Фаза 3 W3:** HubFunnel day Complete readable · prep % note · combat anim best-effort
+2. **Фаза 3 W4:** Hub KR smoke checklist · DS rejoin sanity · quality_gate · phase exit docs
 3. Не начинать B1 PvP / ProfileService / AI mesh / track 106 / Haven décor marathon без явной команды
 
 ## Где остановились
 
 | Область | Состояние |
 |---------|-----------|
+| **Фаза 3 W3** | **PASS MCP** — Complete attr/log · Prep `[KR3 prep step]` · `GetHubFunnelSnapshotBF` |
 | **Фаза 3 W2** | **PASS CONDITIONAL** — copper gacha cosmetics-only MCP; fair_combat+QG PASS; live Robux = owner DevProduct+Publish |
 | **Фаза 3 W1** | **PASS MCP** — cold-start toast/chip · `HubFunnelStep` · Ensure* Mika/Exit copy |
 | **Фаза 2** | **COMPLETE** — scout **107–112** + W2 regress **113→116** |
 | **Фаза 1** | **COMPLETE** |
-| **HubFunnel** | Spawn → MikaOpen → PrepShop → ExitTouch (attr + print) |
+| **HubFunnel** | Spawn → MikaOpen → PrepShop → ExitTouch → **Complete** (attr + print + BF) |
 
 ## Owner hands (carry-over)
 
 | # | Действие | Зачем |
 |---|----------|-------|
 | 1 | **Ctrl+S** place после Studio-сессии | SoT sync |
-| 2 | Пешком cold-start: spawn → tip → Мика [E] → Exit | W1 hands feel |
+| 2 | Пешком cold-start: spawn → tip → Мика [E] → prep (E manga/gacha) → Exit | W4 hub KR smoke |
 | 3 | DevProduct ID → `ZoneConfig.GachaRobuxProductId` · Publish · API Services · live **R** purchase | снять W2 CONDITIONAL |
 | 4 | Опц.: live DS rejoin (из Фазы 1) | PlaceId≠0 |
 
@@ -34,8 +35,7 @@
 
 | # | Срез | Когда |
 |---|------|-------|
-| **F3-W3** | Analytics polish · combat anim best-effort | **NEXT** |
-| **F3-W4** | Phase 3 exit gate | после W3 |
+| **F3-W4** | Phase 3 exit gate | **NEXT** |
 | **106 polish** | Альтернативный track | Только по явной команде |
 | **B1** | PvP slice 3 | Только по явной команде |
 
@@ -43,7 +43,8 @@
 
 `C:\Mimo\RealmOfSpirits\RealmOfSpirits second.rbxl`
 
-**Mirror (F3 W1):** `HubFunnel` · `ZoneController` · `NextStepChip` · `ZoneSystem` · `WorldSpawner` · `GameManager` · `DataStoreManager` · `OtakuHavenBuilder`  
+**Mirror (F3 W3):** `HubFunnel` · `GameManager`  
+**Mirror (F3 W1):** `ZoneController` · `NextStepChip` · `ZoneSystem` · `WorldSpawner` · `DataStoreManager` · `OtakuHavenBuilder`  
 **W2 SoT:** без правок (verification only) · pay path: `OtakuHavenService` + `ZoneConfig.GachaRobuxProductId`
 
 ## Не включать (до явной команды)
@@ -52,4 +53,4 @@ Allow* · Guilds · ProfileService live · Haven décor marathon · PvP combat s
 
 ## Архив
 
-Phase 1–2 **COMPLETE** · Phase 3 W1 **PASS** · W2 **PASS CONDITIONAL** · [`ROADMAP-2026-08-23.md`](ROADMAP-2026-08-23.md)
+Phase 1–2 **COMPLETE** · Phase 3 W1 **PASS** · W2 **PASS CONDITIONAL** · W3 **PASS MCP** · [`ROADMAP-2026-08-23.md`](ROADMAP-2026-08-23.md)

@@ -58,6 +58,23 @@ do
 		return dataStore:GetPlayerData(userId)
 	end
 
+	ensureBF("GetHubFunnelSnapshotBF").OnInvoke = function(userId)
+		if not game:GetService("RunService"):IsStudio() then
+			return nil
+		end
+		local data = dataStore:GetPlayerData(userId)
+		if not data then
+			return nil
+		end
+		local ok, HubFunnel = pcall(function()
+			return require(realmFolder:WaitForChild("HubFunnel"))
+		end)
+		if not ok or not HubFunnel or not HubFunnel.GetSnapshot then
+			return nil
+		end
+		return HubFunnel.GetSnapshot(data)
+	end
+
 	ensureBF("PrepareEvoBF").OnInvoke = function(userId, spiritId)
 		local SpiritDatabase = require(realmFolder:WaitForChild("SpiritDatabase"))
 		local data = dataStore:GetPlayerData(userId)
@@ -2334,8 +2351,13 @@ local function OnPlayerAdded(player)
 			local ok, HubFunnel = pcall(function()
 				return require(realmFolder:WaitForChild("HubFunnel"))
 			end)
-			if ok and HubFunnel and HubFunnel.MarkPlayer then
-				HubFunnel.MarkPlayer(player, "Spawn")
+			if ok and HubFunnel then
+				if HubFunnel.MarkPlayer then
+					HubFunnel.MarkPlayer(player, "Spawn")
+				end
+				if HubFunnel.SyncPlayer then
+					HubFunnel.SyncPlayer(player, data)
+				end
 			end
 		end
 		if _G.InitQuestSystemForPlayer then

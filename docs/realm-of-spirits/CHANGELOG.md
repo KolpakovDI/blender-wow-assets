@@ -6,6 +6,17 @@
 
 ## [Unreleased]
 
+### Phase 3 W3 — analytics polish PASS MCP (2026-08-23)
+- **HubFunnel Complete:** attr `HubFunnelStep=Complete` when Mika+Prep+ExitCombat done; `HubFunnelComplete` · `HubFunnelDayKey` · `HubFunnelPrep` attrs
+- **Logs:** each step prints `DayKey` + step flags; Prep tagged `[KR3 prep step]` for ≥50% prep sampling (GOALS KR3)
+- **Complete log:** `[HubFunnel] … -> Complete (Complete) DayKey=… Mika+Prep+Exit`
+- **SyncPlayer:** on LoadData restores attrs from persisted funnel (rejoin same UTC day)
+- **Studio QA:** `GetHubFunnelSnapshotBF` → `HubFunnel.GetSnapshot` without MCP Mark hacks
+- **MCP Play smoke:** Spawn/Mika enriched logs · Complete via BF — **PASS**
+- **`quality_gate.py`:** **PASS** (python3.12)
+- **Combat anim:** skipped (non-blocking)
+- **Tracker:** [`SESSION-2026-08-23-phase3-commercial-prep.md`](SESSION-2026-08-23-phase3-commercial-prep.md) · **NEXT:** F3-W4 exit gate
+
 ### Phase 3 W2 — monetization live test PASS CONDITIONAL (2026-08-23)
 - **Fair-combat pay path:** gacha (copper + Robux) = cosmetics only · `ProcessReceipt` → `grantGachaReward` + `ProcessedReceipts` idempotent · 0 pay combat stats
 - **MCP Play smoke:** copper **E**×2 → +2 Cosmetics · Inventory combat Qty unchanged · UI «только косметика»; **R** → toast ProductId gate (`GachaRobuxProductId=0`)
