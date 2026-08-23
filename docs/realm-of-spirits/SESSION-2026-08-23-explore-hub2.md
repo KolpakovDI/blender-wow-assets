@@ -12,7 +12,7 @@
 | Гравийная тропа `ExploreHub2Trail` | **PASS** (5 сегментов) |
 | Лут обхода `Crystal_102_6` @ (38,2,52) | **PASS** |
 | QuestSystem `[115]`/`[116]` в Source | **PASS** (grep SoT) |
-| Quest BF chain 113→116 | **CONDITIONAL** — в place нет `QuestAcceptBF` (нет W2-style BF smoke) |
+| Quest BF chain 113→116 | **PASS** (115→116 MCP 2026-08-23) — [`SESSION-2026-08-23-quest-b2-polish.md`](SESSION-2026-08-23-quest-b2-polish.md) |
 | **Hands обход B2** | **PASS (user, self-reported 2026-08-23)** — owner «pass» после hands verify |
 
 ## Маршруты Haven → Combat
@@ -51,7 +51,7 @@
 
 ## Exit
 
-**B2 COMPLETE** — MCP world PASS + **PASS (user hands, self-reported 2026-08-23)**. Quest BF chain остаётся CONDITIONAL (нет `QuestAcceptBF` smoke).
+**B2 COMPLETE** — MCP world PASS + **PASS (user hands, self-reported 2026-08-23)**. Quest BF 115→116 — **PASS** MCP — [`SESSION-2026-08-23-quest-b2-polish.md`](SESSION-2026-08-23-quest-b2-polish.md).
 
 ## Next (post-B2)
 

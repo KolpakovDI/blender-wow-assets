@@ -12,8 +12,13 @@
 - **Quest 115→116:** VisitZone ScoutPost + CollectItem 102 (продолжение W2 113→114); mirror `QuestCatalog` + inline SoT `QuestSystem`
 - **`ClientController`:** whitelist `ExploreHub2WayfindBillboard`
 - MCP smoke Edit+Play: знаки ×3 · trail ×5 · bypass crystal **PASS**
-- **Hands exit:** **PASS (user hands, self-reported 2026-08-23)** — owner «pass»; quest BF chain 113→116 остаётся **CONDITIONAL** (нет `QuestAcceptBF` smoke) — [`SESSION-2026-08-23-explore-hub2.md`](SESSION-2026-08-23-explore-hub2.md)
-- **NEXT-SESSION:** B2 закрыт; backlog B пуст → пауза / polish-only или B1 PvP slice 3 по команде
+- **Hands exit:** **PASS (user hands, self-reported 2026-08-23)** — owner «pass» — [`SESSION-2026-08-23-explore-hub2.md`](SESSION-2026-08-23-explore-hub2.md)
+- **Quest BF 115→116:** **PASS** MCP Play — Accept → VisitZone ScoutPost → TurnIn → CollectItem 102 (`GrantItemBF`) → TurnIn — [`SESSION-2026-08-23-quest-b2-polish.md`](SESSION-2026-08-23-quest-b2-polish.md)
+- **NEXT-SESSION:** B2 + quest chain закрыты; backlog B пуст → пауза / polish-only или B1 PvP slice 3 по команде
+
+### Quest B2 polish — MCP smoke 115→116 (2026-08-23)
+- Закрыт CONDITIONAL после B2: BF smoke **PASS** без правок SoT
+- BFs: `QuestAcceptBF`/`QuestTurnInBF`/`UpdateQuestProgressBF` → SSS.RealmOfSpirits (runtime Play); `GrantItemBF` → `ReplicatedStorage.RealmOfSpirits`
 
 ### E1 hands buffer + Q3 2p — user PASS (2026-08-23)
 - **E1 buffer:** **PASS (user hands, self-reported)** — owner «pass» после month wrap; formal n≥10 таблица не заполнялась run-by-run — [`SESSION-2026-08-23-e1-hands-buffer.md`](SESSION-2026-08-23-e1-hands-buffer.md) · [`E1-HANDS-BUFFER-LOG.md`](E1-HANDS-BUFFER-LOG.md)

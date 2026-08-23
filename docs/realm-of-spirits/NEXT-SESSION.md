@@ -1,11 +1,12 @@
 # NEXT SESSION
 
-**Статус:** 2026-08-23 — Month W1–W4 **PASS** · Q3 slice 3 **PASS (user)** · E1 **PASS (user)** · **B2 Explore hub 2 COMPLETE (user hands)**
+**Статус:** 2026-08-23 — Month W1–W4 **PASS** · Q3 **PASS** · E1 **PASS** · **B2 COMPLETE** · **Quest 115→116 MCP PASS**
 **Следующий фокус:** **пауза / polish-only** — backlog B пуст · **B1 PvP slice 3** только по явной команде
 
 ## Старт сессии (порядок жёсткий)
 
-1. Прочитать [`SESSION-2026-08-23-explore-hub2.md`](SESSION-2026-08-23-explore-hub2.md) — B2 exit PASS
+1. Прочитать [`SESSION-2026-08-23-quest-b2-polish.md`](SESSION-2026-08-23-quest-b2-polish.md) — quest BF PASS
+2. (Архив B2) [`SESSION-2026-08-23-explore-hub2.md`](SESSION-2026-08-23-explore-hub2.md)
 2. **Ctrl+S** place → подтвердить SoT
 3. Выбрать режим: **пауза** · **polish-only** · или **B1 PvP slice 3** (явная команда)
 4. (Опц. регресс) E1 sanity — [`E1-HANDS-BUFFER-LOG.md`](E1-HANDS-BUFFER-LOG.md)
@@ -14,7 +15,8 @@
 
 | Область | Состояние |
 |---------|-----------|
-| **B2 Explore hub 2** | **COMPLETE** — MCP PASS + **PASS (user hands, self-reported 2026-08-23)** — [`SESSION-2026-08-23-explore-hub2.md`](SESSION-2026-08-23-explore-hub2.md) |
+| **B2 Explore hub 2** | **COMPLETE** — MCP + hands PASS — [`SESSION-2026-08-23-explore-hub2.md`](SESSION-2026-08-23-explore-hub2.md) |
+| **Quest 115→116** | **PASS** MCP — [`SESSION-2026-08-23-quest-b2-polish.md`](SESSION-2026-08-23-quest-b2-polish.md) |
 | **E1 buffer** | **PASS (user hands)** |
 | **Q3 slice 3** | **COMPLETE** |
 | **Month W1–W4** | **PASS** |
