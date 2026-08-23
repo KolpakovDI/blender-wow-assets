@@ -6,6 +6,25 @@
 
 ## [Unreleased]
 
+### Phase 4 W2 — ProfileService vendor + shadow read PASS (2026-08-23)
+
+- **`SSS.RealmOfSpirits.ProfileService`:** MadStudio library 5331689994 vendored (require OK; no LoadProfileAsync)
+- **`ProfileServiceAdapter`:** `ShadowReadEnabled`, `ShadowReadLegacyKey`, `ShadowAuditPlayer`, phase `F4-W2-shadow`, `Rollback` in audit
+- **`DataStoreManager`:** defer shadow audit after `LoadData`; `[Persistence]` log extended (`shadow`, `vendored`, `phase`)
+- **Fix:** `ExpansionGate` Studio `folder:GetAttribute` colon syntax (init crash)
+- **MCP Play smoke:** `liveBlocked=true` · `vendored=true` · player join shadow log · zero live behavior change
+- **NOT in W2:** Allow* flip · ProfileService live Load/Save · Guilds · AI mesh · B1 · 106
+- **Tracker:** [`SESSION-2026-08-23-phase4-scale.md`](SESSION-2026-08-23-phase4-scale.md) · **NEXT:** F4 W3 migrate sample
+
+### Phase 4 W1 — ProfileService scout + audit scaffold PASS (2026-08-23)
+- **Unlock:** explicit owner command «фаза 4» · `ExpansionGate` **unchanged** (all Allow*=false)
+- **Track choice:** ProfileService prep first (foundation for Guilds + rated PvP persistence)
+- **`ProfileServiceAdapter`:** `SchemaVersion=1`, 42-key inventory, `GetSchemaInventory`, `GetMigrationAudit`, `ValidateDataShape`
+- **`DataStoreManager`:** `GetPersistenceBackend()` + init `[Persistence]` audit log (read-only; live backend remains DSM)
+- **Studio sync:** `SSS.RealmOfSpirits.ProfileServiceAdapter` + `DataStoreManager` via MCP multi_edit — **Ctrl+S** required
+- **NOT in W1:** Allow* flip · live ProfileService Load/Save · Guilds expand · AI mesh · B1 · 106 · Haven décor
+- **Tracker:** [`SESSION-2026-08-23-phase4-scale.md`](SESSION-2026-08-23-phase4-scale.md) · **NEXT:** F4 W2 vendor + shadow read
+
 ### Phase 3 COMPLETE CONDITIONAL — commercial prep exit W4 (2026-08-23)
 - **Фаза 3 exit:** W1–W4 MCP green · **COMPLETE CONDITIONAL** (live Robux + live DS rejoin = owner hands)
 - **W4 hub KR smoke:** Spawn → MikaOpen → PrepShop → ExitTouch → **Complete** (player attrs) — **PASS MCP**

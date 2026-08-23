@@ -1,12 +1,73 @@
 -- ProfileServiceAdapter (Q4): migration shim — BLOCKED by ExpansionGate until Q4 unlock
+-- Phase 4 W1: read-only audit + schema inventory; live Load/Save still DataStoreManager
+-- Phase 4 W2: ProfileService vendored + shadow dual-read (legacy GetAsync, log only)
+
+local DataStoreService = game:GetService("DataStoreService")
 
 local ProfileServiceAdapter = {}
 
 ProfileServiceAdapter.Enabled = false -- hard default; never flip without ExpansionGate
+ProfileServiceAdapter.ShadowReadEnabled = true -- W2: audit-only while gate locked
 ProfileServiceAdapter.StoreName = "RealmOfSpirits_Profiles_v1"
+ProfileServiceAdapter.LegacyDatastoreName = "RealmOfSpirits_v2"
 ProfileServiceAdapter.MigrateFromKeyPrefix = "Player_"
+ProfileServiceAdapter.SchemaVersion = 1
 
-local function gateAllows()
+-- Top-level keys mirrored from DataStoreManager:GetDefaultData (Phase 4 W1 inventory)
+ProfileServiceAdapter.ExpectedTopLevelKeys = {
+	"Level",
+	"Experience",
+	"SkillPoints",
+	"BonusHP",
+	"BonusAttack",
+	"BonusDefense",
+	"BonusSpeed",
+	"BonusMP",
+	"Rank",
+	"RankTitle",
+	"CopperCoins",
+	"SilverCoins",
+	"GoldCoins",
+	"Reputation",
+	"Crystals",
+	"Spirits",
+	"CurrentSpiritId",
+	"ActiveSpiritIndex",
+	"SpiritStamina",
+	"ResonanceDaily",
+	"DailyBoard",
+	"ShopDaily",
+	"ShowcaseSlots",
+	"Showcase",
+	"EventTokens",
+	"SeasonPass",
+	"SoftBuffs",
+	"CrystalPity",
+	"Inventory",
+	"UniqueItems",
+	"Buffs",
+	"Cosmetics",
+	"ProcessedReceipts",
+	"ActiveQuests",
+	"CompletedQuests",
+	"QuestProgress",
+	"Stats",
+	"Settings",
+	"LastLogin",
+	"FirstJoin",
+	"TotalJoins",
+	"HubFunnel",
+}
+
+ProfileServiceAdapter.OptionalTopLevelKeys = {
+	"Guild", -- GuildSystem thin (Q4)
+	"_Session", -- ephemeral; stripped on save
+}
+
+local SHADOW_MAX_RETRIES = 2
+local _profileServiceModule: any = nil
+
+local function gateAllows(): boolean
 	local ok, ExpansionGate = pcall(function()
 		return require(game:GetService("ReplicatedStorage").RealmOfSpirits:WaitForChild("ExpansionGate"))
 	end)
@@ -16,16 +77,232 @@ local function gateAllows()
 	return ExpansionGate.AssertProfileServiceBlocked() == true
 end
 
+local function legacyKey(userId: number): string
+	return ProfileServiceAdapter.MigrateFromKeyPrefix .. tostring(userId)
+end
+
+local function countTopLevelKeys(data: any): number
+	if type(data) ~= "table" then
+		return 0
+	end
+	local n = 0
+	for key in pairs(data) do
+		if type(key) == "string" then
+			n += 1
+		end
+	end
+	return n
+end
+
+local function getProfileServiceModule(): any
+	if _profileServiceModule ~= nil then
+		return _profileServiceModule
+	end
+	local sss = game:GetService("ServerScriptService"):FindFirstChild("RealmOfSpirits")
+	if not sss then
+		return nil
+	end
+	local mod = sss:FindFirstChild("ProfileService")
+	if not mod or not mod:IsA("ModuleScript") then
+		return nil
+	end
+	local ok, ps = pcall(require, mod)
+	if ok then
+		_profileServiceModule = ps
+	end
+	return _profileServiceModule
+end
+
+function ProfileServiceAdapter.IsProfileServiceVendored(): boolean
+	return getProfileServiceModule() ~= nil
+end
+
+function ProfileServiceAdapter.GetSchemaInventory()
+	return {
+		SchemaVersion = ProfileServiceAdapter.SchemaVersion,
+		StoreName = ProfileServiceAdapter.StoreName,
+		LegacyDatastoreName = ProfileServiceAdapter.LegacyDatastoreName,
+		MigrateFromKeyPrefix = ProfileServiceAdapter.MigrateFromKeyPrefix,
+		ExpectedTopLevelKeys = ProfileServiceAdapter.ExpectedTopLevelKeys,
+		OptionalTopLevelKeys = ProfileServiceAdapter.OptionalTopLevelKeys,
+		ExpectedKeyCount = #ProfileServiceAdapter.ExpectedTopLevelKeys,
+	}
+end
+
+function ProfileServiceAdapter.ValidateDataShape(data: any): (boolean, string?)
+	if type(data) ~= "table" then
+		return false, "not_table"
+	end
+	local missing = {}
+	for _, key in ipairs(ProfileServiceAdapter.ExpectedTopLevelKeys) do
+		if data[key] == nil then
+			table.insert(missing, key)
+		end
+	end
+	if #missing > 0 then
+		return false, "missing_keys:" .. table.concat(missing, ",")
+	end
+	if type(data.Spirits) ~= "table" then
+		return false, "spirits_not_table"
+	end
+	if type(data.Inventory) ~= "table" then
+		return false, "inventory_not_table"
+	end
+	return true, nil
+end
+
+-- W2: read-only legacy key via GetAsync — never writes ProfileService store
+function ProfileServiceAdapter.ShadowReadLegacyKey(userId: number): { [string]: any }
+	local result: { [string]: any } = {
+		UserId = userId,
+		Key = legacyKey(userId),
+		ReadOk = false,
+		DataPresent = false,
+		ShapeOk = false,
+		ShapeReason = nil :: string?,
+		TopLevelKeyCount = 0,
+		Error = nil :: string?,
+	}
+
+	if ProfileServiceAdapter.ShouldUse() then
+		result.Error = "skipped_live_cutover"
+		return result
+	end
+
+	local store: GlobalDataStore? = nil
+	pcall(function()
+		store = DataStoreService:GetDataStore(ProfileServiceAdapter.LegacyDatastoreName)
+	end)
+	if not store then
+		result.Error = "datastore_unavailable"
+		return result
+	end
+
+	local legacyData: any = nil
+	for attempt = 1, SHADOW_MAX_RETRIES do
+		local ok, dataOrErr = pcall(function()
+			return store:GetAsync(result.Key)
+		end)
+		if ok then
+			result.ReadOk = true
+			legacyData = dataOrErr
+			break
+		end
+		result.Error = tostring(dataOrErr)
+		task.wait(0.25 * attempt)
+	end
+
+	if not result.ReadOk then
+		return result
+	end
+
+	if type(legacyData) == "table" then
+		result.DataPresent = true
+		result.TopLevelKeyCount = countTopLevelKeys(legacyData)
+		local shapeOk, shapeReason = ProfileServiceAdapter.ValidateDataShape(legacyData)
+		result.ShapeOk = shapeOk
+		result.ShapeReason = shapeReason
+	else
+		result.DataPresent = false
+		result.ShapeOk = true
+		result.ShapeReason = "no_saved_row"
+	end
+
+	return result
+end
+
+function ProfileServiceAdapter.ShadowAuditPlayer(player: Player, loadedData: any): { [string]: any }
+	local audit: { [string]: any } = {
+		UserId = player.UserId,
+		PlayerName = player.Name,
+		ShadowEnabled = ProfileServiceAdapter.ShadowReadEnabled,
+		Vendored = ProfileServiceAdapter.IsProfileServiceVendored(),
+		LiveShapeOk = false,
+		LiveShapeReason = nil :: string?,
+		Legacy = nil :: { [string]: any }?,
+		LiveLegacyMatch = nil :: boolean?,
+	}
+
+	if not ProfileServiceAdapter.ShadowReadEnabled or ProfileServiceAdapter.ShouldUse() then
+		audit.Skipped = true
+		return audit
+	end
+
+	local liveOk, liveReason = ProfileServiceAdapter.ValidateDataShape(loadedData)
+	audit.LiveShapeOk = liveOk
+	audit.LiveShapeReason = liveReason
+
+	local legacyAudit = ProfileServiceAdapter.ShadowReadLegacyKey(player.UserId)
+	audit.Legacy = legacyAudit
+
+	if legacyAudit.ReadOk and legacyAudit.DataPresent and liveOk then
+		audit.LiveLegacyMatch = legacyAudit.TopLevelKeyCount == countTopLevelKeys(loadedData)
+	end
+
+	print(string.format(
+		"[ProfileServiceAdapter] shadow user=%s vendored=%s liveShape=%s legacyRead=%s legacyShape=%s match=%s",
+		player.Name,
+		tostring(audit.Vendored),
+		tostring(liveOk),
+		tostring(legacyAudit.ReadOk),
+		tostring(legacyAudit.ShapeOk),
+		tostring(audit.LiveLegacyMatch)
+	))
+
+	if not liveOk and liveReason then
+		warn("[ProfileServiceAdapter] shadow live shape FAIL: " .. liveReason)
+	end
+	if legacyAudit.ReadOk and legacyAudit.DataPresent and not legacyAudit.ShapeOk and legacyAudit.ShapeReason then
+		warn("[ProfileServiceAdapter] shadow legacy shape FAIL: " .. legacyAudit.ShapeReason)
+	end
+
+	return audit
+end
+
+function ProfileServiceAdapter.GetMigrationAudit()
+	local gate = gateAllows()
+	local shouldUse = ProfileServiceAdapter.ShouldUse()
+	local vendored = ProfileServiceAdapter.IsProfileServiceVendored()
+	return {
+		Phase = "F4-W2-shadow",
+		LiveBlocked = not shouldUse,
+		GateAllows = gate,
+		Enabled = ProfileServiceAdapter.Enabled,
+		ShouldUse = shouldUse,
+		ShadowReadEnabled = ProfileServiceAdapter.ShadowReadEnabled,
+		ProfileServiceVendored = vendored,
+		CurrentBackend = "DataStoreManager",
+		TargetBackend = "ProfileService",
+		TargetStore = ProfileServiceAdapter.StoreName,
+		SourceDatastore = ProfileServiceAdapter.LegacyDatastoreName,
+		SourceKeyPrefix = ProfileServiceAdapter.MigrateFromKeyPrefix,
+		SchemaVersion = ProfileServiceAdapter.SchemaVersion,
+		TopLevelKeyCount = #ProfileServiceAdapter.ExpectedTopLevelKeys,
+		NextSteps = {
+			"W3: one-way migrate sample key in Studio unpublished only",
+			"W4: flip AllowProfileService + UseProfileServiceAdapter after owner + live DS smoke",
+		},
+		Rollback = {
+			"Remove ProfileService ModuleScript from SSS.RealmOfSpirits",
+			"Set ShadowReadEnabled=false in ProfileServiceAdapter (mirror + Studio)",
+			"DataStoreManager remains live — no Allow* flip required",
+		},
+	}
+end
+
 function ProfileServiceAdapter.GetStatus()
 	return {
 		Enabled = ProfileServiceAdapter.Enabled,
 		GateAllows = gateAllows(),
+		ShadowReadEnabled = ProfileServiceAdapter.ShadowReadEnabled,
+		ProfileServiceVendored = ProfileServiceAdapter.IsProfileServiceVendored(),
 		StoreName = ProfileServiceAdapter.StoreName,
+		SchemaVersion = ProfileServiceAdapter.SchemaVersion,
 		Note = "Blocked until ExpansionGate.AllowProfileService + Enabled — keep DataStoreManager",
 	}
 end
 
-function ProfileServiceAdapter.ShouldUse()
+function ProfileServiceAdapter.ShouldUse(): boolean
 	if not ProfileServiceAdapter.Enabled then
 		return false
 	end
@@ -40,7 +317,7 @@ function ProfileServiceAdapter.ShouldUse()
 	return sss:GetAttribute("UseProfileServiceAdapter") == true
 end
 
-function ProfileServiceAdapter.LoadPlayerData(_userId)
+function ProfileServiceAdapter.LoadPlayerData(_userId: number)
 	if not ProfileServiceAdapter.ShouldUse() then
 		return nil
 	end
@@ -48,7 +325,7 @@ function ProfileServiceAdapter.LoadPlayerData(_userId)
 	return nil
 end
 
-function ProfileServiceAdapter.SavePlayerData(_userId, _data)
+function ProfileServiceAdapter.SavePlayerData(_userId: number, _data: any): boolean
 	if not ProfileServiceAdapter.ShouldUse() then
 		return false
 	end

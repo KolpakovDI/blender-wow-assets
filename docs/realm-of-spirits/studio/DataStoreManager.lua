@@ -372,6 +372,17 @@ function DataStoreManager:LoadData(player)
 	NormalizeCurrency(data)
 	NormalizeSpirits(data)
 	self.PlayerData[userId] = data
+
+	-- Phase 4 W2: shadow dual-read audit (legacy GetAsync + ValidateDataShape; no PS write)
+	task.defer(function()
+		local ok, ProfileServiceAdapter = pcall(function()
+			return require(script.Parent:WaitForChild("ProfileServiceAdapter"))
+		end)
+		if ok and ProfileServiceAdapter and ProfileServiceAdapter.ShadowAuditPlayer then
+			ProfileServiceAdapter.ShadowAuditPlayer(player, data)
+		end
+	end)
+
 	return data
 end
 
@@ -515,12 +526,39 @@ function DataStoreManager:BindToClose()
 	end)
 end
 
+function DataStoreManager:GetPersistenceBackend()
+	local ok, ProfileServiceAdapter = pcall(function()
+		return require(script.Parent:WaitForChild("ProfileServiceAdapter"))
+	end)
+	if ok and ProfileServiceAdapter and ProfileServiceAdapter.ShouldUse() then
+		return "ProfileServiceAdapter"
+	end
+	return "DataStoreManager"
+end
+
 function DataStoreManager:Initialize()
 	self:StartAutoSave()
 	Players.PlayerRemoving:Connect(function(player)
 		self:OnPlayerRemoving(player)
 	end)
 	self:BindToClose()
+	local ok, ProfileServiceAdapter = pcall(function()
+		return require(script.Parent:WaitForChild("ProfileServiceAdapter"))
+	end)
+	if ok and ProfileServiceAdapter and ProfileServiceAdapter.GetMigrationAudit then
+		local audit = ProfileServiceAdapter.GetMigrationAudit()
+		print(string.format(
+			"[Persistence] backend=%s liveBlocked=%s gatePS=%s schemaV=%s keys=%s shadow=%s vendored=%s phase=%s",
+			tostring(audit.CurrentBackend),
+			tostring(audit.LiveBlocked),
+			tostring(audit.GateAllows),
+			tostring(audit.SchemaVersion),
+			tostring(audit.TopLevelKeyCount),
+			tostring(audit.ShadowReadEnabled),
+			tostring(audit.ProfileServiceVendored),
+			tostring(audit.Phase)
+		))
+	end
 	print("DataStore Manager инициализирован")
 end
 
