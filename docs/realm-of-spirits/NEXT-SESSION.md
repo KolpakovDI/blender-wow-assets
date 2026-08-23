@@ -1,15 +1,15 @@
 # NEXT SESSION
 
-**Статус:** 2026-08-23 — Month W1–W4 **PASS** · Q3 **PASS** · E1 **PASS** · **B2 COMPLETE** · **Quest 115→116 MCP PASS**
+**Статус:** 2026-08-23 — Month W1–W4 **PASS** · Q3 **PASS** · E1 **PASS** · **B2 COMPLETE** · **Quest 115→116 MCP PASS** · **W3-B COMPLETE**
 **Следующий фокус:** **пауза / polish-only** — backlog B пуст · **B1 PvP slice 3** только по явной команде
 
 ## Старт сессии (порядок жёсткий)
 
-1. Прочитать [`SESSION-2026-08-23-quest-b2-polish.md`](SESSION-2026-08-23-quest-b2-polish.md) — quest BF PASS
-2. (Архив B2) [`SESSION-2026-08-23-explore-hub2.md`](SESSION-2026-08-23-explore-hub2.md)
-2. **Ctrl+S** place → подтвердить SoT
-3. Выбрать режим: **пауза** · **polish-only** · или **B1 PvP slice 3** (явная команда)
-4. (Опц. регресс) E1 sanity — [`E1-HANDS-BUFFER-LOG.md`](E1-HANDS-BUFFER-LOG.md)
+1. (Архив) [`SESSION-2026-08-23-w3b-essences-whytag.md`](SESSION-2026-08-23-w3b-essences-whytag.md) — W3-B **COMPLETE**
+2. (Архив) [`SESSION-2026-08-23-quest-b2-polish.md`](SESSION-2026-08-23-quest-b2-polish.md) · [`SESSION-2026-08-23-explore-hub2.md`](SESSION-2026-08-23-explore-hub2.md)
+3. **Ctrl+S** place → подтвердить SoT
+4. Выбрать режим: **пауза** · **polish-only** · или **B1 PvP slice 3** (явная команда)
+5. (Опц. регресс) E1 sanity — [`E1-HANDS-BUFFER-LOG.md`](E1-HANDS-BUFFER-LOG.md)
 
 ## Где остановились
 
@@ -20,6 +20,7 @@
 | **E1 buffer** | **PASS (user hands)** |
 | **Q3 slice 3** | **COMPLETE** |
 | **Month W1–W4** | **PASS** |
+| **W3-B essences WhyTag** | **COMPLETE** — MCP + **PASS (user hands)** — [`SESSION-2026-08-23-w3b-essences-whytag.md`](SESSION-2026-08-23-w3b-essences-whytag.md) |
 
 ## Backlog B
 

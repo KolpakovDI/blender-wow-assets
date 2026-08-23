@@ -41,10 +41,10 @@ ItemCatalog.ById = {
 	[310] = {Id = 310, Name = "Звезда трансформации I", Category = "SanctumMaterial", SellPrice = 0, Unsellable = true, Description = "Сдвигает веса Unique и силу синтеза", WhyTag = "синтез · +сила", CombatUtility = false},
 	[311] = {Id = 311, Name = "Звезда трансформации II", Category = "SanctumMaterial", SellPrice = 0, Unsellable = true, Description = "Сильнее Звезды I", WhyTag = "синтез · +сила", CombatUtility = false},
 	[312] = {Id = 312, Name = "Звезда трансформации III", Category = "SanctumMaterial", SellPrice = 0, Unsellable = true, Description = "Макс. тир; редкий лут Resonant-дезинтеграции", WhyTag = "синтез · +сила", CombatUtility = false},
-	[320] = {Id = 320, Name = "Эссенция Огня", Category = "SanctumMaterial", Element = "Fire", SellPrice = 0, Unsellable = true, Description = "Дезинтеграция / квесты Святилища", CombatUtility = false},
-	[321] = {Id = 321, Name = "Эссенция Земли", Category = "SanctumMaterial", Element = "Earth", SellPrice = 0, Unsellable = true, Description = "Дезинтеграция / квесты Святилища", CombatUtility = false},
-	[322] = {Id = 322, Name = "Эссенция Ветра", Category = "SanctumMaterial", Element = "Wind", SellPrice = 0, Unsellable = true, Description = "Дезинтеграция / квесты Святилища", CombatUtility = false},
-	[323] = {Id = 323, Name = "Эссенция Воды", Category = "SanctumMaterial", Element = "Water", SellPrice = 0, Unsellable = true, Description = "Дезинтеграция / квесты Святилища", CombatUtility = false},
+	[320] = {Id = 320, Name = "Эссенция Огня", Category = "SanctumMaterial", Element = "Fire", SellPrice = 0, Unsellable = true, WhyTag = "эссенция · синтез · огонь", Description = "Дезинтеграция / квесты Святилища", CombatUtility = false},
+	[321] = {Id = 321, Name = "Эссенция Земли", Category = "SanctumMaterial", Element = "Earth", SellPrice = 0, Unsellable = true, WhyTag = "эссенция · синтез · земля", Description = "Дезинтеграция / квесты Святилища", CombatUtility = false},
+	[322] = {Id = 322, Name = "Эссенция Ветра", Category = "SanctumMaterial", Element = "Wind", SellPrice = 0, Unsellable = true, WhyTag = "эссенция · синтез · ветер", Description = "Дезинтеграция / квесты Святилища", CombatUtility = false},
+	[323] = {Id = 323, Name = "Эссенция Воды", Category = "SanctumMaterial", Element = "Water", SellPrice = 0, Unsellable = true, WhyTag = "эссенция · синтез · вода", Description = "Дезинтеграция / квесты Святилища", CombatUtility = false},
 }
 
 -- Copper shop + gold sinks (201–203) + Kami shard for Sanctum loop

@@ -27,6 +27,6 @@ Dex Resonant + SpiritDetail: `[R]`, `vid #parentIds`, tier звёзд (StarScore
 - Игрок видит Resonant прогресс в Dex и SpiritDetail — **PASS** (код + hands)
 - Month wrap — [`SESSION-2026-08-23-month-w4-wrap.md`](SESSION-2026-08-23-month-w4-wrap.md)
 
-## Backlog (не W3 scope)
+## Backlog (закрыт)
 
-- Опц. W3-B: essences 320–323 в bag `GetWhyTag` после disintegrate → октябрь
+- ~~W3-B essences 320–323 bag WhyTag~~ → [`SESSION-2026-08-23-w3b-essences-whytag.md`](SESSION-2026-08-23-w3b-essences-whytag.md) **PASS (MCP)**

@@ -6,6 +6,12 @@
 
 ## [Unreleased]
 
+### W3-B — essences 320–323 bag WhyTag (2026-08-23) **COMPLETE**
+- **`ItemCatalog`:** `WhyTag` для эссенций 320–323 — `эссенция · синтез · огонь/земля/ветер/вода`
+- **`BagContentUI`:** без правок — detail chip через `GetWhyTag` уже wired
+- MCP Edit+Play: `GetWhyTag` + bag chip simulate + inventory grant **PASS** — [`SESSION-2026-08-23-w3b-essences-whytag.md`](SESSION-2026-08-23-w3b-essences-whytag.md)
+- **Hands exit:** **PASS (user hands, self-reported 2026-08-23)** — owner «pass» — disintegrate → сумка → detail chip 320–323
+
 ### B2 Explore hub 2 — второй маршрут Haven→Combat (2026-08-23) **COMPLETE**
 - **`OtakuHavenBuilder.EnsureExploreHub2Route`:** восточный обход Genkan → ScoutPost → Combat — 3 синих wayfind-знака + гравийная тропа `ExploreHub2Trail` (Ensure*, без full rebuild)
 - **`WorldLootService`:** highlight лёд #102 @ (38,2,52) «Ледяной кристалл · обход»
