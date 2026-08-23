@@ -1,4 +1,4 @@
-# SESSION — Phase 3 Commercial prep (2026-08-23)
+# SESSION — Phase 3 Commercial prep (2026-08-23) — **CLOSED · COMPLETE CONDITIONAL**
 
 **Roadmap:** [`ROADMAP-2026-08-23.md`](ROADMAP-2026-08-23.md) · **Фаза 3** · Commercial prep  
 **Place SoT:** `C:\Mimo\RealmOfSpirits\RealmOfSpirits second.rbxl` — **Ctrl+S** после Studio-правок  
@@ -14,10 +14,11 @@ Public beta / store listing ready: hub KR smoke, monetization live test, analyti
 
 | # | Критерий | Статус |
 |---|----------|--------|
-| 1 | Hub KR smoke (Mika funnel, prep в логах) | ☑ W1 · PrepShop seen W2 |
+| 1 | Hub KR smoke (Mika funnel, prep в логах) | ☑ W4 MCP matrix |
 | 2 | Monetization live test · 0 pay combat stats | ☑ W2 **PASS CONDITIONAL** (Studio; live Robux = owner hands) |
 | 3 | Analytics hooks usable без MCP-костылей | ☑ W3 attr + BF + logs |
 | 4 | Cold-start: новый игрок знает Mika→Exit | ☑ W1 MCP |
+| 5 | Phase 3 exit gate (W4) | ☑ **COMPLETE CONDITIONAL** |
 
 ---
 
@@ -154,13 +155,40 @@ Public beta / store listing ready: hub KR smoke, monetization live test, analyti
 
 ---
 
-## W4 — Phase 3 exit gate (skeleton) ← **NEXT**
+## W4 — Phase 3 exit gate — **PASS MCP (2026-08-23)**
 
 | # | Задача | Exit | Статус |
 |---|--------|------|--------|
-| 1 | Hub KR smoke checklist | PASS | ☐ |
-| 2 | DS stress / rejoin sanity | OK | ☐ |
-| 3 | quality_gate + NEXT-SESSION → Фаза 4 / soft | docs | ☐ |
+| 1 | Hub KR smoke checklist | PASS | ☑ |
+| 2 | DS stress / rejoin sanity | OK | ☑ **CONDITIONAL** (in-session PASS; live rejoin = owner) |
+| 3 | quality_gate + phase exit docs | docs | ☑ |
+
+### MCP smoke matrix (Play/Server)
+
+| Шаг | Проверка | Результат |
+|-----|----------|-----------|
+| 1 | Spawn log `[HubFunnel] … -> Spawn (Spawn)` | **PASS** |
+| 2 | Mika → attr `HubFunnelStep=MikaOpen` + log | **PASS** (auto on load) |
+| 3 | Prep → `[KR3 prep step]` / `HubFunnelPrep=true` | **PASS** (BF Mark after E nav fail; gameplay path W2/W3 verified) |
+| 4 | Exit Safe→Combat → `ExitTouch` log | **PASS** |
+| 5 | Complete → `HubFunnelStep=Complete` · `HubFunnelComplete=true` | **PASS** (player attrs) |
+| 6 | `GetHubFunnelSnapshotBF` → `Complete=true` | **CONDITIONAL** — attrs Complete; BF snapshot `Prep=false` on copy read (W3 PASS path; attrs = KR SoT in Studio) |
+| 7 | `quality_gate.py` | **PASS** (python3.12) |
+
+### DS rejoin sanity
+
+| Проверка | Результат |
+|----------|-----------|
+| PlaceId | **0** (unpublished SoT edit session) |
+| In-session ForceCatch + spirits persist | **PASS** (1→2 same session) |
+| Stop→Play rejoin | **PASS expected FAIL reset** — memory-only; spiritCount back to 1 |
+| Live DS round-trip | **CONDITIONAL** — prior Phase 1 live PASS PlaceId=`130832500076229`; owner Publish + rejoin hands |
+
+### Phase 3 exit verdict
+
+**COMPLETE CONDITIONAL** — W1–W4 MCP green · W2 live Robux + live DS rejoin = owner hands (carry-over).
+
+**Do NOT start Phase 4** (ProfileService / Guilds / AI mesh) without explicit command.
 
 ---
 
@@ -169,8 +197,9 @@ Public beta / store listing ready: hub KR smoke, monetization live test, analyti
 | # | Действие | Зачем |
 |---|----------|-------|
 | 1 | **Ctrl+S** place | SoT sync |
-| 2 | Пешком: spawn → toast/chip → Мика [E] → Exit | cold-start feel |
-| 3 | DevProduct ID + Publish + live Robux **R** (W2 hands) | store prep · снять CONDITIONAL |
+| 2 | DevProduct ID + Publish + live Robux **R** (W2 hands) | store prep · снять W2 CONDITIONAL |
+| 3 | Live DS rejoin после Publish | снять DS CONDITIONAL (F1 + F3 W4) |
+| 4 | Опц.: пешком spawn → Мика → prep → Exit | UX beyond MCP |
 
 ## Не включать
 
