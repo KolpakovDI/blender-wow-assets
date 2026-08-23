@@ -12,7 +12,8 @@
 - **W4 DS sanity:** in-session ForceCatch persist **PASS**; Stop→Play unpublished memory reset **expected**; live rejoin **CONDITIONAL** (PlaceId=0; prior live PASS Phase 1)
 - **`GetHubFunnelSnapshotBF`:** attrs `HubFunnelComplete=true`; BF snapshot copy-read `Prep=false` in MCP session — attrs = Studio KR SoT (W3 path verified)
 - **`quality_gate.py`:** **PASS** (python3.12)
-- **NEXT:** ждать явной команды на Фазу 4; не стартовать ProfileService / Guilds / AI mesh
+- **NEXT:** owner hands (lift CONDITIONAL) **или** явная команда на Фазу 4 / backlog; «дальше» без уточнения ≠ автостарт Ф4
+- **Exit wrap:** [`SESSION-2026-08-23-phase3-exit-wrap.md`](SESSION-2026-08-23-phase3-exit-wrap.md) · `NEXT-SESSION.md` routing table
 - **Tracker:** [`SESSION-2026-08-23-phase3-commercial-prep.md`](SESSION-2026-08-23-phase3-commercial-prep.md) — **closed**
 
 ### Phase 3 W3 — analytics polish PASS MCP (2026-08-23)

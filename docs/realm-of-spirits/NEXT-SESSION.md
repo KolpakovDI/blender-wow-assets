@@ -1,22 +1,32 @@
 # NEXT SESSION
 
-**Статус:** 2026-08-23 — Фаза 1 **COMPLETE** · Фаза 2 **COMPLETE** · Фаза 3 **COMPLETE CONDITIONAL** (W1 hub **PASS** · W2 monetization **PASS CONDITIONAL** · W3 analytics **PASS MCP** · W4 exit **PASS MCP**)
-**Следующий фокус:** **ждать явной команды** — не стартовать Фазу 4 (ProfileService / Guilds / AI mesh) · опционально owner hands ниже
+**Статус:** 2026-08-23 — Фаза 1 **COMPLETE** · Фаза 2 **COMPLETE** · Фаза 3 **COMPLETE CONDITIONAL** (W1–W4 MCP green)
+**Следующий фокус:** **owner hands** (снять CONDITIONAL) **или** явная команда на backlog / Фазу 4
 
-**Roadmap:** [`ROADMAP-2026-08-23.md`](ROADMAP-2026-08-23.md) · **Tracker:** [`SESSION-2026-08-23-phase3-commercial-prep.md`](SESSION-2026-08-23-phase3-commercial-prep.md) — **closed**
+**Roadmap:** [`ROADMAP-2026-08-23.md`](ROADMAP-2026-08-23.md) · **Exit wrap:** [`SESSION-2026-08-23-phase3-exit-wrap.md`](SESSION-2026-08-23-phase3-exit-wrap.md)
 
 ## Старт сессии (порядок жёсткий)
 
 1. **Ctrl+S** place → подтвердить SoT
-2. Если явная команда на **Фазу 4** — читать ROADMAP § Phase 4 + `ExpansionGate`
-3. Иначе: bugfix-only · owner hands · или backlog по команде (106 / B1 PvP)
-4. Не начинать ProfileService / Guilds / AI mesh / Haven décor marathon без явной команды
+2. **Приоритет по умолчанию:** owner hands ниже (Publish · DevProduct · live DS rejoin · опц. live Robux)
+3. **Bugfix-only** — если что-то красное в play smoke
+4. **Фаза 4 / 106 / B1** — только по **явной** команде (см. таблицу «Выбор владельца»)
+5. Не начинать ProfileService live / Guilds / AI mesh / Haven décor marathon без явной команды + `ExpansionGate`
+
+## Выбор владельца (что значит «дальше»)
+
+| Команда / намерение | Действие агента |
+|---------------------|-----------------|
+| Owner hands / Publish / live Robux / DS | Чеклист § Owner hands · Studio MCP smoke после Publish |
+| «Фаза 4» / «ProfileService prep» / «Guilds» | ROADMAP § Phase 4 scout/plan — **нет W1**; первый срез только после unlock gate + выбор трека |
+| «106» / «B1» / «Haven décor» | Только named backlog · один track |
+| «дальше» (без уточнения) | **Owner hands** или pause — **не** автостарт Ф4 |
 
 ## Где остановились
 
 | Область | Состояние |
 |---------|-----------|
-| **Фаза 3** | **COMPLETE CONDITIONAL** — commercial prep exit W4 **PASS MCP** 2026-08-23 |
+| **Фаза 3** | **COMPLETE CONDITIONAL** — W4 exit **PASS MCP** 2026-08-23 |
 | **Фаза 3 W4** | Hub KR smoke · DS in-session · quality_gate · docs |
 | **Фаза 3 W3** | **PASS MCP** — Complete attr/log · Prep `[KR3 prep step]` · `GetHubFunnelSnapshotBF` |
 | **Фаза 3 W2** | **PASS CONDITIONAL** — copper gacha cosmetics-only MCP; live Robux = owner |
@@ -38,7 +48,7 @@
 
 | # | Срез | Когда |
 |---|------|-------|
-| **Фаза 4** | ProfileService · Guilds · AI mesh · scale | Только по явной команде |
+| **Фаза 4** | ProfileService · Guilds · AI mesh · scale | Явная команда + `ExpansionGate` + scout (нет W1 в ROADMAP) |
 | **106 polish** | Альтернативный track | Только по явной команде |
 | **B1** | PvP slice 3 | Только по явной команде |
 
@@ -50,8 +60,8 @@
 
 ## Не включать (до явной команды)
 
-Allow* · Guilds · ProfileService live · Haven décor marathon · PvP combat stats · два major track параллельно · **Фаза 4 без команды**
+Allow* · Guilds · ProfileService live · Haven décor marathon · PvP combat stats · два major track параллельно · **Фаза 4 без явной команды**
 
 ## Архив
 
-Phase 1–2 **COMPLETE** · Phase 3 **COMPLETE CONDITIONAL** · [`ROADMAP-2026-08-23.md`](ROADMAP-2026-08-23.md)
+Phase 1–2 **COMPLETE** · Phase 3 **COMPLETE CONDITIONAL** · [`ROADMAP-2026-08-23.md`](ROADMAP-2026-08-23.md) · exit wrap [`SESSION-2026-08-23-phase3-exit-wrap.md`](SESSION-2026-08-23-phase3-exit-wrap.md)
