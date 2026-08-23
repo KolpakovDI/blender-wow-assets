@@ -1643,7 +1643,7 @@ function OtakuHavenBuilder.Build()
 			end
 		end
 		if d:IsA("BillboardGui") then
-			if d:GetAttribute("HubWayfind") == true or d.Name == "ExitWayfindBillboard" or d.Name == "DuelWayfindBillboard" or d.Name == "ExploreHub2WayfindBillboard" then
+			if d:GetAttribute("HubWayfind") == true or d.Name == "ExitWayfindBillboard" or d.Name == "DuelWayfindBillboard" or d.Name == "ExploreHub2WayfindBillboard" or d.Name == "ChestClusterWayfindBillboard" then
 				d.AlwaysOnTop = true
 				d.Enabled = true
 			else
@@ -1698,6 +1698,8 @@ function OtakuHavenBuilder.Build()
 	OtakuHavenBuilder.EnsureDuelWayfind(haven)
 	-- B2 Explore hub 2: второй маршрут Haven→Combat (восточный обход)
 	OtakuHavenBuilder.EnsureExploreHub2Route(haven)
+	-- F2 scout line W1: wayfind Exit → ChestCluster (quest 109)
+	OtakuHavenBuilder.EnsureChestClusterWayfind(haven)
 
 	return haven
 end
@@ -1929,6 +1931,86 @@ function OtakuHavenBuilder.EnsureExploreHub2Route(haven)
 		end
 	end
 
+	return folder
+end
+
+-- F2 scout line W1: wayfind Exit → ChestCluster (quest 109)
+function OtakuHavenBuilder.EnsureChestClusterWayfind(haven)
+	haven = haven or workspace:FindFirstChild("OtakuHaven")
+	if not haven then
+		return nil
+	end
+	local old = haven:FindFirstChild("ChestClusterWayfind")
+	if old then
+		old:Destroy()
+	end
+	local folder = Instance.new("Folder")
+	folder.Name = "ChestClusterWayfind"
+	folder.Parent = haven
+
+	local exitC = ZoneConfig.Zones.Exit.Center
+	local chestC = (ZoneConfig.QuestLocations and ZoneConfig.QuestLocations.ChestCluster and ZoneConfig.QuestLocations.ChestCluster.Center)
+		or Vector3.new(130, 1, 20)
+	local look = Vector3.new(chestC.X - exitC.X, 0, chestC.Z - exitC.Z)
+	if look.Magnitude < 1 then
+		look = Vector3.new(1, 0, 0)
+	else
+		look = look.Unit
+	end
+	local pos = Vector3.new(exitC.X, 0.2, exitC.Z) + look * 7
+
+	local pole = makePart({
+		Name = "ChestClusterWayfindPole",
+		Size = Vector3.new(0.35, 5.0, 0.35),
+		Position = pos + Vector3.new(0, 2.5, 0),
+		Color = Color3.fromRGB(90, 70, 40),
+		Material = Enum.Material.Metal,
+		CanCollide = false,
+		Parent = folder,
+	})
+	local board = makePart({
+		Name = "ChestClusterWayfindBoard",
+		Size = Vector3.new(7.0, 2.0, 0.28),
+		CFrame = CFrame.lookAt(pole.Position + Vector3.new(0, 2.1, 0) + look * 0.25, pole.Position + Vector3.new(0, 2.1, 0) + look),
+		Color = Color3.fromRGB(55, 42, 28),
+		Material = Enum.Material.SmoothPlastic,
+		CanCollide = false,
+		Parent = folder,
+	})
+	local gui = Instance.new("SurfaceGui")
+	gui.Face = Enum.NormalId.Front
+	gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+	gui.PixelsPerStud = 40
+	gui.Parent = board
+	local text = Instance.new("TextLabel")
+	text.Size = UDim2.fromScale(1, 1)
+	text.BackgroundTransparency = 1
+	text.Text = "Сундучный грот →"
+	text.TextColor3 = Color3.fromRGB(255, 210, 120)
+	text.Font = Enum.Font.GothamBold
+	text.TextScaled = true
+	text.Parent = gui
+
+	local bb = Instance.new("BillboardGui")
+	bb.Name = "ChestClusterWayfindBillboard"
+	bb.Size = UDim2.new(0, 300, 0, 56)
+	bb.StudsOffset = Vector3.new(0, 3.6, 0)
+	bb.AlwaysOnTop = true
+	bb.MaxDistance = 200
+	bb:SetAttribute("HubWayfind", true)
+	bb.Parent = board
+	local lbl = Instance.new("TextLabel")
+	lbl.Size = UDim2.fromScale(1, 1)
+	lbl.BackgroundColor3 = Color3.fromRGB(45, 35, 22)
+	lbl.BackgroundTransparency = 0.2
+	lbl.Text = "ChestCluster · восток от Exit"
+	lbl.TextColor3 = Color3.fromRGB(255, 220, 150)
+	lbl.Font = Enum.Font.GothamBold
+	lbl.TextScaled = true
+	lbl.Parent = bb
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 8)
+	corner.Parent = lbl
 	return folder
 end
 

@@ -6,6 +6,28 @@
 
 ## [Unreleased]
 
+### Phase 2 W1 — scout side quest 109 ChestCluster PASS (2026-08-23)
+- **Track:** side **108–112** scout line — W1 deliverable **109** «Сундучный грот» VisitZone **ChestCluster**
+- **SoT Studio:** `ZoneConfig.QuestLocations` (6 pads); `WorldSpawner.BuildQuestLocations()`; `ZoneSystem` VisitZone + detail keys; inline quests **107–112** в `QuestSystem`; `EnsureChestClusterWayfind` у Exit; QuestUI Mika 107–109
+- **MCP smoke Play/Server:** seed Q1 → accept **109** → VisitZone ChestCluster → turn-in **PASS**; W2 regress accept **115** **PASS**; QuestLocations count=6
+- **Mirror:** `OtakuHavenBuilder.EnsureChestClusterWayfind`; `QuestCatalog` 108–112 уже были
+- **Tracker:** [`SESSION-2026-08-23-phase2-scout-side.md`](SESSION-2026-08-23-phase2-scout-side.md) · **NEXT:** F2 W2 smoke **108** + **110**
+
+### Phase 1 W4 — publish + DS rejoin + hub funnel PASS (2026-08-23)
+- **W4 exit:** **PASS MCP + HANDS publish/rejoin** — in-session DS/quest smoke ☑; hub QuestMaster+ShopExit+ExitZone ☑; Stop→Play unpublished = memory reset (ожидаемо)
+- **Publish:** Edit `PlaceId=0`; prior live **PASS** PlaceId=`130832500076229` — hands steps в [`SESSION-2026-08-23-phase1-stabilization.md`](SESSION-2026-08-23-phase1-stabilization.md) § W4
+- **DS rejoin MCP:** ForceCatch + GrantItem 320–321 + Q1 seed + side **113** accept→Exit→turnIn; spirits/inv persist in-session
+- **Hub funnel:** HubFunnel Mika; no OtakuHavenBuilder soft-lock blockers
+- **`quality_gate.py`:** **PASS** (W4 repeat, python3.12)
+- **Phase 1 COMPLETE** → soft launch ready; **NEXT:** Фаза 2 content (108–112 или 106)
+
+### Phase 1 W3 — bugfix buffer PASS (2026-08-23)
+- **W3 exit:** **PASS (no fixes required)** — FAIL/P0 из W1–W2 не найдено; hotfix не потребовался
+- **W3-B non-regress:** essences 320–323 `GetWhyTag` + grant + chip `· эссенция · синтез · …` — Edit+Play MCP **PASS**
+- **MCP core smoke Play/Server:** **PASS** — SkillCatalog, ItemCatalog, KamiSanctumSystem, QuestMaster, OtakuHaven, BattleArena, PvP/Trade require OK
+- **`quality_gate.py`:** **PASS** (W3 repeat, python3.12)
+- **NEXT-SESSION:** top = **Phase 1 W4** publish + DS rejoin
+
 ### Phase 1 W2 — core regression MCP PASS (2026-08-23)
 - **W2 regression MCP Play/Server:** **PASS** — Resonant SeedQA+preview+Disintegrate; Q304 OpenKamiSanctum; Q305 KamiDisintegrate; B2 115→116; side 113→114 — [`SESSION-2026-08-23-phase1-stabilization.md`](SESSION-2026-08-23-phase1-stabilization.md)
 - **Trade/duel:** modules require **PASS**; 2p confirm + rematch W/L остаётся **CONDITIONAL** (hands)
