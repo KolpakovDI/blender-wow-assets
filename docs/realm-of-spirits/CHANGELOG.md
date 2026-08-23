@@ -11,7 +11,22 @@
 - **Owner decision:** defer **Publish**, live DS rejoin, live Robux, and `AllowProfileService` cutover while project is raw
 - **Valid now:** unpublished Studio Edit+Play · MCP smoke · Mock/shadow ProfileService · `quality_gate` · git mirrors
 - **Deferred (owner unlock):** Publish PlaceId≠0 · live DS stress · DevProduct live **R** · W4 FlipChecklist · live PS on join · AllowGuilds
-- **Default next (dev-only):** F4 **W7** join restore `data.Guild` → in-memory membership — see [`NEXT-SESSION.md`](NEXT-SESSION.md)
+- **Default next (dev-only):** F4 **W9** guild UI panel / bank prep — see [`NEXT-SESSION.md`](NEXT-SESSION.md)
+
+### Phase 4 W8 — Guild leave persist + roster merge PASS (2026-08-23)
+
+- **`GuildSystem`:** `ClearGuildMembership` · `Leave` persist `data.Guild=nil` · `mergeGuildMetadata` · `SmokeGuildLeaveMock` · `SmokeRosterMergeMock` · phase `F4-W8-guild-leave-merge`
+- **Policy:** leave/restore **do not** require `AllowGuilds`; `CreateOrJoin` / `/guild` still fail-closed
+- **MCP Edit smoke:** Leave Success=true DataGuildNil=true · Merge RosterCount=2 SharedGuildCount=1 · GateAllows=false · `quality_gate` green
+- **NOT in W8:** AllowGuilds · guild DS · UI panel · bank/warfare · Publish
+
+### Phase 4 W7 — Guild join restore PASS (2026-08-23)
+
+- **`GuildSystem`:** `RestoreFromPlayerData` · `RestoreMembershipFromGuildTable` · `SmokeJoinRestoreMock` · phase `F4-W7-guild-restore`
+- **Policy:** restore **does not** require `AllowGuilds` (in-memory continuity); `CreateOrJoin` / `/guild` still fail-closed
+- **Hooks:** `GameManager` after `LoadData` · `GuildSystem.Start` deferred restore when `_G.GetPlayerData` ready
+- **MCP Edit smoke:** Restored=true · Role=Officer · RosterCount=1 · CreateOrJoinBlocked=true · GateAllows=false · `quality_gate` green
+- **NOT in W7:** AllowGuilds · guild DS · UI panel · bank/warfare · Publish
 
 ### Phase 4 W6 — Guild MVP design + in-memory roster PASS (2026-08-23)
 

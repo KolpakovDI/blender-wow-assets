@@ -2363,6 +2363,16 @@ local function OnPlayerAdded(player)
 		if _G.InitQuestSystemForPlayer then
 			_G.InitQuestSystemForPlayer(player, data)
 		end
+		do
+			local okGuild, GuildSystem = pcall(function()
+				return require(script.Parent:WaitForChild("GuildSystem"))
+			end)
+			if okGuild and GuildSystem and type(GuildSystem.RestoreFromPlayerData) == "function" then
+				pcall(function()
+					GuildSystem.RestoreFromPlayerData(player, data)
+				end)
+			end
+		end
 		local leveledUp, _, rewards = levelingSystem:CheckLevelUp(data)
 		if leveledUp then
 			for _, reward in ipairs(rewards) do

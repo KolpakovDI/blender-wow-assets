@@ -29,7 +29,7 @@
 | `ExpansionGate` | `RS.RealmOfSpirits` | All Allow*=false defaults |
 | `ProfileServiceAdapter` | `SSS.RealmOfSpirits` | Stub → **W1 audit API** |
 | `DataStoreManager` | `SSS.RealmOfSpirits` | Live backend `RealmOfSpirits_v2` + session lock |
-| `GuildSystem` | `SSS.RealmOfSpirits` | W6 in-memory roster + fail-closed CreateOrJoin |
+| `GuildSystem` | `SSS.RealmOfSpirits` | W8 leave persist + roster merge; W7 join restore; CreateOrJoin fail-closed |
 | `SpiritMeshGenerationService` | `SSS.RealmOfSpirits` | Online path blocked |
 | `PvPDuelSystem` | `SSS.RealmOfSpirits` | Fair duel OK; `pvpExtraAllowed()` for rated |
 
@@ -284,6 +284,72 @@ GetMvpDesign → InMemoryOnly=true FutureStore=RealmOfSpirits_Guilds_v1
 **W6 NOT in scope:** AllowGuilds · live guild DS · UI panel · bank/warfare · B1 · 106 · Haven décor
 
 **Next after W6:** W7 join restore `data.Guild` → in-memory membership (still gate OFF = no create).
+
+---
+
+## W7 — Join restore `data.Guild` → in-memory — **PASS (dev-only, 2026-08-23)**
+
+**Scope:** restore persisted `Guild` into session membership/roster; **no** `AllowGuilds` for restore; create stays fail-closed; **no** guild DS · **no** Publish.
+
+| # | Задача | Статус |
+|---|--------|--------|
+| 1 | `RestoreMembershipFromGuildTable` / `RestoreFromPlayerData` (gate-independent) | ☑ |
+| 2 | `GameManager` hook after `LoadData` | ☑ |
+| 3 | `GuildSystem.Start` defer restore when data ready | ☑ |
+| 4 | `SmokeJoinRestoreMock` (sentinel restore, create still blocked) | ☑ |
+| 5 | Phase/audit → `F4-W7-guild-restore` | ☑ |
+| 6 | Studio sync + MCP Edit smoke | ☑ |
+| 7 | `quality_gate.py` | ☑ green |
+| 8 | Docs: NEXT / ROADMAP / CHANGELOG | ☑ |
+
+**Policy note:** restore is intentional **without** `AllowGuilds` so continuity testing works in-memory while `/guild` + `CreateOrJoin` remain gated.
+
+**MCP smoke (Edit, unpublished):**
+
+```
+GetGuildAudit → Phase=F4-W7-guild-restore GateAllows=false AllowGuildsAttr=false RestoreRequires=false CreateRequires=true
+SmokeGuildRosterMock → Success=true RosterCount=2 CreateOrJoinBlocked=true
+SmokeJoinRestoreMock → Success=true Restored=true Role=Officer RosterCount=1 CreateOrJoinBlocked=true NoGuildRejected=true
+GetMvpDesign → AllowGuildsRequiredForRestore=false AllowGuildsRequiredForCreate=true
+```
+
+**W7 NOT in scope:** AllowGuilds · live guild DS · UI panel · bank/warfare · B1 · 106 · Haven décor
+
+**Next after W7:** W8 Leave persist + multi-player roster merge (still gate OFF = no create).
+
+---
+
+## W8 — Leave persist + multi-player roster merge — **PASS (dev-only, 2026-08-23)**
+
+**Scope:** `/guildleave` + `Leave` clear `data.Guild` + membership; same guild Id restores merge roster; **no** `AllowGuilds` for leave/restore; create stays fail-closed; **no** guild DS · **no** Publish.
+
+| # | Задача | Статус |
+|---|--------|--------|
+| 1 | `ClearGuildMembership` — gate-independent leave + `data.Guild = nil` | ☑ |
+| 2 | `Leave(player)` wraps clear + attributes + remote | ☑ |
+| 3 | `mergeGuildMetadata` — multi-player restore into shared `guildsById` | ☑ |
+| 4 | `SmokeGuildLeaveMock` (sentinel leave, gate OFF) | ☑ |
+| 5 | `SmokeRosterMergeMock` (two restores → roster=2) | ☑ |
+| 6 | Phase/audit → `F4-W8-guild-leave-merge` | ☑ |
+| 7 | Studio sync + MCP Edit smoke | ☑ |
+| 8 | `quality_gate.py` | ☑ green |
+| 9 | Docs: NEXT / ROADMAP / CHANGELOG | ☑ |
+
+**Policy note:** Leave and restore remain **without** `AllowGuilds`; only `CreateOrJoin` / `/guild` require gate.
+
+**MCP smoke (Edit, unpublished):**
+
+```
+GetGuildAudit → Phase=F4-W8-guild-leave-merge GateAllows=false LeaveRequiresAllowGuilds=false CreateRequiresAllowGuilds=true
+SmokeGuildLeaveMock → Success=true DataGuildNil=true RosterCountAfter=0 CreateOrJoinBlocked=true
+SmokeRosterMergeMock → Success=true RosterCount=2 SharedGuildCount=1 LeaderUserId=900000401 CreateOrJoinBlocked=true
+SmokeJoinRestoreMock → Success=true (regression)
+SmokeGuildRosterMock → Success=true (regression)
+```
+
+**W8 NOT in scope:** AllowGuilds · live guild DS · UI panel · bank/warfare · B1 · 106 · Haven décor
+
+**Next after W8:** W9 guild UI panel / bank prep (still gate OFF = no create/live DS).
 
 ---
 
