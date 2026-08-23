@@ -6,6 +6,12 @@
 
 ## [Unreleased]
 
+### Phase 1 W1 — E1 owner skip (2026-08-23)
+- **E1-HANDS-BUFFER-LOG:** секция **Owner skip** — дата 2026-08-23; formal n≥10 / ≥90% **не проводился**; fake Run# rows не добавлены
+- **W1 exit:** **OWNER SKIP** (не formal ≥90% gate); prior self-reported PASS (2026-08-23) принят
+- **Formal KR1 gate:** **CONDITIONAL** — задокументирован owner skip
+- **SESSION / NEXT-SESSION:** W1 closed → top = **Phase 1 W2** regression checklist
+
 ### Phase 1 Stabilization — старт (2026-08-23)
 - **Roadmap:** [`ROADMAP-2026-08-23.md`](ROADMAP-2026-08-23.md) — полный анализ проекта, оценки сроков, фазы 0–4
 - **Tracker:** [`SESSION-2026-08-23-phase1-stabilization.md`](SESSION-2026-08-23-phase1-stabilization.md) — W1–W4 checklist

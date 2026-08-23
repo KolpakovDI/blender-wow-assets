@@ -15,14 +15,14 @@ Invite-only soft launch **без P0**: стабилизация, формаль�
 | # | Критерий | Статус |
 |---|----------|--------|
 | 1 | 0 open P0 | ☐ |
-| 2 | E1: n≥10 ≥90% **или** documented owner skip | ☐ |
+| 2 | E1: n≥10 ≥90% **или** documented owner skip | ☑ **OWNER SKIP** 2026-08-23 (formal KR1 **CONDITIONAL**) |
 | 3 | `quality_gate.py` green | ☑ PASS 2026-08-23 |
 | 4 | DS rejoin smoke PASS | ☐ |
 | 5 | Регресс Resonant + Q304/305 + trade/duel + B2 115→116 | ☐ |
 
 ---
 
-## W1 — E1 buffer (старт 23.08.2026)
+## W1 — E1 buffer — **OWNER SKIP (2026-08-23)**
 
 **Фокус:** 10 прогонов full cycle **или** owner skip path.
 
@@ -30,15 +30,15 @@ Invite-only soft launch **без P0**: стабилизация, формаль�
 |---|--------|--------|
 | 1 | Таблица Run#1–10 в [`E1-HANDS-BUFFER-LOG.md`](E1-HANDS-BUFFER-LOG.md) готова | ☑ |
 | 2 | MCP core smoke (modules load) | ☑ PASS 2026-08-23 |
-| 3 | Hands Run#1–10 заполнены **или** owner skip задокументирован | ☐ |
-| 4 | PASS rate ≥90% (≤1 FAIL на 10) | ☐ |
-| 5 | ≥70% runs с skills 1+2 | ☐ |
+| 3 | Hands Run#1–10 заполнены **или** owner skip задокументирован | ☑ **OWNER SKIP** 2026-08-23 |
+| 4 | PASS rate ≥90% (≤1 FAIL на 10) | ☐ skipped (owner skip) |
+| 5 | ≥70% runs с skills 1+2 | ☐ skipped (owner skip) |
 
-**Owner skip path:** если owner подтверждает «pass без n≥10» — записать дату, причину, ссылку на SESSION; formal gate остаётся CONDITIONAL.
+**Owner skip (2026-08-23):** owner «owner skip» — формальный n≥10 не проводился; prior self-reported PASS (2026-08-23) принят. Formal KR1 gate остаётся **CONDITIONAL**. → **W2 regress**.
 
 ---
 
-## W2 — Регресс ядра
+## W2 — Регресс ядра **(следующий фокус)**
 
 **Фокус:** Resonant loop + квесты + social + explore route.
 
@@ -87,3 +87,4 @@ Allow* · Guilds · ProfileService live · AI mesh online · Haven décor marath
 | 2026-08-23 | Старт Фазы 1; ROADMAP + SESSION + NEXT-SESSION | W1 in progress |
 | 2026-08-23 | `quality_gate.py` (python3.12) | **PASS** — all 5 checks OK |
 | 2026-08-23 | MCP core smoke Play/Server | **PASS** — SkillCatalog, ItemCatalog, KamiSanctumSystem, QuestMaster, OtakuHaven, BattleArena, PvP/Trade require OK |
+| 2026-08-23 | Owner skip E1 formal n≥10 | **OWNER SKIP** — W1 closed; formal KR1 **CONDITIONAL**; → W2 regress |

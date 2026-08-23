@@ -70,6 +70,19 @@
 
 ---
 
+## Owner skip (2026-08-23)
+
+| Поле | Значение |
+|------|----------|
+| Дата | **2026-08-23** |
+| Решение | **OWNER SKIP** — формальный n≥10 / ≥90% gate **не пройден** |
+| Причина | Owner decision to skip formal n≥10; prior self-reported PASS (2026-08-23) принят как достаточный сигнал для W1 exit |
+| Run-by-run | Таблица Run#1…10 **не заполнялась** — fake rows **не добавлялись** |
+| Formal KR1 gate | **CONDITIONAL** — см. [`SESSION-2026-08-23-phase1-stabilization.md`](SESSION-2026-08-23-phase1-stabilization.md) |
+| W1 exit | **OWNER SKIP** (не formal ≥90% gate) → переход к **Phase 1 W2** |
+
+---
+
 ## Таблица прогонов
 
 | Run# | Date | F→battle | E→exit | skills 1/2 | Resonant/Sanctum | PASS/FAIL | Notes |
@@ -120,11 +133,13 @@
 
 ---
 
-## Итог (заполнить после n≥10)
+## Итог
 
 | Поле | Значение |
 |------|----------|
 | Даты прогонов | **2026-08-23** (user summary; run-by-run — n/a) |
-| PASS / FAIL | **PASS** / 0 FAIL (self-reported) |
-| % completion | **PASS (user hands)** — formal n≥10 table не заполнена |
-| Вердикт | **PASS (user hands)** — закрыто 2026-08-23 · [`SESSION-2026-08-23-e1-hands-buffer.md`](SESSION-2026-08-23-e1-hands-buffer.md) |
+| PASS / FAIL | **PASS (self-reported)** / 0 FAIL — formal n≥10 **не проводился** |
+| % completion | **n/a** — таблица Run# не заполнена |
+| W1 exit | **OWNER SKIP (2026-08-23)** — не formal ≥90% gate |
+| Formal KR1 | **CONDITIONAL** — owner skip задокументирован |
+| Вердикт | W1 закрыт через owner skip → **Phase 1 W2** · prior hands: [`SESSION-2026-08-23-e1-hands-buffer.md`](SESSION-2026-08-23-e1-hands-buffer.md) |
