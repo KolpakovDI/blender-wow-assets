@@ -1153,6 +1153,51 @@ QuestCatalog.Quests = {
 		},
 		Prerequisites = {113}
 	},
+	-- B2 Explore hub 2: второй маршрут Haven→Combat (восточный обход ScoutPost)
+	[115] = {
+		Id = 115,
+		Name = "Обходная тропа",
+		Description = "Пройдите восточным обходом к лагерю ScoutPost — следуйте синим знакам от Genkan",
+		Type = "Side",
+		Level = 2,
+		ZoneHint = "ScoutPost · восточные знаки",
+		TargetZone = "ScoutPost",
+		Objectives = {
+			{Type = "VisitZone", ZoneDetail = "ScoutPost", Count = 1}
+		},
+		Rewards = {
+			Experience = 65,
+			CopperCoins = 38,
+			SilverCoins = 0,
+			GoldCoins = 0,
+			Reputation = 7,
+			UniqueItems = {},
+			Items = {{Id = 1, Quantity = 1}}
+		},
+		Prerequisites = {114}
+	},
+	[116] = {
+		Id = 116,
+		Name = "Лёд на обходе",
+		Description = "Соберите 1 ледяной кристалл (#102) на восточной тропе — синяя подсветка у ScoutPost",
+		Type = "Side",
+		Level = 2,
+		ZoneHint = "ScoutPost · ледяной кристалл E",
+		TargetZone = "ScoutPost",
+		Objectives = {
+			{Type = "CollectItem", ItemId = 102, Count = 1}
+		},
+		Rewards = {
+			Experience = 75,
+			CopperCoins = 42,
+			SilverCoins = 0,
+			GoldCoins = 0,
+			Reputation = 8,
+			UniqueItems = {},
+			Items = {{Id = 2, Quantity = 1}}
+		},
+		Prerequisites = {115}
+	},
 }
 
 

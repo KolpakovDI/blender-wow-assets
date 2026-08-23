@@ -6,6 +6,15 @@
 
 ## [Unreleased]
 
+### B2 Explore hub 2 — второй маршрут Haven→Combat (2026-08-23) **COMPLETE**
+- **`OtakuHavenBuilder.EnsureExploreHub2Route`:** восточный обход Genkan → ScoutPost → Combat — 3 синих wayfind-знака + гравийная тропа `ExploreHub2Trail` (Ensure*, без full rebuild)
+- **`WorldLootService`:** highlight лёд #102 @ (38,2,52) «Ледяной кристалл · обход»
+- **Quest 115→116:** VisitZone ScoutPost + CollectItem 102 (продолжение W2 113→114); mirror `QuestCatalog` + inline SoT `QuestSystem`
+- **`ClientController`:** whitelist `ExploreHub2WayfindBillboard`
+- MCP smoke Edit+Play: знаки ×3 · trail ×5 · bypass crystal **PASS**
+- **Hands exit:** **PASS (user hands, self-reported 2026-08-23)** — owner «pass»; quest BF chain 113→116 остаётся **CONDITIONAL** (нет `QuestAcceptBF` smoke) — [`SESSION-2026-08-23-explore-hub2.md`](SESSION-2026-08-23-explore-hub2.md)
+- **NEXT-SESSION:** B2 закрыт; backlog B пуст → пауза / polish-only или B1 PvP slice 3 по команде
+
 ### E1 hands buffer + Q3 2p — user PASS (2026-08-23)
 - **E1 buffer:** **PASS (user hands, self-reported)** — owner «pass» после month wrap; formal n≥10 таблица не заполнялась run-by-run — [`SESSION-2026-08-23-e1-hands-buffer.md`](SESSION-2026-08-23-e1-hands-buffer.md) · [`E1-HANDS-BUFFER-LOG.md`](E1-HANDS-BUFFER-LOG.md)
 - **Q3 slice 3 2p:** trade confirm + duel rematch W/L — **CONDITIONAL → PASS (user)** — [`SESSION-2026-08-23-q3-slice3-trade-duel.md`](SESSION-2026-08-23-q3-slice3-trade-duel.md)

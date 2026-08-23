@@ -1643,7 +1643,7 @@ function OtakuHavenBuilder.Build()
 			end
 		end
 		if d:IsA("BillboardGui") then
-			if d:GetAttribute("HubWayfind") == true or d.Name == "ExitWayfindBillboard" or d.Name == "DuelWayfindBillboard" then
+			if d:GetAttribute("HubWayfind") == true or d.Name == "ExitWayfindBillboard" or d.Name == "DuelWayfindBillboard" or d.Name == "ExploreHub2WayfindBillboard" then
 				d.AlwaysOnTop = true
 				d.Enabled = true
 			else
@@ -1696,6 +1696,8 @@ function OtakuHavenBuilder.Build()
 
 	-- Q3 Slice 2: Exit wayfind → арена / дуэль (читается из хаба)
 	OtakuHavenBuilder.EnsureDuelWayfind(haven)
+	-- B2 Explore hub 2: второй маршрут Haven→Combat (восточный обход)
+	OtakuHavenBuilder.EnsureExploreHub2Route(haven)
 
 	return haven
 end
@@ -1774,6 +1776,159 @@ function OtakuHavenBuilder.EnsureDuelWayfind(haven)
 	local corner = Instance.new("UICorner")
 	corner.CornerRadius = UDim.new(0, 8)
 	corner.Parent = lbl
+	return folder
+end
+
+-- B2 Explore hub 2: восточная обходная тропа Haven → ScoutPost → Combat (знаки + короткая гравийная полоса)
+function OtakuHavenBuilder.EnsureExploreHub2Route(haven)
+	haven = haven or workspace:FindFirstChild("OtakuHaven")
+	if not haven then
+		return nil
+	end
+	local old = workspace:FindFirstChild("ExploreHub2Trail")
+	if old then
+		old:Destroy()
+	end
+	local oldSigns = haven:FindFirstChild("ExploreHub2Wayfind")
+	if oldSigns then
+		oldSigns:Destroy()
+	end
+
+	local folder = Instance.new("Folder")
+	folder.Name = "ExploreHub2Wayfind"
+	folder.Parent = haven
+
+	local scoutC = (ZoneConfig.QuestLocations and ZoneConfig.QuestLocations.ScoutPost and ZoneConfig.QuestLocations.ScoutPost.Center)
+		or Vector3.new(40, 1, 55)
+	local combatC = (ZoneConfig.Zones and ZoneConfig.Zones.Combat and ZoneConfig.Zones.Combat.Center)
+		or Vector3.new(105, 1, 45)
+	local genkanC = (ZoneConfig.Zones and ZoneConfig.Zones.Genkan and ZoneConfig.Zones.Genkan.Center)
+		or Vector3.new(-25, 3, -6)
+
+	local function hubSign(name, position, lookAtPos, billboardText, boardText)
+		local dir = Vector3.new(lookAtPos.X - position.X, 0, lookAtPos.Z - position.Z)
+		if dir.Magnitude < 1 then
+			dir = Vector3.new(0, 0, 1)
+		end
+		dir = dir.Unit
+		local pole = makePart({
+			Name = name .. "Pole",
+			Size = Vector3.new(0.32, 4.8, 0.32),
+			Position = position + Vector3.new(0, 2.4, 0),
+			Color = Color3.fromRGB(55, 48, 72),
+			Material = Enum.Material.Metal,
+			CanCollide = false,
+			Parent = folder,
+		})
+		local board = makePart({
+			Name = name .. "Board",
+			Size = Vector3.new(6.8, 2.0, 0.26),
+			CFrame = CFrame.lookAt(pole.Position + Vector3.new(0, 2.2, 0) + dir * 0.2, pole.Position + Vector3.new(0, 2.2, 0) + dir),
+			Color = Color3.fromRGB(38, 32, 52),
+			Material = Enum.Material.SmoothPlastic,
+			CanCollide = false,
+			Parent = folder,
+		})
+		local gui = Instance.new("SurfaceGui")
+		gui.Face = Enum.NormalId.Front
+		gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+		gui.PixelsPerStud = 40
+		gui.Parent = board
+		local text = Instance.new("TextLabel")
+		text.Size = UDim2.fromScale(1, 1)
+		text.BackgroundTransparency = 1
+		text.Text = boardText
+		text.TextColor3 = Color3.fromRGB(180, 230, 255)
+		text.Font = Enum.Font.GothamBold
+		text.TextScaled = true
+		text.Parent = gui
+
+		local bb = Instance.new("BillboardGui")
+		bb.Name = "ExploreHub2WayfindBillboard"
+		bb.Size = UDim2.new(0, 320, 0, 58)
+		bb.StudsOffset = Vector3.new(0, 3.8, 0)
+		bb.AlwaysOnTop = true
+		bb.MaxDistance = 200
+		bb:SetAttribute("HubWayfind", true)
+		bb:SetAttribute("KeepVisible", true)
+		bb.Parent = board
+		local lbl = Instance.new("TextLabel")
+		lbl.Size = UDim2.fromScale(1, 1)
+		lbl.BackgroundColor3 = Color3.fromRGB(28, 36, 58)
+		lbl.BackgroundTransparency = 0.18
+		lbl.Text = billboardText
+		lbl.TextColor3 = Color3.fromRGB(200, 235, 255)
+		lbl.Font = Enum.Font.GothamBold
+		lbl.TextScaled = true
+		lbl.Parent = bb
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(0, 8)
+		corner.Parent = lbl
+		return pole
+	end
+
+	-- Восточный обход: Genkan → ScoutPost → Combat (альтернатива главной дороге у Exit)
+	local startPos = Vector3.new(18, 0.2, genkanC.Z + 38)
+	local midPos = Vector3.new(scoutC.X - 8, 0.2, scoutC.Z - 3)
+	local endPos = Vector3.new(combatC.X - 48, 0.2, combatC.Z + 3)
+
+	hubSign(
+		"ExploreHub2Start",
+		startPos,
+		midPos,
+		"Обходная тропа → Combat · следуй знакам",
+		"Обход → Combat"
+	)
+	hubSign(
+		"ExploreHub2Mid",
+		midPos,
+		endPos,
+		"Лагерь разведки · лут E → Combat",
+		"ScoutPost · лут E"
+	)
+	hubSign(
+		"ExploreHub2End",
+		endPos,
+		combatC,
+		"Combat · лови духа E",
+		"Combat →"
+	)
+
+	-- Короткая гравийная полоса (не перестраивает OtakuHaven)
+	local trail = Instance.new("Model")
+	trail.Name = "ExploreHub2Trail"
+	trail.Parent = workspace
+	trail:SetAttribute("Route", "HavenEastBypass")
+	trail:SetAttribute("HubWayfind", true)
+
+	local gravelColor = Color3.fromRGB(120, 110, 95)
+	local pathPts = {
+		startPos,
+		Vector3.new(26, 0.2, startPos.Z + 8),
+		Vector3.new(scoutC.X - 14, 0.2, scoutC.Z - 8),
+		midPos,
+		Vector3.new(scoutC.X + 6, 0.2, scoutC.Z + 2),
+		endPos,
+	}
+	for i = 1, #pathPts - 1 do
+		local a, b = pathPts[i], pathPts[i + 1]
+		local delta = b - a
+		local len = delta.Magnitude
+		if len > 0.5 then
+			local mid = a + delta * 0.5
+			local cf = CFrame.lookAt(mid, b) * CFrame.Angles(0, math.rad(90), 0)
+			makePart({
+				Name = "GravelSeg" .. i,
+				Size = Vector3.new(4.2, 0.18, len + 0.6),
+				CFrame = cf,
+				Color = gravelColor,
+				Material = Enum.Material.Ground,
+				CanCollide = true,
+				Parent = trail,
+			})
+		end
+	end
+
 	return folder
 end
 

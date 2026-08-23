@@ -270,6 +270,8 @@ local crystalSpots = {
 	{ Pos = Vector3.new(28, 2, 52), ItemId = 101, Label = "Огненный кристалл · лут", Color = Color3.fromRGB(255, 90, 40), LightColor = Color3.fromRGB(255, 120, 50), Highlight = true },
 	-- W2 quest 114: у Exit (после VisitZone 113)
 	{ Pos = Vector3.new(-18, 2, 66), ItemId = 101, Label = "Огненный кристалл · у Exit", Color = Color3.fromRGB(255, 90, 40), LightColor = Color3.fromRGB(255, 120, 50), Highlight = true },
+	-- B2 Explore hub 2: ледяной лут на восточном обходе (quest 116)
+	{ Pos = Vector3.new(38, 2, 52), ItemId = 102, Label = "Ледяной кристалл · обход", Color = Color3.fromRGB(120, 200, 255), LightColor = Color3.fromRGB(180, 230, 255), Highlight = true },
 	-- EmberCourt / Fire (#1) — side 101 needs 5; keep ≥5 spots so no 45s respawn wait
 	{ Pos = Vector3.new(62, 2, 24), ItemId = 101, Label = "Огненный кристалл", Color = Color3.fromRGB(255, 90, 40), LightColor = Color3.fromRGB(255, 120, 50) },
 	{ Pos = Vector3.new(78, 2, 36), ItemId = 101, Label = "Огненный кристалл", Color = Color3.fromRGB(255, 90, 40), LightColor = Color3.fromRGB(255, 120, 50) },

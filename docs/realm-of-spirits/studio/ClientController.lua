@@ -152,6 +152,7 @@ local KEEP_VISIBLE_BB = {
 	ShowcaseToast = true,
 	ShowcaseDisplay = true,
 	ExitWayfindBillboard = true,
+	ExploreHub2WayfindBillboard = true,
 }
 local POINTER_INSTANCE_NAMES = {
 	QuestTargetMarker = true,
