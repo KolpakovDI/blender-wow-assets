@@ -224,6 +224,12 @@ end
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
+player.CharacterAdded:Connect(function()
+	if focusActive or (questPanel and questPanel.Visible) then
+		endMikaFocus()
+	end
+end)
+
 -- Получаем RemoteEvent
 local QuestEvent = realmFolder:WaitForChild("Quest")
 
@@ -829,7 +835,10 @@ local QUEST_ACTIVE_DIALOGUE = {
 	[110] = "Мика: ElementShrine у FrostRidge — святилище стихий!",
 	[111] = "Мика: Overlook — обзорный утёс, вид на арену!",
 	[112] = "Мика: TrailCamp — придорожный стан, короткий привал!",
+	[113] = "Мика: Пройди Exit из Haven в Combat — отметь дверь, вернись!",
+	[114] = "Мика: У Exit возьми огненный кристалл (E) — одна искра хватит!",
 	[304] = "Мика: Святилище у E — осколок (#301) и Звёзды (#310) усилят синтез. Открой реактор, попробуй превью!",
+	[305] = "Мика: Разбери лишнего духа в Святилище (вкладка Дезинтеграция) — oсколки и эссенции пригодятся для следующего синтеза!",
 }
 
 local function dialogueForQuest(quest, readyToTurnIn, isActive)

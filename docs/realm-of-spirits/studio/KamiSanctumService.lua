@@ -19,8 +19,34 @@ end
 
 local PEDESTAL_NAME = "KamiSanctumShrine"
 local MESH_TEMPLATE_NAME = "CyberShintoLabShrine"
+local SHRINE_RANGE = 16
 local lastOpen = {}
 local openSanctum
+
+local function getShrinePivot()
+	local shrine = workspace:FindFirstChild(PEDESTAL_NAME)
+	if shrine and shrine:IsA("Model") then
+		return shrine:GetPivot()
+	end
+	local mesh = findMeshTemplate()
+	if mesh then
+		return mesh:GetPivot()
+	end
+	return nil
+end
+
+local function isNearShrine(player)
+	local character = player and player.Character
+	local hrp = character and character:FindFirstChild("HumanoidRootPart")
+	if not hrp then
+		return false
+	end
+	local pivot = getShrinePivot()
+	if not pivot then
+		return true
+	end
+	return (hrp.Position - pivot.Position).Magnitude <= SHRINE_RANGE
+end
 
 local function findMeshTemplate()
 	local haven = workspace:FindFirstChild("OtakuHaven")
@@ -252,7 +278,7 @@ openSanctum = function(player)
 	else
 		local qbf = sssRealm:FindFirstChild("UpdateQuestProgressBF")
 		if qbf then
-			qbf:Invoke(player, "OpenKamiSanctum", {Count = 1})
+			qbf:Invoke(player.UserId, "OpenKamiSanctum", {Count = 1})
 		end
 	end
 end
@@ -401,8 +427,19 @@ remote.OnServerEvent:Connect(function(player, action, payload)
 	end
 
 	if action == "Open" or action == "RequestOpen" then
+		if not isNearShrine(player) then
+			remote:FireClient(player, "Error", {Error = "too_far"})
+			return
+		end
 		openSanctum(player)
 		return
+	end
+
+	if action == "PreviewSynthesize" or action == "Synthesize" or action == "PreviewDisintegrate" or action == "Disintegrate" then
+		if not isNearShrine(player) then
+			remote:FireClient(player, "Error", {Error = "too_far"})
+			return
+		end
 	end
 
 	if action == "PreviewSynthesize" then

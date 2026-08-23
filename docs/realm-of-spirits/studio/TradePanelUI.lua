@@ -41,6 +41,7 @@ function TradePanelUI.Mount(screenGui, deps)
 		Color3.fromRGB(40, 40, 50)
 	)
 	shopListFrame.ClipsDescendants = true
+	shopListFrame.ZIndex = tradeFrame.ZIndex + 1
 
 	CreateTextLabel(shopListFrame, "ShopListTitle",
 		UDim2.new(0, 5, 0, 5),
@@ -62,8 +63,19 @@ function TradePanelUI.Mount(screenGui, deps)
 	shopScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
 	shopScroll.AutomaticCanvasSize = Enum.AutomaticSize.None
 	shopScroll.ClipsDescendants = true
-	shopScroll.ZIndex = 2
+	shopScroll.ZIndex = shopListFrame.ZIndex + 1
 	shopScroll.Parent = shopListFrame
+
+	local shopEmptyLabel = CreateTextLabel(shopListFrame, "ShopEmptyLabel",
+		UDim2.new(0, 8, 0, 36),
+		UDim2.new(1, -16, 1, -44),
+		"Загрузка товаров…",
+		Color3.fromRGB(180, 180, 190),
+		13
+	)
+	shopEmptyLabel.TextWrapped = true
+	shopEmptyLabel.Visible = false
+	shopEmptyLabel.ZIndex = shopScroll.ZIndex + 1
 
 	local inventoryListFrame = CreateFrame(tradeFrame, "InventoryListFrame",
 		UDim2.new(0.55, 5, 0, 75),
@@ -71,6 +83,7 @@ function TradePanelUI.Mount(screenGui, deps)
 		Color3.fromRGB(40, 40, 50)
 	)
 	inventoryListFrame.ClipsDescendants = true
+	inventoryListFrame.ZIndex = tradeFrame.ZIndex + 1
 
 	CreateTextLabel(inventoryListFrame, "InventoryListTitle",
 		UDim2.new(0, 5, 0, 5),
@@ -92,7 +105,7 @@ function TradePanelUI.Mount(screenGui, deps)
 	inventoryScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
 	inventoryScroll.AutomaticCanvasSize = Enum.AutomaticSize.None
 	inventoryScroll.ClipsDescendants = true
-	inventoryScroll.ZIndex = 2
+	inventoryScroll.ZIndex = inventoryListFrame.ZIndex + 1
 	inventoryScroll.Parent = inventoryListFrame
 
 	local closeTradeButton = CreateTextButton(tradeFrame, "CloseTradeButton",
@@ -102,7 +115,7 @@ function TradePanelUI.Mount(screenGui, deps)
 		Color3.fromRGB(100, 100, 100),
 		"❌"
 	)
-	closeTradeButton.ZIndex = 5
+	closeTradeButton.ZIndex = tradeFrame.ZIndex + 5
 	closeTradeButton.MouseButton1Click:Connect(function()
 		tradeFrame.Visible = false
 	end)
@@ -196,6 +209,7 @@ function TradePanelUI.Mount(screenGui, deps)
 		clearButtons(inventoryItemButtons)
 		local playerData = getPlayerData() or {}
 		local y = 4
+		local rowZ = inventoryScroll.ZIndex + 1
 		for _, item in ipairs(playerData.Inventory or {}) do
 			local def = itemDef(item.Id)
 			local itemName = (def and def.Name) or ("Предмет #" .. item.Id)
@@ -214,6 +228,7 @@ function TradePanelUI.Mount(screenGui, deps)
 			btn.Text = ""
 			btn.TextTransparency = 1
 			btn.ClipsDescendants = true
+			btn.ZIndex = rowZ
 
 			local nameLbl = Instance.new("TextLabel")
 			nameLbl.Name = "ItemName"
@@ -226,7 +241,7 @@ function TradePanelUI.Mount(screenGui, deps)
 			nameLbl.TextXAlignment = Enum.TextXAlignment.Left
 			nameLbl.TextTruncate = Enum.TextTruncate.AtEnd
 			nameLbl.Text = itemName .. " x" .. tostring(item.Quantity or 1)
-			nameLbl.ZIndex = (btn.ZIndex or 1) + 1
+			nameLbl.ZIndex = rowZ + 1
 			nameLbl.Parent = btn
 
 			local sellBtn = CreateTextButton(btn, "SellBtn",
@@ -236,6 +251,7 @@ function TradePanelUI.Mount(screenGui, deps)
 				Color3.fromRGB(180, 100, 70),
 				nil
 			)
+			sellBtn.ZIndex = rowZ + 2
 			sellBtn.Text = canSell and ("Продать\n" .. sellPriceText) or "Нельзя"
 			sellBtn.TextScaled = true
 			sellBtn.Active = canSell
@@ -247,6 +263,7 @@ function TradePanelUI.Mount(screenGui, deps)
 				Color3.fromRGB(100, 180, 100),
 				nil
 			)
+			useBtn.ZIndex = rowZ + 2
 			useBtn.Visible = showUse
 			if item.Id == 203 then
 				useBtn.Text = "Имя"
@@ -282,70 +299,83 @@ function TradePanelUI.Mount(screenGui, deps)
 		clearButtons(shopItemButtons)
 		local wallet = walletTotals(getPlayerData())
 		local y = 4
+		local itemCount = 0
+		local rowZ = shopScroll.ZIndex + 1
 		for _, item in ipairs(lastShopItems or {}) do
-			local priced = resolveShopPrices(item)
-			local priceText = formatShopPrice(priced)
-			local affordable = canAffordShopItem(priced, wallet)
-			local displayName = tostring(priced.Name or ("#" .. tostring(priced.Id)))
+			if type(item) == "table" and item.Id then
+				itemCount += 1
+				local priced = resolveShopPrices(item)
+				local priceText = formatShopPrice(priced)
+				local affordable = canAffordShopItem(priced, wallet)
+				local displayName = tostring(priced.Name or ("#" .. tostring(priced.Id)))
 
-			local btn = CreateTextButton(shopScroll, "ShopItem" .. tostring(priced.Id),
-				UDim2.new(0, 2, 0, y),
-				UDim2.new(1, -14, 0, 52),
-				"",
-				Color3.fromRGB(70, 130, 180),
-				nil
-			)
-			btn.Text = ""
-			btn.TextTransparency = 1
-			btn.ClipsDescendants = true
+				local btn = CreateTextButton(shopScroll, "ShopItem" .. tostring(priced.Id),
+					UDim2.new(0, 2, 0, y),
+					UDim2.new(1, -14, 0, 52),
+					"",
+					Color3.fromRGB(70, 130, 180),
+					nil
+				)
+				btn.Text = ""
+				btn.TextTransparency = 1
+				btn.ClipsDescendants = true
+				btn.ZIndex = rowZ
 
-			local nameLbl = Instance.new("TextLabel")
-			nameLbl.Name = "ItemName"
-			nameLbl.BackgroundTransparency = 1
-			nameLbl.Position = UDim2.new(0, 8, 0, 2)
-			nameLbl.Size = UDim2.new(1, -80, 0, 22)
-			nameLbl.Font = Enum.Font.GothamBold
-			nameLbl.TextSize = 13
-			nameLbl.TextColor3 = Color3.fromRGB(245, 240, 230)
-			nameLbl.TextXAlignment = Enum.TextXAlignment.Left
-			nameLbl.TextTruncate = Enum.TextTruncate.AtEnd
-			nameLbl.Text = displayName
-			nameLbl.ZIndex = (btn.ZIndex or 1) + 1
-			nameLbl.Parent = btn
+				local nameLbl = Instance.new("TextLabel")
+				nameLbl.Name = "ItemName"
+				nameLbl.BackgroundTransparency = 1
+				nameLbl.Position = UDim2.new(0, 8, 0, 2)
+				nameLbl.Size = UDim2.new(1, -80, 0, 22)
+				nameLbl.Font = Enum.Font.GothamBold
+				nameLbl.TextSize = 13
+				nameLbl.TextColor3 = Color3.fromRGB(245, 240, 230)
+				nameLbl.TextXAlignment = Enum.TextXAlignment.Left
+				nameLbl.TextTruncate = Enum.TextTruncate.AtEnd
+				nameLbl.Text = displayName
+				nameLbl.ZIndex = rowZ + 1
+				nameLbl.Parent = btn
 
-			local priceLbl = Instance.new("TextLabel")
-			priceLbl.Name = "ItemPrice"
-			priceLbl.BackgroundTransparency = 1
-			priceLbl.Position = UDim2.new(0, 8, 0, 24)
-			priceLbl.Size = UDim2.new(1, -80, 0, 22)
-			priceLbl.Font = Enum.Font.Gotham
-			priceLbl.TextSize = 12
-			priceLbl.TextColor3 = affordable and Color3.fromRGB(160, 230, 160) or Color3.fromRGB(255, 140, 140)
-			priceLbl.TextXAlignment = Enum.TextXAlignment.Left
-			priceLbl.TextTruncate = Enum.TextTruncate.AtEnd
-			priceLbl.Text = affordable and ("Цена: " .. priceText) or ("Цена: " .. priceText .. " (мало)")
-			priceLbl.ZIndex = (btn.ZIndex or 1) + 1
-			priceLbl.Parent = btn
+				local priceLbl = Instance.new("TextLabel")
+				priceLbl.Name = "ItemPrice"
+				priceLbl.BackgroundTransparency = 1
+				priceLbl.Position = UDim2.new(0, 8, 0, 24)
+				priceLbl.Size = UDim2.new(1, -80, 0, 22)
+				priceLbl.Font = Enum.Font.Gotham
+				priceLbl.TextSize = 12
+				priceLbl.TextColor3 = affordable and Color3.fromRGB(160, 230, 160) or Color3.fromRGB(255, 140, 140)
+				priceLbl.TextXAlignment = Enum.TextXAlignment.Left
+				priceLbl.TextTruncate = Enum.TextTruncate.AtEnd
+				priceLbl.Text = affordable and ("Цена: " .. priceText) or ("Цена: " .. priceText .. " (мало)")
+				priceLbl.ZIndex = rowZ + 1
+				priceLbl.Parent = btn
 
-			local buyBtn = CreateTextButton(btn, "BuyBtn",
-				UDim2.new(1, -72, 0, 8),
-				UDim2.new(0, 68, 0, 36),
-				"Купить",
-				affordable and Color3.fromRGB(70, 180, 70) or Color3.fromRGB(110, 90, 90),
-				nil
-			)
-			buyBtn.Text = "Купить\n" .. priceText
-			buyBtn.TextScaled = true
-			buyBtn.TextColor3 = affordable and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(220, 180, 180)
-			local itemId = priced.Id
-			buyBtn.MouseButton1Click:Connect(function()
-				TradeEvent:FireServer("Buy", { ItemId = itemId, Quantity = 1 })
-			end)
-			table.insert(shopItemButtons, btn)
-			y = y + 58
+				local buyBtn = CreateTextButton(btn, "BuyBtn",
+					UDim2.new(1, -72, 0, 8),
+					UDim2.new(0, 68, 0, 36),
+					"Купить",
+					affordable and Color3.fromRGB(70, 180, 70) or Color3.fromRGB(110, 90, 90),
+					nil
+				)
+				buyBtn.ZIndex = rowZ + 2
+				buyBtn.Text = "Купить\n" .. priceText
+				buyBtn.TextScaled = true
+				buyBtn.TextColor3 = affordable and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(220, 180, 180)
+				local itemId = priced.Id
+				buyBtn.MouseButton1Click:Connect(function()
+					TradeEvent:FireServer("Buy", { ItemId = itemId, Quantity = 1 })
+				end)
+				table.insert(shopItemButtons, btn)
+				y = y + 58
+			end
 		end
 		shopScroll.CanvasSize = UDim2.new(0, 0, 0, math.max(y, 4))
 		shopScroll.CanvasPosition = Vector2.zero
+		if itemCount == 0 then
+			shopEmptyLabel.Text = "Товары недоступны. Подойдите к Otaku Haven для покупки."
+			shopEmptyLabel.Visible = true
+		else
+			shopEmptyLabel.Visible = false
+		end
 	end
 
 	function api.RefreshAfford()
@@ -356,8 +386,11 @@ function TradePanelUI.Mount(screenGui, deps)
 
 	function api.Open()
 		tradeFrame.Visible = true
-		TradeEvent:FireServer("GetShop", {})
+		shopEmptyLabel.Text = "Загрузка товаров…"
+		shopEmptyLabel.Visible = true
+		api.RefreshShop(ItemCatalog.GetShopItems())
 		api.RefreshInventory()
+		TradeEvent:FireServer("GetShop", {})
 	end
 
 	function api.BindZoneSilentRefresh(player)

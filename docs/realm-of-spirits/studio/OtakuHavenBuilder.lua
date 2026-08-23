@@ -1594,7 +1594,7 @@ function OtakuHavenBuilder.Build()
 		Slide = 5.2,
 		ModelName = "ShopExit",
 		ObjectText = "Выход в Акихабару",
-		BillboardText = "Выход -> Акихабара",
+		BillboardText = "Выход → Акихабара · дуэль у арены",
 		ShowBillboard = true,
 		LeftName = "ExitDoorLeft",
 		RightName = "ExitDoorRight",
@@ -1643,7 +1643,7 @@ function OtakuHavenBuilder.Build()
 			end
 		end
 		if d:IsA("BillboardGui") then
-			if d:GetAttribute("HubWayfind") == true or d.Name == "ExitWayfindBillboard" then
+			if d:GetAttribute("HubWayfind") == true or d.Name == "ExitWayfindBillboard" or d.Name == "DuelWayfindBillboard" then
 				d.AlwaysOnTop = true
 				d.Enabled = true
 			else
@@ -1749,7 +1749,7 @@ function OtakuHavenBuilder.EnsureDuelWayfind(haven)
 	local text = Instance.new("TextLabel")
 	text.Size = UDim2.fromScale(1, 1)
 	text.BackgroundTransparency = 1
-	text.Text = "Дуэль → арена"
+	text.Text = "Выход → дуэль"
 	text.TextColor3 = Color3.fromRGB(255, 220, 120)
 	text.Font = Enum.Font.GothamBold
 	text.TextScaled = true
@@ -1757,16 +1757,16 @@ function OtakuHavenBuilder.EnsureDuelWayfind(haven)
 
 	local bb = Instance.new("BillboardGui")
 	bb.Name = "DuelWayfindBillboard"
-	bb.Size = UDim2.new(0, 260, 0, 48)
-	bb.StudsOffset = Vector3.new(0, 3.4, 0)
+	bb.Size = UDim2.new(0, 300, 0, 56)
+	bb.StudsOffset = Vector3.new(0, 3.6, 0)
 	bb.AlwaysOnTop = true
-	bb.MaxDistance = 160
+	bb.MaxDistance = 200
 	bb.Parent = board
 	local lbl = Instance.new("TextLabel")
 	lbl.Size = UDim2.fromScale(1, 1)
 	lbl.BackgroundColor3 = Color3.fromRGB(30, 22, 40)
 	lbl.BackgroundTransparency = 0.2
-	lbl.Text = "Дуэль · дорога к арене"
+	lbl.Text = "Дуэль · Y у Exit → арена"
 	lbl.TextColor3 = Color3.fromRGB(255, 230, 160)
 	lbl.Font = Enum.Font.GothamBold
 	lbl.TextScaled = true
@@ -2023,8 +2023,8 @@ function OtakuHavenBuilder.BuildDirtRoadToArena()
 		text.Parent = gui
 	end
 	waySign("SignHaven", 0.08, "← Haven")
-	waySign("SignArena", 0.55, "Арена → дуэль")
-	waySign("SignArenaNear", 0.92, "Дуэль →")
+	waySign("SignArena", 0.55, "Арена → дуэль · Y")
+	waySign("SignArenaNear", 0.92, "Дуэль · Y у плиток")
 
 	model:SetAttribute("From", "OtakuHavenExit")
 	model:SetAttribute("To", "BattleArenaEntrance")

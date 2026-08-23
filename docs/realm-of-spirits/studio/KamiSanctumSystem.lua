@@ -219,6 +219,7 @@ function KamiSanctumSystem.PreviewSynthesize(data, spiritIndices, components)
 	local qualityScore = qSum / #donors
 	local diversity = KamiSanctumConfig.DiversityFactor(primaries)
 	local power = KamiSanctumConfig.ResonancePower(level, qualityScore, starScore, n, diversity)
+	local powerNoStars = KamiSanctumConfig.ResonancePower(level, qualityScore, 0, n, diversity)
 	local countBonus = (n - 2) / 4
 	local weightUnique = math.clamp(0.08 + 0.12 * starScore + 0.05 * countBonus + 0.04 * qualityScore, 0.05, 0.55)
 
@@ -234,6 +235,8 @@ function KamiSanctumSystem.PreviewSynthesize(data, spiritIndices, components)
 		StarScore = starScore,
 		QualityScore = qualityScore,
 		ResonancePower = power,
+		ResonancePowerBase = powerNoStars,
+		StarDelta = power - powerNoStars,
 		CorePrimary = coreP,
 		Primaries = primaries,
 		UniqueChance = weightUnique,
@@ -395,6 +398,7 @@ function KamiSanctumSystem.Synthesize(data, spiritIndices, components, rng)
 		PrimaryElement = coreP,
 		Element = coreP,
 		ResonancePower = preview.ResonancePower,
+		StarScore = starScore,
 		BonusHP = math.floor(20 * preview.ResonancePower),
 		BonusAttack = math.floor(4 * preview.ResonancePower),
 		BonusDefense = math.floor(3 * preview.ResonancePower),

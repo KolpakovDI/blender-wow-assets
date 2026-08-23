@@ -22,6 +22,7 @@ local inDuel = false
 local incomingFrom = nil
 local challengeGui
 local duelHudGui
+local rematchCountdownGen = 0
 
 local function arenaCenter()
 	local arena = workspace:FindFirstChild("BattleArena")
@@ -348,7 +349,15 @@ local function showIncoming(fromName)
 	showToast("Входящий вызов на дуэль!")
 end
 
-local function showRematchOffer(fromName, seconds)
+local function stopRematchCountdown()
+	rematchCountdownGen += 1
+end
+
+local function showRematchOffer(fromName, seconds, wins, losses)
+	stopRematchCountdown()
+	local ttl = math.max(1, math.floor(tonumber(seconds) or 20))
+	local gen = rematchCountdownGen
+	local expiresAt = tick() + ttl
 	local gui = ensureChallengeGui()
 	gui:SetAttribute("Mode", "Rematch")
 	gui.Enabled = true
@@ -360,20 +369,36 @@ local function showRematchOffer(fromName, seconds)
 	if title then
 		title.Text = "Реванш?"
 	end
-	if body then
-		body.Text = "Ещё раунд с "
-			.. (fromName or "соперником")
-			.. "? При отказе — возврат на точку вызова ("
-			.. tostring(seconds or 20)
-			.. "с)."
+	local function refreshBody(leftSec)
+		if not body then
+			return
+		end
+		body.Text = string.format(
+			"Ещё раунд с %s?\nСчёт сессии: %dW / %dL · осталось %dс\nОтказ — возврат на точку вызова.",
+			tostring(fromName or "соперником"),
+			math.max(0, math.floor(tonumber(wins) or 0)),
+			math.max(0, math.floor(tonumber(losses) or 0)),
+			math.max(0, leftSec)
+		)
 	end
+	refreshBody(ttl)
 	if accept then
 		accept.Text = "Реванш"
 	end
 	if decline then
 		decline.Text = "Уйти"
 	end
-	showToast("Предложение реванша")
+	showToast("Реванш? «Реванш» или «Уйти» — " .. ttl .. "с")
+	task.spawn(function()
+		while gen == rematchCountdownGen and gui.Enabled and gui:GetAttribute("Mode") == "Rematch" do
+			local left = math.ceil(expiresAt - tick())
+			if left <= 0 then
+				break
+			end
+			refreshBody(left)
+			task.wait(1)
+		end
+	end)
 end
 
 duelEvent.OnClientEvent:Connect(function(action, data)
@@ -392,7 +417,6 @@ duelEvent.OnClientEvent:Connect(function(action, data)
 		inDuel = true
 		hideChallengeGui()
 		player:SetAttribute("BattleEngaged", tick())
-		player:SetAttribute("BattleRequest", tick())
 		showDuelHud(data.OpponentName, data.SpiritName, data.EnemySpiritName)
 		showToast("ДУЭЛЬ ДУХОВ vs " .. tostring(data.OpponentName or "соперник"))
 		if data.Hint then
@@ -404,11 +428,12 @@ duelEvent.OnClientEvent:Connect(function(action, data)
 		clearDuelFlags()
 	elseif action == "RematchOffer" then
 		clearDuelFlags()
-		showRematchOffer(data.OpponentName, data.Seconds)
+		showRematchOffer(data.OpponentName, data.Seconds, data.Wins, data.Losses)
 	elseif action == "RematchWaiting" then
 		hideChallengeGui()
 		showToast("Ждём ответа соперника...")
 	elseif action == "RematchClosed" or action == "ReturnedHome" then
+		stopRematchCountdown()
 		hideChallengeGui()
 		clearDuelFlags()
 	end

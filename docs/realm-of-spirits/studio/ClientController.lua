@@ -22,6 +22,7 @@ local EvolveSpiritEvent = realmFolder:WaitForChild("EvolveSpirit")
 local QuestEvent = realmFolder:WaitForChild("Quest")
 local DataEvent = realmFolder:WaitForChild("DataSync")
 local SpiritDatabaseModule = require(realmFolder:WaitForChild("SpiritDatabase"))
+local CombatAnimResolver = require(realmFolder:WaitForChild("CombatAnimResolver"))
 
 local MAX_TARGET_DISTANCE = 45
 local isInBattle = false
@@ -34,12 +35,27 @@ local isCatchPending = false
 local catchRequestId = 0
 local suppressBattleUpdates = false
 
+local COMBAT_HINT_LABELS: { [string]: string } = {
+	Slash = "Удар!",
+	Lunge = "Выпад!",
+	SpellTap = "Удар!",
+	SpellImpulse = "Импульс!",
+	RangedShot = "Выстрел!",
+}
+
 local selectionHighlight = Instance.new("Highlight")
 selectionHighlight.Name = "SelectionHighlight"
 selectionHighlight.FillTransparency = 0.65
 selectionHighlight.OutlineTransparency = 0
 selectionHighlight.Enabled = false
 selectionHighlight.Parent = workspace
+
+local combatFlashHighlight = Instance.new("Highlight")
+combatFlashHighlight.Name = "CombatFlashHighlight"
+combatFlashHighlight.FillTransparency = 0.75
+combatFlashHighlight.OutlineTransparency = 0.15
+combatFlashHighlight.Enabled = false
+combatFlashHighlight.Parent = workspace
 
 local function getSpiritsFolder()
 	return workspace:FindFirstChild("Spirits")
@@ -609,32 +625,6 @@ local function waitForBladeModel(char, timeoutSec)
 	return nil, nil
 end
 
-local function playSlashAnimation(char, humanoid)
-	if not humanoid then
-		return nil
-	end
-	local animator = humanoid:FindFirstChildOfClass("Animator")
-	if not animator then
-		animator = Instance.new("Animator")
-		animator.Parent = humanoid
-	end
-	local anim = Instance.new("Animation")
-	if char:FindFirstChild("UpperTorso") then
-		anim.AnimationId = "rbxassetid://522635514"
-	else
-		anim.AnimationId = "rbxassetid://941992724"
-	end
-	local ok, track = pcall(function()
-		return animator:LoadAnimation(anim)
-	end)
-	if ok and track then
-		track.Priority = Enum.AnimationPriority.Action4
-		track:Play(0.05, 1, 1.2)
-		return track
-	end
-	return nil
-end
-
 local function tweenMotorC0(motor, goalC0, duration)
 	local info = TweenInfo.new(duration, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 	local tw = TweenService:Create(motor, info, { C0 = goalC0 })
@@ -642,7 +632,50 @@ local function tweenMotorC0(motor, goalC0, duration)
 	return tw
 end
 
--- Выхватить меч → лицом к врагу → slash + tween взмах BladeMotor + выпад
+local function pulseCombatFeedback(char: Model, animKind: string)
+	if animKind == "None" or animKind == "" then
+		return
+	end
+	player:SetAttribute("LastCombatAnim", animKind)
+	local label = COMBAT_HINT_LABELS[animKind]
+	if label then
+		setTargetHint(label, 0.3)
+	end
+	combatFlashHighlight.Adornee = char
+	combatFlashHighlight.FillColor = Color3.fromRGB(255, 220, 120)
+	combatFlashHighlight.OutlineColor = Color3.fromRGB(255, 180, 60)
+	combatFlashHighlight.Enabled = true
+	task.delay(0.22, function()
+		if combatFlashHighlight.Adornee == char then
+			combatFlashHighlight.Enabled = false
+			combatFlashHighlight.Adornee = nil
+		end
+	end)
+	if not isInBattle then
+		return
+	end
+	local camera = workspace.CurrentCamera
+	if not camera then
+		return
+	end
+	local origin = camera.CFrame
+	local punch = origin * CFrame.new(0, 0, -0.35) * CFrame.Angles(math.rad(1.2), 0, 0)
+	local outTw = TweenService:Create(
+		camera,
+		TweenInfo.new(0.06, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+		{ CFrame = punch }
+	)
+	outTw:Play()
+	outTw.Completed:Connect(function()
+		TweenService:Create(
+			camera,
+			TweenInfo.new(0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+			{ CFrame = origin }
+		):Play()
+	end)
+end
+
+-- Выхватить меч → лицом к врагу → tween взмах BladeMotor + выпад (без body sword swing)
 local function playPlayerAttackAnimation(data)
 	data = data or {}
 	if isPlayerAttackAnimating then
@@ -654,9 +687,15 @@ local function playPlayerAttackAnimation(data)
 	end
 	local root = char:FindFirstChild("HumanoidRootPart")
 	local humanoid = char:FindFirstChildOfClass("Humanoid")
-	if not root then
+	if not root or not humanoid then
 		return
 	end
+	local skillId = data.SkillId and tonumber(data.SkillId)
+	local animKind = CombatAnimResolver.ResolveKind(skillId)
+	local lungeDist = CombatAnimResolver.GetLungeDistance(animKind)
+	local doBlade = CombatAnimResolver.ShouldBladeTween(animKind)
+	local timing = CombatAnimResolver.GetTiming(animKind)
+	local isHeavy = CombatAnimResolver.IsHeavyKind(animKind)
 
 	task.spawn(function()
 		isPlayerAttackAnimating = true
@@ -676,34 +715,66 @@ local function playPlayerAttackAnimation(data)
 
 		root.CFrame = CFrame.lookAt(root.Position, root.Position + forward)
 
-				local restC0 = computeBladeRestC0(char)
-		local windupC0 = restC0 * CFrame.Angles(math.rad(35), math.rad(-15), math.rad(110))
-		local slashC0 = restC0 * CFrame.Angles(math.rad(-110), math.rad(30), math.rad(-55))
-		local _, motor = waitForBladeModel(char, 0.8)
-		if motor then
-			motor.C0 = restC0
+		-- Body sword-swing disabled; blade tween + root lunge carry attack feel.
+		if CombatAnimResolver.ShouldPlayBodyAnim(animKind) then
+			CombatAnimResolver.Play(char, humanoid, skillId)
+		end
+		pulseCombatFeedback(char, animKind)
+
+		local motor
+		local restC0
+		local windupC0
+		local slashC0
+		if doBlade then
+			restC0 = computeBladeRestC0(char)
+			if isHeavy then
+				windupC0 = restC0 * CFrame.Angles(math.rad(60), math.rad(-8), math.rad(100))
+				slashC0 = restC0 * CFrame.Angles(math.rad(-100), math.rad(22), math.rad(-72))
+			else
+				windupC0 = restC0 * CFrame.Angles(math.rad(48), math.rad(-12), math.rad(105))
+				slashC0 = restC0 * CFrame.Angles(math.rad(-98), math.rad(28), math.rad(-62))
+			end
+			local _
+			_, motor = waitForBladeModel(char, 0.35)
+			if motor then
+				motor.C0 = restC0
+			end
 		end
 
-playSlashAnimation(char, humanoid)
-
+		local doLunge = CombatAnimResolver.ShouldRootLunge(animKind)
+		local backTween
 		local origin = root.CFrame
-		local lungeCF = CFrame.lookAt(origin.Position + forward * 2.0, origin.Position + forward * 6)
-		local outTween = TweenService:Create(root, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { CFrame = lungeCF })
-		local backTween = TweenService:Create(root, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { CFrame = origin })
-		outTween:Play()
-
-		if motor then
-			local windup = tweenMotorC0(motor, windupC0, 0.1)
-			windup.Completed:Wait()
-			local slash = tweenMotorC0(motor, slashC0, 0.11)
-			slash.Completed:Wait()
-			tweenMotorC0(motor, restC0, 0.14)
-		else
-			task.wait(0.25)
+		if doLunge then
+			local lungeCF = CFrame.lookAt(origin.Position + forward * lungeDist, origin.Position + forward * (lungeDist + 4))
+			local outTween = TweenService:Create(
+				root,
+				TweenInfo.new(timing.lungeOut, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+				{ CFrame = lungeCF }
+			)
+			backTween = TweenService:Create(
+				root,
+				TweenInfo.new(timing.lungeBack, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+				{ CFrame = origin }
+			)
+			outTween:Play()
 		end
 
-		backTween:Play()
-		backTween.Completed:Wait()
+		if doBlade and motor and restC0 and windupC0 and slashC0 then
+			local windup = tweenMotorC0(motor, windupC0, timing.bladeWindup)
+			windup.Completed:Wait()
+			local slash = tweenMotorC0(motor, slashC0, timing.bladeSlash)
+			slash.Completed:Wait()
+			tweenMotorC0(motor, restC0, timing.bladeRest)
+		elseif not doBlade then
+			task.wait(timing.spellHold)
+		else
+			task.wait(timing.bladeWindup + timing.bladeSlash + timing.bladeRest)
+		end
+
+		if doLunge and backTween then
+			backTween:Play()
+			backTween.Completed:Wait()
+		end
 		isPlayerAttackAnimating = false
 	end)
 end
@@ -920,6 +991,10 @@ end)
 player.CharacterAdded:Connect(function(char)
 	character = char
 	isPlayerAttackAnimating = false
+	isInBattle = false
+	isCatchPending = false
+	selectedSpirit = nil
+	suppressBattleUpdates = false
 end)
 
 -- ============================================

@@ -750,6 +750,29 @@ QuestCatalog.Quests = {
 		},
 		Prerequisites = {1}
 	},
+	[305] = {
+		Id = 305,
+		Name = "Разбор эссенции",
+		Description = "В Святилище Ками разберите одного духа (не последнего) — осколки, Звёзды и эссенции.",
+		Type = "Side",
+		Level = 4,
+		ZoneHint = "Святилище Ками · вкладка Дезинтеграция",
+		Objectives = {
+			{Type = "KamiDisintegrate", Count = 1},
+		},
+		Rewards = {
+			Experience = 80,
+			CopperCoins = 40,
+			SilverCoins = 4,
+			GoldCoins = 0,
+			Reputation = 10,
+			UniqueItems = {},
+			Items = {
+				{Id = 310, Quantity = 1},
+			},
+		},
+		Prerequisites = {304},
+	},
 
 	-- ============================================
 	-- Exploration story beats (Q1 expansion) — VisitZone / habitat
@@ -1083,6 +1106,52 @@ QuestCatalog.Quests = {
 			Items = {{Id = 1, Quantity = 2}}
 		},
 		Prerequisites = {1}
+	},
+	-- Month W2: 2-step Exit→Combat side chain (VisitZone → CollectItem)
+	-- SoT Studio: quests live in QuestSystem (no QuestCatalog ModuleScript yet)
+	[113] = {
+		Id = 113,
+		Name = "Кэш у выхода",
+		Description = "Пройдите через Exit из Haven в Combat (отметьте зону Exit)",
+		Type = "Side",
+		Level = 2,
+		ZoneHint = "Exit · дверь Haven→Combat",
+		TargetZone = "Exit",
+		Objectives = {
+			{Type = "VisitZone", ZoneDetail = "Exit", Count = 1}
+		},
+		Rewards = {
+			Experience = 60,
+			CopperCoins = 35,
+			SilverCoins = 0,
+			GoldCoins = 0,
+			Reputation = 6,
+			UniqueItems = {},
+			Items = {{Id = 1, Quantity = 1}}
+		},
+		Prerequisites = {1}
+	},
+	[114] = {
+		Id = 114,
+		Name = "Искра на тропе",
+		Description = "Соберите 1 огненный кристалл (#101) у Exit — подсветка на тропе",
+		Type = "Side",
+		Level = 2,
+		ZoneHint = "Exit · кристалл E",
+		TargetZone = "Exit",
+		Objectives = {
+			{Type = "CollectItem", ItemId = 101, Count = 1}
+		},
+		Rewards = {
+			Experience = 70,
+			CopperCoins = 40,
+			SilverCoins = 0,
+			GoldCoins = 0,
+			Reputation = 8,
+			UniqueItems = {},
+			Items = {{Id = 2, Quantity = 1}}
+		},
+		Prerequisites = {113}
 	},
 }
 

@@ -6,7 +6,140 @@
 
 ## [Unreleased]
 
-### Combat animations — cat.1 analysis (2026-08-19)
+### E1 hands buffer + Q3 2p — user PASS (2026-08-23)
+- **E1 buffer:** **PASS (user hands, self-reported)** — owner «pass» после month wrap; formal n≥10 таблица не заполнялась run-by-run — [`SESSION-2026-08-23-e1-hands-buffer.md`](SESSION-2026-08-23-e1-hands-buffer.md) · [`E1-HANDS-BUFFER-LOG.md`](E1-HANDS-BUFFER-LOG.md)
+- **Q3 slice 3 2p:** trade confirm + duel rematch W/L — **CONDITIONAL → PASS (user)** — [`SESSION-2026-08-23-q3-slice3-trade-duel.md`](SESSION-2026-08-23-q3-slice3-trade-duel.md)
+- **NEXT-SESSION:** month + E1 + Q3 закрыты; top = выбор backlog **B1 PvP slice 3** или **B2 Explore hub 2**
+
+### E1 hands buffer setup (2026-08-23)
+- **`E1-HANDS-BUFFER-LOG.md`:** шаблон n≥10 full cycle (Мика→Exit→бой F/1/2→Haven); метрика ≥90% PASS; колонки Run/Date/F/E/skills/Resonant
+- **NEXT-SESSION:** top = E1 buffer; Q3 2p hands остаётся CONDITIONAL
+- MCP smoke Edit+Play: core modules + QuestMaster + ExitZone/BattleArena **PASS**
+
+### Q3 slice 3 — trade/duel polish (2026-08-23) **COMPLETE**
+- **`PvPDuelSystem` / `PvPDuelController`:** session W/L stub; rematch countdown; тосты `· сессия XW/YL`
+- **`PlayerTradeController`:** confirm overlay перед «Готово» (обе стороны с предметом); тосты info/error/success; красный flash панели при fail
+- **`PlayerTradeSystem`:** `Kind` в Toast; русские `✗ Обмен сорван: …` для cancel reasons
+- **`OtakuHavenBuilder`:** Exit/дуэль wayfind copy («Y у Exit → арена»); Exit door hint «дуэль у арены»
+- Smoke Edit: grep + SimulateSwap + EnsureDuelWayfind **PASS**; Play Solo load **PASS**; 2p trade confirm — **CONDITIONAL** — [`SESSION-2026-08-23-q3-slice3-trade-duel.md`](SESSION-2026-08-23-q3-slice3-trade-duel.md)
+
+### Month dev wrap W1–W4 (2026-08-23)
+- **W1** Sanctum product slice — **PASS** (304, stars/shard, disintegrate UX)
+- **W2** Exit side 113→114 — **PASS** MCP
+- **W3** Dex Resonant UI — **PASS** (код + user hands)
+- **W4** Sanctum stars meta — **PASS** (★ picker, StarDelta +0.360, quest 305 hands)
+- **Resonant loop** — **PASS** (user hands)
+- Month wrap doc — [`SESSION-2026-08-23-month-w4-wrap.md`](SESSION-2026-08-23-month-w4-wrap.md)
+- **Октябрь (backlog, ONE slice):** E1 hands n≥10 **или** PvP slice 3 / Explore hub 2 **или** Q3 slice 3
+
+### Combat Anim — sword swing removed (2026-08-23)
+- **Body sword-swing disabled:** `CombatAnimResolver.Play()` no-op; `ShouldPlayBodyAnim()` → false; blade tween + root lunge unchanged
+- **Studio cleanup:** удалены `CombatAnimations/*` (Linked Sword clips), `Workspace.SwordSwingIdleAnims`, katana audit models, `ServerStorage._AnimAudit_OfficialSlash`
+- **`DG_CLIPS` / `FALLBACK_IDS` / Linked Sword IDs** убраны из resolver
+
+### Month W4 — Sanctum stars meta (2026-08-23)
+- **Выбор W4:** Sanctum stars meta (continuity W1/W3; не PvP / Explore hub 2)
+- **`KamiSanctumSystem`:** preview `ResonancePowerBase` + `StarDelta` для подсказки силы
+- **`KamiSanctumController`:** ★I/II/III picker из сумки · `(+X.XX от звёзд)` в Status · synth передаёт звёзды
+- **Quest 305** «Разбор эссенции» — `KamiDisintegrate` ×1, prereq 304; `QuestUI` реплики
+- **`ItemCatalog`:** `WhyTag` «синтез · +сила» для 310–312
+- MCP smoke preview: base **1.147** → **1.507** (+0.360) с звёздами — [`SESSION-2026-08-23-w4-sanctum-stars-meta.md`](SESSION-2026-08-23-w4-sanctum-stars-meta.md)
+
+### Combat Anim — visibility pass (2026-08-23)
+- **Root cause:** Action4 track играл, но Animate idle/movement (weight 1) маскировали руку; root lunge 1.6 stud / 0.08s был незаметен; не было client feedback
+- **`CombatAnimResolver`:** `stopConflictingTracks()` перед Play; `Play(0.05,1,speed)` + `AdjustWeight(1)`; lunge Slash **2.4** / Lunge **4.2** stud
+- **`ClientController`:** `pulseCombatFeedback()` — hint «Удар!»/«Выпад!» 0.3s, gold flash, camera punch в бою; `LastCombatAnim` attribute
+- **Smoke MCP:** skill **1** lowerTracks=0 w=1.0 lunge=2.4 · skill **119** lunge=4.2
+
+### Combat Anim — best free Linked Sword set applied (2026-08-23)
+- **`DG_CLIPS` + `CombatAnimations/` + `FALLBACK_IDS`:** production set — Slash/SpellTap/RangedShot `522635514` (0.5s), Lunge/SpellImpulse `522638767` (1.5s), SlashR6 `129967390` (0.5s)
+- Proprietary DG Katana IDs still unavailable; free Linked Sword pair is the shipping sword melee set
+- MCP smoke Play: `VerifyAllClips` 6/6 Length > 0 (source=`folder`); skill **1**→Slash IsPlaying · skill **119**→Lunge IsPlaying
+
+### Combat Anim — free public sword IDs hunt (2026-08-23)
+- **Web + Creator Store + Studio MCP:** 12 verified free sword animation IDs (`VerifyClip` Length > 0); top pair **`522635514`/`522638767`** (Linked Sword / R15 Animate toolslash-toollunge)
+- **Creator Store free models:** AnimSaves KeyframeSequence only — parent model ID не грузится как Animation
+- **`COMBAT-ANIMATIONS.md`:** таблица verified free sword animations + failed IDs
+
+### Month W3 — Dex Resonant UI (2026-08-23)
+- **`UIController`:** Dex panel секция `── Resonant [R] ──` (vid `#parentIds` + tier ★ I/II/III); roster `[R]`; SpiritDetail — `[R] Resonant`, vid, StarScore, ResonancePower
+- **`KamiSanctumSystem`:** `StarScore` на инстансе Resonant после synth
+- MCP smoke synth **PASS** — [`SESSION-2026-08-23-w3-dex-resonant.md`](SESSION-2026-08-23-w3-dex-resonant.md)
+
+### Month W2 — Exit side chain 113→114 (2026-08-23)
+- Side **113** VisitZone Exit → **114** CollectItem 101 у Exit; loot spot `(-18,2,66)`
+- **Hotfix:** `QuestSystem:UpdateProgress` — отсутствовала ветка **VisitZone** в Studio SoT
+- MCP smoke Accept→progress→TurnIn **PASS** — [`SESSION-2026-08-23-w2-exit-side-chain.md`](SESSION-2026-08-23-w2-exit-side-chain.md)
+
+### Combat Anim — DG exact clips hunt blocked (2026-08-23)
+- **Deep hunt:** place `94217045453265` · universe `9051406594` · group `35562865`; web + Catalog API + Studio MCP `search_asset` — **0 public DG animation IDs**
+- **Verified:** forum katana IDs → Length 0; Linked Sword `522635514`/`522638767` → 0.5s/1.5s (**NOT DG**)
+- **`CombatAnimResolver.DG_CLIPS`:** шаблон для user-provided rbxassetid; manual extraction steps в `COMBAT-ANIMATIONS.md`
+- **Blocked:** `copyingAllowed=false`; group inventory недоступен без Team Create / permission
+
+### Combat Anim — вариант 3 paste + smoke (2026-08-23)
+- **`DG_CLIPS`:** 6 слотов (`SlashR15`, `LungeR15`, `SpellTapR15`, `SpellImpulseR15`, `RangedShotR15`, `SlashR6`) с комментариями `paste rbxassetid://... here`
+- **Приоритет:** `CombatAnimations/` (непустой `AnimationId`) → `DG_CLIPS` → `FALLBACK_IDS`
+- **`VerifyClip` / `VerifyAllClips`:** Studio smoke через `LoadAnimation` + `Length > 0` (Play mode надёжнее Edit)
+- **`COMBAT-ANIMATIONS.md` § Вариант 3** · **`NEXT-SESSION`:** ждём rbxassetid от user
+
+### Combat Anim — body attack visibility fix (2026-08-23)
+- **Root cause:** `CombatAnimResolver.Play()` вызывался **после** `waitForBladeModel(0.8s)` — body slash/lunge не стартовал, пока ждали RealmBlade; виден только blade tween
+- **Fix:** body anim сразу после поворота к цели; blade wait **0.35s**; guard `humanoid`; track cache в `CombatAnimResolver`
+- **DG research re-check:** proprietary IDs недоступны; forum katana IDs → Length 0; **CombatAnimations/** подтверждены в Studio (`522635514` / `522638767`)
+- **Smoke MCP:** `PlayPlayerAttack` → Action4 @ 50ms (119/31/11); skill 2 → None; direct resolver 1→0.5s, 119→1.5s
+
+### Combat Anim — Dueling Grounds feel (2026-08-23)
+- **Research:** DG — melee-only PvP, light ~0.5s / heavy slower; **публичных asset ID нет** (proprietary)
+- **Approximation:** Roblox Linked Sword `522635514` (slash) + `522638767` (lunge) — [DevForum Classic Sword](https://devforum.roblox.com/t/classic-sword-function/3873089)
+- **`CombatAnimResolver`:** `GetTiming()` · `IsHeavyKind()` · DG-tuned speed/lunge (Slash 1.45/1.6 stud, Lunge 0.85/3.5 stud)
+- **`ClientController`:** per-kind blade/lunge tweens из resolver; overhead arc light vs heavy
+- **Smoke MCP:** skills 1/119/31/11/2 → **5/5 PASS**; track load skill1 length 0.5s
+- **`COMBAT-ANIMATIONS.md`:** секция Dueling Grounds research + tuning table
+
+### Resonant live loop MCP smoke (2026-08-23)
+- Post Combat Anim cat.1–4: SeedQA → **Ками-Глыба** → бой SkillIndex 1+2 win → Care → Temper → Sanctum `[R]` — **PASS**
+- [`SESSION-2026-08-23-resonant-loop-smoke.md`](SESSION-2026-08-23-resonant-loop-smoke.md)
+- След.: **hands** прогон без SeedQA/ForceCatch
+
+### Combat Anim cat.4 — Ranged + Spell (2026-08-23)
+- **`None`**: все Ranged+Spell — без body anim, без blade tween, **lunge 0** (исправлен fallback 2 stud)
+- **`ShouldBladeTween()`** · `ClientController` — поворот к цели + пауза 0.12s, VFX на сервере
+- **Combat Anim pipeline (cat.1–4) — complete**
+
+### Combat Anim cat.3 — Ranged + Physical (2026-08-23)
+- **`RangedShot`**: skill **11** — slash release 1.35×, **lunge 0** (на месте)
+- **`ShouldRootLunge()`** + `ClientController` пропускает HRP tween для дальних физ. атак
+- **`CombatAnimations/RangedShotR15`**
+
+### Combat Anim cat.2 — Melee + Spell (2026-08-23)
+- **`CombatAnimResolver`**: `SpellTap` (31, 126 — быстрый slash 1.45×, lunge 1.5) · `SpellImpulse` (303 — lunge 0.95×, 2.5 stud)
+- **`CombatAnimations/`**: `SpellTapR15`, `SpellImpulseR15` (alias Linked Sword clips)
+
+### Combat Anim cat.1 — Melee + Physical (2026-08-23)
+- **`CombatAnimResolver`**: выбор slash/lunge по `SkillCatalog.GetCombatMeta`; skill **119** → lunge (`522638767`), остальные melee physical → slash (`522635514`)
+- **`CombatAnimations/`** в Studio: `SlashR15`, `LungeR15`, `SlashR6`
+- **`ClientController`**: `PlayPlayerAttack` использует resolver + `SkillId`; дистанция выпада 2/3 studs
+- **`GameManager` / `PvPDuelSystem`**: `SkillId` в payload `PlayPlayerAttack`
+- **`SkillCatalog.CombatMeta`** синхронизирован в Studio SoT
+
+### Fix: shop panel empty overlay (2026-08-23)
+- **UIController**: `RealmOfSpiritsUI.ZIndexBehavior = Sibling` (в Studio было default Global — товары слева с ZIndex=1 рисовались под `ShopListFrame`)
+- **TradePanelUI**: строки магазина/инвентаря с ZIndex выше scroll; `shopEmptyLabel` скрывается после загрузки; каталог через `ItemCatalog.GetShopItems()` в `Open()`
+- **GameManager**: `GetShop` доступен везде; покупка/продажа — только в Otaku Haven
+- **UIController**: `TradeResult` при ошибке не сбрасывает каталог
+
+### Fix: client/server audit — quest persist, trade race, PvP duel (2026-08-23)
+- **QuestSystem**: квесты привязаны к `playerData.ActiveQuests/CompletedQuests/QuestProgress`; `InitQuestSystemForPlayer` после LoadData
+- **PlayerTradeSystem**: mutex `completingPairs` против double-complete
+- **PvPDuelController**: убран `BattleRequest` при дуэли (не стартует wild PvE)
+- **KamiSanctumController**: `mode = "Synthesize"` по умолчанию
+- **ClientController**: сброс battle/catch state на respawn
+- **QuestUI**: `endMikaFocus()` на respawn
+- **GameManager**: cleanup `Humanoid.Died` connections
+- **KamiSanctumService** (mirror): proximity gate; Studio SoT уже с session auth
+- **OtakuHavenService**: `typeof(action)` guard; ClaimSeasonPass safe zone (mirror)
+
 - **`COMBAT-ANIMATIONS.md`**: матрица 4 категорий; категория **Melee + Physical** — proposal `522635514` (slash) + `522638767` (lunge для #119); Studio wiring — след. сессия
 - Checkpoint: [`SESSION-2026-08-19-combat-animations-checkpoint.md`](SESSION-2026-08-19-combat-animations-checkpoint.md)
 

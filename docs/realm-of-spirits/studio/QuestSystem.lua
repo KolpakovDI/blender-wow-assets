@@ -51,14 +51,31 @@ local function NormalizeCurrency(playerData)
 	playerData.CopperCoins = total % 100
 end
 
-function QuestSystem.new(player)
+function QuestSystem.new(player, playerData)
 	local self = setmetatable({}, QuestSystem)
 
 	self.Player = player
-	self.ActiveQuests = {}
-	self.CompletedQuests = {}
 	self.ReadyToTurnIn = {}
-	self.QuestProgress = {}
+	if playerData then
+		playerData.ActiveQuests = playerData.ActiveQuests or {}
+		playerData.CompletedQuests = playerData.CompletedQuests or {}
+		playerData.QuestProgress = playerData.QuestProgress or {}
+		self.ActiveQuests = playerData.ActiveQuests
+		self.CompletedQuests = playerData.CompletedQuests
+		self.QuestProgress = playerData.QuestProgress
+		self._boundToSave = true
+	else
+		self.ActiveQuests = {}
+		self.CompletedQuests = {}
+		self.QuestProgress = {}
+		self._boundToSave = false
+	end
+
+	for questId, active in pairs(self.ActiveQuests) do
+		if active and self:AreAllObjectivesComplete(questId) then
+			self.ReadyToTurnIn[questId] = true
+		end
+	end
 
 	return self
 end
@@ -529,12 +546,40 @@ end
 local PlayerQuestSystems = {}
 local RecentQuestMasterInteraction = {}
 
+local function getQuestPlayerData(player)
+	if _G.GetPlayerData then
+		return _G.GetPlayerData(player)
+	end
+	local ok, DSM = pcall(require, script.Parent.DataStoreManager)
+	if ok and DSM then
+		return DSM.new():GetPlayerData(player.UserId)
+	end
+	return nil
+end
+
+local function InitQuestSystemForPlayer(player, playerData)
+	if not player or not playerData then
+		return nil
+	end
+	local questSystem = QuestSystem.new(player, playerData)
+	PlayerQuestSystems[player.UserId] = questSystem
+	return questSystem
+end
+
 local function GetOrCreateQuestSystem(player)
 	local questSystem = PlayerQuestSystems[player.UserId]
-	if not questSystem then
-		questSystem = QuestSystem.new(player)
-		PlayerQuestSystems[player.UserId] = questSystem
+	if questSystem then
+		if not questSystem._boundToSave then
+			local data = getQuestPlayerData(player)
+			if data and not next(questSystem.ActiveQuests) and not next(questSystem.CompletedQuests) then
+				return InitQuestSystemForPlayer(player, data)
+			end
+		end
+		return questSystem
 	end
+	local data = getQuestPlayerData(player)
+	questSystem = QuestSystem.new(player, data)
+	PlayerQuestSystems[player.UserId] = questSystem
 	return questSystem
 end
 
@@ -837,6 +882,7 @@ end
 
 -- Экспортируем для других скриптов
 _G.UpdateQuestProgress = updateQuestProgress
+_G.InitQuestSystemForPlayer = InitQuestSystemForPlayer
 _G.RoS_OpenQuestUI = function(player)
 	local qs = GetOrCreateQuestSystem(player)
 	if qs then
@@ -856,7 +902,20 @@ end
 -- ============================================
 
 Players.PlayerAdded:Connect(function(player)
-	GetOrCreateQuestSystem(player)
+	task.spawn(function()
+		for _ = 1, 50 do
+			if not player.Parent then
+				return
+			end
+			local data = getQuestPlayerData(player)
+			if data then
+				InitQuestSystemForPlayer(player, data)
+				return
+			end
+			task.wait(0.2)
+		end
+		GetOrCreateQuestSystem(player)
+	end)
 end)
 
 -- Обработка игроков уже в игре

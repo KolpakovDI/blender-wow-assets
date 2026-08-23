@@ -469,6 +469,9 @@ end
 task.spawn(function() setupHaven(workspace:WaitForChild("OtakuHaven", 60)) end)
 workspace.ChildAdded:Connect(function(child) if child.Name == "OtakuHaven" then task.wait(0.3); setupHaven(child) end end)
 havenEvent.OnServerEvent:Connect(function(player, action, payload)
+	if typeof(action) ~= "string" then
+		return
+	end
 	payload = type(payload) == "table" and payload or {}
 	if action == "RequestBuffs" then
 		local playerData = getPlayerData(player)
@@ -521,6 +524,10 @@ havenEvent.OnServerEvent:Connect(function(player, action, payload)
 			end
 		end
 	elseif action == "ClaimSeasonPass" then
+		if not isInSafeZone(player) then
+			notify(player, "Toast", { Text = "Сезонный пропуск только в Haven" })
+			return
+		end
 		local playerData = getPlayerData(player)
 		if not playerData then return end
 		local ok, SeasonLiveOps = pcall(function()

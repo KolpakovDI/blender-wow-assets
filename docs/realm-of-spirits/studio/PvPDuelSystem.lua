@@ -210,6 +210,23 @@ local function toast(player, text)
 	notify(player, "Toast", { Message = text })
 end
 
+local function duelSessionStats(player)
+	if not player then
+		return 0, 0
+	end
+	return tonumber(player:GetAttribute("PvPDuelWins")) or 0,
+		tonumber(player:GetAttribute("PvPDuelLosses")) or 0
+end
+
+local function bumpDuelSessionStats(winner, loser)
+	if winner and winner.Parent then
+		winner:SetAttribute("PvPDuelWins", duelSessionStats(winner) + 1)
+	end
+	if loser and loser.Parent then
+		loser:SetAttribute("PvPDuelLosses", duelSessionStats(loser) + 1)
+	end
+end
+
 local function clearPendingPair(userA, userB)
 	if pending[userA] and pending[userA].PartnerId == userB then
 		pending[userA] = nil
@@ -405,15 +422,21 @@ offerRematch = function(challenger, target, originA, originB)
 	}
 	rematchPending[challenger.UserId] = session
 	rematchPending[target.UserId] = session
+	local cw, cl = duelSessionStats(challenger)
+	local tw, tl = duelSessionStats(target)
 	notify(challenger, "RematchOffer", {
 		OpponentName = target.DisplayName,
 		OpponentUserId = target.UserId,
 		Seconds = REMATCH_TTL,
+		Wins = cw,
+		Losses = cl,
 	})
 	notify(target, "RematchOffer", {
 		OpponentName = challenger.DisplayName,
 		OpponentUserId = challenger.UserId,
 		Seconds = REMATCH_TTL,
+		Wins = tw,
+		Losses = tl,
 	})
 	toast(challenger, "Реванш? Принять / Отклонить (" .. REMATCH_TTL .. "с)")
 	toast(target, "Реванш? Принять / Отклонить (" .. REMATCH_TTL .. "с)")
@@ -702,6 +725,8 @@ local function endDuel(duel, absoluteWinner, reason)
 
 	destroyDuelVisuals(duel)
 
+	bumpDuelSessionStats(winnerPlr, loserPlr)
+
 	for _, plr in ipairs({ challenger, target }) do
 		if plr then
 			plr:SetAttribute("InPvPDuel", nil)
@@ -710,7 +735,15 @@ local function endDuel(duel, absoluteWinner, reason)
 			if _G.HideBattleBlade then
 				_G.HideBattleBlade(plr)
 			end
-			notify(plr, "DuelEnd", { Reason = reason or "end" })
+			local wins, losses = duelSessionStats(plr)
+			local opp = (plr == winnerPlr) and loserPlr or winnerPlr
+			notify(plr, "DuelEnd", {
+				Reason = reason or "end",
+				Won = plr == winnerPlr,
+				OpponentName = opp and (opp.DisplayName or opp.Name) or "",
+				Wins = wins,
+				Losses = losses,
+			})
 		end
 	end
 
@@ -747,14 +780,17 @@ local function endDuel(duel, absoluteWinner, reason)
 	end
 
 	if winnerPlr then
+		local ww, wl = duelSessionStats(winnerPlr)
+		local stub = string.format(" · сессия %dW/%dL", ww, wl)
 		if WIN_COPPER > 0 then
-			toast(winnerPlr, "✓ Дуэль духов: победа! +" .. WIN_COPPER .. " 🥉")
+			toast(winnerPlr, "✓ Дуэль духов: победа! +" .. WIN_COPPER .. " 🥉" .. stub)
 		else
-			toast(winnerPlr, "✓ Дуэль духов: победа! (слава)")
+			toast(winnerPlr, "✓ Дуэль духов: победа! (слава)" .. stub)
 		end
 	end
 	if loserPlr then
-		toast(loserPlr, "Дуэль духов: поражение")
+		local lw, ll = duelSessionStats(loserPlr)
+		toast(loserPlr, string.format("Дуэль духов: поражение · сессия %dW/%dL", lw, ll))
 	end
 
 	local originA, originB = duel.OriginA, duel.OriginB
@@ -936,7 +972,10 @@ local function handleAttack(player, data)
 	end
 
 	if battleEvent then
-		battleEvent:FireClient(player, "PlayPlayerAttack", { Mode = "Battle" })
+		battleEvent:FireClient(player, "PlayPlayerAttack", {
+			Mode = "Battle",
+			SkillId = result.Ability and result.Ability.Id,
+		})
 	end
 
 	duel.Battle.LastMessage = result.Message or ""

@@ -1,44 +1,44 @@
 # NEXT SESSION
 
-**Статус:** 2026-08-19 checkpoint — **Combat Anim cat.1 proposed**; W1 Sanctum smoke **PASS**; docs/mirrors в git.  
-**План месяца:** [`MONTH-PLAN-2026-09-dev.md`](MONTH-PLAN-2026-09-dev.md)  
-**Текущая неделя:** W1 Sanctum (закрыто) → **Combat animations pipeline**
+**Статус:** 2026-08-23 — Month W1–W4 **PASS** · Q3 slice 3 **PASS (user)** · **E1 hands buffer PASS (user)**  
+**Следующий фокус:** **выбрать один backlog B** — PvP slice 3 **или** Explore hub 2 (не оба параллельно)
 
 ## Старт сессии (порядок жёсткий)
 
-1. **Combat Anim — категория 1 (Melee + Physical)**  
-   - Прочитать [`COMBAT-ANIMATIONS.md`](COMBAT-ANIMATIONS.md)  
-   - Studio: `ReplicatedStorage.RealmOfSpirits.CombatAnimations/` (`522635514` slash, `522638767` lunge)  
-   - `ClientController` или `CombatAnimResolver` — выбор по `SkillCatalog.GetCombatMeta`  
-   - Skill **119** → lunge; остальные 10 физ. melee → slash  
-   - Play smoke: skill 1 + 119 с RealmBlade  
-   - **Ctrl+S**
-
-2. **Категории 2–4** — по одной после smoke cat.1 (см. матрицу в `COMBAT-ANIMATIONS.md`)
-
-3. **Опционально:** sync `SkillCatalog.CombatMeta` + `QuestUIChain` в `.rbxl` если mirror ≠ place
+1. Прочитать [`SESSION-2026-08-23-month-w4-wrap.md`](SESSION-2026-08-23-month-w4-wrap.md) — month exit + кандидаты backlog
+2. **Ctrl+S** place → подтвердить SoT
+3. **Owner выбор:** **B1 PvP slice 3** **или** **B2 Explore hub 2** — один vertical, не комбинировать
+4. (Опц. регресс) короткий E1 sanity: Мика → Exit → бой F/1/2 → Haven — [`E1-HANDS-BUFFER-LOG.md`](E1-HANDS-BUFFER-LOG.md)
 
 ## Где остановились
 
 | Область | Состояние |
 |---------|-----------|
-| Quest UI chains | Done (mirror + Studio MCP) |
-| SPIRIT-SKILLS + CombatMeta | Done (mirror; Studio sync — проверить) |
-| Combat Anim cat.1 | **Analysis done, implementation pending** |
-| Sanctum W1 | PASS — [`SESSION-2026-08-19-w1-sanctum-smoke.md`](SESSION-2026-08-19-w1-sanctum-smoke.md) |
+| **E1 buffer** | **PASS (user hands)** — self-reported 2026-08-23 · [`SESSION-2026-08-23-e1-hands-buffer.md`](SESSION-2026-08-23-e1-hands-buffer.md) |
+| **Q3 slice 3** | **COMPLETE** — 2p trade/duel **PASS (user)** · [`SESSION-2026-08-23-q3-slice3-trade-duel.md`](SESSION-2026-08-23-q3-slice3-trade-duel.md) |
+| **Month W1–W4** | **PASS** — [`SESSION-2026-08-23-month-w4-wrap.md`](SESSION-2026-08-23-month-w4-wrap.md) |
+| Resonant hands | **PASS** |
+| Combat Anim | blade tween + lunge only |
+| E4 / Q3 base | Live 2p trade + duel wayfind **PASS** (код + user) |
+
+## Backlog B (следующий срез — выбрать один)
+
+| # | Срез | Когда |
+|---|------|-------|
+| **B1** | **PvP slice 3** | Второй vertical из MONTH-PLAN; после month + E1 + Q3 PASS |
+| **B2** | **Explore hub 2** | Альтернатива B1; не параллельно |
+| — | Month complete | Все gate закрыты — можно пауза / polish-only по команде |
 
 ## Studio SoT
 
 `C:\Mimo\RealmOfSpirits\RealmOfSpirits second.rbxl`
 
-**Модули в mirror (сессия):** `SkillCatalog`, `QuestUI`, `QuestUIChain`, Sanctum/QuestCatalog/DataStoreManager
+**Mirror (Q3 slice 3):** `PvPDuelSystem` · `PvPDuelController` · `PlayerTradeController` · `PlayerTradeSystem` · `OtakuHavenBuilder`
 
-**Audit в place (можно убрать):** `ServerStorage._AnimAudit_OfficialSlash`
+## Не включать (до явной команды)
 
-## Не включать
+Allow* · Guilds · ProfileService live · Haven décor · PvP combat stats · два major track параллельно
 
-Allow* · Guilds · ProfileService live · PvP · Haven décor · второй major track
+## Архив месяца
 
-## Архив
-
-[`SESSION-2026-08-19-combat-animations-checkpoint.md`](SESSION-2026-08-19-combat-animations-checkpoint.md) · Resonant loop · W1 Sanctum smoke
+Month wrap · W4 · W3 · Resonant loop · W2 · W1 · Q3 slice 3 · E1 buffer · [`E1-HANDS-LOG.md`](E1-HANDS-LOG.md) (архив skip + #8)

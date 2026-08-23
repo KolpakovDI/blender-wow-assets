@@ -37,10 +37,37 @@ local function formatOffer(offer)
 	return "(пусто)"
 end
 
-local function showToast(text)
+local function offerHasContent(offer)
+	offer = offer or {}
+	if type(offer.CosmeticId) == "string" and offer.CosmeticId ~= "" then
+		return true
+	end
+	local id = tonumber(offer.ItemId)
+	local qty = tonumber(offer.Quantity) or 0
+	return id ~= nil and qty > 0
+end
+
+local TOAST_KIND = {
+	info = {
+		BackgroundColor3 = Color3.fromRGB(24, 18, 34),
+		TextColor3 = Color3.fromRGB(220, 245, 255),
+	},
+	error = {
+		BackgroundColor3 = Color3.fromRGB(52, 18, 24),
+		TextColor3 = Color3.fromRGB(255, 170, 170),
+	},
+	success = {
+		BackgroundColor3 = Color3.fromRGB(18, 40, 28),
+		TextColor3 = Color3.fromRGB(170, 255, 190),
+	},
+}
+
+local function showToast(text, kind)
 	if not text or text == "" then
 		return
 	end
+	kind = TOAST_KIND[kind] and kind or "info"
+	local style = TOAST_KIND[kind]
 	local pg = player:WaitForChild("PlayerGui")
 	local gui = pg:FindFirstChild("PlayerTradeToastGui")
 	if not gui then
@@ -58,17 +85,17 @@ local function showToast(text)
 		label.AnchorPoint = Vector2.new(0.5, 0)
 		label.Position = UDim2.new(0.5, 0, 0.12, 0)
 		label.Size = UDim2.new(0, 520, 0, 52)
-		label.BackgroundColor3 = Color3.fromRGB(24, 18, 34)
 		label.BackgroundTransparency = 0.08
 		label.Font = Enum.Font.GothamBold
 		label.TextSize = 17
 		label.TextWrapped = true
-		label.TextColor3 = Color3.fromRGB(220, 245, 255)
 		label.Parent = gui
 		local c = Instance.new("UICorner")
 		c.CornerRadius = UDim.new(0, 8)
 		c.Parent = label
 	end
+	label.BackgroundColor3 = style.BackgroundColor3
+	label.TextColor3 = style.TextColor3
 	label.Text = text
 	label.Visible = true
 	task.delay(5, function()
@@ -78,7 +105,7 @@ local function showToast(text)
 	end)
 end
 
-local guiRoot, panel, titleLabel, myOfferLabel, partnerOfferLabel, readyLabel, invList, cosList
+local guiRoot, panel, panelStroke, titleLabel, myOfferLabel, partnerOfferLabel, readyLabel, invList, cosList, readyBtn, confirmFrame
 
 local function refreshInvList()
 	if not invList then
@@ -179,8 +206,54 @@ local function refreshPanel()
 		myReady and "OK" or "...",
 		partnerReady and "OK" or "..."
 	)
+	if readyBtn then
+		if myReady then
+			readyBtn.Text = "Снять"
+			readyBtn.BackgroundColor3 = Color3.fromRGB(120, 100, 50)
+		else
+			readyBtn.Text = "Готово"
+			readyBtn.BackgroundColor3 = Color3.fromRGB(50, 140, 90)
+		end
+	end
+	if panelStroke then
+		panelStroke.Color = Color3.fromRGB(120, 200, 255)
+	end
 	refreshInvList()
 	refreshCosList()
+end
+
+local function flashPanelError()
+	if not panelStroke then
+		return
+	end
+	panelStroke.Color = Color3.fromRGB(255, 90, 90)
+	task.delay(1.2, function()
+		if panelStroke and inTrade then
+			panelStroke.Color = Color3.fromRGB(120, 200, 255)
+		end
+	end)
+end
+
+local function hideConfirmReady()
+	if confirmFrame then
+		confirmFrame.Visible = false
+	end
+end
+
+local function showConfirmReady()
+	ensureGui()
+	if not confirmFrame then
+		return
+	end
+	local body = confirmFrame:FindFirstChild("Body")
+	if body then
+		body.Text = string.format(
+			"Подтвердить обмен?\n\nВы отдаёте: %s\nПолучаете: %s",
+			formatOffer(myOffer),
+			formatOffer(partnerOffer)
+		)
+	end
+	confirmFrame.Visible = true
 end
 
 local function ensureGui()
@@ -207,10 +280,10 @@ local function ensureGui()
 	local corner = Instance.new("UICorner")
 	corner.CornerRadius = UDim.new(0, 12)
 	corner.Parent = panel
-	local stroke = Instance.new("UIStroke")
-	stroke.Color = Color3.fromRGB(120, 200, 255)
-	stroke.Thickness = 2
-	stroke.Parent = panel
+	panelStroke = Instance.new("UIStroke")
+	panelStroke.Color = Color3.fromRGB(120, 200, 255)
+	panelStroke.Thickness = 2
+	panelStroke.Parent = panel
 
 	titleLabel = Instance.new("TextLabel")
 	titleLabel.Name = "Title"
@@ -326,7 +399,7 @@ local function ensureGui()
 		end
 	end)
 
-	local readyBtn = Instance.new("TextButton")
+	readyBtn = Instance.new("TextButton")
 	readyBtn.Name = "Ready"
 	readyBtn.Size = UDim2.new(0, 120, 0, 32)
 	readyBtn.Position = UDim2.new(0.5, -60, 1, -48)
@@ -335,14 +408,113 @@ local function ensureGui()
 	readyBtn.TextSize = 14
 	readyBtn.TextColor3 = Color3.new(1, 1, 1)
 	readyBtn.Text = "Готово"
+	readyBtn.ZIndex = panel.ZIndex + 2
 	readyBtn.Parent = panel
 	local readyCorner = Instance.new("UICorner")
 	readyCorner.CornerRadius = UDim.new(0, 8)
 	readyCorner.Parent = readyBtn
 	readyBtn.MouseButton1Click:Connect(function()
-		if inTrade then
-			tradeEvent:FireServer("Ready", { Ready = not myReady })
+		if not inTrade then
+			return
 		end
+		if myReady then
+			hideConfirmReady()
+			tradeEvent:FireServer("Ready", { Ready = false })
+			return
+		end
+		if not offerHasContent(myOffer) then
+			showToast("Сначала выберите предмет для обмена", "error")
+			flashPanelError()
+			return
+		end
+		if offerHasContent(partnerOffer) then
+			showConfirmReady()
+			return
+		end
+		tradeEvent:FireServer("Ready", { Ready = true })
+	end)
+
+	confirmFrame = Instance.new("Frame")
+	confirmFrame.Name = "ConfirmReady"
+	confirmFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+	confirmFrame.Position = UDim2.fromScale(0.5, 0.5)
+	confirmFrame.Size = UDim2.new(0, 360, 0, 168)
+	confirmFrame.BackgroundColor3 = Color3.fromRGB(20, 16, 30)
+	confirmFrame.BorderSizePixel = 0
+	confirmFrame.Visible = false
+	confirmFrame.ZIndex = panel.ZIndex + 10
+	confirmFrame.Parent = panel
+	local confirmCorner = Instance.new("UICorner")
+	confirmCorner.CornerRadius = UDim.new(0, 10)
+	confirmCorner.Parent = confirmFrame
+	local confirmStroke = Instance.new("UIStroke")
+	confirmStroke.Color = Color3.fromRGB(255, 200, 120)
+	confirmStroke.Thickness = 2
+	confirmStroke.Parent = confirmFrame
+
+	local confirmTitle = Instance.new("TextLabel")
+	confirmTitle.Name = "Title"
+	confirmTitle.Size = UDim2.new(1, -20, 0, 24)
+	confirmTitle.Position = UDim2.new(0, 10, 0, 8)
+	confirmTitle.BackgroundTransparency = 1
+	confirmTitle.Font = Enum.Font.GothamBold
+	confirmTitle.TextSize = 16
+	confirmTitle.TextColor3 = Color3.fromRGB(255, 230, 180)
+	confirmTitle.TextXAlignment = Enum.TextXAlignment.Left
+	confirmTitle.Text = "Подтверждение обмена"
+	confirmTitle.Parent = confirmFrame
+
+	local confirmBody = Instance.new("TextLabel")
+	confirmBody.Name = "Body"
+	confirmBody.Size = UDim2.new(1, -20, 0, 72)
+	confirmBody.Position = UDim2.new(0, 10, 0, 34)
+	confirmBody.BackgroundTransparency = 1
+	confirmBody.Font = Enum.Font.Gotham
+	confirmBody.TextSize = 14
+	confirmBody.TextWrapped = true
+	confirmBody.TextYAlignment = Enum.TextYAlignment.Top
+	confirmBody.TextColor3 = Color3.fromRGB(230, 220, 210)
+	confirmBody.TextXAlignment = Enum.TextXAlignment.Left
+	confirmBody.Text = ""
+	confirmBody.Parent = confirmFrame
+
+	local confirmYes = Instance.new("TextButton")
+	confirmYes.Name = "Yes"
+	confirmYes.Size = UDim2.new(0, 120, 0, 32)
+	confirmYes.Position = UDim2.new(0.5, -130, 1, -42)
+	confirmYes.BackgroundColor3 = Color3.fromRGB(50, 140, 90)
+	confirmYes.Font = Enum.Font.GothamBold
+	confirmYes.TextSize = 14
+	confirmYes.TextColor3 = Color3.new(1, 1, 1)
+	confirmYes.Text = "Подтвердить"
+	confirmYes.ZIndex = confirmFrame.ZIndex + 1
+	confirmYes.Parent = confirmFrame
+	local confirmYesCorner = Instance.new("UICorner")
+	confirmYesCorner.CornerRadius = UDim.new(0, 8)
+	confirmYesCorner.Parent = confirmYes
+	confirmYes.MouseButton1Click:Connect(function()
+		hideConfirmReady()
+		if inTrade then
+			tradeEvent:FireServer("Ready", { Ready = true })
+		end
+	end)
+
+	local confirmNo = Instance.new("TextButton")
+	confirmNo.Name = "No"
+	confirmNo.Size = UDim2.new(0, 120, 0, 32)
+	confirmNo.Position = UDim2.new(0.5, 10, 1, -42)
+	confirmNo.BackgroundColor3 = Color3.fromRGB(90, 70, 80)
+	confirmNo.Font = Enum.Font.GothamBold
+	confirmNo.TextSize = 14
+	confirmNo.TextColor3 = Color3.new(1, 1, 1)
+	confirmNo.Text = "Назад"
+	confirmNo.ZIndex = confirmFrame.ZIndex + 1
+	confirmNo.Parent = confirmFrame
+	local confirmNoCorner = Instance.new("UICorner")
+	confirmNoCorner.CornerRadius = UDim.new(0, 8)
+	confirmNoCorner.Parent = confirmNo
+	confirmNo.MouseButton1Click:Connect(function()
+		hideConfirmReady()
 	end)
 
 	local cancelBtn = Instance.new("TextButton")
@@ -376,6 +548,7 @@ local function openTrade(name)
 end
 
 local function closeTrade()
+	hideConfirmReady()
 	inTrade = false
 	player:SetAttribute("InPlayerTrade", nil)
 	partnerName = ""
@@ -410,7 +583,16 @@ tradeEvent.OnClientEvent:Connect(function(action, payload)
 	elseif action == "TradeState" then
 		applyState(payload)
 	elseif action == "Toast" then
-		showToast(payload.Text or "")
+		local kind = payload.Kind
+		if not kind and type(payload.Text) == "string" then
+			local t = payload.Text
+			if string.find(t, "✗", 1, true) or string.find(t, "сорван", 1, true) or string.find(t, "Недостаточно", 1, true) then
+				kind = "error"
+			elseif string.find(t, "✓", 1, true) or string.find(t, "успеш", 1, true) then
+				kind = "success"
+			end
+		end
+		showToast(payload.Text or "", kind)
 	elseif action == "TradeComplete" then
 		local msg = payload.Text
 		if not msg or msg == "" then
@@ -420,10 +602,15 @@ tradeEvent.OnClientEvent:Connect(function(action, payload)
 				formatOffer(payload.Received)
 			)
 		end
-		showToast(msg)
+		showToast(msg, "success")
 		closeTrade()
 	elseif action == "TradeCancelled" then
-		showToast(payload.Text or "Обмен отменён")
+		local reason = payload.Reason
+		local isError = reason ~= nil and reason ~= "cancelled"
+		showToast(payload.Text or "Обмен отменён", isError and "error" or "info")
+		if isError then
+			flashPanelError()
+		end
 		closeTrade()
 	end
 end)

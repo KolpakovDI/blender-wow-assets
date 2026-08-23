@@ -89,6 +89,58 @@ local function ResolveOwnedSpiritDisplay(spirit)
 	}
 end
 
+local function isResonantSpirit(spirit)
+	if type(spirit) ~= "table" then
+		return false
+	end
+	return spirit.Kind == "Resonant" or (tonumber(spirit.Id) or 0) >= 9000
+end
+
+local function formatParentIds(parentIds)
+	if type(parentIds) ~= "table" or #parentIds == 0 then
+		return "—"
+	end
+	local parts = {}
+	for _, pid in ipairs(parentIds) do
+		table.insert(parts, "#" .. tostring(pid))
+	end
+	return table.concat(parts, ", ")
+end
+
+local function formatStarTierHint(starScore, resonancePower)
+	local score = tonumber(starScore)
+	if score then
+		if score >= 0.75 then
+			return "★★★ III"
+		elseif score >= 0.4 then
+			return "★★ II"
+		elseif score >= 0.15 then
+			return "★ I"
+		end
+		return "без тира"
+	end
+	local pow = tonumber(resonancePower)
+	if pow then
+		return string.format("сила %.2f", pow)
+	end
+	return "—"
+end
+
+local function buildResonantDexLines(spirits)
+	local lines = {}
+	for i, s in ipairs(spirits or {}) do
+		if isResonantSpirit(s) then
+			local name = s.Name or ("Ками #" .. tostring(s.Id))
+			local lvl = tonumber(s.Level) or 1
+			local parents = formatParentIds(s.ParentIds)
+			local stars = formatStarTierHint(s.StarScore, s.ResonancePower)
+			table.insert(lines, string.format("[R] %d. %s Lv%d", i, name, lvl))
+			table.insert(lines, string.format("    vid %s · %s", parents, stars))
+		end
+	end
+	return lines
+end
+
 -- Маппинг числового ранга в буквенный
 local RankNames = {[1] = "D", [2] = "C", [3] = "B", [4] = "A", [5] = "S", [6] = "SS", [7] = "SSS"}
 
@@ -479,6 +531,14 @@ RefreshDexPanel = function(dex)
 	end
 	if #lines == 0 then
 		table.insert(lines, "Пока нет духов в коллекции.")
+	end
+	local resonantLines = buildResonantDexLines((PlayerData and PlayerData.Spirits) or {})
+	if #resonantLines > 0 then
+		table.insert(lines, "")
+		table.insert(lines, "── Resonant [R] ──")
+		for _, rl in ipairs(resonantLines) do
+			table.insert(lines, rl)
+		end
 	end
 	local atk = math.floor((tonumber(dex.AttackPct) or 0) * 1000 + 0.5) / 10
 	local def = math.floor((tonumber(dex.DefensePct) or 0) * 1000 + 0.5) / 10
@@ -1632,10 +1692,14 @@ OpenSpiritDetail = function(index)
 	-- Заполняем информацию
 	detailSpiritName.Text = "Имя: " .. tostring(spiritInfo.Name)
 	detailSpiritLevel.Text = "Уровень: " .. (spirit.Level or 1)
+	local rarityText = spiritInfo.Rarity or "-"
+	if isResonantSpirit(spirit) then
+		rarityText = "[R] Resonant"
+	end
 	detailSpiritElement.Text = "Элемент: "
 		.. (spiritInfo.ElementLabel or spiritInfo.Element or "-")
-		.. " | Редкость: "
-		.. (spiritInfo.Rarity or "-")
+		.. " | "
+		.. rarityText
 
 	-- Текущее состояние (базовые характеристики зависят от уровня)
 	local lvl = spirit.Level or 1
@@ -1694,7 +1758,25 @@ OpenSpiritDetail = function(index)
 	end
 	detailSpiritSkills.Text = skillsText
 
-	ApplyEvoProgressUI(spirit)
+	if isResonantSpirit(spirit) then
+		local parents = formatParentIds(spirit.ParentIds)
+		local stars = formatStarTierHint(spirit.StarScore, spirit.ResonancePower)
+		local pow = tonumber(spirit.ResonancePower) or 0
+		detailEvoProgressLabel.Text = string.format(
+			"[R] Resonant · слот %d\nvid %s · %s · сила %.2f",
+			index, parents, stars, pow
+		)
+		detailEvoProgressLabel.TextColor3 = Color3.fromRGB(200, 180, 255)
+		evolveButtonEnabled = false
+		detailEvolveButton.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+		local evoLbl = detailEvolveButton:FindFirstChild("ButtonLabel")
+		if evoLbl then
+			evoLbl.Text = "Ками"
+		end
+	else
+		detailEvoProgressLabel.TextColor3 = Color3.fromRGB(255, 220, 140)
+		ApplyEvoProgressUI(spirit)
+	end
 
 	spiritDetailFrame.Visible = true
 
@@ -2470,7 +2552,8 @@ local function UpdateSpiritSlots(spirits)
 				if iconFrame then iconFrame.BackgroundColor3 = iconData.Color end
 				if iconEmoji then iconEmoji.Text = iconData.Emoji end
 				if nameLabel then
-					nameLabel.Text = shortName .. " Ур." .. (spiritInfo.Level or 1)
+					local prefix = isResonantSpirit(spiritInfo) and "[R] " or ""
+					nameLabel.Text = prefix .. shortName .. " Ур." .. (spiritInfo.Level or 1)
 				end
 				slot.BackgroundColor3 = Color3.fromRGB(80, 120, 80)
 			else
@@ -3203,6 +3286,9 @@ TradeEvent.OnClientEvent:Connect(function(action, data)
 		ShowNotification(data.Message or "")
 		if data.Success and tradeUI.IsVisible() then
 			RefreshTradeInventory()
+			tradeUI.RefreshAfford()
+		elseif not data.Success and tradeUI.IsVisible() and data.Message then
+			-- Keep catalog visible; purchase may fail outside Haven
 			tradeUI.RefreshAfford()
 		end
 	end

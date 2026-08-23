@@ -1850,7 +1850,11 @@ BattleEvent.OnServerEvent:Connect(function(player, action, data)
 		if _G.ShowBattleBlade then
 			_G.ShowBattleBlade(player)
 		end
-		BattleEvent:FireClient(player, "PlayPlayerAttack", {Mode = "Battle", TargetPosition = targetPos})
+		BattleEvent:FireClient(player, "PlayPlayerAttack", {
+			Mode = "Battle",
+			TargetPosition = targetPos,
+			SkillId = result.Ability and result.Ability.Id,
+		})
 		if battle.EnemyModel and battle.EnemyModel.Parent then
 			PlaySpiritAttackAnimation(battle.EnemyModel, player.Character and player.Character.PrimaryPart and player.Character.PrimaryPart.Position)
 		end
@@ -2160,8 +2164,14 @@ end)
 -- Торговля (NPC магазин)
 -- ============================================
 TradeEvent.OnServerEvent:Connect(function(player, action, data)
+	if typeof(action) ~= "string" then
+		return
+	end
 	local playerData = GetPlayerData(player)
 	if not playerData then return end
+	if type(data) ~= "table" then
+		data = {}
+	end
 
 	local function canUseNpcShop()
 		local detail = player:GetAttribute("ZoneDetail")
@@ -2188,9 +2198,9 @@ TradeEvent.OnServerEvent:Connect(function(player, action, data)
 		return shopPart ~= nil and (hrp.Position - shopPart.Position).Magnitude <= 45
 	end
 
-	if action == "GetShop" or action == "Buy" or action == "Sell" then
+	if action == "Buy" or action == "Sell" then
 		if not canUseNpcShop() then
-			TradeEvent:FireClient(player, "TradeResult", {Success = false, Message = "Магазин только в Otaku Haven"})
+			TradeEvent:FireClient(player, "TradeResult", {Success = false, Message = "Покупка и продажа только в Otaku Haven"})
 			return
 		end
 	end
@@ -2268,11 +2278,17 @@ end)
 -- ============================================
 -- Загрузка данных игрока при входе
 -- ============================================
+local diedConnections = {}
+
 local function SetupCharacter(player, character)
 	local humanoid = character:WaitForChild("Humanoid")
 	-- Гарантируем анимацию падения при любой смерти
 	humanoid.BreakJointsOnDeath = false
-	humanoid.Died:Connect(function()
+	local prev = diedConnections[player.UserId]
+	if prev then
+		prev:Disconnect()
+	end
+	diedConnections[player.UserId] = humanoid.Died:Connect(function()
 		HandlePlayerDeath(player)
 	end)
 end
@@ -2314,6 +2330,9 @@ local function OnPlayerAdded(player)
 
 	local data = dataStore:LoadData(player)
 	if data then
+		if _G.InitQuestSystemForPlayer then
+			_G.InitQuestSystemForPlayer(player, data)
+		end
 		local leveledUp, _, rewards = levelingSystem:CheckLevelUp(data)
 		if leveledUp then
 			for _, reward in ipairs(rewards) do
@@ -2343,6 +2362,11 @@ Players.PlayerRemoving:Connect(function(player)
 	deathDebounce[player.UserId] = nil
 	if fullSyncCooldown then
 		fullSyncCooldown[player.UserId] = nil
+	end
+	local diedConn = diedConnections[player.UserId]
+	if diedConn then
+		diedConn:Disconnect()
+		diedConnections[player.UserId] = nil
 	end
 end)
 

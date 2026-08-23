@@ -194,27 +194,36 @@ local function pushState(player, partner)
 end
 
 local CANCEL_REASON_TEXT = {
-	out_of_range = "Обмен не удался: отойдите ближе (до 22 studs)",
-	no_data = "Обмен не удался: нет данных игрока",
-	missing_item = "Обмен не удался: предмета нет в инвентаре",
-	missing_cosmetic = "Обмен не удался: косметика не найдена",
-	not_safe = "Обмен не удался: только в Safe Zone",
+	out_of_range = "✗ Обмен сорван: подойдите ближе (до 22 studs)",
+	no_data = "✗ Обмен сорван: нет данных игрока",
+	missing_item = "✗ Обмен сорван: предмета уже нет в инвентаре",
+	missing_cosmetic = "✗ Обмен сорван: косметика не найдена",
+	not_safe = "✗ Обмен только в Safe Zone (Genkan / Exit / Spawn)",
 	cancelled = "Обмен отменён",
-	left = "Обмен отменён: игрок вышел",
+	left = "✗ Обмен сорван: партнёр вышел из игры",
+	timeout = "✗ Обмен сорван: время истекло",
 }
+
+local function toastKindForReason(reason)
+	if reason == "cancelled" then
+		return "info"
+	end
+	return "error"
+end
 
 local function cancelPair(playerA, playerB, reason)
 	reason = reason or "cancelled"
-	local text = CANCEL_REASON_TEXT[reason] or ("Обмен не удался: " .. tostring(reason))
+	local text = CANCEL_REASON_TEXT[reason] or ("✗ Обмен сорван: " .. tostring(reason))
+	local kind = toastKindForReason(reason)
 	if playerA then
 		clearSession(playerA.UserId)
-		notify(playerA, "Toast", { Text = text })
-		notify(playerA, "TradeCancelled", { Reason = reason, Text = text })
+		notify(playerA, "Toast", { Text = text, Kind = kind })
+		notify(playerA, "TradeCancelled", { Reason = reason, Text = text, IsError = kind == "error" })
 	end
 	if playerB then
 		clearSession(playerB.UserId)
-		notify(playerB, "Toast", { Text = text })
-		notify(playerB, "TradeCancelled", { Reason = reason, Text = text })
+		notify(playerB, "Toast", { Text = text, Kind = kind })
+		notify(playerB, "TradeCancelled", { Reason = reason, Text = text, IsError = kind == "error" })
 	end
 end
 
@@ -230,6 +239,16 @@ local function formatOfferServer(offer)
 		return string.format("%s x%d", name, tonumber(offer.Quantity) or 1)
 	end
 	return "ничего"
+end
+
+local completingPairs = {}
+
+local function pairKey(playerA, playerB)
+	local u1, u2 = playerA.UserId, playerB.UserId
+	if u1 > u2 then
+		u1, u2 = u2, u1
+	end
+	return u1 .. "_" .. u2
 end
 
 local function tryComplete(playerA, playerB)
@@ -258,14 +277,24 @@ local function tryComplete(playerA, playerB)
 	local offerB = sb.Offer or {}
 
 	if not offerHasContent(offerA) or not offerHasContent(offerB) then
-		local msg = "Оба должны положить предмет или косметику"
-		notify(playerA, "Toast", { Text = msg })
-		notify(playerB, "Toast", { Text = msg })
+		local msg = "✗ Оба игрока должны положить предмет или косметику"
+		notify(playerA, "Toast", { Text = msg, Kind = "error" })
+		notify(playerB, "Toast", { Text = msg, Kind = "error" })
 		sa.Ready = false
 		sb.Ready = false
 		pushState(playerA, playerB)
 		pushState(playerB, playerA)
 		return
+	end
+
+	local tradeKey = pairKey(playerA, playerB)
+	if completingPairs[tradeKey] then
+		return
+	end
+	completingPairs[tradeKey] = true
+
+	local function releaseTradeLock()
+		completingPairs[tradeKey] = nil
 	end
 
 	local idA = tonumber(offerA.ItemId)
@@ -280,11 +309,13 @@ local function tryComplete(playerA, playerB)
 	if cosA then
 		takenCosA = takeCosmetic(dataA, cosA)
 		if not takenCosA then
+			releaseTradeLock()
 			cancelPair(playerA, playerB, "missing_cosmetic")
 			return
 		end
 	elseif idA and qtyA > 0 then
 		if not takeItem(dataA, idA, qtyA) then
+			releaseTradeLock()
 			cancelPair(playerA, playerB, "missing_item")
 			return
 		end
@@ -298,6 +329,7 @@ local function tryComplete(playerA, playerB)
 			elseif idA and qtyA > 0 then
 				giveItem(dataA, idA, qtyA)
 			end
+			releaseTradeLock()
 			cancelPair(playerA, playerB, "missing_cosmetic")
 			return
 		end
@@ -308,6 +340,7 @@ local function tryComplete(playerA, playerB)
 			elseif idA and qtyA > 0 then
 				giveItem(dataA, idA, qtyA)
 			end
+			releaseTradeLock()
 			cancelPair(playerA, playerB, "missing_item")
 			return
 		end
@@ -347,9 +380,10 @@ local function tryComplete(playerA, playerB)
 	local textB = string.format("✓ Обмен успешен! Отдали: %s · Получили: %s", gaveB, gotB)
 	notify(playerA, "TradeComplete", { Received = offerB, Gave = offerA, Text = textA })
 	notify(playerB, "TradeComplete", { Received = offerA, Gave = offerB, Text = textB })
-	notify(playerA, "Toast", { Text = textA })
-	notify(playerB, "Toast", { Text = textB })
+	notify(playerA, "Toast", { Text = textA, Kind = "success" })
+	notify(playerB, "Toast", { Text = textB, Kind = "success" })
 	print("[PlayerTrade] complete", playerA.Name, "<->", playerB.Name, gaveA, "<->", gotA)
+	releaseTradeLock()
 end
 
 --- Studio/QA: pure data swap (no players / zone). Returns ok, reason.
@@ -411,19 +445,19 @@ function PlayerTradeSystem.Start()
 			local targetId = tonumber(payload.TargetUserId)
 			local target = targetId and Players:GetPlayerByUserId(targetId)
 			if not target or target == player then
-				notify(player, "Toast", { Text = "Игрок не найден" })
+				notify(player, "Toast", { Text = "✗ Игрок не найден", Kind = "error" })
 				return
 			end
 			if not isInSafeZone(player) or not isInSafeZone(target) then
-				notify(player, "Toast", { Text = "Обмен только в Safe" })
+				notify(player, "Toast", { Text = "✗ Обмен только в Safe Zone", Kind = "error" })
 				return
 			end
 			if not withinRange(player, target) then
-				notify(player, "Toast", { Text = "Подойдите ближе" })
+				notify(player, "Toast", { Text = "✗ Подойдите ближе к игроку", Kind = "error" })
 				return
 			end
 			if sessions[player.UserId] or sessions[target.UserId] then
-				notify(player, "Toast", { Text = "Уже в обмене" })
+				notify(player, "Toast", { Text = "✗ Уже в обмене", Kind = "error" })
 				return
 			end
 			sessions[player.UserId] = {
@@ -466,7 +500,7 @@ function PlayerTradeSystem.Start()
 				local data = getPlayerData(player)
 				local owned = data and findCosmetic(data, cosmeticId)
 				if not owned then
-					notify(player, "Toast", { Text = "Нет такой косметики" })
+					notify(player, "Toast", { Text = "✗ Нет такой косметики", Kind = "error" })
 					return
 				end
 				session.Offer = {
@@ -481,13 +515,13 @@ function PlayerTradeSystem.Start()
 				if itemId and quantity > 0 then
 					local def = ItemCatalog.Get(itemId)
 					if not def then
-						notify(player, "Toast", { Text = "Неизвестный предмет" })
+						notify(player, "Toast", { Text = "✗ Неизвестный предмет", Kind = "error" })
 						return
 					end
 					local data = getPlayerData(player)
 					local inv = data and findInvEntry(data, itemId)
 					if not inv or (inv.Quantity or 0) < quantity then
-						notify(player, "Toast", { Text = "Недостаточно предметов" })
+						notify(player, "Toast", { Text = "✗ Недостаточно предметов в инвентаре", Kind = "error" })
 						return
 					end
 					-- MVP: 1 slot; clear CosmeticId
@@ -503,13 +537,13 @@ function PlayerTradeSystem.Start()
 		elseif action == "Ready" then
 			local session = sessions[player.UserId]
 			if not session then
-				notify(player, "Toast", { Text = "Нет активного обмена" })
+				notify(player, "Toast", { Text = "✗ Нет активного обмена", Kind = "error" })
 				return
 			end
 			local partner = Players:GetPlayerByUserId(session.PartnerId)
 			if not partner then
 				clearSession(player.UserId)
-				notify(player, "Toast", { Text = "Партнёр вышел" })
+				notify(player, "Toast", { Text = "✗ Партнёр вышел", Kind = "error" })
 				return
 			end
 			session.Ready = payload.Ready == true

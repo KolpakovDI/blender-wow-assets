@@ -268,6 +268,8 @@ local crystalSpots = {
 	{ Pos = Vector3.new(-20, 2, 68), ItemId = 120, Label = "Коробка редкой манги · лут", Color = Color3.fromRGB(220, 90, 120), LightColor = Color3.fromRGB(255, 140, 170), Highlight = true },
 	-- Second fire on Combat path (quest 101 still has EmberCourt ×5)
 	{ Pos = Vector3.new(28, 2, 52), ItemId = 101, Label = "Огненный кристалл · лут", Color = Color3.fromRGB(255, 90, 40), LightColor = Color3.fromRGB(255, 120, 50), Highlight = true },
+	-- W2 quest 114: у Exit (после VisitZone 113)
+	{ Pos = Vector3.new(-18, 2, 66), ItemId = 101, Label = "Огненный кристалл · у Exit", Color = Color3.fromRGB(255, 90, 40), LightColor = Color3.fromRGB(255, 120, 50), Highlight = true },
 	-- EmberCourt / Fire (#1) — side 101 needs 5; keep ≥5 spots so no 45s respawn wait
 	{ Pos = Vector3.new(62, 2, 24), ItemId = 101, Label = "Огненный кристалл", Color = Color3.fromRGB(255, 90, 40), LightColor = Color3.fromRGB(255, 120, 50) },
 	{ Pos = Vector3.new(78, 2, 36), ItemId = 101, Label = "Огненный кристалл", Color = Color3.fromRGB(255, 90, 40), LightColor = Color3.fromRGB(255, 120, 50) },

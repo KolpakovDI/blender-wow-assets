@@ -72,9 +72,42 @@ local function formatDisintegratePreview(data)
 end
 
 local DEFAULT_STATUS = "Выберите 2–6 духов · Осколок Ками (301)"
+local mode = "Synthesize"
 local selected = {} -- indices for synth
 local disIndex = nil
+local STAR_IDS = {310, 311, 312}
+local STAR_LABELS = {[310] = "★I", [311] = "★II", [312] = "★III"}
+local starUse = {[310] = 0, [311] = 0, [312] = 0}
 local gui = nil
+
+local function invQty(id)
+	local inv = (PlayerData and PlayerData.Inventory) or {}
+	local n = inv[id] or inv[tostring(id)]
+	return math.max(0, math.floor(tonumber(n) or 0))
+end
+
+local function buildSynthComponents()
+	local comps = {[301] = 1}
+	for _, sid in ipairs(STAR_IDS) do
+		local q = math.max(0, math.floor(tonumber(starUse[sid]) or 0))
+		if q > 0 then
+			comps[sid] = q
+		end
+	end
+	return comps
+end
+
+local function formatStarPreviewHint(data)
+	local delta = tonumber(data.StarDelta) or 0
+	local base = tonumber(data.ResonancePowerBase)
+	if delta > 0.001 then
+		return string.format(" (+%.2f от звёзд)", delta)
+	end
+	if base and invQty(310) + invQty(311) + invQty(312) > 0 then
+		return " · добавьте ★ из сумки для +силы"
+	end
+	return ""
+end
 
 local function notify(text)
 	local trMod = realm:FindFirstChild("ToastRouter")
@@ -283,10 +316,10 @@ local function ensureGui()
 
 	local hint = Instance.new("TextLabel")
 	hint.Name = "Hint"
-	hint.Size = UDim2.new(1, -24, 0, 72)
-	hint.Position = UDim2.fromOffset(12, 298)
+	hint.Size = UDim2.new(1, -24, 0, 56)
+	hint.Position = UDim2.fromOffset(12, 320)
 	hint.BackgroundTransparency = 1
-	hint.Text = "Выберите 2–6 духов. Нужен Осколок Ками (301). Звёзды трансформации усиливают Unique."
+	hint.Text = "Выберите 2–6 духов. Нужен Осколок Ками (301). Звёзды #310–312 усиливают силу Resonant в превью."
 	hint.TextColor3 = Color3.fromRGB(190, 180, 210)
 	hint.Font = Enum.Font.Gotham
 	hint.TextSize = 13
@@ -295,10 +328,55 @@ local function ensureGui()
 	hint.TextYAlignment = Enum.TextYAlignment.Top
 	hint.Parent = frame
 
+	local starRow = Instance.new("Frame")
+	starRow.Name = "StarRow"
+	starRow.Size = UDim2.new(1, -24, 0, 28)
+	starRow.Position = UDim2.fromOffset(12, 288)
+	starRow.BackgroundTransparency = 1
+	starRow.Parent = frame
+
+	local function refreshStarRow()
+		for _, ch in ipairs(starRow:GetChildren()) do
+			if ch:IsA("TextButton") then
+				ch:Destroy()
+			end
+		end
+		local x = 0
+		for _, sid in ipairs(STAR_IDS) do
+			local have = invQty(sid)
+			local use = math.clamp(math.floor(tonumber(starUse[sid]) or 0), 0, have)
+			starUse[sid] = use
+			local btn = Instance.new("TextButton")
+			btn.Name = "Star_" .. sid
+			btn.Size = UDim2.fromOffset(128, 24)
+			btn.Position = UDim2.fromOffset(x, 0)
+			btn.BackgroundColor3 = use > 0 and Color3.fromRGB(80, 55, 110) or Color3.fromRGB(40, 32, 56)
+			btn.TextColor3 = Color3.fromRGB(240, 230, 255)
+			btn.Font = Enum.Font.Gotham
+			btn.TextSize = 12
+			btn.Text = string.format("%s ×%d/%d", STAR_LABELS[sid] or ("#" .. sid), use, have)
+			btn.Parent = starRow
+			btn.MouseButton1Click:Connect(function()
+				if have <= 0 then
+					notify("Нет " .. (STAR_LABELS[sid] or ("#" .. sid)) .. " в сумке")
+					return
+				end
+				local nextUse = use + 1
+				if nextUse > have then
+					nextUse = 0
+				end
+				starUse[sid] = nextUse
+				refreshStarRow()
+			end)
+			x += 132
+		end
+	end
+	rawset(_G, "__KamiSanctumRefreshStars", refreshStarRow)
+
 	local previewBtn = Instance.new("TextButton")
 	previewBtn.Name = "Preview"
 	previewBtn.Size = UDim2.new(0.48, -8, 0, 40)
-	previewBtn.Position = UDim2.fromOffset(12, 380)
+	previewBtn.Position = UDim2.fromOffset(12, 388)
 	previewBtn.BackgroundColor3 = Color3.fromRGB(60, 80, 120)
 	previewBtn.Text = "Превью"
 	previewBtn.TextColor3 = Color3.new(1, 1, 1)
@@ -308,7 +386,7 @@ local function ensureGui()
 	local goBtn = Instance.new("TextButton")
 	goBtn.Name = "Go"
 	goBtn.Size = UDim2.new(0.48, -8, 0, 40)
-	goBtn.Position = UDim2.new(0.52, 0, 0, 380)
+	goBtn.Position = UDim2.new(0.52, 0, 0, 388)
 	goBtn.BackgroundColor3 = Color3.fromRGB(120, 70, 160)
 	goBtn.Text = "Слить"
 	goBtn.TextColor3 = Color3.new(1, 1, 1)
@@ -318,7 +396,7 @@ local function ensureGui()
 	local status = Instance.new("TextLabel")
 	status.Name = "Status"
 	status.Size = UDim2.new(1, -24, 0, 40)
-	status.Position = UDim2.fromOffset(12, 428)
+	status.Position = UDim2.fromOffset(12, 436)
 	status.BackgroundTransparency = 1
 	status.Text = ""
 	status.TextColor3 = Color3.fromRGB(180, 255, 200)
@@ -354,7 +432,7 @@ local function ensureGui()
 		tabSynth.BackgroundColor3 = Color3.fromRGB(90, 60, 130)
 		tabDis.BackgroundColor3 = Color3.fromRGB(50, 40, 60)
 		goBtn.Text = "Слить"
-		hint.Text = "Выберите 2–6 духов. Нужен Осколок Ками. Звёзды трансформации усиливают Unique."
+		hint.Text = "Выберите 2–6 духов. Нужен Осколок Ками. Нажмите ★I/II/III — звёзды из сумки усилят силу в превью."
 		refresh()
 	end)
 	tabDis.MouseButton1Click:Connect(function()
@@ -370,7 +448,7 @@ local function ensureGui()
 		if mode == "Synthesize" then
 			remote:FireServer("PreviewSynthesize", {
 				SpiritIndices = selected,
-				Components = {[301] = 1, [310] = 0},
+				Components = buildSynthComponents(),
 			})
 		else
 			remote:FireServer("PreviewDisintegrate", {SpiritIndex = disIndex})
@@ -385,7 +463,7 @@ local function ensureGui()
 			end
 			remote:FireServer("Synthesize", {
 				SpiritIndices = selected,
-				Components = {[301] = 1},
+				Components = buildSynthComponents(),
 			})
 		else
 			if not disIndex then
@@ -401,6 +479,7 @@ local function ensureGui()
 	-- store refresh
 	gui:SetAttribute("_ready", true)
 	rawset(_G, "__KamiSanctumRefresh", refresh)
+	refreshStarRow()
 	refresh()
 	return gui
 end
@@ -420,6 +499,9 @@ dataSync.OnClientEvent:Connect(function(action, data)
 		PlayerData = data
 		if gui and gui.Enabled and _G.__KamiSanctumRefresh then
 			_G.__KamiSanctumRefresh()
+		end
+		if gui and gui.Enabled and _G.__KamiSanctumRefreshStars then
+			_G.__KamiSanctumRefreshStars()
 		end
 	end
 end)
@@ -450,9 +532,11 @@ remote.OnClientEvent:Connect(function(action, data)
 		local g = ensureGui()
 		local st = g.Main.Status
 		if data.Ok then
+			local starHint = formatStarPreviewHint(data)
 			st.Text = string.format(
-				"Сила %.2f · Unique ~%d%% · тир %s · медь %d · осталось %d",
+				"Сила %.2f%s · Unique ~%d%% · тир %s · медь %d · осталось %d",
 				data.ResonancePower or 0,
+				starHint,
 				math.floor((data.UniqueChance or 0) * 100),
 				tostring(data.TierHint),
 				data.CopperCost or 0,
