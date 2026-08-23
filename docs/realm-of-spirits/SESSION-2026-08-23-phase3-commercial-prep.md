@@ -14,8 +14,8 @@ Public beta / store listing ready: hub KR smoke, monetization live test, analyti
 
 | # | Критерий | Статус |
 |---|----------|--------|
-| 1 | Hub KR smoke (Mika funnel, prep в логах) | ☐ W1 partial · W2+ |
-| 2 | Monetization live test · 0 pay combat stats | ☐ W2 |
+| 1 | Hub KR smoke (Mika funnel, prep в логах) | ☑ W1 · PrepShop seen W2 |
+| 2 | Monetization live test · 0 pay combat stats | ☑ W2 **PASS CONDITIONAL** (Studio; live Robux = owner hands) |
 | 3 | Analytics hooks usable без MCP-костылей | ☐ W1 attr · W3+ |
 | 4 | Cold-start: новый игрок знает Mika→Exit | ☑ W1 MCP |
 
@@ -58,19 +58,70 @@ Public beta / store listing ready: hub KR smoke, monetization live test, analyti
 
 ---
 
-## W2 — Monetization live test (skeleton)
+## W2 — Monetization live test — **PASS CONDITIONAL (2026-08-23)**
+
+**Scope:** fair-combat gate на pay path · copper gacha smoke · ProcessReceipt path review · friction note для live Publish. **Не** новые DevProducts без approval · **не** pay combat power.
 
 | # | Задача | Exit | Статус |
 |---|--------|------|--------|
-| 1 | Live / Studio smoke покупки (cosmetics-only) | 0 combat stats | ☐ |
-| 2 | Confirm fair-combat gate на pay path | PASS | ☐ |
-| 3 | Log / note friction | backlog | ☐ |
+| 1 | Studio smoke покупки (cosmetics-only) | 0 combat stats | ☑ copper **PASS** · live Robux ☐ owner hands |
+| 2 | Confirm fair-combat gate на pay path | PASS | ☑ `fair_combat_check` + Studio SoT |
+| 3 | Log / note friction | backlog | ☑ см. ниже |
 
-**NEXT after W1:** F3-W2 monetization live test.
+**Вердикт:** **PASS CONDITIONAL** — Studio/MCP cosmetics-only + CI gate green; реальный Robux purchase невозможен пока `GachaRobuxProductId = 0` и place без live API Services.
+
+### W2 matrix
+
+| Проверка | Результат |
+|----------|-----------|
+| `grantGachaReward` → только `Cosmetics` / `Type=Cosmetic` / «только косметика» | **PASS** (SoT + mirror) |
+| ProcessReceipt → тот же `grantGachaReward` + `ProcessedReceipts[PurchaseId]` idempotent | **PASS** (static SoT) |
+| `ZoneConfig.GachaRobuxProductId` | **0** (gate) — toast «задайте …ProductId» |
+| Copper gacha MCP Play (E×2) | **PASS** — +2 cosmetics (`Fig_*` / `FigRare_*`), −100 copper |
+| Combat inventory after gacha | **PASS** — Inv Ids/Qty unchanged (1,2,4,5,301) |
+| Spirit Level / combat power | **PASS** — no level/stats drip from gacha |
+| UI clarity | **PASS** — popup «только косметика, без бонусов в бою»; prompt «Гашапон · только косметика» |
+| Robux prompt R (ProductId=0) | **PASS** — toast gate, no purchase prompt |
+| ProcessReceipt MCP invoke | **N/A** — Roblox API: callback set-only, get/call запрещён |
+| `fair_combat_check.py` | **PASS** (python3.12) |
+| `quality_gate.py` | **PASS** (python3.12) |
+
+### MCP smoke recipe (повтор)
+
+1. Play (Local Server) · дождаться `[HubFunnel] … Spawn` + data load  
+2. Server: `GetPlayerDataBF:Invoke(userId)` snapshot copper / Cosmetics / Inventory  
+3. Teleport HRP near `Workspace.OtakuHaven.Decor.GachaMachine` (~5 studs)  
+4. Client: **E** (copper) → Cosmetics++ · Inventory combat Qty неизменны · popup disclaimer  
+5. Client: **R** → toast `Robux-гача: задайте ZoneConfig.GachaRobuxProductId` (пока ProductId=0)  
+6. Stop Play · **Ctrl+S** если SoT меняли (W2 SoT не меняли)
+
+### Friction — live Publish (owner)
+
+| # | Friction | Действие |
+|---|----------|----------|
+| F1 | `GachaRobuxProductId = 0` | Create **Developer Product** (Robux gacha, cosmetics-only copy) → вписать ID в `ZoneConfig.GachaRobuxProductId` → **Ctrl+S** |
+| F2 | Unpublished / DS memory-only | **Publish** place; Game Settings → **Enable Studio Access to API Services** (для live DS/receipts в Studio) |
+| F3 | ProcessReceipt не smoke-ается из MCP | Hands: купить DevProduct в Play (опубликованный place / Test) → Cosmetics++ · повтор того же PurchaseId не дублирует награду |
+| F4 | Robux spend real | Тест на **тестовом** DevProduct / малой цене; не создавать combat DevProducts |
+
+### Owner hands — live Robux purchase
+
+1. **Ctrl+S** place  
+2. Create Developer Product (cosmetics gacha) → copy ID → `ZoneConfig.GachaRobuxProductId = <id>`  
+3. Publish place · API Services on  
+4. Play (published / Team Test): Haven → GachaMachine → **R** → подтвердить покупку  
+5. Verify: Cosmetics++ · Inventory combat без изменений · повтор receipt не двойной grant  
+6. (Опц.) повтор copper **E** — тот же cosmetics-only пул  
+
+### SoT правки (W2)
+
+- Нет — только verification
+
+**NEXT after W2:** F3-W3 analytics polish · combat anim best-effort
 
 ---
 
-## W3 — Analytics hooks polish (skeleton)
+## W3 — Analytics hooks polish (skeleton) ← **NEXT**
 
 | # | Задача | Exit | Статус |
 |---|--------|------|--------|
@@ -96,7 +147,7 @@ Public beta / store listing ready: hub KR smoke, monetization live test, analyti
 |---|----------|-------|
 | 1 | **Ctrl+S** place | SoT sync |
 | 2 | Пешком: spawn → toast/chip → Мика [E] → Exit | cold-start feel |
-| 3 | Опц.: Publish + live monetization (W2) | store prep |
+| 3 | DevProduct ID + Publish + live Robux **R** (W2 hands) | store prep · снять CONDITIONAL |
 
 ## Не включать
 

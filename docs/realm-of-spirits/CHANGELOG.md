@@ -6,6 +6,14 @@
 
 ## [Unreleased]
 
+### Phase 3 W2 — monetization live test PASS CONDITIONAL (2026-08-23)
+- **Fair-combat pay path:** gacha (copper + Robux) = cosmetics only · `ProcessReceipt` → `grantGachaReward` + `ProcessedReceipts` idempotent · 0 pay combat stats
+- **MCP Play smoke:** copper **E**×2 → +2 Cosmetics · Inventory combat Qty unchanged · UI «только косметика»; **R** → toast ProductId gate (`GachaRobuxProductId=0`)
+- **ProcessReceipt MCP invoke:** N/A (callback set-only); live Robux = owner hands (DevProduct + Publish + API Services)
+- **`fair_combat_check.py` / `quality_gate.py`:** **PASS** (python3.12)
+- **SoT правки:** нет
+- **Tracker:** [`SESSION-2026-08-23-phase3-commercial-prep.md`](SESSION-2026-08-23-phase3-commercial-prep.md) · **NEXT:** F3-W3 analytics polish
+
 ### Phase 3 W1 — hub polish + cold-start onboarding PASS (2026-08-23)
 - **Cold-start:** ZoneController toast once «Поговори с Микой [E]» → «Exit → Combat» (delay after ToastRouter.Bind)
 - **NextStepChip:** copy Mika [E] / Exit → Combat
@@ -13,7 +21,7 @@
 - **Ensure* copy:** Mika TalkHint «Мика [E]»; Exit billboard «Exit → Combat»; `OtakuHavenBuilder.EnsureHubColdStartCopy`
 - **MCP Play smoke:** Spawn+MikaOpen logs, chip, toast tip — **PASS**
 - **`quality_gate.py`:** **PASS** (python3.12)
-- **Tracker:** [`SESSION-2026-08-23-phase3-commercial-prep.md`](SESSION-2026-08-23-phase3-commercial-prep.md) · **NEXT:** F3-W2 monetization live test
+- **Tracker:** [`SESSION-2026-08-23-phase3-commercial-prep.md`](SESSION-2026-08-23-phase3-commercial-prep.md) · W2 closed CONDITIONAL · **NEXT:** F3-W3
 
 ### Phase 2 COMPLETE — scout side line W4 exit (2026-08-23)
 - **Фаза 2 exit:** side scout line **107–112** + W2 regress **113→116** — **COMPLETE**
