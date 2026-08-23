@@ -373,7 +373,7 @@ local function EnsureQuestMasterInteract(model)
 	if not hint then
 		hint = Instance.new("BillboardGui")
 		hint.Name = "TalkHint"
-		hint.Size = UDim2.new(0, 120, 0, 36)
+		hint.Size = UDim2.new(0, 140, 0, 36)
 		hint.StudsOffset = Vector3.new(0, 2.2, 0)
 		hint.AlwaysOnTop = true
 		hint.MaxDistance = 60
@@ -383,7 +383,7 @@ local function EnsureQuestMasterInteract(model)
 		lbl.Size = UDim2.fromScale(1, 1)
 		lbl.BackgroundColor3 = Color3.fromRGB(40, 20, 50)
 		lbl.BackgroundTransparency = 0.25
-		lbl.Text = "КВЕСТ →"
+		lbl.Text = "Мика [E]"
 		lbl.TextColor3 = Color3.fromRGB(255, 210, 240)
 		lbl.Font = Enum.Font.GothamBold
 		lbl.TextScaled = true
@@ -392,7 +392,13 @@ local function EnsureQuestMasterInteract(model)
 		corner.CornerRadius = UDim.new(0, 8)
 		corner.Parent = lbl
 	end
-	hint.Enabled = false
+	-- F3-W1: keep TalkHint readable for cold-start (Ensure*)
+	hint.Enabled = true
+	hint.Size = UDim2.new(0, 140, 0, 36)
+	local hintLbl = hint:FindFirstChild("Label")
+	if hintLbl and hintLbl:IsA("TextLabel") then
+		hintLbl.Text = "Мика [E]"
+	end
 
 	for _, desc in ipairs(model:GetDescendants()) do
 		if desc:IsA("ProximityPrompt") and not desc:IsDescendantOf(anchor) then

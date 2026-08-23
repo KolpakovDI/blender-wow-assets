@@ -132,7 +132,7 @@ local function NormalizeSpirits(data)
 	end
 	data.CrystalPity.Misses = math.max(0, math.floor(tonumber(data.CrystalPity.Misses) or 0))
 	if type(data.HubFunnel) ~= "table" then
-		data.HubFunnel = { DayKey = "", Mika = false, Prep = false, ExitCombat = false }
+		data.HubFunnel = { DayKey = "", Spawn = false, Mika = false, Prep = false, ExitCombat = false }
 	end
 	for _, spirit in ipairs(data.Spirits) do
 		if type(spirit) ~= "table" or not spirit.Id then continue end
@@ -286,7 +286,7 @@ function DataStoreManager:GetDefaultData()
 		LastLogin = 0,
 		FirstJoin = 0,
 		TotalJoins = 0,
-		HubFunnel = { DayKey = "", Mika = false, Prep = false, ExitCombat = false },
+		HubFunnel = { DayKey = "", Spawn = false, Mika = false, Prep = false, ExitCombat = false },
 	}
 end
 

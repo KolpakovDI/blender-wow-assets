@@ -401,11 +401,30 @@ local function resolveZoneTitle(zoneType, detail)
 	return nil, nil
 end
 
+-- F3-W1 cold-start: once per session, 2-step toast (Mika → Exit)
+-- Delay tips until ToastRouter.Bind (UIController) settles — early Tip can be dropped.
 local function showHubIntro()
-	if hubIntroShown then return end
+	if hubIntroShown then
+		return
+	end
 	hubIntroShown = true
 	showZoneTitle("Otaku Haven", Color3.fromRGB(255, 180, 220))
-	showToast("Мика у входа -> магазин (генкан) -> Выход в Акихабару", 5)
+	task.delay(1.2, function()
+		if player.Parent == nil then
+			return
+		end
+		showToast("Поговори с Микой [E]", 3.5)
+	end)
+	task.delay(5.4, function()
+		if player.Parent == nil then
+			return
+		end
+		local zone = player:GetAttribute("CurrentZone")
+		if zone == "Combat" then
+			return
+		end
+		showToast("Exit → Combat", 3.5)
+	end)
 end
 
 zoneChanged.OnClientEvent:Connect(function(zoneType, detail)

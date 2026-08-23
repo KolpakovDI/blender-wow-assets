@@ -21,8 +21,8 @@ local STEP = {
 }
 
 local STEP_TEXT = {
-	[STEP.Mika] = "Поговори с Микой",
-	[STEP.Exit] = "Выход в Акихабару",
+	[STEP.Mika] = "Поговори с Микой [E]",
+	[STEP.Exit] = "Exit → Combat",
 	[STEP.Loot] = "Подбери лут у двери (E)",
 }
 
@@ -330,4 +330,4 @@ task.spawn(function()
 	refresh()
 end)
 
-print("[RoS] NextStepChip ready (UI package B + ZoneHint)")
+print("[RoS] NextStepChip ready (F3-W1 cold-start copy + ZoneHint)")

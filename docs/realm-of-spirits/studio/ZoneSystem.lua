@@ -161,6 +161,21 @@ local function onCharacterAdded(player, character)
 	if not hrp then return end
 
 	setPlayerZone(player, "Safe", "Spawn")
+	task.defer(function()
+		-- Wait for GameManager _G.GetPlayerData after LoadData
+		for _ = 1, 40 do
+			if type(rawget(_G, "GetPlayerData")) == "function" then
+				local ok, HubFunnel = pcall(function()
+					return require(RealmFolder:WaitForChild("HubFunnel"))
+				end)
+				if ok and HubFunnel and HubFunnel.MarkPlayer then
+					HubFunnel.MarkPlayer(player, "Spawn")
+				end
+				return
+			end
+			task.wait(0.1)
+		end
+	end)
 
 	local running = true
 	character.AncestryChanged:Connect(function(_, parent)

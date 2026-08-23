@@ -2330,6 +2330,14 @@ local function OnPlayerAdded(player)
 
 	local data = dataStore:LoadData(player)
 	if data then
+		do
+			local ok, HubFunnel = pcall(function()
+				return require(realmFolder:WaitForChild("HubFunnel"))
+			end)
+			if ok and HubFunnel and HubFunnel.MarkPlayer then
+				HubFunnel.MarkPlayer(player, "Spawn")
+			end
+		end
 		if _G.InitQuestSystemForPlayer then
 			_G.InitQuestSystemForPlayer(player, data)
 		end

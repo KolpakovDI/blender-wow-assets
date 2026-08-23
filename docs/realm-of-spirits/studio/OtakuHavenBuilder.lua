@@ -1594,7 +1594,7 @@ function OtakuHavenBuilder.Build()
 		Slide = 5.2,
 		ModelName = "ShopExit",
 		ObjectText = "Выход в Акихабару",
-		BillboardText = "Выход → Акихабара · дуэль у арены",
+		BillboardText = "Exit → Combat",
 		ShowBillboard = true,
 		LeftName = "ExitDoorLeft",
 		RightName = "ExitDoorRight",
@@ -1700,6 +1700,7 @@ function OtakuHavenBuilder.Build()
 	OtakuHavenBuilder.EnsureExploreHub2Route(haven)
 	-- F2 scout line W1: wayfind Exit → ChestCluster (quest 109)
 	OtakuHavenBuilder.EnsureChestClusterWayfind(haven)
+	OtakuHavenBuilder.EnsureHubColdStartCopy(haven)
 
 	return haven
 end
@@ -1935,6 +1936,41 @@ function OtakuHavenBuilder.EnsureExploreHub2Route(haven)
 end
 
 -- F2 scout line W1: wayfind Exit → ChestCluster (quest 109)
+function OtakuHavenBuilder.EnsureHubColdStartCopy(haven)
+	-- F3-W1: readability only (no rebuild) — Exit billboard + Mika TalkHint
+	haven = haven or workspace:FindFirstChild("OtakuHaven")
+	if haven then
+		for _, d in ipairs(haven:GetDescendants()) do
+			if d:IsA("BillboardGui") and (d.Name == "ExitWayfindBillboard" or d:GetAttribute("HubWayfind") == true) then
+				local lbl = d:FindFirstChildWhichIsA("TextLabel", true)
+				if lbl then
+					lbl.Text = "Exit → Combat"
+				end
+				d.Enabled = true
+				d.AlwaysOnTop = true
+			end
+		end
+	end
+	local qm = workspace:FindFirstChild("QuestMaster")
+	if not qm then
+		return
+	end
+	local anchor = qm:FindFirstChild("QuestInteractAnchor")
+	if not anchor then
+		return
+	end
+	local hint = anchor:FindFirstChild("TalkHint")
+	if not hint then
+		return
+	end
+	hint.Enabled = true
+	hint.Size = UDim2.new(0, 140, 0, 36)
+	local lbl = hint:FindFirstChild("Label")
+	if lbl and lbl:IsA("TextLabel") then
+		lbl.Text = "Мика [E]"
+	end
+end
+
 function OtakuHavenBuilder.EnsureChestClusterWayfind(haven)
 	haven = haven or workspace:FindFirstChild("OtakuHaven")
 	if not haven then
