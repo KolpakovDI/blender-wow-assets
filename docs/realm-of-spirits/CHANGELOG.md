@@ -6,6 +6,15 @@
 
 ## [Unreleased]
 
+### Phase 4 W3 — unpublished migrate sample PASS (2026-08-23)
+
+- **`ProfileServiceAdapter`:** `MigrateSampleUserId=900000001` (sentinel) · `MigrateSampleKey` · `SeedMigrateSampleLegacy` · `ComputeDataChecksum` · phase `F4-W3-migrate`
+- **One-way migrate:** `RealmOfSpirits_v2` / `Player_900000001` → `RealmOfSpirits_Profiles_v1` via **ProfileStore.Mock** (gate locked; no production keys)
+- **Verify:** `ValidateDataShape` + checksum match source/target — **PASS** (unpublished: `SourceOrigin=synthetic_seed`)
+- **MCP Play smoke:** `[Persistence] phase=F4-W3-migrate` · shadow join unchanged · live backend still `DataStoreManager`
+- **NOT in W3:** Allow* flip · ProfileService live Load/Save on join · Guilds · AI mesh · B1 · 106
+- **Tracker:** [`SESSION-2026-08-23-phase4-scale.md`](SESSION-2026-08-23-phase4-scale.md) · **NEXT:** F4 W4 owner gate flip
+
 ### Phase 4 W2 — ProfileService vendor + shadow read PASS (2026-08-23)
 
 - **`SSS.RealmOfSpirits.ProfileService`:** MadStudio library 5331689994 vendored (require OK; no LoadProfileAsync)

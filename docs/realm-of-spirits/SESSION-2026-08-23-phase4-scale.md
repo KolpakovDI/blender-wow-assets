@@ -39,7 +39,7 @@
 
 1. **W1** — audit API + `ValidateDataShape` on `GetDefaultData` · gate locked  
 2. **W2** — vendor ProfileService Roblox module; dual-read shadow (log diff, no write)  
-3. **W3** — unpublished one-key migrate sample `Player_*` → `RealmOfSpirits_Profiles_v1`  
+3. **W3** — unpublished one-key migrate sample `Player_900000001` → `RealmOfSpirits_Profiles_v1` · **PASS**  
 4. **W4** — owner: `AllowProfileService` + `UseProfileServiceAdapter` + live rejoin smoke · **then** cutover
 
 ---
@@ -99,9 +99,47 @@
 
 ---
 
-## W3 — Unpublished migrate sample (planned)
+## W3 — Unpublished migrate sample — **PASS (2026-08-23)**
 
-One test UserId in Studio unpublished; compare checksum; no production keys.
+| # | Задача | Статус |
+|---|--------|--------|
+| 1 | Sentinel UserId `900000001` (NOT production) | ☑ |
+| 2 | `MigrateSampleKey` one-way legacy → `RealmOfSpirits_Profiles_v1` (Mock target) | ☑ |
+| 3 | `ValidateDataShape` + `ComputeDataChecksum` compare source/target | ☑ |
+| 4 | Gate locked · no Allow* · live path = DataStoreManager | ☑ |
+| 5 | MCP Edit + Play smoke | ☑ |
+| 6 | Studio sync + mirror | ☑ |
+| 7 | `quality_gate.py` | ☑ |
+| 8 | Docs: NEXT / ROADMAP / CHANGELOG | ☑ |
+
+**API (W3):** `MigrateSampleUserId=900000001` · `MigrateSampleEnabled=true` · `SeedMigrateSampleLegacy` · `MigrateSampleKey` · `ComputeDataChecksum` · phase `F4-W3-migrate`.
+
+**MCP smoke (Edit, unpublished):**
+
+```
+GetMigrationAudit → phase=F4-W3-migrate, liveBlocked=true, ShouldUse=false, MigrateSampleUserId=900000001
+ValidateDataShape(GetDefaultData) → PASS
+MigrateSampleKey() → Success=true, SourceOrigin=synthetic_seed, ChecksumMatch=true, MockTarget=true
+```
+
+(`SourceOrigin=synthetic_seed` expected unpublished — legacy DS API off; mock ProfileService target used.)
+
+**MCP smoke (Play, unpublished):**
+
+```
+[Persistence] backend=DataStoreManager liveBlocked=true gatePS=false schemaV=1 keys=42 shadow=true vendored=true phase=F4-W3-migrate
+[ProfileServiceAdapter] shadow user=… vendored=true liveShape=true legacyRead=false …
+MigrateSampleKey (Server) → Success=true, ChecksumMatch=true
+```
+
+**Rollback (no Allow* flip):**
+
+1. Set `MigrateSampleEnabled=false` in `ProfileServiceAdapter` (Studio + mirror)
+2. `ProfileStore.Mock:WipeProfileAsync("Player_900000001")` if re-smoking
+3. W2 rollback still applies (remove PS module / `ShadowReadEnabled=false`)
+4. **Ctrl+S** place — live remains `DataStoreManager`
+
+**NOT in W3:** Allow* · ProfileService live Load/Save on join · production UserIds · Guilds · B1 · 106 · Haven décor
 
 ---
 
