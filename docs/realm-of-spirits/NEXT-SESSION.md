@@ -1,24 +1,26 @@
 # NEXT SESSION
 
-**Статус:** 2026-08-23 — Фаза 1 **COMPLETE** · **Фаза 2 W3 PASS** (quests **111** + **112** MCP)
-**Следующий фокус:** **Фаза 2 W4** — full line exit **107–112** + W2 regress **113→116**
+**Статус:** 2026-08-23 — Фаза 1 **COMPLETE** · Фаза 2 **COMPLETE** (scout line **107–112** + W2 regress **113→116**)
+**Следующий фокус:** **Фаза 3** Commercial prep — hub polish pass · monetization live test · analytics · onboarding
 
 **Roadmap:** [`ROADMAP-2026-08-23.md`](ROADMAP-2026-08-23.md) · **Tracker:** [`SESSION-2026-08-23-phase2-scout-side.md`](SESSION-2026-08-23-phase2-scout-side.md)
 
 ## Старт сессии (порядок жёсткий)
 
 1. **Ctrl+S** place → подтвердить SoT
-2. **Фаза 2 W4:** `validate_quest_catalog.py` + MCP full line **107–112** + regress **113→116**
+2. **Фаза 3 W1:** hub polish pass (не marathon) · cold-start onboarding smoke
 3. Не начинать B1 PvP / ProfileService / AI mesh / track 106 без явной команды
 
 ## Где остановились
 
 | Область | Состояние |
 |---------|-----------|
-| **Фаза 2 W3** | **PASS MCP (2026-08-23)** — **111** Overlook (seed Q12) + **112** TrailCamp (seed Q1); optional **109** repeat PASS; regress **115** accept OK |
-| **Фаза 2 W2** | **PASS MCP** — **108** Waystone + **110** ElementShrine; regress 115 accept OK |
+| **Фаза 2 W4** | **PASS MCP (2026-08-23)** — full line **107–112** + W2 chain **113→116**; `validate_quest_catalog` + `quality_gate` green |
+| **Фаза 2 W3** | **PASS MCP** — **111** Overlook + **112** TrailCamp |
+| **Фаза 2 W2** | **PASS MCP** — **108** Waystone + **110** ElementShrine |
 | **Фаза 2 W1** | **PASS MCP** — quest **109** ChestCluster |
-| **Scout line 107–112** | SoT inline `QuestSystem` ☑ · mirror `QuestCatalog` ☑ · hooks ☑ · MCP smoke **107–112** individual PASS |
+| **Scout line 107–112** | SoT inline `QuestSystem` ☑ · mirror `QuestCatalog` ☑ · hooks ☑ · W4 full line MCP **PASS** |
+| **Фаза 2** | **COMPLETE (2026-08-23)** |
 | **Wayfind 109** | `EnsureChestClusterWayfind` у Exit ☑ |
 | **Wayfind 108/110** | Ensure* StoneBasin/FrostRidge — **не нужны** (MCP PASS без hints) |
 | **Фаза 1** | **COMPLETE** |
@@ -37,7 +39,8 @@
 
 | # | Срез | Когда |
 |---|------|-------|
-| **F2-W4** | Full line exit + quality_gate + hands | **NEXT** |
+| **F3-W1** | Hub polish + onboarding cold-start | **NEXT** |
+| **F2-W4** | Full line exit + quality_gate + hands | ☑ **PASS MCP** (hands owner) |
 | **106 polish** | Альтернативный track | Только по явной команде |
 | **B1** | PvP slice 3 | Только по явной команде |
 

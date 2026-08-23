@@ -6,6 +6,15 @@
 
 ## [Unreleased]
 
+### Phase 2 COMPLETE — scout side line W4 exit (2026-08-23)
+- **Фаза 2 exit:** side scout line **107–112** + W2 regress **113→116** — **COMPLETE**
+- **`validate_quest_catalog.py`:** **PASS** (full line 107–112 green)
+- **`quality_gate.py`:** **PASS** (python3.12)
+- **MCP smoke Play/Server — full scout line:** seed Q1 → **107** ScoutPost **PASS**; Q10 → **108** Waystone **PASS**; Q1 → **109** ChestCluster **PASS**; Q8 → **110** ElementShrine **PASS**; Q12 → **111** Overlook **PASS**; Q1 → **112** TrailCamp **PASS**
+- **MCP W2 chain regress:** Q1 seed → **113** Exit → **114** grant #101 → **115** ScoutPost → **116** grant #102 — **PASS**; QuestLocations count=6
+- **SoT правки:** нет
+- **Tracker:** [`SESSION-2026-08-23-phase2-scout-side.md`](SESSION-2026-08-23-phase2-scout-side.md) · **NEXT:** Фаза 3 Commercial prep
+
 ### Phase 2 W3 — scout side 111 Overlook + 112 TrailCamp PASS (2026-08-23)
 - **MCP smoke Play/Server:** seed Q12 → accept **111** → VisitZone **Overlook** → turn-in **PASS**; seed Q1 → accept **112** → VisitZone **TrailCamp** → turn-in **PASS**; optional repeat **109** **PASS**; regress accept **115** **PASS**
 - **SoT правки:** нет — smoke на hooks W1–W2

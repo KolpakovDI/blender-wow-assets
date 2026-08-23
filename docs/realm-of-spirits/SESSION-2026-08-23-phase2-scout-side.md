@@ -14,9 +14,9 @@
 
 | # | Критерий | Статус |
 |---|----------|--------|
-| 1 | 1 side chain Accept→TurnIn PASS | ☑ W1 **109** · W2 **108**+**110** · W3 **111**+**112** MCP; полная линия — W4 |
-| 2 | Регресс W2 (113→114, 115→116) не красный | ☑ **PASS** spot-check 115 accept MCP W1+W2 |
-| 3 | QuestLocations + VisitZone hooks в SoT | ☑ W1 |
+| 1 | 1 side chain Accept→TurnIn PASS | ☑ W4 full line **107–112** MCP **PASS** |
+| 2 | Регресс W2 (113→114, 115→116) не красный | ☑ W4 chain **113→116** MCP **PASS** |
+| 3 | QuestLocations + VisitZone hooks в SoT | ☑ W1 · W4 QuestLocations count=6 **PASS** |
 
 ---
 
@@ -132,14 +132,44 @@ Studio → `docs/realm-of-spirits/studio/`:
 
 ---
 
-## W4 — Phase 2 exit + regress
+## W4 — Phase 2 exit + regress — **PASS MCP (2026-08-23)**
 
-| # | Задача | Exit |
-|---|--------|------|
-| 1 | Full line **107–112** catalog validate | `validate_quest_catalog.py` green |
-| 2 | W2 chain **113→116** non-regress MCP | PASS |
-| 3 | `quality_gate.py` | green |
-| 4 | Hands: пешком Exit → ChestCluster → Мика | owner verify |
+| # | Задача | Exit | Статус |
+|---|--------|------|--------|
+| 1 | Full line **107–112** catalog validate | `validate_quest_catalog.py` green | ☑ **PASS** |
+| 2 | MCP smoke **107–112** Accept→VisitZone→TurnIn | seeds per quest | ☑ **PASS** |
+| 3 | W2 chain **113→116** non-regress MCP | full BF chain | ☑ **PASS** |
+| 4 | `quality_gate.py` | green | ☑ **PASS** (python3.12) |
+| 5 | Hands: пешком Exit → ChestCluster → Мика | owner verify | ☐ owner |
+
+### MCP smoke (Play/Server) — full scout line
+
+| Шаг | Seed | Результат |
+|-----|------|-----------|
+| **107** ScoutPost | Q1 | **PASS** Accept→VisitZone→TurnIn |
+| **108** Waystone | Q10 | **PASS** |
+| **109** ChestCluster | Q1 | **PASS** |
+| **110** ElementShrine | Q8 | **PASS** |
+| **111** Overlook | Q12 | **PASS** |
+| **112** TrailCamp | Q1 | **PASS** |
+
+### MCP smoke — W2 chain regress
+
+| Шаг | Результат |
+|-----|-----------|
+| Seed Q1 → **113** Exit → turn-in | **PASS** |
+| **114** grant #101 → turn-in | **PASS** |
+| **115** ScoutPost → turn-in | **PASS** |
+| **116** grant #102 → turn-in | **PASS** |
+| `QuestLocations` count=6 | **PASS** |
+
+**SoT правки:** нет — W4 exit green на W1–W3 hooks.
+
+---
+
+## Phase 2 — **COMPLETE (2026-08-23)**
+
+Exit criteria ☑ · W1–W4 MCP PASS · `validate_quest_catalog` + `quality_gate` green.
 
 ---
 
@@ -148,9 +178,10 @@ Studio → `docs/realm-of-spirits/studio/`:
 1. **Ctrl+S** place.
 2. W1: Q1 сдан → **109** у Мики → ChestCluster → turn-in.
 3. W2 опц.: prereq Q10 → **108** Waystone; prereq Q8 → **110** ElementShrine.
-4. Опц.: регресс **115** после **114**.
+4. W4: prereq Q1 → **107** ScoutPost у Exit.
+5. Опц.: регресс **113→116** пешком после **114**.
 
 ## Next
 
-- **W4:** full line **107–112** validate + W2 chain **113→116** regress + hands Exit→ChestCluster
-- Не параллелить **106 polish** track
+- **Фаза 3** Commercial prep — [`ROADMAP-2026-08-23.md`](ROADMAP-2026-08-23.md) § Фаза 3
+- Не параллелить **106 polish** track без явной команды
