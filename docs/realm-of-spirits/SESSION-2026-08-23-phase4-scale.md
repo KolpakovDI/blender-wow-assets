@@ -29,7 +29,7 @@
 | `ExpansionGate` | `RS.RealmOfSpirits` | All Allow*=false defaults |
 | `ProfileServiceAdapter` | `SSS.RealmOfSpirits` | Stub → **W1 audit API** |
 | `DataStoreManager` | `SSS.RealmOfSpirits` | Live backend `RealmOfSpirits_v2` + session lock |
-| `GuildSystem` | `SSS.RealmOfSpirits` | W8 leave persist + roster merge; W7 join restore; CreateOrJoin fail-closed |
+| `GuildSystem` | `SSS.RealmOfSpirits` | W10 deposit/withdraw prep; W9 UI+bank; W8 leave+merge; CreateOrJoin fail-closed |
 | `SpiritMeshGenerationService` | `SSS.RealmOfSpirits` | Online path blocked |
 | `PvPDuelSystem` | `SSS.RealmOfSpirits` | Fair duel OK; `pvpExtraAllowed()` for rated |
 
@@ -350,6 +350,72 @@ SmokeGuildRosterMock → Success=true (regression)
 **W8 NOT in scope:** AllowGuilds · live guild DS · UI panel · bank/warfare · B1 · 106 · Haven décor
 
 **Next after W8:** W9 guild UI panel / bank prep (still gate OFF = no create/live DS).
+
+---
+
+## W9 — Guild UI panel / bank prep — **PASS (dev-only, 2026-08-23)**
+
+**Scope:** client GuildPanelUI + empty Locked bank shape on guild record; **no** `AllowGuilds` · **no** live bank DS · **no** Publish.
+
+| # | Задача | Статус |
+|---|--------|--------|
+| 1 | Empty `Bank` on guild record + `GetBank` / `GetBankAudit` | ☑ |
+| 2 | `GetPanelSnapshot` + remotes GetPanel / GetBank | ☑ |
+| 3 | `GuildPanelUI` LocalScript (G / `/guildpanel`, fail-closed) | ☑ |
+| 4 | `SmokeGuildBankMock` + `SmokeGuildPanelPrepMock` | ☑ |
+| 5 | Phase/audit → `F4-W9-guild-ui-bank` | ☑ |
+| 6 | Studio sync + MCP Edit smoke | ☑ |
+| 7 | Docs: NEXT / ROADMAP / CHANGELOG | ☑ |
+| 8 | `quality_gate.py` | ⚠ shell unavailable this turn — MCP smokes green |
+
+**Policy note:** UI read + bank shape work with gate OFF; CreateOrJoin / bank writes remain fail-closed.
+
+**MCP smoke (Edit, unpublished):**
+
+```
+GetGuildAudit → Phase=F4-W9-guild-ui-bank GateAllows=false
+SmokeGuildBankMock → Success=true Copper=0 Locked=true CreateOrJoinBlocked=true
+SmokeGuildPanelPrepMock → Success=true LockedOk=true MemberOk=true CreateOrJoinBlocked=true
+W6–W8 regress → leave/merge/roster/restore Success=true
+AllowGuilds=false · GuildPanelUI present
+```
+
+**W9 NOT in scope:** AllowGuilds · live guild DS · live deposit/withdraw · warfare · B1 · 106 · Haven décor · Publish
+
+**Next after W9:** W10 bank deposit/withdraw prep **or** warfare stub (still gate OFF).
+
+---
+
+## W10 — Bank deposit/withdraw prep — **PASS (dev-only, 2026-08-24)**
+
+**Scope:** live Deposit/Withdraw APIs fail-closed (`Locked`) until AllowGuilds; in-memory mutate via `SmokeBankDepositMock` for QA; **no** AllowGuilds · **no** live guild DS · **no** Publish.
+
+| # | Задача | Статус |
+|---|--------|--------|
+| 1 | `DepositCopper` / `WithdrawCopper` — validate + fail-closed Locked | ☑ |
+| 2 | In-memory `applyBankCopperDelta` for smoke QA only | ☑ |
+| 3 | Remotes `Deposit` / `Withdraw` + `GetBank` WriteLocked / panel `BankWriteLocked` | ☑ |
+| 4 | `SmokeBankDepositMock` (live blocked + copper 500→300) | ☑ |
+| 5 | Phase/audit → `F4-W10-guild-bank-write` | ☑ |
+| 6 | `GuildPanelUI` WRITE LOCKED label + Error handler | ☑ |
+| 7 | Studio sync + MCP Edit smoke | ☑ |
+| 8 | Docs: NEXT / ROADMAP / CHANGELOG | ☑ |
+| 9 | `quality_gate.py` | ☑ green |
+
+**Policy choice (documented):** live path = **fail-closed Locked** (`!AllowGuilds` ∨ `bank.Locked`); QA = `SmokeBankDepositMock` mutates in-memory copper without unlocking live remotes.
+
+**MCP smoke (Edit, unpublished):**
+
+```
+GetGuildAudit → Phase=F4-W10-guild-bank-write GateAllows=false
+SmokeBankDepositMock → Success=true LiveDepositBlocked=true LiveWithdrawBlocked=true CopperAfter=300 WriteLocked=true
+W6–W9 regress → roster/restore/leave/merge/bank/panel Success=true
+AllowGuilds=false · DepositWithdrawPrep=true · LiveBankWrites=false
+```
+
+**W10 NOT in scope:** AllowGuilds · live guild DS · unlock Bank.Locked · warfare · B1 · 106 · Haven décor · Publish
+
+**Next after W10:** W11 warfare stub **or** item bank slots (still gate OFF).
 
 ---
 

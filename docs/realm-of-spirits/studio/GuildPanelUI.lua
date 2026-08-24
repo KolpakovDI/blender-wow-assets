@@ -1,7 +1,7 @@
 --!strict
--- GuildPanelUI (F4 W9): fail-closed guild panel + bank read-only prep
--- Toggle: G key or chat /guildpanel · CreateOrJoin stays gated server-side
--- Reads GuildEvent GetPanel / player Guild* attrs; no Allow* flip · no live bank writes
+-- GuildPanelUI (F4 W10): fail-closed guild panel + bank write prep (live Locked)
+-- Toggle: G key or chat /guildpanel · CreateOrJoin / Deposit / Withdraw stay gated server-side
+-- Reads GuildEvent GetPanel / GuildBank; no Allow* flip · live bank writes fail-closed
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -9,33 +9,36 @@ local UserInputService = game:GetService("UserInputService")
 
 local player = Players.LocalPlayer
 local RealmFolder = ReplicatedStorage:WaitForChild("RealmOfSpirits")
-local guildEvent = RealmFolder:WaitForChild("GuildEvent", 30)
-if not guildEvent or not guildEvent:IsA("RemoteEvent") then
+local guildEventInst = RealmFolder:WaitForChild("GuildEvent", 30)
+if not guildEventInst or not guildEventInst:IsA("RemoteEvent") then
 	warn("[GuildPanelUI] GuildEvent missing")
 	return
 end
+local guildEvent: RemoteEvent = guildEventInst :: RemoteEvent
 
 local ExpansionGate: any = nil
 pcall(function()
 	ExpansionGate = require(RealmFolder:WaitForChild("ExpansionGate", 5))
 end)
 
-type BankSnapshot = {
+type BankSnap = {
 	Copper: number?,
 	ItemCount: number?,
 	Locked: boolean?,
+	WriteLocked: boolean?,
 	InMemoryOnly: boolean?,
 	MaxSlots: number?,
 }
 
-type PanelSnapshot = {
+type PanelSnap = {
 	HasMembership: boolean?,
 	GateAllows: boolean?,
 	CreateBlocked: boolean?,
+	BankWriteLocked: boolean?,
 	LockedMessage: string?,
 	Membership: { Id: string?, Name: string?, Tag: string?, Role: string? }?,
 	Roster: { { UserId: number?, Role: string? } }?,
-	Bank: BankSnapshot?,
+	Bank: BankSnap?,
 }
 
 local panelGui: ScreenGui? = nil
@@ -45,7 +48,7 @@ local rosterLabel: TextLabel? = nil
 local bankLabel: TextLabel? = nil
 local titleLabel: TextLabel? = nil
 local visible = false
-local lastSnap: PanelSnapshot? = nil
+local lastSnap: PanelSnap? = nil
 
 local function gateAllows(): boolean
 	return ExpansionGate ~= nil and ExpansionGate.AllowGuilds == true
@@ -178,7 +181,7 @@ local function ensureGui()
 	hint.TextSize = 11
 	hint.TextColor3 = Color3.fromRGB(140, 140, 160)
 	hint.TextXAlignment = Enum.TextXAlignment.Left
-	hint.Text = "G / /guildpanel — закрыть · создание гильдии закрыто (gate)"
+	hint.Text = "G / /guildpanel — закрыть · create/deposit Locked (gate)"
 	hint.Parent = frame
 
 	closeBtn.MouseButton1Click:Connect(function()
@@ -208,17 +211,17 @@ local function formatRoster(roster: { { UserId: number?, Role: string? } }?): st
 	return table.concat(lines, "\n")
 end
 
-local function formatBank(bank: BankSnapshot?): string
+local function formatBank(bank: BankSnap?): string
 	if type(bank) ~= "table" then
 		return "Банк: недоступен (нет гильдии)"
 	end
 	local copper = tonumber(bank.Copper) or 0
 	local items = tonumber(bank.ItemCount) or 0
 	local maxSlots = tonumber(bank.MaxSlots) or 20
-	local locked = bank.Locked ~= false
-	if locked then
+	local writeLocked = bank.WriteLocked ~= false or bank.Locked ~= false
+	if writeLocked then
 		return string.format(
-			"Банк (prep): Copper %d · слоты %d/%d · LOCKED (нет live DS)",
+			"Банк (W10): Copper %d · слоты %d/%d · WRITE LOCKED (нет AllowGuilds)",
 			copper,
 			items,
 			maxSlots
@@ -227,7 +230,7 @@ local function formatBank(bank: BankSnapshot?): string
 	return string.format("Банк: Copper %d · слоты %d/%d", copper, items, maxSlots)
 end
 
-local function applySnapshot(snap: PanelSnapshot)
+local function applySnapshot(snap: PanelSnap)
 	lastSnap = snap
 	ensureGui()
 	if not bodyLabel or not rosterLabel or not bankLabel or not titleLabel then
@@ -269,14 +272,16 @@ end
 local function applyLocalFallback()
 	ensureGui()
 	if hasLocalMembership() then
-		local name = tostring(player:GetAttribute("GuildName") or "?")
-		local tag = tostring(player:GetAttribute("GuildTag") or "??")
-		local role = tostring(player:GetAttribute("GuildRole") or "Member")
 		applySnapshot({
 			HasMembership = true,
 			GateAllows = gateAllows(),
 			CreateBlocked = not gateAllows(),
-			Membership = { Name = name, Tag = tag, Role = role, Id = "?" },
+			Membership = {
+				Name = tostring(player:GetAttribute("GuildName") or "?"),
+				Tag = tostring(player:GetAttribute("GuildTag") or "??"),
+				Role = tostring(player:GetAttribute("GuildRole") or "Member"),
+				Id = "?",
+			},
 			Roster = {},
 			Bank = { Copper = 0, ItemCount = 0, Locked = true, MaxSlots = 20 },
 		})
@@ -297,7 +302,7 @@ end
 local function requestPanel()
 	ensureGui()
 	applyLocalFallback()
-	;(guildEvent :: RemoteEvent):FireServer("GetPanel", {})
+	guildEvent:FireServer("GetPanel", {})
 end
 
 local function setVisible(on: boolean)
@@ -315,12 +320,12 @@ local function toggle()
 	setVisible(not visible)
 end
 
-;(guildEvent :: RemoteEvent).OnClientEvent:Connect(function(action: any, payload: any)
+guildEvent.OnClientEvent:Connect(function(action: any, payload: any)
 	if typeof(action) ~= "string" then
 		return
 	end
 	if action == "GuildPanel" and type(payload) == "table" then
-		applySnapshot(payload :: PanelSnapshot)
+		applySnapshot(payload :: PanelSnap)
 	elseif action == "GuildState" or action == "GuildJoined" then
 		if visible then
 			requestPanel()
@@ -342,6 +347,12 @@ end
 	elseif action == "GuildBank" and visible and lastSnap and lastSnap.HasMembership then
 		lastSnap.Bank = if type(payload) == "table" then payload else nil
 		applySnapshot(lastSnap)
+	elseif action == "Error" and visible and type(payload) == "table" then
+		local msg = tostring(payload.Message or "")
+		if #msg > 0 and bodyLabel then
+			bodyLabel.Text = string.format("Банк: %s", msg)
+			bodyLabel.TextColor3 = Color3.fromRGB(255, 180, 140)
+		end
 	end
 end)
 
@@ -367,4 +378,4 @@ player:GetAttributeChangedSignal("GuildTag"):Connect(function()
 	end
 end)
 
-print("[GuildPanelUI] W9 ready — G / /guildpanel (fail-closed)")
+print("[GuildPanelUI] W10 ready — G / /guildpanel (deposit fail-closed)")

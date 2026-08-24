@@ -11,7 +11,24 @@
 - **Owner decision:** defer **Publish**, live DS rejoin, live Robux, and `AllowProfileService` cutover while project is raw
 - **Valid now:** unpublished Studio Edit+Play · MCP smoke · Mock/shadow ProfileService · `quality_gate` · git mirrors
 - **Deferred (owner unlock):** Publish PlaceId≠0 · live DS stress · DevProduct live **R** · W4 FlipChecklist · live PS on join · AllowGuilds
-- **Default next (dev-only):** F4 **W9** guild UI panel / bank prep — see [`NEXT-SESSION.md`](NEXT-SESSION.md)
+- **Default next (dev-only):** F4 **W11** warfare stub / item bank — see [`NEXT-SESSION.md`](NEXT-SESSION.md)
+
+### Phase 4 W10 — Bank deposit/withdraw prep PASS (2026-08-24)
+
+- **`GuildSystem`:** `DepositCopper` · `WithdrawCopper` (live fail-closed `Locked` until AllowGuilds) · `SmokeBankDepositMock` (in-memory copper mutate) · remotes `Deposit`/`Withdraw` · phase `F4-W10-guild-bank-write`
+- **`GetBank` / panel:** `WriteLocked` · `BankWriteLocked`; CreateOrJoin still gated
+- **`GuildPanelUI`:** WRITE LOCKED bank label + Error handler for deposit/withdraw rejects
+- **Policy:** live path Locked; QA smoke mutates in-memory only — no AllowGuilds · no live bank DS
+- **MCP Edit smoke:** Deposit/Withdraw blocked · Copper 500→300 · W6–W9 regress PASS · GateAllows=false
+- **NOT in W10:** AllowGuilds · guild DS · unlock Bank.Locked · warfare · Publish
+
+### Phase 4 W9 — Guild UI panel + bank prep PASS (2026-08-23)
+
+- **`GuildSystem`:** `GetBank` · `GetBankAudit` · `GetPanelSnapshot` · empty Locked `Bank` on guild record · `SmokeGuildBankMock` · `SmokeGuildPanelPrepMock` · phase `F4-W9-guild-ui-bank`
+- **`GuildPanelUI`:** client LocalScript — G / `/guildpanel`; fail-closed locked message; roster+bank read-only when membership exists
+- **Policy:** CreateOrJoin / `/guild` still fail-closed; no AllowGuilds; no live bank DS
+- **MCP Edit smoke:** Bank Success Copper=0 Locked · Panel LockedOk+MemberOk · W6–W8 regress PASS · GateAllows=false
+- **NOT in W9:** AllowGuilds · guild DS · live deposit/withdraw · warfare · Publish
 
 ### Phase 4 W8 — Guild leave persist + roster merge PASS (2026-08-23)
 

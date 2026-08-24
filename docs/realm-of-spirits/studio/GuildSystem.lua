@@ -1,8 +1,13 @@
--- GuildSystem (F4 W9): guild UI panel / bank prep (in-memory, gate OFF)
+-- GuildSystem (F4 W10): bank deposit/withdraw prep (in-memory, gate OFF)
 -- Restore + Leave do NOT require AllowGuilds (in-memory session only)
 -- CreateOrJoin remains fail-closed behind ExpansionGate.AllowGuilds
--- Bank = empty in-memory shape only — no live guild DS / Allow* flip
+-- Live Deposit/Withdraw fail-closed (Locked) until AllowGuilds; Smoke mutates in-memory
 -- Start() from OtakuHavenService / GameManager after DataStore ready
+-- Mirror: re-export from Studio SoT after Ctrl+S if this file drifts.
+-- Runtime SoT = ServerScriptService.RealmOfSpirits.GuildSystem in place .rbxl
+-- W10 APIs: DepositCopper, WithdrawCopper, SmokeBankDepositMock (plus W9 GetBank/GetPanel)
+-- Client companion: StarterPlayerScripts.GuildPanelUI (G / /guildpanel, fail-closed)
+-- Phase: F4-W10-guild-bank-write · AllowGuilds=false · CreateOrJoin gated
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -15,16 +20,19 @@ GuildSystem._started = false
 GuildSystem.MaxNameLen = 24
 GuildSystem.MaxTagLen = 4
 GuildSystem.MaxMembersPerGuild = 20
-GuildSystem.MaxBankSlots = 20
 GuildSystem.GuildStoreNameFuture = "RealmOfSpirits_Guilds_v1"
 GuildSystem.PlayerGuildKey = "Guild" -- optional schema v1
 GuildSystem.RosterSchemaVersion = 1
+GuildSystem.MaxBankSlots = 20
 GuildSystem.BankSchemaVersion = 1
 GuildSystem.SmokeGuildId = "g_w6smoke"
 GuildSystem.SmokeRestoreGuildId = "g_w7restore"
 GuildSystem.SmokeLeaveGuildId = "g_w8leave"
 GuildSystem.SmokeMergeGuildId = "g_w8merge"
 GuildSystem.SmokeBankGuildId = "g_w9bank"
+GuildSystem.SmokeDepositGuildId = "g_w10deposit"
+GuildSystem.MaxBankCopperTxn = 1000000
+GuildSystem.MaxBankCopperBalance = 100000000
 
 local RealmFolder = ReplicatedStorage:WaitForChild("RealmOfSpirits")
 local remoteInst = RealmFolder:FindFirstChild("GuildEvent")
@@ -166,7 +174,7 @@ function GuildSystem.GetRoster(guildId)
 	return rosterArray(record)
 end
 
--- In-memory bank snapshot (empty / locked). No deposit/withdraw until AllowGuilds + DS.
+-- In-memory bank snapshot. Live deposit/withdraw fail-closed while Locked / !AllowGuilds.
 function GuildSystem.GetBank(guildId)
 	local record = guildsById[guildId]
 	if not record then
@@ -177,6 +185,7 @@ function GuildSystem.GetBank(guildId)
 	for _ in pairs(bank.Items) do
 		itemCount += 1
 	end
+	local writeLocked = (bank.Locked == true) or (not gateAllowsGuilds())
 	return {
 		Copper = bank.Copper,
 		ItemCount = itemCount,
@@ -184,37 +193,163 @@ function GuildSystem.GetBank(guildId)
 		MaxSlots = bank.MaxSlots,
 		SchemaVersion = bank.SchemaVersion,
 		Locked = bank.Locked == true,
+		WriteLocked = writeLocked,
 		InMemoryOnly = true,
 	}
+end
+
+local function resolveUserId(player)
+	if typeof(player) == "Instance" and player:IsA("Player") then
+		return player.UserId, player
+	end
+	if type(player) == "table" then
+		return tonumber(player.UserId), nil
+	end
+	return nil, nil
+end
+
+local function normalizeCopperAmount(amountRaw)
+	local amount = tonumber(amountRaw)
+	if type(amount) ~= "number" or amount ~= amount or amount <= 0 then
+		return nil, "InvalidAmount"
+	end
+	amount = math.floor(amount)
+	if amount < 1 or amount > GuildSystem.MaxBankCopperTxn then
+		return nil, "InvalidAmount"
+	end
+	return amount, nil
+end
+
+-- In-memory copper delta (QA / smoke). Does NOT bypass live Deposit/Withdraw gates.
+local function applyBankCopperDelta(guildId, delta)
+	local record = guildsById[guildId]
+	if not record then
+		return false, "NoGuild"
+	end
+	local bank = ensureBank(record)
+	local d = tonumber(delta)
+	if type(d) ~= "number" or d ~= d or d == 0 then
+		return false, "InvalidAmount"
+	end
+	d = math.floor(d)
+	local nextCopper = bank.Copper + d
+	if nextCopper < 0 then
+		return false, "InsufficientFunds"
+	end
+	if nextCopper > GuildSystem.MaxBankCopperBalance then
+		return false, "CapExceeded"
+	end
+	bank.Copper = nextCopper
+	return true, GuildSystem.GetBank(guildId)
+end
+
+-- Live path: fail-closed until AllowGuilds AND bank.Locked=false.
+function GuildSystem.DepositCopper(player, amountRaw)
+	local userId, realPlayer = resolveUserId(player)
+	if not userId then
+		return false, "InvalidPlayer"
+	end
+	local amount, amountErr = normalizeCopperAmount(amountRaw)
+	if not amount then
+		return false, amountErr or "InvalidAmount"
+	end
+	local info = membership[userId]
+	if not info then
+		return false, "NoMembership"
+	end
+	if not gateAllowsGuilds() then
+		return false, "Locked"
+	end
+	local record = guildsById[info.Id]
+	if not record then
+		return false, "NoGuild"
+	end
+	local bank = ensureBank(record)
+	if bank.Locked then
+		return false, "Locked"
+	end
+	local ok, res = applyBankCopperDelta(info.Id, amount)
+	if not ok then
+		return false, res
+	end
+	if realPlayer then
+		pcall(function()
+			remote:FireClient(realPlayer, "GuildBank", res)
+		end)
+	end
+	return true, res
+end
+
+function GuildSystem.WithdrawCopper(player, amountRaw)
+	local userId, realPlayer = resolveUserId(player)
+	if not userId then
+		return false, "InvalidPlayer"
+	end
+	local amount, amountErr = normalizeCopperAmount(amountRaw)
+	if not amount then
+		return false, amountErr or "InvalidAmount"
+	end
+	local info = membership[userId]
+	if not info then
+		return false, "NoMembership"
+	end
+	if not gateAllowsGuilds() then
+		return false, "Locked"
+	end
+	local record = guildsById[info.Id]
+	if not record then
+		return false, "NoGuild"
+	end
+	local bank = ensureBank(record)
+	if bank.Locked then
+		return false, "Locked"
+	end
+	local ok, res = applyBankCopperDelta(info.Id, -amount)
+	if not ok then
+		return false, res
+	end
+	if realPlayer then
+		pcall(function()
+			remote:FireClient(realPlayer, "GuildBank", res)
+		end)
+	end
+	return true, res
 end
 
 function GuildSystem.GetBankAudit()
 	local bankGuildCount = 0
 	local totalItems = 0
+	local totalCopper = 0
 	for _, record in pairs(guildsById) do
 		local bank = ensureBank(record)
 		bankGuildCount += 1
+		totalCopper += bank.Copper
 		for _ in pairs(bank.Items) do
 			totalItems += 1
 		end
 	end
 	return {
-		Phase = "F4-W9-guild-ui-bank",
+		Phase = "F4-W10-guild-bank-write",
 		DevOnly = true,
 		GateAllows = gateAllowsGuilds(),
 		AllowGuildsAttr = allowGuildsAttr(),
 		InMemoryOnly = true,
 		LiveBankWrites = false,
+		DepositWithdrawPrep = true,
+		LiveDepositRequiresAllowGuilds = true,
+		LiveDepositRequiresUnlocked = true,
 		BankSchemaVersion = GuildSystem.BankSchemaVersion,
 		MaxBankSlots = GuildSystem.MaxBankSlots,
+		MaxBankCopperTxn = GuildSystem.MaxBankCopperTxn,
 		BankShape = { "Copper", "Items", "MaxSlots", "SchemaVersion", "Locked" },
 		GuildsWithBank = bankGuildCount,
 		TotalBankItems = totalItems,
-		Note = "Bank prep only — empty in-memory table; no AllowGuilds / guild DS",
+		TotalBankCopper = totalCopper,
+		Note = "W10: live Deposit/Withdraw fail-closed Locked; SmokeBankDepositMock mutates in-memory",
 	}
 end
 
--- Client panel snapshot: membership + roster + bank (fail-closed create still gated).
+-- Client panel snapshot: membership + roster + bank (fail-closed create / bank writes).
 function GuildSystem.GetPanelSnapshot(player)
 	local info = GuildSystem.GetMembership(player)
 	local gateOk = gateAllowsGuilds()
@@ -223,6 +358,7 @@ function GuildSystem.GetPanelSnapshot(player)
 			HasMembership = false,
 			GateAllows = gateOk,
 			CreateBlocked = not gateOk,
+			BankWriteLocked = true,
 			LockedMessage = if gateOk
 				then "Нет гильдии — вступите через /guild (когда открыто)"
 				else "Гильдии закрыты (ExpansionGate / dev-only)",
@@ -236,6 +372,7 @@ function GuildSystem.GetPanelSnapshot(player)
 		HasMembership = true,
 		GateAllows = gateOk,
 		CreateBlocked = not gateOk,
+		BankWriteLocked = (bank == nil) or (bank.WriteLocked == true),
 		Membership = info,
 		Roster = roster,
 		Bank = bank,
@@ -246,13 +383,14 @@ end
 -- Read-only MVP persistence design (no live DS writes).
 function GuildSystem.GetMvpDesign()
 	return {
-		Phase = "F4-W9-guild-ui-bank",
+		Phase = "F4-W10-guild-bank-write",
 		DevOnly = true,
 		InMemoryOnly = true,
 		AllowGuildsRequiredForCreate = true,
 		AllowGuildsRequiredForRestore = false,
 		AllowGuildsRequiredForLeave = false,
 		AllowGuildsRequiredForBankWrite = true,
+		LiveDepositWithdrawFailClosed = true,
 		PlayerProfileKey = GuildSystem.PlayerGuildKey,
 		PlayerShape = { "Id", "Name", "Tag", "Role" },
 		RosterShape = { "Id", "Name", "Tag", "LeaderUserId", "Members", "CreatedAt", "SchemaVersion", "Bank" },
@@ -263,6 +401,7 @@ function GuildSystem.GetMvpDesign()
 		MaxTagLen = GuildSystem.MaxTagLen,
 		MaxMembersPerGuild = GuildSystem.MaxMembersPerGuild,
 		MaxBankSlots = GuildSystem.MaxBankSlots,
+		MaxBankCopperTxn = GuildSystem.MaxBankCopperTxn,
 		FutureStoreName = GuildSystem.GuildStoreNameFuture,
 		PersistencePlan = {
 			"A. Player optional Guild {Id,Name,Tag,Role} — schema v1 locked; no full roster in profile",
@@ -272,8 +411,9 @@ function GuildSystem.GetMvpDesign()
 			"E. W7 = restore data.Guild → membership/roster on load (no AllowGuilds); CreateOrJoin still gated",
 			"F. W8 = Leave clears data.Guild + membership; same guild Id restores merge roster",
 			"G. W9 = GuildPanelUI + empty Bank on guild record (in-memory, Locked=true); no live bank DS",
+			"H. W10 = DepositCopper/WithdrawCopper fail-closed Locked; SmokeBankDepositMock in-memory mutate",
 		},
-		Note = "Restore/Leave/UI read work with gate OFF; CreateOrJoin + bank writes fail-closed until AllowGuilds",
+		Note = "Restore/Leave/UI read work with gate OFF; CreateOrJoin + live bank writes fail-closed until AllowGuilds",
 	}
 end
 
@@ -287,7 +427,7 @@ function GuildSystem.GetGuildAudit()
 		guildCount += 1
 	end
 	return {
-		Phase = "F4-W9-guild-ui-bank",
+		Phase = "F4-W10-guild-bank-write",
 		DevOnly = true,
 		GateAllows = gateAllowsGuilds(),
 		AllowGuildsAttr = allowGuildsAttr(),
@@ -301,6 +441,7 @@ function GuildSystem.GetGuildAudit()
 		LeaveRequiresAllowGuilds = false,
 		CreateRequiresAllowGuilds = true,
 		BankWriteRequiresAllowGuilds = true,
+		LiveDepositWithdrawFailClosed = true,
 		UiPanel = "GuildPanelUI",
 		ChatCommands = { "/guild", "/guildleave", "/guildpanel", "/expansiongate" },
 		Apis = {
@@ -311,6 +452,8 @@ function GuildSystem.GetGuildAudit()
 			"GetBank",
 			"GetBankAudit",
 			"GetPanelSnapshot",
+			"DepositCopper",
+			"WithdrawCopper",
 			"RestoreMembershipFromGuildTable",
 			"RestoreFromPlayerData",
 			"ClearGuildMembership",
@@ -320,15 +463,16 @@ function GuildSystem.GetGuildAudit()
 			"SmokeRosterMergeMock",
 			"SmokeGuildBankMock",
 			"SmokeGuildPanelPrepMock",
+			"SmokeBankDepositMock",
 			"CreateOrJoin",
 			"Leave",
 		},
 		NextSteps = {
 			"Keep AllowGuilds=false under dev-only",
-			"W10+: bank deposit/withdraw + warfare (owner unlock + AllowGuilds for live DS)",
-			"Owner unlock required before live guild DS + AllowGuilds",
+			"W11+: warfare stub or item bank slots (still gate OFF)",
+			"Owner unlock required before live guild DS + AllowGuilds + unlock Bank.Locked",
 		},
-		Note = "W9 UI panel + bank prep — CreateOrJoin fail-closed until ExpansionGate.AllowGuilds",
+		Note = "W10 deposit/withdraw prep — live path Locked; CreateOrJoin fail-closed until AllowGuilds",
 	}
 end
 
@@ -847,7 +991,6 @@ function GuildSystem.SmokeGuildPanelPrepMock()
 		end
 	end
 
-	-- No membership → locked message (smoke stub only needs UserId)
 	local fakeNoGuild = { UserId = 900000601 }
 	local snapLocked = GuildSystem.GetPanelSnapshot(fakeNoGuild)
 	local lockedOk = snapLocked.HasMembership == false
@@ -882,6 +1025,74 @@ function GuildSystem.SmokeGuildPanelPrepMock()
 		LockedMessage = snapLocked.LockedMessage,
 		RosterCount = snapMember.Roster and #snapMember.Roster or 0,
 		BankLocked = snapMember.Bank and snapMember.Bank.Locked or nil,
+		CreateOrJoinBlocked = createBlocked,
+		GateAllows = gateAllowsGuilds(),
+		AllowGuildsAttr = allowGuildsAttr(),
+		Phase = design.Phase,
+		InMemoryOnly = true,
+	}
+end
+
+-- Studio/dev smoke: live Deposit/Withdraw Locked; in-memory copper mutate for QA.
+function GuildSystem.SmokeBankDepositMock()
+	local smokeId = GuildSystem.SmokeDepositGuildId
+	guildsById[smokeId] = nil
+	for uid, info in pairs(membership) do
+		if info.Id == smokeId then
+			membership[uid] = nil
+		end
+	end
+
+	local userId = 900000701
+	local okRestore = GuildSystem.RestoreMembershipFromGuildTable(userId, {
+		Id = smokeId,
+		Name = "W10 Deposit Guild",
+		Tag = "W10D",
+		Role = "Leader",
+	}, nil)
+	local fakeMember = { UserId = userId }
+
+	local okDep, depErr = GuildSystem.DepositCopper(fakeMember, 100)
+	local liveDepositBlocked = okDep == false and depErr == "Locked"
+
+	local okWd, wdErr = GuildSystem.WithdrawCopper(fakeMember, 50)
+	local liveWithdrawBlocked = okWd == false and wdErr == "Locked"
+
+	local okMutIn, bankAfterIn = applyBankCopperDelta(smokeId, 500)
+	local okMutOut, bankAfterOut = applyBankCopperDelta(smokeId, -200)
+	local bankFinal = GuildSystem.GetBank(smokeId)
+	local panel = GuildSystem.GetPanelSnapshot(fakeMember)
+	local createBlocked = not gateAllowsGuilds()
+
+	local mutateOk = okRestore == true
+		and liveDepositBlocked == true
+		and liveWithdrawBlocked == true
+		and okMutIn == true
+		and okMutOut == true
+		and bankAfterIn ~= nil
+		and bankAfterIn.Copper == 500
+		and bankAfterOut ~= nil
+		and bankAfterOut.Copper == 300
+		and bankFinal ~= nil
+		and bankFinal.Copper == 300
+		and bankFinal.Locked == true
+		and bankFinal.WriteLocked == true
+		and panel.BankWriteLocked == true
+		and createBlocked == true
+
+	local design = GuildSystem.GetMvpDesign()
+	return {
+		Success = mutateOk,
+		SmokeGuildId = smokeId,
+		LiveDepositBlocked = liveDepositBlocked,
+		LiveWithdrawBlocked = liveWithdrawBlocked,
+		LiveDepositError = depErr,
+		LiveWithdrawError = wdErr,
+		CopperAfterDepositMock = bankAfterIn and bankAfterIn.Copper or nil,
+		CopperAfterWithdrawMock = bankFinal and bankFinal.Copper or nil,
+		BankLocked = bankFinal and bankFinal.Locked or nil,
+		WriteLocked = bankFinal and bankFinal.WriteLocked or nil,
+		PanelWriteLocked = panel.BankWriteLocked,
 		CreateOrJoinBlocked = createBlocked,
 		GateAllows = gateAllowsGuilds(),
 		AllowGuildsAttr = allowGuildsAttr(),
@@ -938,6 +1149,16 @@ function GuildSystem.Start()
 			remote:FireClient(player, "GuildBank", bank or { Locked = true, Copper = 0, ItemCount = 0, Items = {}, InMemoryOnly = true })
 		elseif action == "GetPanel" then
 			remote:FireClient(player, "GuildPanel", GuildSystem.GetPanelSnapshot(player))
+		elseif action == "Deposit" then
+			local ok, res = GuildSystem.DepositCopper(player, payload.Amount)
+			if not ok then
+				remote:FireClient(player, "Error", { Message = tostring(res), Action = "Deposit" })
+			end
+		elseif action == "Withdraw" then
+			local ok, res = GuildSystem.WithdrawCopper(player, payload.Amount)
+			if not ok then
+				remote:FireClient(player, "Error", { Message = tostring(res), Action = "Withdraw" })
+			end
 		end
 	end)
 
@@ -987,7 +1208,7 @@ function GuildSystem.Start()
 		end)
 	end
 
-	print("Realm of Spirits - GuildSystem W9 UI+bank prep (in-memory) loaded")
+	print("Realm of Spirits - GuildSystem W10 bank deposit/withdraw prep (in-memory) loaded")
 end
 
 return GuildSystem
