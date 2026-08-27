@@ -1,6 +1,6 @@
 --!strict
--- GuildPanelUI (F4 W12): fail-closed guild panel + bank + warfare status (live Locked)
--- Toggle: G key or chat /guildpanel · CreateOrJoin / Deposit / Withdraw / Warfare stay gated server-side
+-- GuildPanelUI (F4 W13): fail-closed guild panel + bank + warfare (live Locked; transfer gated)
+-- Toggle: G key or chat /guildpanel · CreateOrJoin / Deposit / Withdraw / Transfer / Warfare stay gated
 -- Reads GuildEvent GetPanel / GuildBank / GuildWarfare; no Allow* flip · live writes fail-closed
 
 local Players = game:GetService("Players")
@@ -276,7 +276,7 @@ local function formatWarfare(warfare: WarfareSnap?): string
 	local writeLocked = warfare.WriteLocked ~= false or warfare.Locked ~= false
 	if writeLocked then
 		return string.format(
-			"Война (W12): %s · цель %s · %d уч. · LOCKED",
+			"Война: %s · цель %s · %d уч. · LOCKED",
 			state,
 			target,
 			participants
@@ -441,4 +441,4 @@ player:GetAttributeChangedSignal("GuildTag"):Connect(function()
 	end
 end)
 
-print("[GuildPanelUI] W12 ready — G / /guildpanel (warfare stub fail-closed)")
+print("[GuildPanelUI] W13 ready — G / /guildpanel (inv↔bank transfer fail-closed)")

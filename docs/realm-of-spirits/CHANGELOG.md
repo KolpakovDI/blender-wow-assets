@@ -11,7 +11,15 @@
 - **Owner decision:** defer **Publish**, live DS rejoin, live Robux, and `AllowProfileService` cutover while project is raw
 - **Valid now:** unpublished Studio Edit+Play · MCP smoke · Mock/shadow ProfileService · `quality_gate` · git mirrors
 - **Deferred (owner unlock):** Publish PlaceId≠0 · live DS stress · DevProduct live **R** · W4 FlipChecklist · live PS on join · AllowGuilds
-- **Default next (dev-only):** F4 **W13** inventory↔bank transfer prep **or** owner unlock — see [`NEXT-SESSION.md`](NEXT-SESSION.md)
+- **Default next (dev-only):** F4 **W14** rated PvP prep **or** owner unlock — see [`NEXT-SESSION.md`](NEXT-SESSION.md)
+
+### Phase 4 W13 — Inventory↔bank transfer prep PASS (2026-08-27)
+
+- **`GuildSystem`:** `TransferItemToBank` / `TransferItemFromBank` / `TransferCopperToBank` / `TransferCopperFromBank` (live fail-closed `Locked` until AllowGuilds) · synthetic bag shape `{Inventory={Id,Quantity}, CopperCoins}` · `SmokeInventoryBankTransferMock` · remotes Transfer* · phase `F4-W13-guild-inv-bank`
+- **`GuildPanelUI`:** W13 ready label (transfer still gated server-side)
+- **Policy:** live Transfer* Locked; QA smoke mutates synthetic inventory↔bank only — no AllowGuilds · CreateOrJoin gated · no Publish
+- **MCP Edit smoke:** Transfer* blocked · inv 5→4 item101 · copper 1000→850 / bank 150 · InsufficientItems · W6–W12 regress PASS · GateAllows=false
+- **NOT in W13:** AllowGuilds · guild DS · unlock Bank.Locked · live inventory mutate on real players · Publish
 
 ### Phase 4 W12 — Warfare stub PASS (2026-08-24)
 

@@ -2,8 +2,8 @@
 
 > **DEV-ONLY MODE** (owner decision 2026-08-23) — **не публикуем** place и **не включаем** live cutover, пока владелец явно не снимет режим. Проект сырой; публикация отложена **намеренно**, не навсегда.
 
-**Статус:** 2026-08-24 — Фаза 1 **COMPLETE** · Фаза 2 **COMPLETE** · Фаза 3 **COMPLETE CONDITIONAL** · **Фаза 4 W1–W3 PASS** · **W4 PREP PASS (CONDITIONAL)** · **W5–W12 PASS (dev-only)**
-**Следующий фокус (dev-only default):** **Ф4 W13** — inventory↔bank transfer prep (gate OFF) **или** owner unlock — без Publish / AllowGuilds flip
+**Статус:** 2026-08-27 — Фаза 1 **COMPLETE** · Фаза 2 **COMPLETE** · Фаза 3 **COMPLETE CONDITIONAL** · **Фаза 4 W1–W3 PASS** · **W4 PREP PASS (CONDITIONAL)** · **W5–W13 PASS (dev-only)**
+**Следующий фокус (dev-only default):** **Ф4 W14** — rated PvP prep (gate OFF) **или** owner unlock — без Publish / AllowGuilds flip
 
 **Roadmap:** [`ROADMAP-2026-08-23.md`](ROADMAP-2026-08-23.md) · **Phase 4:** [`SESSION-2026-08-23-phase4-scale.md`](SESSION-2026-08-23-phase4-scale.md)
 
@@ -16,14 +16,14 @@
 | Mock / shadow **ProfileService** (gate OFF) | Live **Robux** purchase (DevProduct + Publish) |
 | `quality_gate.py`, git mirrors, docs | **`AllowProfileService`** flip + live PS cutover |
 | Bug fix-only по красному smoke | **`AllowGuilds`** flip + live guild DS |
-| Ф4 prep: audit · migrate sample · gated Load/Save · Guild in-memory MVP + bank/warfare write prep | Live ops / store listing / marketing pass |
+| Ф4 prep: audit · migrate sample · gated Load/Save · Guild in-memory MVP + bank/warfare/transfer prep | Live ops / store listing / marketing pass |
 
 **Снять dev-only:** только явная команда владельца («publish», «owner hands», «live cutover») + [`OwnerFlipChecklist`](SESSION-2026-08-23-phase4-scale.md) в SESSION W4.
 
 ## Старт сессии (порядок жёсткий)
 
 1. **Ctrl+S** place → подтвердить SoT
-2. **Приоритет по умолчанию (dev-only):** **Ф4 W13** — inventory↔bank transfer prep (gate OFF)
+2. **Приоритет по умолчанию (dev-only):** **Ф4 W14** — rated PvP prep (gate OFF)
 3. **Bug fix-only** — если что-то красное в play smoke
 4. **Owner hands / Publish / live cutover** — только по **явной** команде владельца (не default)
 5. **106 / B1 / Haven décor** — только по явной команде
@@ -32,7 +32,8 @@
 
 | Команда / намерение | Действие агента |
 |---------------------|-----------------|
-| «дальше» (без уточнения) | **Ф4 W13** inventory↔bank prep (dev-only safe) |
+| «дальше» (без уточнения) | **Ф4 W14** rated PvP prep (dev-only safe) |
+| «W13» / «inventory» / «transfer» | SESSION W13 · already **PASS** — re-smoke if needed |
 | «W12» / «warfare» | SESSION W12 · already **PASS** — re-smoke if needed |
 | «W11» / «item bank» | SESSION W11 · already **PASS** — re-smoke if needed |
 | «W10» / «bank deposit» | SESSION W10 · already **PASS** — re-smoke if needed |
@@ -48,6 +49,7 @@
 | Область | Состояние |
 |---------|-----------|
 | **Dev-only** | **ACTIVE** — Publish/live cutover deferred by owner |
+| **Фаза 4 W13** | **PASS** — TransferItem/Copper To/FromBank fail-closed Locked; SmokeInventoryBankTransferMock |
 | **Фаза 4 W12** | **PASS** — DeclareWarfare/JoinWarfare fail-closed Locked; SmokeWarfareMock in-memory |
 | **Фаза 4 W11** | **PASS** — DepositItem/WithdrawItem fail-closed Locked; SmokeBankItemSlotsMock in-memory |
 | **Фаза 4 W10** | **PASS** — Deposit/Withdraw fail-closed Locked; SmokeBankDepositMock in-memory |
@@ -62,6 +64,14 @@
 | **Persistence** | Live = `DataStoreManager` · PS path ready behind triple gate |
 | **ExpansionGate** | All Allow*=false (не трогали) |
 | **Schema** | **v1 locked** (42 keys + optional `Guild`, `_Session`) — `Guild` may include `Role` |
+
+## Фаза 4 W13 exit (2026-08-27) — PASS (dev-only)
+
+- `TransferItemToBank` / `TransferItemFromBank` / `TransferCopperToBank` / `TransferCopperFromBank` — live fail-closed `Locked` until AllowGuilds + unlocked bank
+- `SmokeInventoryBankTransferMock` — synthetic `{Inventory,CopperCoins}` ↔ bank; inv 5→4 · copper 850 · bank item qty 1 · copper 150; live Transfer* blocked; InsufficientItems
+- Remotes `TransferItemToBank` / `TransferItemFromBank` / `TransferCopperToBank` / `TransferCopperFromBank`
+- CreateOrJoin / `/guild` still fail-closed; phase `F4-W13-guild-inv-bank`
+- **NOT:** AllowGuilds · guild DS · unlock Bank.Locked · live player inventory mutate under gate OFF · Publish
 
 ## Фаза 4 W12 exit (2026-08-24) — PASS (dev-only)
 
@@ -141,7 +151,8 @@
 
 | # | Срез | Когда |
 |---|------|-------|
-| **Ф4 W13** | Inventory↔bank transfer prep (gate OFF) | **default next** (dev-only) |
+| **Ф4 W14** | Rated PvP prep (gate OFF) | **default next** (dev-only) |
+| **Ф4 W13** | Inventory↔bank transfer prep (gate OFF) | ☑ **PASS** |
 | **Ф4 W12** | Warfare stub (gate OFF) | ☑ **PASS** |
 | **Ф4 W11** | Item bank slots (gate OFF) | ☑ **PASS** |
 | **Ф4 W10** | Bank deposit/withdraw prep (gate OFF) | ☑ **PASS** |
@@ -153,7 +164,7 @@
 | **Ф4 W4 live** | Owner gate flip + live PS smoke | Owner unlock dev-only |
 | **Ф4 W4 prep** | Gated Load/Save + Mock smoke | ☑ **PREP PASS** |
 | **106 polish** | Alt track | Явная команда |
-| **B1** | PvP slice 3 | После W12+ / owner call |
+| **B1** | PvP slice 3 | После W14+ / owner call |
 
 ## Studio SoT
 
@@ -167,4 +178,4 @@ Publish без owner · Allow* flip без checklist · live Guild DS · AI mesh
 
 ## Архив
 
-Phase 1–2 **COMPLETE** · Phase 3 **COMPLETE CONDITIONAL** · Phase 4 W1–W3 **PASS** · W4 **PREP PASS CONDITIONAL** · W5–W12 **PASS** · [`SESSION-2026-08-23-phase4-scale.md`](SESSION-2026-08-23-phase4-scale.md)
+Phase 1–2 **COMPLETE** · Phase 3 **COMPLETE CONDITIONAL** · Phase 4 W1–W3 **PASS** · W4 **PREP PASS CONDITIONAL** · W5–W13 **PASS** · [`SESSION-2026-08-23-phase4-scale.md`](SESSION-2026-08-23-phase4-scale.md)

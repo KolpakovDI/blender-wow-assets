@@ -29,7 +29,7 @@
 | `ExpansionGate` | `RS.RealmOfSpirits` | All Allow*=false defaults |
 | `ProfileServiceAdapter` | `SSS.RealmOfSpirits` | Stub → **W1 audit API** |
 | `DataStoreManager` | `SSS.RealmOfSpirits` | Live backend `RealmOfSpirits_v2` + session lock |
-| `GuildSystem` | `SSS.RealmOfSpirits` | W12 warfare stub; W11 item slots; W10 copper; W9 UI+bank; CreateOrJoin fail-closed |
+| `GuildSystem` | `SSS.RealmOfSpirits` | W13 inv↔bank transfer; W12 warfare; W11 item slots; W10 copper; W9 UI+bank; CreateOrJoin fail-closed |
 | `SpiritMeshGenerationService` | `SSS.RealmOfSpirits` | Online path blocked |
 | `PvPDuelSystem` | `SSS.RealmOfSpirits` | Fair duel OK; `pvpExtraAllowed()` for rated |
 
@@ -486,6 +486,41 @@ AllowGuilds=false · WarfarePrep=true · LiveWarfareWrites=false
 **W12 NOT in scope:** AllowGuilds · AllowWarfare · live guild DS · unlock Warfare.Locked · warfare combat · B1 · 106 · Haven décor · Publish
 
 **Next after W12:** W13 inventory↔bank transfer prep (still gate OFF) **or** owner unlock.
+
+---
+
+## W13 — Inventory↔bank transfer prep — **PASS (dev-only, 2026-08-27)**
+
+**Scope:** live TransferItem/Copper To/FromBank fail-closed (`Locked`) until AllowGuilds; synthetic player bag `{Inventory={Id,Quantity}, CopperCoins}` ↔ guild bank via `SmokeInventoryBankTransferMock`; **no** AllowGuilds · **no** live guild DS · **no** Publish.
+
+| # | Задача | Статус |
+|---|--------|--------|
+| 1 | Inventory helpers (`ensureInventoryList`, item/copper deltas) matching DSM/GameManager shape | ☑ |
+| 2 | `TransferItemToBank` / `TransferItemFromBank` / `TransferCopperToBank` / `TransferCopperFromBank` — fail-closed Locked | ☑ |
+| 3 | In-memory `applyTransfer*` for smoke QA only (rollback on bank/inv fail) | ☑ |
+| 4 | Remotes Transfer* + reuse DepositItem/WithdrawItem bank slot/copper patterns | ☑ |
+| 5 | `SmokeInventoryBankTransferMock` (live blocked + inv/bank/copper mutate + InsufficientItems) | ☑ |
+| 6 | Phase/audit → `F4-W13-guild-inv-bank` | ☑ |
+| 7 | `GuildPanelUI` W13 ready label | ☑ |
+| 8 | Studio sync + MCP Edit smoke | ☑ |
+| 9 | Docs: NEXT / ROADMAP / CHANGELOG | ☑ |
+| 10 | `quality_gate.py` | ⚠ terminal sandbox unavailable this agent — MCP smokes green; re-run locally |
+
+**Policy choice:** wire player Inventory/CopperCoins shape for future unlock; live path remains fail-closed Locked (same as W10–W12). QA smoke uses synthetic bag — does not require `_G.GetPlayerData`.
+
+**MCP smoke (Edit, unpublished):**
+
+```
+GetGuildAudit → Phase=F4-W13-guild-inv-bank GateAllows=false
+SmokeInventoryBankTransferMock → Success=true Live*Blocked=true InvQty=4 Copper=850 BankItemQty=1 BankCopper=150 InsufficientItemsBlocked=true
+SmokeWarfareMock / SmokeBankItemSlotsMock / SmokeBankDepositMock → Success=true (W10–W12 regress)
+W6–W9 regress → Success=true
+AllowGuilds=false · InventoryTransferPrep=true · LiveInventoryTransfer=false
+```
+
+**W13 NOT in scope:** AllowGuilds · live guild DS · unlock Bank.Locked · live inventory mutate under gate OFF · warfare combat · B1 · 106 · Haven décor · Publish
+
+**Next after W13:** W14 rated PvP prep (still gate OFF) **or** owner unlock.
 
 ---
 

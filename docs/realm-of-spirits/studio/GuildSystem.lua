@@ -1,14 +1,14 @@
--- GuildSystem (F4 W12): warfare stub (in-memory, gate OFF)
+-- GuildSystem (F4 W13): inventory↔bank transfer prep (in-memory, gate OFF)
 -- Restore + Leave do NOT require AllowGuilds (in-memory session only)
 -- CreateOrJoin remains fail-closed behind ExpansionGate.AllowGuilds
--- Live bank writes + Declare/Join warfare fail-closed (Locked) until AllowGuilds
--- Smoke mutates in-memory copper/slots/warfare without unlocking live remotes
+-- Live bank writes + Declare/Join + inventory transfers fail-closed (Locked) until AllowGuilds
+-- Smoke mutates synthetic inventory↔bank without unlocking live remotes
 -- Start() from OtakuHavenService / GameManager after DataStore ready
 -- Mirror: re-export from Studio SoT after Ctrl+S if this file drifts.
 -- Runtime SoT = ServerScriptService.RealmOfSpirits.GuildSystem in place .rbxl
--- W12 APIs: DeclareWarfare, JoinWarfare, GetWarfare, SmokeWarfareMock (plus W10–W11 bank)
+-- W13 APIs: TransferItemToBank/FromBank, TransferCopperToBank/FromBank, SmokeInventoryBankTransferMock
 -- Client companion: StarterPlayerScripts.GuildPanelUI (G / /guildpanel, fail-closed)
--- Phase: F4-W12-guild-warfare · AllowGuilds=false · CreateOrJoin gated
+-- Phase: F4-W13-guild-inv-bank · AllowGuilds=false · CreateOrJoin gated
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -35,6 +35,7 @@ GuildSystem.SmokeDepositGuildId = "g_w10deposit"
 GuildSystem.SmokeItemGuildId = "g_w11items"
 GuildSystem.SmokeWarfareGuildId = "g_w12war"
 GuildSystem.SmokeWarfareTargetGuildId = "g_w12target"
+GuildSystem.SmokeTransferGuildId = "g_w13xfer"
 GuildSystem.WarfareSchemaVersion = 1
 GuildSystem.MaxWarfareParticipants = 20
 GuildSystem.MaxBankCopperTxn = 1000000
@@ -687,6 +688,363 @@ function GuildSystem.WithdrawItem(player, itemRaw, qtyRaw)
 	return true, res
 end
 
+-- Player inventory shape (DataStoreManager / GameManager): list of { Id, Quantity }
+-- Wallet copper for transfer prep: CopperCoins (total copper units).
+local function ensureInventoryList(bag)
+	if type(bag) ~= "table" then
+		return nil
+	end
+	if type(bag.Inventory) ~= "table" then
+		bag.Inventory = {}
+	end
+	return bag.Inventory
+end
+
+local function countPlayerInventoryQty(inventory, itemId)
+	local id = tonumber(itemId)
+	if type(inventory) ~= "table" or type(id) ~= "number" then
+		return 0
+	end
+	id = math.floor(id)
+	local total = 0
+	for _, entry in ipairs(inventory) do
+		if type(entry) == "table" and tonumber(entry.Id) == id then
+			total += math.max(0, math.floor(tonumber(entry.Quantity) or 0))
+		end
+	end
+	return total
+end
+
+-- Positive = add to bag; negative = remove. Mutates inventory list in place.
+local function applyPlayerInventoryItemDelta(inventory, itemId, qtyDelta)
+	local id = tonumber(itemId)
+	local d = tonumber(qtyDelta)
+	if type(inventory) ~= "table" then
+		return false, "NoInventory"
+	end
+	if type(id) ~= "number" or id ~= id or id < 1 then
+		return false, "InvalidItem"
+	end
+	if type(d) ~= "number" or d ~= d or d == 0 then
+		return false, "InvalidAmount"
+	end
+	id = math.floor(id)
+	d = math.floor(d)
+
+	if d > 0 then
+		for _, entry in ipairs(inventory) do
+			if type(entry) == "table" and tonumber(entry.Id) == id then
+				entry.Quantity = math.floor(tonumber(entry.Quantity) or 0) + d
+				return true, nil
+			end
+		end
+		table.insert(inventory, { Id = id, Quantity = d })
+		return true, nil
+	end
+
+	local need = -d
+	if countPlayerInventoryQty(inventory, id) < need then
+		return false, "InsufficientItems"
+	end
+	local left = need
+	local i = 1
+	while i <= #inventory do
+		local entry = inventory[i]
+		if type(entry) == "table" and tonumber(entry.Id) == id then
+			local have = math.max(0, math.floor(tonumber(entry.Quantity) or 0))
+			local take = math.min(have, left)
+			entry.Quantity = have - take
+			left -= take
+			if entry.Quantity <= 0 then
+				table.remove(inventory, i)
+			else
+				i += 1
+			end
+			if left <= 0 then
+				break
+			end
+		else
+			i += 1
+		end
+	end
+	return true, nil
+end
+
+local function getBagCopper(bag)
+	if type(bag) ~= "table" then
+		return 0
+	end
+	return math.max(0, math.floor(tonumber(bag.CopperCoins) or 0))
+end
+
+local function applyPlayerCopperDelta(bag, delta)
+	if type(bag) ~= "table" then
+		return false, "NoBag"
+	end
+	local d = tonumber(delta)
+	if type(d) ~= "number" or d ~= d or d == 0 then
+		return false, "InvalidAmount"
+	end
+	d = math.floor(d)
+	local nextCopper = getBagCopper(bag) + d
+	if nextCopper < 0 then
+		return false, "InsufficientFunds"
+	end
+	bag.CopperCoins = nextCopper
+	return true, nil
+end
+
+-- In-memory item transfer inventory→bank (QA / smoke). Does NOT bypass live Transfer gates.
+local function applyTransferItemToBank(guildId, bag, itemId, qty)
+	local inventory = ensureInventoryList(bag)
+	if not inventory then
+		return false, "NoInventory"
+	end
+	local id, itemErr = normalizeItemId(itemId)
+	if not id then
+		return false, itemErr or "InvalidItem"
+	end
+	local amount, qtyErr = normalizeItemQty(qty)
+	if not amount then
+		return false, qtyErr or "InvalidAmount"
+	end
+	if countPlayerInventoryQty(inventory, id) < amount then
+		return false, "InsufficientItems"
+	end
+	local okInv, invErr = applyPlayerInventoryItemDelta(inventory, id, -amount)
+	if not okInv then
+		return false, invErr
+	end
+	local okBank, bankRes = applyBankItemDelta(guildId, id, amount)
+	if not okBank then
+		applyPlayerInventoryItemDelta(inventory, id, amount) -- rollback
+		return false, bankRes
+	end
+	return true, {
+		Bank = bankRes,
+		InventoryQty = countPlayerInventoryQty(inventory, id),
+		CopperCoins = getBagCopper(bag),
+	}
+end
+
+local function applyTransferItemFromBank(guildId, bag, itemId, qty)
+	local inventory = ensureInventoryList(bag)
+	if not inventory then
+		return false, "NoInventory"
+	end
+	local id, itemErr = normalizeItemId(itemId)
+	if not id then
+		return false, itemErr or "InvalidItem"
+	end
+	local amount, qtyErr = normalizeItemQty(qty)
+	if not amount then
+		return false, qtyErr or "InvalidAmount"
+	end
+	local okBank, bankRes = applyBankItemDelta(guildId, id, -amount)
+	if not okBank then
+		return false, bankRes
+	end
+	local okInv, invErr = applyPlayerInventoryItemDelta(inventory, id, amount)
+	if not okInv then
+		applyBankItemDelta(guildId, id, amount) -- rollback bank
+		return false, invErr
+	end
+	return true, {
+		Bank = bankRes,
+		InventoryQty = countPlayerInventoryQty(inventory, id),
+		CopperCoins = getBagCopper(bag),
+	}
+end
+
+local function applyTransferCopperToBank(guildId, bag, amountRaw)
+	local amount, amountErr = normalizeCopperAmount(amountRaw)
+	if not amount then
+		return false, amountErr or "InvalidAmount"
+	end
+	if getBagCopper(bag) < amount then
+		return false, "InsufficientFunds"
+	end
+	local okBag, bagErr = applyPlayerCopperDelta(bag, -amount)
+	if not okBag then
+		return false, bagErr
+	end
+	local okBank, bankRes = applyBankCopperDelta(guildId, amount)
+	if not okBank then
+		applyPlayerCopperDelta(bag, amount) -- rollback
+		return false, bankRes
+	end
+	return true, {
+		Bank = bankRes,
+		CopperCoins = getBagCopper(bag),
+	}
+end
+
+local function applyTransferCopperFromBank(guildId, bag, amountRaw)
+	local amount, amountErr = normalizeCopperAmount(amountRaw)
+	if not amount then
+		return false, amountErr or "InvalidAmount"
+	end
+	local okBank, bankRes = applyBankCopperDelta(guildId, -amount)
+	if not okBank then
+		return false, bankRes
+	end
+	local okBag, bagErr = applyPlayerCopperDelta(bag, amount)
+	if not okBag then
+		applyBankCopperDelta(guildId, amount) -- rollback
+		return false, bagErr
+	end
+	return true, {
+		Bank = bankRes,
+		CopperCoins = getBagCopper(bag),
+	}
+end
+
+local function resolvePlayerBag(player)
+	local _, realPlayer = resolveUserId(player)
+	if not realPlayer then
+		return nil, "InvalidPlayer"
+	end
+	local data = getData(realPlayer)
+	if type(data) ~= "table" then
+		return nil, "NoPlayerData"
+	end
+	ensureInventoryList(data)
+	if data.CopperCoins == nil then
+		data.CopperCoins = 0
+	end
+	return data, nil
+end
+
+local function assertTransferUnlocked(player)
+	local userId, realPlayer = resolveUserId(player)
+	if not userId then
+		return nil, nil, "InvalidPlayer"
+	end
+	local info = membership[userId]
+	if not info then
+		return nil, nil, "NoMembership"
+	end
+	if not gateAllowsGuilds() then
+		return nil, nil, "Locked"
+	end
+	local record = guildsById[info.Id]
+	if not record then
+		return nil, nil, "NoGuild"
+	end
+	local bank = ensureBank(record)
+	if bank.Locked then
+		return nil, nil, "Locked"
+	end
+	return info, realPlayer, nil
+end
+
+-- Live path: fail-closed until AllowGuilds AND bank.Locked=false. Moves player Inventory ↔ bank.
+function GuildSystem.TransferItemToBank(player, itemRaw, qtyRaw)
+	local info, realPlayer, err = assertTransferUnlocked(player)
+	if not info then
+		return false, err
+	end
+	local bag, bagErr = resolvePlayerBag(realPlayer or player)
+	if not bag then
+		return false, bagErr or "NoPlayerData"
+	end
+	local ok, res = applyTransferItemToBank(info.Id, bag, itemRaw, qtyRaw)
+	if not ok then
+		return false, res
+	end
+	if realPlayer then
+		pcall(function()
+			remote:FireClient(realPlayer, "GuildBank", res.Bank)
+			remote:FireClient(realPlayer, "InventoryTransfer", {
+				Direction = "ToBank",
+				Kind = "Item",
+				InventoryQty = res.InventoryQty,
+				CopperCoins = res.CopperCoins,
+			})
+		end)
+	end
+	return true, res
+end
+
+function GuildSystem.TransferItemFromBank(player, itemRaw, qtyRaw)
+	local info, realPlayer, err = assertTransferUnlocked(player)
+	if not info then
+		return false, err
+	end
+	local bag, bagErr = resolvePlayerBag(realPlayer or player)
+	if not bag then
+		return false, bagErr or "NoPlayerData"
+	end
+	local ok, res = applyTransferItemFromBank(info.Id, bag, itemRaw, qtyRaw)
+	if not ok then
+		return false, res
+	end
+	if realPlayer then
+		pcall(function()
+			remote:FireClient(realPlayer, "GuildBank", res.Bank)
+			remote:FireClient(realPlayer, "InventoryTransfer", {
+				Direction = "FromBank",
+				Kind = "Item",
+				InventoryQty = res.InventoryQty,
+				CopperCoins = res.CopperCoins,
+			})
+		end)
+	end
+	return true, res
+end
+
+function GuildSystem.TransferCopperToBank(player, amountRaw)
+	local info, realPlayer, err = assertTransferUnlocked(player)
+	if not info then
+		return false, err
+	end
+	local bag, bagErr = resolvePlayerBag(realPlayer or player)
+	if not bag then
+		return false, bagErr or "NoPlayerData"
+	end
+	local ok, res = applyTransferCopperToBank(info.Id, bag, amountRaw)
+	if not ok then
+		return false, res
+	end
+	if realPlayer then
+		pcall(function()
+			remote:FireClient(realPlayer, "GuildBank", res.Bank)
+			remote:FireClient(realPlayer, "InventoryTransfer", {
+				Direction = "ToBank",
+				Kind = "Copper",
+				CopperCoins = res.CopperCoins,
+			})
+		end)
+	end
+	return true, res
+end
+
+function GuildSystem.TransferCopperFromBank(player, amountRaw)
+	local info, realPlayer, err = assertTransferUnlocked(player)
+	if not info then
+		return false, err
+	end
+	local bag, bagErr = resolvePlayerBag(realPlayer or player)
+	if not bag then
+		return false, bagErr or "NoPlayerData"
+	end
+	local ok, res = applyTransferCopperFromBank(info.Id, bag, amountRaw)
+	if not ok then
+		return false, res
+	end
+	if realPlayer then
+		pcall(function()
+			remote:FireClient(realPlayer, "GuildBank", res.Bank)
+			remote:FireClient(realPlayer, "InventoryTransfer", {
+				Direction = "FromBank",
+				Kind = "Copper",
+				CopperCoins = res.CopperCoins,
+			})
+		end)
+	end
+	return true, res
+end
+
 -- In-memory warfare declare (QA / smoke). Does NOT bypass live DeclareWarfare gates.
 local function applyWarfareDeclare(guildId, targetGuildId, declaredByUserId)
 	local record = guildsById[guildId]
@@ -833,7 +1191,7 @@ function GuildSystem.GetBankAudit()
 		totalItems += countOccupiedSlots(bank)
 	end
 	return {
-		Phase = "F4-W12-guild-warfare",
+		Phase = "F4-W13-guild-inv-bank",
 		DevOnly = true,
 		GateAllows = gateAllowsGuilds(),
 		AllowGuildsAttr = allowGuildsAttr(),
@@ -841,9 +1199,11 @@ function GuildSystem.GetBankAudit()
 		LiveBankWrites = false,
 		DepositWithdrawPrep = true,
 		ItemSlotsPrep = true,
+		InventoryTransferPrep = true,
 		LiveDepositRequiresAllowGuilds = true,
 		LiveDepositRequiresUnlocked = true,
 		LiveItemWrites = false,
+		LiveInventoryTransfer = false,
 		BankSchemaVersion = GuildSystem.BankSchemaVersion,
 		MaxBankSlots = GuildSystem.MaxBankSlots,
 		MaxStackPerSlot = GuildSystem.MaxStackPerSlot,
@@ -851,10 +1211,12 @@ function GuildSystem.GetBankAudit()
 		MaxItemQtyTxn = GuildSystem.MaxItemQtyTxn,
 		BankShape = { "Copper", "Items", "MaxSlots", "SchemaVersion", "Locked" },
 		ItemSlotShape = { "Slot", "ItemId", "Qty" },
+		PlayerInventoryShape = { "Id", "Quantity" },
+		PlayerWalletKey = "CopperCoins",
 		GuildsWithBank = bankGuildCount,
 		TotalBankItems = totalItems,
 		TotalBankCopper = totalCopper,
-		Note = "W11 bank items + W12 warfare: live writes fail-closed Locked; smoke mutates in-memory only",
+		Note = "W13 inventory↔bank prep: live Transfer* fail-closed Locked; smoke mutates synthetic bag + bank",
 	}
 end
 
@@ -869,7 +1231,7 @@ function GuildSystem.GetWarfareAudit()
 		end
 	end
 	return {
-		Phase = "F4-W12-guild-warfare",
+		Phase = "F4-W13-guild-inv-bank",
 		DevOnly = true,
 		GateAllows = gateAllowsGuilds(),
 		AllowGuildsAttr = allowGuildsAttr(),
@@ -892,7 +1254,7 @@ function GuildSystem.GetWarfareAudit()
 		States = { "Idle", "Declared" },
 		GuildsWithWarfare = warfareGuildCount,
 		DeclaredCount = declaredCount,
-		Note = "W12: live DeclareWarfare/JoinWarfare fail-closed Locked; SmokeWarfareMock mutates in-memory",
+		Note = "W12 warfare stub retained; phase advanced to W13 inv↔bank (warfare still Locked)",
 	}
 end
 
@@ -935,7 +1297,7 @@ end
 -- Read-only MVP persistence design (no live DS writes).
 function GuildSystem.GetMvpDesign()
 	return {
-		Phase = "F4-W12-guild-warfare",
+		Phase = "F4-W13-guild-inv-bank",
 		DevOnly = true,
 		InMemoryOnly = true,
 		AllowGuildsRequiredForCreate = true,
@@ -943,11 +1305,15 @@ function GuildSystem.GetMvpDesign()
 		AllowGuildsRequiredForLeave = false,
 		AllowGuildsRequiredForBankWrite = true,
 		AllowGuildsRequiredForWarfare = true,
+		AllowGuildsRequiredForInventoryTransfer = true,
 		LiveDepositWithdrawFailClosed = true,
 		LiveItemWritesFailClosed = true,
 		LiveWarfareFailClosed = true,
+		LiveInventoryTransferFailClosed = true,
 		PlayerProfileKey = GuildSystem.PlayerGuildKey,
 		PlayerShape = { "Id", "Name", "Tag", "Role" },
+		PlayerInventoryShape = { "Id", "Quantity" },
+		PlayerWalletKey = "CopperCoins",
 		RosterShape = { "Id", "Name", "Tag", "LeaderUserId", "Members", "CreatedAt", "SchemaVersion", "Bank", "Warfare" },
 		MemberEntryShape = { "UserId", "Role", "JoinedAt" },
 		BankShape = { "Copper", "Items", "MaxSlots", "SchemaVersion", "Locked" },
@@ -982,8 +1348,9 @@ function GuildSystem.GetMvpDesign()
 			"H. W10 = DepositCopper/WithdrawCopper fail-closed Locked; SmokeBankDepositMock in-memory mutate",
 			"I. W11 = DepositItem/WithdrawItem fail-closed Locked; SmokeBankItemSlotsMock slot stack/fill",
 			"J. W12 = DeclareWarfare/JoinWarfare fail-closed Locked; SmokeWarfareMock in-memory declare/join",
+			"K. W13 = TransferItem/Copper To/FromBank fail-closed Locked; SmokeInventoryBankTransferMock synthetic bag↔bank",
 		},
-		Note = "Restore/Leave/UI read work with gate OFF; CreateOrJoin + live bank/warfare writes fail-closed until AllowGuilds",
+		Note = "Restore/Leave/UI read work with gate OFF; CreateOrJoin + live bank/warfare/transfer fail-closed until AllowGuilds",
 	}
 end
 
@@ -997,7 +1364,7 @@ function GuildSystem.GetGuildAudit()
 		guildCount += 1
 	end
 	return {
-		Phase = "F4-W12-guild-warfare",
+		Phase = "F4-W13-guild-inv-bank",
 		DevOnly = true,
 		GateAllows = gateAllowsGuilds(),
 		AllowGuildsAttr = allowGuildsAttr(),
@@ -1012,9 +1379,11 @@ function GuildSystem.GetGuildAudit()
 		CreateRequiresAllowGuilds = true,
 		BankWriteRequiresAllowGuilds = true,
 		WarfareRequiresAllowGuilds = true,
+		InventoryTransferRequiresAllowGuilds = true,
 		LiveDepositWithdrawFailClosed = true,
 		LiveItemWritesFailClosed = true,
 		LiveWarfareFailClosed = true,
+		LiveInventoryTransferFailClosed = true,
 		UiPanel = "GuildPanelUI",
 		ChatCommands = { "/guild", "/guildleave", "/guildpanel", "/expansiongate" },
 		Apis = {
@@ -1031,6 +1400,10 @@ function GuildSystem.GetGuildAudit()
 			"WithdrawCopper",
 			"DepositItem",
 			"WithdrawItem",
+			"TransferItemToBank",
+			"TransferItemFromBank",
+			"TransferCopperToBank",
+			"TransferCopperFromBank",
 			"DeclareWarfare",
 			"JoinWarfare",
 			"RestoreMembershipFromGuildTable",
@@ -1045,15 +1418,16 @@ function GuildSystem.GetGuildAudit()
 			"SmokeBankDepositMock",
 			"SmokeBankItemSlotsMock",
 			"SmokeWarfareMock",
+			"SmokeInventoryBankTransferMock",
 			"CreateOrJoin",
 			"Leave",
 		},
 		NextSteps = {
 			"Keep AllowGuilds=false under dev-only",
-			"W13+: inventory↔bank transfer or rated PvP prep when unlocked — still gate OFF until owner",
+			"W14+: rated PvP prep or owner unlock — still gate OFF until owner",
 			"Owner unlock required before live guild DS + AllowGuilds + unlock Bank/Warfare.Locked",
 		},
-		Note = "W12 warfare stub — live Declare/Join Locked; CreateOrJoin fail-closed until AllowGuilds",
+		Note = "W13 inventory↔bank — live Transfer* Locked; CreateOrJoin fail-closed until AllowGuilds",
 	}
 end
 
@@ -1874,6 +2248,112 @@ function GuildSystem.SmokeWarfareMock()
 	}
 end
 
+-- Studio/dev smoke: live Transfer* Locked; synthetic Inventory/CopperCoins ↔ bank for QA.
+function GuildSystem.SmokeInventoryBankTransferMock()
+	local smokeId = GuildSystem.SmokeTransferGuildId
+	guildsById[smokeId] = nil
+	for uid, info in pairs(membership) do
+		if info.Id == smokeId then
+			membership[uid] = nil
+		end
+	end
+
+	local userId = 900001001
+	local okRestore = GuildSystem.RestoreMembershipFromGuildTable(userId, {
+		Id = smokeId,
+		Name = "W13 Transfer Guild",
+		Tag = "W13X",
+		Role = "Leader",
+	}, nil)
+	local fakeMember = { UserId = userId }
+
+	local okLiveItemIn, liveItemInErr = GuildSystem.TransferItemToBank(fakeMember, 101, 1)
+	local liveItemToBlocked = okLiveItemIn == false and liveItemInErr == "Locked"
+	local okLiveItemOut, liveItemOutErr = GuildSystem.TransferItemFromBank(fakeMember, 101, 1)
+	local liveItemFromBlocked = okLiveItemOut == false and liveItemOutErr == "Locked"
+	local okLiveCuIn, liveCuInErr = GuildSystem.TransferCopperToBank(fakeMember, 50)
+	local liveCopperToBlocked = okLiveCuIn == false and liveCuInErr == "Locked"
+	local okLiveCuOut, liveCuOutErr = GuildSystem.TransferCopperFromBank(fakeMember, 50)
+	local liveCopperFromBlocked = okLiveCuOut == false and liveCuOutErr == "Locked"
+
+	local bag = {
+		CopperCoins = 1000,
+		Inventory = {
+			{ Id = 101, Quantity = 5 },
+		},
+	}
+
+	local okToBank, resToBank = applyTransferItemToBank(smokeId, bag, 101, 2)
+	local okFromBank, resFromBank = applyTransferItemFromBank(smokeId, bag, 101, 1)
+	local okCuTo, resCuTo = applyTransferCopperToBank(smokeId, bag, 200)
+	local okCuFrom, resCuFrom = applyTransferCopperFromBank(smokeId, bag, 50)
+
+	local bankFinal = GuildSystem.GetBank(smokeId)
+	local panel = GuildSystem.GetPanelSnapshot(fakeMember)
+	local createBlocked = not gateAllowsGuilds()
+
+	local invQty = countPlayerInventoryQty(bag.Inventory, 101)
+	local copperOk = getBagCopper(bag) == 850
+	local bankItem = bankFinal and bankFinal.Items and bankFinal.Items[1] or nil
+	local bankItemOk = bankItem ~= nil and bankItem.ItemId == 101 and bankItem.Qty == 1
+	local bankCopperOk = bankFinal ~= nil and bankFinal.Copper == 150
+
+	-- InsufficientItems on over-withdraw from bag
+	local okShort, shortErr = applyTransferItemToBank(smokeId, bag, 101, 99)
+	local shortBlocked = okShort == false and shortErr == "InsufficientItems"
+
+	local mutateOk = okRestore == true
+		and liveItemToBlocked == true
+		and liveItemFromBlocked == true
+		and liveCopperToBlocked == true
+		and liveCopperFromBlocked == true
+		and okToBank == true
+		and okFromBank == true
+		and okCuTo == true
+		and okCuFrom == true
+		and resToBank ~= nil
+		and resToBank.InventoryQty == 3
+		and resFromBank ~= nil
+		and resFromBank.InventoryQty == 4
+		and invQty == 4
+		and copperOk == true
+		and bankItemOk == true
+		and bankCopperOk == true
+		and bankFinal ~= nil
+		and bankFinal.Locked == true
+		and bankFinal.WriteLocked == true
+		and panel.BankWriteLocked == true
+		and createBlocked == true
+		and shortBlocked == true
+
+	local design = GuildSystem.GetMvpDesign()
+	local bankAudit = GuildSystem.GetBankAudit()
+	return {
+		Success = mutateOk,
+		SmokeGuildId = smokeId,
+		LiveItemToBankBlocked = liveItemToBlocked,
+		LiveItemFromBankBlocked = liveItemFromBlocked,
+		LiveCopperToBankBlocked = liveCopperToBlocked,
+		LiveCopperFromBankBlocked = liveCopperFromBlocked,
+		LiveItemToError = liveItemInErr,
+		LiveCopperToError = liveCuInErr,
+		InventoryQtyAfter = invQty,
+		CopperAfter = getBagCopper(bag),
+		BankItemQtyAfter = bankItem and bankItem.Qty or nil,
+		BankCopperAfter = bankFinal and bankFinal.Copper or nil,
+		InsufficientItemsBlocked = shortBlocked,
+		BankLocked = bankFinal and bankFinal.Locked or nil,
+		WriteLocked = bankFinal and bankFinal.WriteLocked or nil,
+		PanelWriteLocked = panel.BankWriteLocked,
+		CreateOrJoinBlocked = createBlocked,
+		GateAllows = gateAllowsGuilds(),
+		AllowGuildsAttr = allowGuildsAttr(),
+		InventoryTransferPrep = bankAudit.InventoryTransferPrep == true,
+		Phase = design.Phase,
+		InMemoryOnly = true,
+	}
+end
+
 local function deferRestoreWhenDataReady(player)
 	task.spawn(function()
 		for _ = 1, 40 do
@@ -1941,6 +2421,26 @@ function GuildSystem.Start()
 			local ok, res = GuildSystem.WithdrawItem(player, payload.ItemId, payload.Amount or payload.Qty)
 			if not ok then
 				remote:FireClient(player, "Error", { Message = tostring(res), Action = "WithdrawItem" })
+			end
+		elseif action == "TransferItemToBank" then
+			local ok, res = GuildSystem.TransferItemToBank(player, payload.ItemId, payload.Amount or payload.Qty)
+			if not ok then
+				remote:FireClient(player, "Error", { Message = tostring(res), Action = "TransferItemToBank" })
+			end
+		elseif action == "TransferItemFromBank" then
+			local ok, res = GuildSystem.TransferItemFromBank(player, payload.ItemId, payload.Amount or payload.Qty)
+			if not ok then
+				remote:FireClient(player, "Error", { Message = tostring(res), Action = "TransferItemFromBank" })
+			end
+		elseif action == "TransferCopperToBank" then
+			local ok, res = GuildSystem.TransferCopperToBank(player, payload.Amount)
+			if not ok then
+				remote:FireClient(player, "Error", { Message = tostring(res), Action = "TransferCopperToBank" })
+			end
+		elseif action == "TransferCopperFromBank" then
+			local ok, res = GuildSystem.TransferCopperFromBank(player, payload.Amount)
+			if not ok then
+				remote:FireClient(player, "Error", { Message = tostring(res), Action = "TransferCopperFromBank" })
 			end
 		elseif action == "GetWarfare" then
 			local info = GuildSystem.GetMembership(player)
@@ -2012,7 +2512,7 @@ function GuildSystem.Start()
 		end)
 	end
 
-	print("Realm of Spirits - GuildSystem W12 warfare stub (in-memory) loaded")
+	print("Realm of Spirits - GuildSystem W13 inventory↔bank transfer prep (in-memory) loaded")
 end
 
 return GuildSystem
