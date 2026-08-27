@@ -83,11 +83,12 @@
 | 2026-08-27 | «дальше» — tracker + smoke recipes | SESSION-2026-08-27-owner-unlock.md · OWNER-UNLOCK § smoke · paths ☑ |
 | 2026-08-27 | Owner: проект не готов — не предлагать Publish | **PAUSED** · DEV-ONLY restored · steps 2–7 deferred |
 | 2026-08-27 | Owner policy update: agent **may** suggest Publish when readiness PASS | readiness checklist in NEXT-SESSION + OWNER-UNLOCK · current verdict **NOT READY** |
+| 2026-08-27 | Post-W18 regression smoke (default «дальше») | Smoke*Mock 18/18 PASS · Play partial · [`SESSION-2026-08-27-regression.md`](SESSION-2026-08-27-regression.md) · readiness still **NOT READY** |
 
 ---
 
 ## Next (default — не owner unlock)
 
-**Default «дальше»:** post-W18 regression smoke (Smoke*Mock suite + core loop) + fix-only — см. [`NEXT-SESSION.md`](NEXT-SESSION.md).
+**Default «дальше»:** hands core loop E2E (Smoke*Mock ☑) — см. [`SESSION-2026-08-27-regression.md`](SESSION-2026-08-27-regression.md) · [`NEXT-SESSION.md`](NEXT-SESSION.md).
 
 **Owner unlock resume:** readiness **PASS** (агент предлагает) **или** «проект готов» / «owner unlock» → шаг 1 (Ctrl+S) → шаг 2 (Publish).
