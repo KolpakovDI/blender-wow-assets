@@ -11,7 +11,12 @@
 - **Owner decision:** defer **Publish**, live DS rejoin, live Robux, and `AllowProfileService` cutover while project is raw
 - **Valid now:** unpublished Studio Edit+Play · MCP smoke · Mock/shadow ProfileService · `quality_gate` · git mirrors
 - **Deferred (owner unlock):** Publish PlaceId≠0 · live DS stress · DevProduct live **R** · W4 FlipChecklist · live PS on join · AllowGuilds
-- **Default next (dev-only):** F4 **W14** rated PvP prep **or** owner unlock — see [`NEXT-SESSION.md`](NEXT-SESSION.md)
+- **Default next (dev-only):** F4 **W14–W18** rated PvP track **or** owner unlock — see [`NEXT-SESSION.md`](NEXT-SESSION.md) · SESSION § W14–W18 plan
+
+### Phase 4 W14–W18 plan — Rated PvP track (2026-08-27)
+
+- **Docs:** SESSION / ROADMAP / NEXT lock W14 rating stub → W15 ladder → W16 matchmaking → W17 season/meta → W18 numbered-track wrap
+- **Policy:** `AllowNewPvPFeatures=false`; live APIs fail-closed; Smoke*Mock QA; no Publish / Allow* flip
 
 ### Phase 4 W13 — Inventory↔bank transfer prep PASS (2026-08-27)
 

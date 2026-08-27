@@ -2,10 +2,22 @@
 
 > **DEV-ONLY MODE** (owner decision 2026-08-23) — **не публикуем** place и **не включаем** live cutover, пока владелец явно не снимет режим. Проект сырой; публикация отложена **намеренно**, не навсегда.
 
-**Статус:** 2026-08-27 — Фаза 1 **COMPLETE** · Фаза 2 **COMPLETE** · Фаза 3 **COMPLETE CONDITIONAL** · **Фаза 4 W1–W3 PASS** · **W4 PREP PASS (CONDITIONAL)** · **W5–W13 PASS (dev-only)**
-**Следующий фокус (dev-only default):** **Ф4 W14** — rated PvP prep (gate OFF) **или** owner unlock — без Publish / AllowGuilds flip
+**Статус:** 2026-08-27 — Фаза 1 **COMPLETE** · Фаза 2 **COMPLETE** · Фаза 3 **COMPLETE CONDITIONAL** · **Фаза 4 W1–W3 PASS** · **W4 PREP PASS (CONDITIONAL)** · **W5–W13 PASS (dev-only)** · **W14–W18 plan locked**
+**Следующий фокус (dev-only default):** **Ф4 W14→W18** rated PvP track (gate OFF) — см. SESSION § W14–W18 · **или** owner unlock — без Publish / Allow* flip
 
 **Roadmap:** [`ROADMAP-2026-08-23.md`](ROADMAP-2026-08-23.md) · **Phase 4:** [`SESSION-2026-08-23-phase4-scale.md`](SESSION-2026-08-23-phase4-scale.md)
+
+## План Ф4 W14–W18 (rated PvP track, DEV-ONLY)
+
+| Нед | Название | Одна строка |
+|-----|----------|-------------|
+| **W14** | Rated PvP prep | Rating schema stub · Declare/Match fail-closed · `SmokeRatedPvPMock` |
+| **W15** | Rank / ladder stub | In-memory ranks · `GetLadderAudit` · panel read-only · live Locked |
+| **W16** | Matchmaking stub | Queue/party fail-closed · `SmokeMatchmakingMock` |
+| **W17** | Season / meta stub | SeasonId · soft-reset plan · `GetSeasonAudit` (no live seasons) |
+| **W18** | Numbered-track wrap | Exit checklist W1–W18 · backlog map · NEXT post-W18 |
+
+**Gate:** `AllowNewPvPFeatures=false` (reuse existing; no new AllowRatedPvP). Live APIs Locked; QA = Smoke*Mock only.
 
 ## Dev-only policy
 
@@ -23,7 +35,7 @@
 ## Старт сессии (порядок жёсткий)
 
 1. **Ctrl+S** place → подтвердить SoT
-2. **Приоритет по умолчанию (dev-only):** **Ф4 W14** — rated PvP prep (gate OFF)
+2. **Приоритет по умолчанию (dev-only):** **Ф4 W14→W18** rated PvP track (gate OFF)
 3. **Bug fix-only** — если что-то красное в play smoke
 4. **Owner hands / Publish / live cutover** — только по **явной** команде владельца (не default)
 5. **106 / B1 / Haven décor** — только по явной команде
@@ -32,7 +44,12 @@
 
 | Команда / намерение | Действие агента |
 |---------------------|-----------------|
-| «дальше» (без уточнения) | **Ф4 W14** rated PvP prep (dev-only safe) |
+| «дальше» (без уточнения) | **Ф4 W14→W18** по SESSION plan (dev-only safe) |
+| «W14» / «rated» | SESSION W14 · rating stub + SmokeRatedPvPMock |
+| «W15» / «ladder» | SESSION W15 · rank/ladder stub |
+| «W16» / «matchmaking» | SESSION W16 · queue stub |
+| «W17» / «season» | SESSION W17 · season/meta stub |
+| «W18» / «wrap» | SESSION W18 · numbered-track wrap |
 | «W13» / «inventory» / «transfer» | SESSION W13 · already **PASS** — re-smoke if needed |
 | «W12» / «warfare» | SESSION W12 · already **PASS** — re-smoke if needed |
 | «W11» / «item bank» | SESSION W11 · already **PASS** — re-smoke if needed |
@@ -152,6 +169,10 @@
 | # | Срез | Когда |
 |---|------|-------|
 | **Ф4 W14** | Rated PvP prep (gate OFF) | **default next** (dev-only) |
+| **Ф4 W15** | Rank / ladder stub (gate OFF) | after W14 |
+| **Ф4 W16** | Matchmaking stub (gate OFF) | after W15 |
+| **Ф4 W17** | Season / meta stub (gate OFF) | after W16 |
+| **Ф4 W18** | Phase 4 numbered-track wrap | after W17 |
 | **Ф4 W13** | Inventory↔bank transfer prep (gate OFF) | ☑ **PASS** |
 | **Ф4 W12** | Warfare stub (gate OFF) | ☑ **PASS** |
 | **Ф4 W11** | Item bank slots (gate OFF) | ☑ **PASS** |
