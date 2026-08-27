@@ -39,6 +39,7 @@ Entry skill for all Realm of Spirits agent work.
 - After Studio `ModuleScript` Source edits: bust require cache (Destroy + recreate ModuleScript) before `require` / `Build()`.
 - Never commit `.rbxl` or secrets. **Always commit** meaningful docs/skills/mirrors after a coherent chunk; do not push unless asked.
 - Russian UI strings stay Russian; agent chat with user in Russian when they write Russian.
+- **DEV-ONLY default:** do not suggest Publish on every «дальше». When [`NEXT-SESSION.md`](../../docs/realm-of-spirits/NEXT-SESSION.md) § Readiness assessment = **PASS**, agent **may** proactively offer owner unlock / Publish with rationale; owner decides.
 
 ## Session open checklist
 

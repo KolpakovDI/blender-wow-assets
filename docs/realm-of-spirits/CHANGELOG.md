@@ -6,6 +6,35 @@
 
 ## [Unreleased]
 
+### Publish suggestion policy (2026-08-27)
+
+- **Owner policy:** агент **может** предложить Publish / owner unlock когда readiness checklist **PASS**; владелец решает сам; suggestion ≠ instruction
+- **`NEXT-SESSION.md`:** § Readiness assessment (7 criteria) · current verdict **NOT READY** · DEV-ONLY remains default
+- **`OWNER-UNLOCK.md`:** agent may suggest cutover on readiness PASS; «дальше» without PASS → regression smoke, not Publish
+- **`SESSION-2026-08-27-owner-unlock.md`:** policy journal entry · readiness NOT READY
+- **`ROADMAP-2026-08-23.md`:** gate line updated — Publish suggestion gated on readiness PASS
+- **NOT changed:** Allow* still owner hands · no auto-Publish · post-W18 regression still default «дальше»
+
+### Dev-only policy reinforcement (2026-08-27)
+
+- **Owner reminder:** проект **не готов** — **не предлагать Publish** в default «дальше»
+- **`NEXT-SESSION.md`:** mode restored to **DEV-ONLY** (default); owner unlock **PAUSED / gated**
+- **`OWNER-UNLOCK.md`:** banner «Не предлагать Publish пока проект не готов»; activation only on «проект готов» / «owner unlock» / «owner unlock step N»
+- **`SESSION-2026-08-27-owner-unlock.md`:** status **PAUSED**; steps 2–7 **deferred**
+- **`ROADMAP-2026-08-23.md` §5:** post-W18 default = regression smoke + fix-only; Publish = gated owner unlock
+- **Default next:** Smoke*Mock suite + core loop re-smoke · fix-only if red · no Allow* flip
+
+### Owner unlock mode (2026-08-27)
+
+- **Owner command:** start live cutover track after F4 W1–W18 PASS
+- **New doc:** [`OWNER-UNLOCK.md`](OWNER-UNLOCK.md) — ordered checklist steps 1–7 + rollback one-liners
+- **`NEXT-SESSION.md`:** mode `OWNER-UNLOCK IN PROGRESS` (dev-only cutover track active) — **superseded** by dev-only policy reinforcement above
+- **Studio audit (read-only):** PlaceId=0 · GachaRobuxProductId=0 · all Allow*=false · audits F4-W4-prep / W13 / W18-wrap
+- **Agent did NOT flip Allow*** — owner hands for Publish / DevProduct / gate attrs
+- **Tracker:** [`SESSION-2026-08-27-owner-unlock.md`](SESSION-2026-08-27-owner-unlock.md) — step checklist PASS/CONDITIONAL
+- **Smoke recipes:** OWNER-UNLOCK § Output strings + MCP seed/rejoin scripts (шаги 2–3)
+- **MCP re-audit («дальше»):** PlaceId still 0 · mirror paths verified ☑
+
 ### Dev-only mode policy (2026-08-23)
 
 - **Owner decision:** defer **Publish**, live DS rejoin, live Robux, and `AllowProfileService` cutover while project is raw
