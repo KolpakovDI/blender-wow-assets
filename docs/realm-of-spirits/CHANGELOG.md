@@ -11,7 +11,16 @@
 - **Owner decision:** defer **Publish**, live DS rejoin, live Robux, and `AllowProfileService` cutover while project is raw
 - **Valid now:** unpublished Studio Edit+Play · MCP smoke · Mock/shadow ProfileService · `quality_gate` · git mirrors
 - **Deferred (owner unlock):** Publish PlaceId≠0 · live DS stress · DevProduct live **R** · W4 FlipChecklist · live PS on join · AllowGuilds
-- **Default next (dev-only):** F4 **W14–W18** rated PvP track **or** owner unlock — see [`NEXT-SESSION.md`](NEXT-SESSION.md) · SESSION § W14–W18 plan
+- **Default next (dev-only):** **post-W18** — owner unlock **or** named backlog — see [`NEXT-SESSION.md`](NEXT-SESSION.md)
+
+### Phase 4 W14–W18 — Rated PvP track PASS (2026-08-27)
+
+- **`RatedPvPSystem`:** rating schema · Declare/Match Locked · GetLadder/SetRank · Enqueue/Dequeue/PartyInvite · SeasonId/GetSeasonAudit · GetWrapAudit · SmokeRated/Ladder/Matchmaking/Season/Wrap · remote `RatedPvP` · phase `F4-W18-wrap`
+- **`RatedPvPPanelUI`:** P / `/ratedpanel` read-only ladder panel (fail-closed)
+- **`OtakuHavenService`:** `RatedPvPSystem.Start()` wired
+- **Policy:** `AllowNewPvPFeatures=false`; live APIs Locked; Smoke*Mock QA only — no Publish
+- **MCP Edit smoke:** Wrap Success · all Smoke* PASS · GateAllows=false · `quality_gate` green
+- **NOT:** Allow* flip · live rated/MM/seasons · Publish
 
 ### Phase 4 W14–W18 plan — Rated PvP track (2026-08-27)
 

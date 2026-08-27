@@ -530,43 +530,53 @@ AllowGuilds=false · InventoryTransferPrep=true · LiveInventoryTransfer=false
 
 | Нед | Фокус | Exit (1 line) |
 |-----|-------|----------------|
-| **W14** | Rated PvP prep | Rating schema stub + fail-closed Declare/Match + `SmokeRatedPvPMock` |
-| **W15** | Rank / ladder stub | In-memory ranks + `GetLadderAudit` + panel read-only; live Locked |
-| **W16** | Matchmaking stub | Queue/party stub fail-closed + `SmokeMatchmakingMock` |
-| **W17** | Season / meta stub | Season id + soft-reset plan + `GetSeasonAudit` (no live seasons) |
-| **W18** | Phase 4 numbered-track wrap | Exit checklist W1–W18 + backlog map + NEXT post-W18 |
+| **W14** | Rated PvP prep | Rating schema stub · Declare/Match fail-closed · `SmokeRatedPvPMock` — ☑ PASS |
+| **W15** | Rank / ladder stub | In-memory ranks · `GetLadderAudit` · panel read-only · live Locked — ☑ PASS |
+| **W16** | Matchmaking stub | Queue/party fail-closed · `SmokeMatchmakingMock` — ☑ PASS |
+| **W17** | Season / meta stub | SeasonId · soft-reset plan · `GetSeasonAudit` (no live seasons) — ☑ PASS |
+| **W18** | Phase 4 numbered-track wrap | Exit checklist W1–W18 · backlog map · NEXT post-W18 — ☑ PASS |
 
-### W14 — Rated PvP prep — **PLANNED**
+### W14 — Rated PvP prep — **PASS (dev-only, 2026-08-27)**
 
-**Scope:** `RatedPvPSystem` ModuleScript — rating shape `{Rating, Wins, Losses, SeasonId?}` stub; `DeclareRated` / `MatchRated` live fail-closed until `AllowNewPvPFeatures`; `GetRatedAudit` + `SmokeRatedPvPMock`; remotes under `RatedPvP`; **no** ladder UI yet · **no** matchmaking · **no** seasons live.
+**Scope:** `RatedPvPSystem` — rating schema · Declare/Match fail-closed · `SmokeRatedPvPMock` · remote `RatedPvP`.
 
-**Gate:** reuse `ExpansionGate.AllowNewPvPFeatures` (same as `pvpExtraAllowed()` in `PvPDuelSystem`) — **do not** invent `AllowRatedPvP`.
+**MCP smoke:** LiveDeclare/Match Locked · SelfTarget · WinnerRating 1016 / Loser 984 · GateAllows=false · Phase→W18 after track.
 
-**NOT in W14:** AllowNewPvPFeatures flip · live ranked matches · copper/power rewards · Publish · B1 cosmetic
+**NOT in W14:** AllowNewPvPFeatures · live ranked · Publish
 
-### W15 — Rank / ladder stub — **PLANNED**
+### W15 — Rank / ladder stub — **PASS (dev-only, 2026-08-27)**
 
-**Scope:** in-memory `ranksByUserId` + sorted ladder snapshot; `GetLadder` / `GetLadderAudit`; thin read-only client row (or extend existing PvP HUD label); live rank writes Locked; smoke mutates memory only.
+**Scope:** `GetLadder` / `GetLadderAudit` / `SetRank` Locked · `SmokeLadderMock` · `RatedPvPPanelUI` (P / `/ratedpanel`) read-only.
 
-**NOT in W15:** live ladder DS · seasonal reset · matchmaking · Allow* flip · Publish
+**MCP smoke:** LiveRankBlocked · LadderCount≥3 · TopRank=1 · WriteLocked · panel WriteLocked.
 
-### W16 — Matchmaking stub — **PLANNED**
+**NOT in W15:** live ladder DS · Allow* · Publish
 
-**Scope:** queue/party in-memory stub; `Enqueue` / `Dequeue` / `PartyInvite` fail-closed Locked; `SmokeMatchmakingMock`; no teleport / no duel start from queue while gate OFF.
+### W16 — Matchmaking stub — **PASS (dev-only, 2026-08-27)**
 
-**NOT in W16:** live MM · cross-server · Allow* flip · Publish
+**Scope:** `Enqueue` / `Dequeue` / `PartyInvite` Locked · `SmokeMatchmakingMock` in-memory queue/party.
 
-### W17 — Season / meta stub — **PLANNED**
+**MCP smoke:** LiveEnqueue/Dequeue/Party Locked · QueueCount=2 · PartyCount=1 · AlreadyQueued · SelfTarget.
 
-**Scope:** `SeasonId` constant + soft-reset plan in `GetSeasonAudit`; document meta rotation (no live pool swap); smoke validates audit fields only.
+**NOT in W16:** live MM · cross-server · Allow* · Publish
 
-**NOT in W17:** live season flip · reward grant · Allow* flip · Publish
+### W17 — Season / meta stub — **PASS (dev-only, 2026-08-27)**
 
-### W18 — Phase 4 numbered-track wrap — **PLANNED**
+**Scope:** `SeasonId=S0-dev` · `GetSeasonAudit` soft-reset plan · `StartSeason` Locked · `SmokeSeasonMock`.
 
-**Scope:** docs-only (+ light audit `Phase=F4-W18-wrap`); exit checklist for W1–W18; backlog map (live Guild DS, PS cutover, B1, mesh, Haven); update NEXT default to **post-W18** (owner unlock **or** named backlog — not another silent W19 invent unless owner asks).
+**MCP smoke:** LiveSeasonBlocked · SoftResetPlanCount≥3 · LiveSeasons=false.
+
+**NOT in W17:** live season flip · rewards · Allow* · Publish
+
+### W18 — Phase 4 numbered-track wrap — **PASS (dev-only, 2026-08-27)**
+
+**Scope:** `GetWrapAudit` / `SmokeWrapMock` · exit checklist W1–W18 · backlog map · NEXT post-W18.
+
+**MCP smoke:** WrapComplete · ChecklistCount=7 · all Smoke* regress PASS · GateAllows=false · `quality_gate` green.
 
 **NOT in W18:** Allow* · Publish · new live systems
+
+**Post-W18 default:** owner unlock **or** named backlog (live Guild DS · PS cutover · B1 · mesh · Haven) — **not** invent W19 unless owner asks.
 
 ---
 
