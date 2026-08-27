@@ -11,7 +11,25 @@
 - **Owner decision:** defer **Publish**, live DS rejoin, live Robux, and `AllowProfileService` cutover while project is raw
 - **Valid now:** unpublished Studio Edit+Play · MCP smoke · Mock/shadow ProfileService · `quality_gate` · git mirrors
 - **Deferred (owner unlock):** Publish PlaceId≠0 · live DS stress · DevProduct live **R** · W4 FlipChecklist · live PS on join · AllowGuilds
-- **Default next (dev-only):** F4 **W11** warfare stub / item bank — see [`NEXT-SESSION.md`](NEXT-SESSION.md)
+- **Default next (dev-only):** F4 **W13** inventory↔bank transfer prep **or** owner unlock — see [`NEXT-SESSION.md`](NEXT-SESSION.md)
+
+### Phase 4 W12 — Warfare stub PASS (2026-08-24)
+
+- **`GuildSystem`:** in-memory `Warfare` on guild record · `GetWarfare` / `GetWarfareAudit` · `DeclareWarfare` / `JoinWarfare` (live fail-closed `Locked` until AllowGuilds) · `SmokeWarfareMock` · remotes `GetWarfare`/`DeclareWarfare`/`JoinWarfare` · phase `F4-W12-guild-warfare`
+- **`GetPanelSnapshot`:** read-only `Warfare` + `WarfareWriteLocked`
+- **`GuildPanelUI`:** warfare status row (Idle/Declared · LOCKED)
+- **Policy:** live declare/join Locked; QA smoke mutates in-memory only — no AllowGuilds · no AllowWarfare invented · no Publish
+- **MCP Edit smoke:** Declare/Join blocked · State Declared · participants 2 · SelfTarget blocked · W6–W11 regress PASS · GateAllows=false
+- **NOT in W12:** AllowGuilds · guild DS · unlock Warfare.Locked · combat resolution · Publish
+
+### Phase 4 W11 — Item bank slots prep PASS (2026-08-24)
+
+- **`GuildSystem`:** `DepositItem` · `WithdrawItem` (live fail-closed `Locked`) · `SmokeBankItemSlotsMock` (in-memory slot stack/fill + SlotsFull) · remotes `DepositItem`/`WithdrawItem` · phase `F4-W11-guild-bank-items`
+- **`GetBank`:** slot snapshot `{Slot,ItemId,Qty}` · `ItemSlotsPrep` · CreateOrJoin still gated
+- **`GuildPanelUI`:** W11 WRITE LOCKED bank label (slots)
+- **Policy:** live item writes Locked; QA smoke mutates in-memory only — no AllowGuilds · no inventory↔bank · no warfare
+- **MCP Edit smoke:** DepositItem/WithdrawItem blocked · qty 101: 3→2 · SlotsFull · W6–W10 regress PASS · GateAllows=false
+- **NOT in W11:** AllowGuilds · guild DS · unlock Bank.Locked · warfare · Publish
 
 ### Phase 4 W10 — Bank deposit/withdraw prep PASS (2026-08-24)
 

@@ -1,7 +1,7 @@
 --!strict
--- GuildPanelUI (F4 W10): fail-closed guild panel + bank write prep (live Locked)
--- Toggle: G key or chat /guildpanel · CreateOrJoin / Deposit / Withdraw stay gated server-side
--- Reads GuildEvent GetPanel / GuildBank; no Allow* flip · live bank writes fail-closed
+-- GuildPanelUI (F4 W12): fail-closed guild panel + bank + warfare status (live Locked)
+-- Toggle: G key or chat /guildpanel · CreateOrJoin / Deposit / Withdraw / Warfare stay gated server-side
+-- Reads GuildEvent GetPanel / GuildBank / GuildWarfare; no Allow* flip · live writes fail-closed
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -24,10 +24,21 @@ end)
 type BankSnap = {
 	Copper: number?,
 	ItemCount: number?,
+	SlotCount: number?,
 	Locked: boolean?,
 	WriteLocked: boolean?,
 	InMemoryOnly: boolean?,
 	MaxSlots: number?,
+	MaxStackPerSlot: number?,
+}
+
+type WarfareSnap = {
+	State: string?,
+	TargetGuildId: string?,
+	ParticipantCount: number?,
+	Locked: boolean?,
+	WriteLocked: boolean?,
+	InMemoryOnly: boolean?,
 }
 
 type PanelSnap = {
@@ -35,10 +46,12 @@ type PanelSnap = {
 	GateAllows: boolean?,
 	CreateBlocked: boolean?,
 	BankWriteLocked: boolean?,
+	WarfareWriteLocked: boolean?,
 	LockedMessage: string?,
 	Membership: { Id: string?, Name: string?, Tag: string?, Role: string? }?,
 	Roster: { { UserId: number?, Role: string? } }?,
 	Bank: BankSnap?,
+	Warfare: WarfareSnap?,
 }
 
 local panelGui: ScreenGui? = nil
@@ -46,6 +59,7 @@ local panelFrame: Frame? = nil
 local bodyLabel: TextLabel? = nil
 local rosterLabel: TextLabel? = nil
 local bankLabel: TextLabel? = nil
+local warfareLabel: TextLabel? = nil
 local titleLabel: TextLabel? = nil
 local visible = false
 local lastSnap: PanelSnap? = nil
@@ -73,8 +87,8 @@ local function ensureGui()
 
 	local frame = Instance.new("Frame")
 	frame.Name = "GuildPanel"
-	frame.Size = UDim2.fromOffset(360, 320)
-	frame.Position = UDim2.new(0.5, -180, 0.5, -160)
+	frame.Size = UDim2.fromOffset(360, 360)
+	frame.Position = UDim2.new(0.5, -180, 0.5, -180)
 	frame.BackgroundColor3 = Color3.fromRGB(28, 26, 38)
 	frame.BorderSizePixel = 0
 	frame.Visible = false
@@ -117,7 +131,7 @@ local function ensureGui()
 
 	local body = Instance.new("TextLabel")
 	body.Name = "Body"
-	body.Size = UDim2.new(1, -24, 0, 72)
+	body.Size = UDim2.new(1, -24, 0, 64)
 	body.Position = UDim2.fromOffset(12, 44)
 	body.BackgroundTransparency = 1
 	body.Font = Enum.Font.Gotham
@@ -131,8 +145,8 @@ local function ensureGui()
 
 	local roster = Instance.new("TextLabel")
 	roster.Name = "Roster"
-	roster.Size = UDim2.new(1, -24, 0, 110)
-	roster.Position = UDim2.fromOffset(12, 120)
+	roster.Size = UDim2.new(1, -24, 0, 96)
+	roster.Position = UDim2.fromOffset(12, 112)
 	roster.BackgroundColor3 = Color3.fromRGB(36, 34, 48)
 	roster.Font = Enum.Font.Code
 	roster.TextSize = 13
@@ -153,8 +167,8 @@ local function ensureGui()
 
 	local bank = Instance.new("TextLabel")
 	bank.Name = "Bank"
-	bank.Size = UDim2.new(1, -24, 0, 48)
-	bank.Position = UDim2.fromOffset(12, 240)
+	bank.Size = UDim2.new(1, -24, 0, 40)
+	bank.Position = UDim2.fromOffset(12, 216)
 	bank.BackgroundColor3 = Color3.fromRGB(36, 34, 48)
 	bank.Font = Enum.Font.Gotham
 	bank.TextSize = 13
@@ -172,16 +186,37 @@ local function ensureGui()
 	bankCorner.CornerRadius = UDim.new(0, 4)
 	bankCorner.Parent = bank
 
+	local warfare = Instance.new("TextLabel")
+	warfare.Name = "Warfare"
+	warfare.Size = UDim2.new(1, -24, 0, 40)
+	warfare.Position = UDim2.fromOffset(12, 264)
+	warfare.BackgroundColor3 = Color3.fromRGB(36, 34, 48)
+	warfare.Font = Enum.Font.Gotham
+	warfare.TextSize = 13
+	warfare.TextWrapped = true
+	warfare.TextXAlignment = Enum.TextXAlignment.Left
+	warfare.TextYAlignment = Enum.TextYAlignment.Top
+	warfare.TextColor3 = Color3.fromRGB(180, 190, 200)
+	warfare.Text = ""
+	warfare.Parent = frame
+	local warPad = Instance.new("UIPadding")
+	warPad.PaddingTop = UDim.new(0, 6)
+	warPad.PaddingLeft = UDim.new(0, 8)
+	warPad.Parent = warfare
+	local warCorner = Instance.new("UICorner")
+	warCorner.CornerRadius = UDim.new(0, 4)
+	warCorner.Parent = warfare
+
 	local hint = Instance.new("TextLabel")
 	hint.Name = "Hint"
 	hint.Size = UDim2.new(1, -24, 0, 18)
-	hint.Position = UDim2.fromOffset(12, 292)
+	hint.Position = UDim2.fromOffset(12, 312)
 	hint.BackgroundTransparency = 1
 	hint.Font = Enum.Font.Gotham
 	hint.TextSize = 11
 	hint.TextColor3 = Color3.fromRGB(140, 140, 160)
 	hint.TextXAlignment = Enum.TextXAlignment.Left
-	hint.Text = "G / /guildpanel — закрыть · create/deposit Locked (gate)"
+	hint.Text = "G / /guildpanel — закрыть · create/bank/warfare Locked (gate)"
 	hint.Parent = frame
 
 	closeBtn.MouseButton1Click:Connect(function()
@@ -195,6 +230,7 @@ local function ensureGui()
 	bodyLabel = body
 	rosterLabel = roster
 	bankLabel = bank
+	warfareLabel = warfare
 	titleLabel = title
 end
 
@@ -216,12 +252,12 @@ local function formatBank(bank: BankSnap?): string
 		return "Банк: недоступен (нет гильдии)"
 	end
 	local copper = tonumber(bank.Copper) or 0
-	local items = tonumber(bank.ItemCount) or 0
+	local items = tonumber(bank.ItemCount) or tonumber(bank.SlotCount) or 0
 	local maxSlots = tonumber(bank.MaxSlots) or 20
 	local writeLocked = bank.WriteLocked ~= false or bank.Locked ~= false
 	if writeLocked then
 		return string.format(
-			"Банк (W10): Copper %d · слоты %d/%d · WRITE LOCKED (нет AllowGuilds)",
+			"Банк: Copper %d · слоты %d/%d · WRITE LOCKED",
 			copper,
 			items,
 			maxSlots
@@ -230,10 +266,29 @@ local function formatBank(bank: BankSnap?): string
 	return string.format("Банк: Copper %d · слоты %d/%d", copper, items, maxSlots)
 end
 
+local function formatWarfare(warfare: WarfareSnap?): string
+	if type(warfare) ~= "table" then
+		return "Война: — (нет гильдии)"
+	end
+	local state = tostring(warfare.State or "Idle")
+	local participants = tonumber(warfare.ParticipantCount) or 0
+	local target = tostring(warfare.TargetGuildId or "—")
+	local writeLocked = warfare.WriteLocked ~= false or warfare.Locked ~= false
+	if writeLocked then
+		return string.format(
+			"Война (W12): %s · цель %s · %d уч. · LOCKED",
+			state,
+			target,
+			participants
+		)
+	end
+	return string.format("Война: %s · цель %s · %d уч.", state, target, participants)
+end
+
 local function applySnapshot(snap: PanelSnap)
 	lastSnap = snap
 	ensureGui()
-	if not bodyLabel or not rosterLabel or not bankLabel or not titleLabel then
+	if not bodyLabel or not rosterLabel or not bankLabel or not warfareLabel or not titleLabel then
 		return
 	end
 
@@ -252,6 +307,7 @@ local function applySnapshot(snap: PanelSnap)
 		bodyLabel.TextColor3 = Color3.fromRGB(220, 220, 230)
 		rosterLabel.Text = formatRoster(snap.Roster)
 		bankLabel.Text = formatBank(snap.Bank)
+		warfareLabel.Text = formatWarfare(snap.Warfare)
 	else
 		titleLabel.Text = "ГИЛЬДИЯ"
 		local msg = snap.LockedMessage
@@ -266,6 +322,7 @@ local function applySnapshot(snap: PanelSnap)
 		bodyLabel.TextColor3 = Color3.fromRGB(255, 180, 140)
 		rosterLabel.Text = "Состав: —"
 		bankLabel.Text = "Банк: — (нужна гильдия)"
+		warfareLabel.Text = "Война: —"
 	end
 end
 
@@ -284,6 +341,7 @@ local function applyLocalFallback()
 			},
 			Roster = {},
 			Bank = { Copper = 0, ItemCount = 0, Locked = true, MaxSlots = 20 },
+			Warfare = { State = "Idle", Locked = true, WriteLocked = true, ParticipantCount = 0 },
 		})
 	else
 		applySnapshot({
@@ -295,6 +353,7 @@ local function applyLocalFallback()
 				else "Гильдии закрыты (ExpansionGate / dev-only)",
 			Roster = {},
 			Bank = nil,
+			Warfare = nil,
 		})
 	end
 end
@@ -339,6 +398,7 @@ guildEvent.OnClientEvent:Connect(function(action: any, payload: any)
 				LockedMessage = "Гильдии закрыты (ExpansionGate / dev-only)",
 				Roster = {},
 				Bank = nil,
+				Warfare = nil,
 			})
 		end
 	elseif action == "GuildRoster" and visible and lastSnap and lastSnap.HasMembership then
@@ -347,10 +407,13 @@ guildEvent.OnClientEvent:Connect(function(action: any, payload: any)
 	elseif action == "GuildBank" and visible and lastSnap and lastSnap.HasMembership then
 		lastSnap.Bank = if type(payload) == "table" then payload else nil
 		applySnapshot(lastSnap)
+	elseif action == "GuildWarfare" and visible and lastSnap and lastSnap.HasMembership then
+		lastSnap.Warfare = if type(payload) == "table" then payload else nil
+		applySnapshot(lastSnap)
 	elseif action == "Error" and visible and type(payload) == "table" then
 		local msg = tostring(payload.Message or "")
 		if #msg > 0 and bodyLabel then
-			bodyLabel.Text = string.format("Банк: %s", msg)
+			bodyLabel.Text = string.format("Ошибка: %s", msg)
 			bodyLabel.TextColor3 = Color3.fromRGB(255, 180, 140)
 		end
 	end
@@ -378,4 +441,4 @@ player:GetAttributeChangedSignal("GuildTag"):Connect(function()
 	end
 end)
 
-print("[GuildPanelUI] W10 ready — G / /guildpanel (deposit fail-closed)")
+print("[GuildPanelUI] W12 ready — G / /guildpanel (warfare stub fail-closed)")

@@ -29,7 +29,7 @@
 | `ExpansionGate` | `RS.RealmOfSpirits` | All Allow*=false defaults |
 | `ProfileServiceAdapter` | `SSS.RealmOfSpirits` | Stub → **W1 audit API** |
 | `DataStoreManager` | `SSS.RealmOfSpirits` | Live backend `RealmOfSpirits_v2` + session lock |
-| `GuildSystem` | `SSS.RealmOfSpirits` | W10 deposit/withdraw prep; W9 UI+bank; W8 leave+merge; CreateOrJoin fail-closed |
+| `GuildSystem` | `SSS.RealmOfSpirits` | W12 warfare stub; W11 item slots; W10 copper; W9 UI+bank; CreateOrJoin fail-closed |
 | `SpiritMeshGenerationService` | `SSS.RealmOfSpirits` | Online path blocked |
 | `PvPDuelSystem` | `SSS.RealmOfSpirits` | Fair duel OK; `pvpExtraAllowed()` for rated |
 
@@ -415,7 +415,77 @@ AllowGuilds=false · DepositWithdrawPrep=true · LiveBankWrites=false
 
 **W10 NOT in scope:** AllowGuilds · live guild DS · unlock Bank.Locked · warfare · B1 · 106 · Haven décor · Publish
 
-**Next after W10:** W11 warfare stub **or** item bank slots (still gate OFF).
+**Next after W10:** W11 item bank slots (coherent after copper) **or** warfare stub (still gate OFF).
+
+---
+
+## W11 — Item bank slots prep — **PASS (dev-only, 2026-08-24)**
+
+**Scope:** live DepositItem/WithdrawItem fail-closed (`Locked`) until AllowGuilds; in-memory slot stack/fill via `SmokeBankItemSlotsMock`; **no** AllowGuilds · **no** live guild DS · **no** player inventory transfer · **no** Publish.
+
+| # | Задача | Статус |
+|---|--------|--------|
+| 1 | Slot shape `{Slot,ItemId,Qty}` + stack/fill helpers | ☑ |
+| 2 | `DepositItem` / `WithdrawItem` — validate + fail-closed Locked | ☑ |
+| 3 | In-memory `applyBankItemDelta` for smoke QA only | ☑ |
+| 4 | Remotes `DepositItem` / `WithdrawItem` + GetBank slot snapshot | ☑ |
+| 5 | `SmokeBankItemSlotsMock` (live blocked + qty 3→2 + SlotsFull) | ☑ |
+| 6 | Phase/audit → `F4-W11-guild-bank-items` | ☑ |
+| 7 | `GuildPanelUI` W11 bank label | ☑ |
+| 8 | Studio sync + MCP Edit smoke | ☑ |
+| 9 | Docs: NEXT / ROADMAP / CHANGELOG | ☑ |
+| 10 | `quality_gate.py` | ☑ green |
+
+**Policy choice:** continue bank track after W10 copper (item slots more coherent than warfare). Live path = fail-closed Locked; QA smoke mutates in-memory slots without unlocking live remotes / inventory.
+
+**MCP smoke (Edit, unpublished):**
+
+```
+GetGuildAudit → Phase=F4-W11-guild-bank-items GateAllows=false
+SmokeBankItemSlotsMock → Success=true LiveDepositBlocked=true LiveWithdrawBlocked=true Qty 3→2 SlotsFullBlocked=true
+SmokeBankDepositMock → Success=true Copper=300 (W10 regress)
+W6–W9 regress → Success=true
+AllowGuilds=false · ItemSlotsPrep=true · LiveItemWrites=false
+```
+
+**W11 NOT in scope:** AllowGuilds · live guild DS · unlock Bank.Locked · warfare · inventory↔bank · B1 · 106 · Haven décor · Publish
+
+**Next after W11:** W12 warfare stub (still gate OFF).
+
+---
+
+## W12 — Warfare stub — **PASS (dev-only, 2026-08-24)**
+
+**Scope:** in-memory warfare state + live Declare/Join fail-closed (`Locked`) until AllowGuilds; `SmokeWarfareMock` for QA; panel read-only status; **no** AllowGuilds · **no** AllowWarfare · **no** combat resolve · **no** Publish.
+
+| # | Задача | Статус |
+|---|--------|--------|
+| 1 | `Warfare` shape on guild record + `ensureWarfare` / `GetWarfare` | ☑ |
+| 2 | `DeclareWarfare` / `JoinWarfare` — validate + fail-closed Locked | ☑ |
+| 3 | In-memory `applyWarfareDeclare` / `applyWarfareJoin` for smoke QA only | ☑ |
+| 4 | Remotes `GetWarfare` / `DeclareWarfare` / `JoinWarfare` + panel Warfare snapshot | ☑ |
+| 5 | `SmokeWarfareMock` (live blocked + Declared + 2 participants + SelfTarget) | ☑ |
+| 6 | Phase/audit → `F4-W12-guild-warfare` · `GetWarfareAudit` | ☑ |
+| 7 | `GuildPanelUI` warfare status row (read-only) | ☑ |
+| 8 | Studio sync + MCP Edit smoke | ☑ |
+| 9 | Docs: NEXT / ROADMAP / CHANGELOG | ☑ |
+| 10 | `quality_gate.py` | ☑ green |
+
+**Policy choice:** reuse `AllowGuilds` for live declare/join (no new AllowWarfare flag). Live path = fail-closed Locked; QA smoke mutates in-memory without unlocking remotes.
+
+**MCP smoke (Edit, unpublished):**
+
+```
+GetGuildAudit → Phase=F4-W12-guild-warfare GateAllows=false
+SmokeWarfareMock → Success=true LiveDeclareBlocked=true LiveJoinBlocked=true State=Declared Participants=2 SelfTargetBlocked=true
+SmokeBankItemSlotsMock / SmokeBankDepositMock → Success=true (W10–W11 regress)
+W6–W9 regress → Success=true
+AllowGuilds=false · WarfarePrep=true · LiveWarfareWrites=false
+```
+
+**W12 NOT in scope:** AllowGuilds · AllowWarfare · live guild DS · unlock Warfare.Locked · warfare combat · B1 · 106 · Haven décor · Publish
+
+**Next after W12:** W13 inventory↔bank transfer prep (still gate OFF) **or** owner unlock.
 
 ---
 

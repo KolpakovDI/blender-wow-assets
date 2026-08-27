@@ -2,8 +2,8 @@
 
 > **DEV-ONLY MODE** (owner decision 2026-08-23) — **не публикуем** place и **не включаем** live cutover, пока владелец явно не снимет режим. Проект сырой; публикация отложена **намеренно**, не навсегда.
 
-**Статус:** 2026-08-24 — Фаза 1 **COMPLETE** · Фаза 2 **COMPLETE** · Фаза 3 **COMPLETE CONDITIONAL** · **Фаза 4 W1–W3 PASS** · **W4 PREP PASS (CONDITIONAL)** · **W5–W10 PASS (dev-only)**
-**Следующий фокус (dev-only default):** **Ф4 W11** — warfare stub **или** item bank slots (gate OFF) — без Publish / AllowGuilds flip
+**Статус:** 2026-08-24 — Фаза 1 **COMPLETE** · Фаза 2 **COMPLETE** · Фаза 3 **COMPLETE CONDITIONAL** · **Фаза 4 W1–W3 PASS** · **W4 PREP PASS (CONDITIONAL)** · **W5–W12 PASS (dev-only)**
+**Следующий фокус (dev-only default):** **Ф4 W13** — inventory↔bank transfer prep (gate OFF) **или** owner unlock — без Publish / AllowGuilds flip
 
 **Roadmap:** [`ROADMAP-2026-08-23.md`](ROADMAP-2026-08-23.md) · **Phase 4:** [`SESSION-2026-08-23-phase4-scale.md`](SESSION-2026-08-23-phase4-scale.md)
 
@@ -16,14 +16,14 @@
 | Mock / shadow **ProfileService** (gate OFF) | Live **Robux** purchase (DevProduct + Publish) |
 | `quality_gate.py`, git mirrors, docs | **`AllowProfileService`** flip + live PS cutover |
 | Bug fix-only по красному smoke | **`AllowGuilds`** flip + live guild DS |
-| Ф4 prep: audit · migrate sample · gated Load/Save · Guild in-memory MVP + bank write prep | Live ops / store listing / marketing pass |
+| Ф4 prep: audit · migrate sample · gated Load/Save · Guild in-memory MVP + bank/warfare write prep | Live ops / store listing / marketing pass |
 
 **Снять dev-only:** только явная команда владельца («publish», «owner hands», «live cutover») + [`OwnerFlipChecklist`](SESSION-2026-08-23-phase4-scale.md) в SESSION W4.
 
 ## Старт сессии (порядок жёсткий)
 
 1. **Ctrl+S** place → подтвердить SoT
-2. **Приоритет по умолчанию (dev-only):** **Ф4 W11** — warfare stub или item bank slots (gate OFF)
+2. **Приоритет по умолчанию (dev-only):** **Ф4 W13** — inventory↔bank transfer prep (gate OFF)
 3. **Bug fix-only** — если что-то красное в play smoke
 4. **Owner hands / Publish / live cutover** — только по **явной** команде владельца (не default)
 5. **106 / B1 / Haven décor** — только по явной команде
@@ -32,7 +32,9 @@
 
 | Команда / намерение | Действие агента |
 |---------------------|-----------------|
-| «дальше» (без уточнения) | **Ф4 W11** warfare stub / item bank (dev-only safe) |
+| «дальше» (без уточнения) | **Ф4 W13** inventory↔bank prep (dev-only safe) |
+| «W12» / «warfare» | SESSION W12 · already **PASS** — re-smoke if needed |
+| «W11» / «item bank» | SESSION W11 · already **PASS** — re-smoke if needed |
 | «W10» / «bank deposit» | SESSION W10 · already **PASS** — re-smoke if needed |
 | «W9» / «Guild UI» | SESSION W9 · already **PASS** — re-smoke if needed |
 | «W8» / «Guild leave» | SESSION W8 · already **PASS** — re-smoke if needed |
@@ -46,6 +48,8 @@
 | Область | Состояние |
 |---------|-----------|
 | **Dev-only** | **ACTIVE** — Publish/live cutover deferred by owner |
+| **Фаза 4 W12** | **PASS** — DeclareWarfare/JoinWarfare fail-closed Locked; SmokeWarfareMock in-memory |
+| **Фаза 4 W11** | **PASS** — DepositItem/WithdrawItem fail-closed Locked; SmokeBankItemSlotsMock in-memory |
 | **Фаза 4 W10** | **PASS** — Deposit/Withdraw fail-closed Locked; SmokeBankDepositMock in-memory |
 | **Фаза 4 W9** | **PASS** — GuildPanelUI + bank prep (in-memory Locked); CreateOrJoin still gated |
 | **Фаза 4 W8** | **PASS** — Leave persist + multi-player roster merge; CreateOrJoin still gated |
@@ -58,6 +62,22 @@
 | **Persistence** | Live = `DataStoreManager` · PS path ready behind triple gate |
 | **ExpansionGate** | All Allow*=false (не трогали) |
 | **Schema** | **v1 locked** (42 keys + optional `Guild`, `_Session`) — `Guild` may include `Role` |
+
+## Фаза 4 W12 exit (2026-08-24) — PASS (dev-only)
+
+- `DeclareWarfare` / `JoinWarfare` — live fail-closed `Locked` until AllowGuilds + unlocked warfare
+- `SmokeWarfareMock` — in-memory Declared vs target; participants 2; SelfTarget blocked; LiveDeclare/Join blocked
+- Remotes `GetWarfare` / `DeclareWarfare` / `JoinWarfare`; panel `Warfare` snapshot read-only
+- CreateOrJoin / `/guild` still fail-closed; phase `F4-W12-guild-warfare`
+- **NOT:** AllowGuilds · AllowWarfare · guild DS · unlock Warfare.Locked · combat resolve · Publish
+
+## Фаза 4 W11 exit (2026-08-24) — PASS (dev-only)
+
+- `DepositItem` / `WithdrawItem` — live fail-closed `Locked` until AllowGuilds + unlocked bank
+- `SmokeBankItemSlotsMock` — in-memory item 101 qty 3→2; SlotsFull; LiveDeposit/WithdrawItem blocked
+- Remotes `DepositItem` / `WithdrawItem`; slot snapshot in `GetBank.Items`
+- CreateOrJoin / `/guild` still fail-closed; phase `F4-W11-guild-bank-items`
+- **NOT:** AllowGuilds · guild DS · unlock Bank.Locked · warfare · player inventory↔bank · Publish
 
 ## Фаза 4 W10 exit (2026-08-24) — PASS (dev-only)
 
@@ -121,7 +141,9 @@
 
 | # | Срез | Когда |
 |---|------|-------|
-| **Ф4 W11** | Warfare stub **or** item bank slots (gate OFF) | **default next** (dev-only) |
+| **Ф4 W13** | Inventory↔bank transfer prep (gate OFF) | **default next** (dev-only) |
+| **Ф4 W12** | Warfare stub (gate OFF) | ☑ **PASS** |
+| **Ф4 W11** | Item bank slots (gate OFF) | ☑ **PASS** |
 | **Ф4 W10** | Bank deposit/withdraw prep (gate OFF) | ☑ **PASS** |
 | **Ф4 W9** | Guild UI panel / bank prep (gate OFF) | ☑ **PASS** |
 | **Ф4 W8** | Leave persist + multi-player roster merge | ☑ **PASS** |
@@ -131,7 +153,7 @@
 | **Ф4 W4 live** | Owner gate flip + live PS smoke | Owner unlock dev-only |
 | **Ф4 W4 prep** | Gated Load/Save + Mock smoke | ☑ **PREP PASS** |
 | **106 polish** | Alt track | Явная команда |
-| **B1** | PvP slice 3 | После W11+ / owner call |
+| **B1** | PvP slice 3 | После W12+ / owner call |
 
 ## Studio SoT
 
@@ -145,4 +167,4 @@ Publish без owner · Allow* flip без checklist · live Guild DS · AI mesh
 
 ## Архив
 
-Phase 1–2 **COMPLETE** · Phase 3 **COMPLETE CONDITIONAL** · Phase 4 W1–W3 **PASS** · W4 **PREP PASS CONDITIONAL** · W5–W10 **PASS** · [`SESSION-2026-08-23-phase4-scale.md`](SESSION-2026-08-23-phase4-scale.md)
+Phase 1–2 **COMPLETE** · Phase 3 **COMPLETE CONDITIONAL** · Phase 4 W1–W3 **PASS** · W4 **PREP PASS CONDITIONAL** · W5–W12 **PASS** · [`SESSION-2026-08-23-phase4-scale.md`](SESSION-2026-08-23-phase4-scale.md)

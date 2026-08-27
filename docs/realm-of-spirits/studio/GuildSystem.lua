@@ -1,13 +1,14 @@
--- GuildSystem (F4 W10): bank deposit/withdraw prep (in-memory, gate OFF)
+-- GuildSystem (F4 W12): warfare stub (in-memory, gate OFF)
 -- Restore + Leave do NOT require AllowGuilds (in-memory session only)
 -- CreateOrJoin remains fail-closed behind ExpansionGate.AllowGuilds
--- Live Deposit/Withdraw fail-closed (Locked) until AllowGuilds; Smoke mutates in-memory
+-- Live bank writes + Declare/Join warfare fail-closed (Locked) until AllowGuilds
+-- Smoke mutates in-memory copper/slots/warfare without unlocking live remotes
 -- Start() from OtakuHavenService / GameManager after DataStore ready
 -- Mirror: re-export from Studio SoT after Ctrl+S if this file drifts.
 -- Runtime SoT = ServerScriptService.RealmOfSpirits.GuildSystem in place .rbxl
--- W10 APIs: DepositCopper, WithdrawCopper, SmokeBankDepositMock (plus W9 GetBank/GetPanel)
+-- W12 APIs: DeclareWarfare, JoinWarfare, GetWarfare, SmokeWarfareMock (plus W10–W11 bank)
 -- Client companion: StarterPlayerScripts.GuildPanelUI (G / /guildpanel, fail-closed)
--- Phase: F4-W10-guild-bank-write · AllowGuilds=false · CreateOrJoin gated
+-- Phase: F4-W12-guild-warfare · AllowGuilds=false · CreateOrJoin gated
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -31,8 +32,15 @@ GuildSystem.SmokeLeaveGuildId = "g_w8leave"
 GuildSystem.SmokeMergeGuildId = "g_w8merge"
 GuildSystem.SmokeBankGuildId = "g_w9bank"
 GuildSystem.SmokeDepositGuildId = "g_w10deposit"
+GuildSystem.SmokeItemGuildId = "g_w11items"
+GuildSystem.SmokeWarfareGuildId = "g_w12war"
+GuildSystem.SmokeWarfareTargetGuildId = "g_w12target"
+GuildSystem.WarfareSchemaVersion = 1
+GuildSystem.MaxWarfareParticipants = 20
 GuildSystem.MaxBankCopperTxn = 1000000
 GuildSystem.MaxBankCopperBalance = 100000000
+GuildSystem.MaxStackPerSlot = 99
+GuildSystem.MaxItemQtyTxn = 999
 
 local RealmFolder = ReplicatedStorage:WaitForChild("RealmOfSpirits")
 local remoteInst = RealmFolder:FindFirstChild("GuildEvent")
@@ -90,6 +98,106 @@ local function emptyBank()
 	}
 end
 
+local function emptyWarfare()
+	return {
+		State = "Idle", -- Idle | Declared (Active deferred)
+		TargetGuildId = nil,
+		DeclaredByUserId = nil,
+		DeclaredAt = nil,
+		Participants = {},
+		SchemaVersion = GuildSystem.WarfareSchemaVersion,
+		Locked = true, -- live declare/join deferred until AllowGuilds
+	}
+end
+
+-- Occupied slots keyed by 1..MaxSlots: { ItemId, Qty }. Legacy dicts without Slot are compacted.
+local function normalizeBankItems(rawItems)
+	local slots = {}
+	if type(rawItems) ~= "table" then
+		return slots
+	end
+	local pending = {}
+	for key, entry in pairs(rawItems) do
+		if type(entry) == "table" then
+			local itemId = tonumber(entry.ItemId or entry.Id)
+			local qty = tonumber(entry.Qty or entry.Count or entry.Amount)
+			local slot = tonumber(entry.Slot or key)
+			if itemId and itemId == itemId and itemId >= 1 and qty and qty == qty and qty >= 1 then
+				itemId = math.floor(itemId)
+				qty = math.floor(qty)
+				table.insert(pending, {
+					Slot = if type(slot) == "number" and slot >= 1 then math.floor(slot) else nil,
+					ItemId = itemId,
+					Qty = math.min(qty, GuildSystem.MaxStackPerSlot),
+				})
+			end
+		end
+	end
+	table.sort(pending, function(a, b)
+		local sa = a.Slot or 9999
+		local sb = b.Slot or 9999
+		if sa ~= sb then
+			return sa < sb
+		end
+		return a.ItemId < b.ItemId
+	end)
+	local used = {}
+	local nextFree = 1
+	local function allocSlot(preferred)
+		if preferred and preferred >= 1 and preferred <= GuildSystem.MaxBankSlots and used[preferred] ~= true then
+			used[preferred] = true
+			return preferred
+		end
+		while nextFree <= GuildSystem.MaxBankSlots do
+			if used[nextFree] ~= true then
+				local s = nextFree
+				used[s] = true
+				nextFree += 1
+				return s
+			end
+			nextFree += 1
+		end
+		return nil
+	end
+	for _, row in ipairs(pending) do
+		local slot = allocSlot(row.Slot)
+		if slot then
+			slots[slot] = { ItemId = row.ItemId, Qty = row.Qty }
+		end
+	end
+	return slots
+end
+
+local function snapshotBankSlots(bank)
+	local list = {}
+	if type(bank) ~= "table" or type(bank.Items) ~= "table" then
+		return list
+	end
+	for slot, entry in pairs(bank.Items) do
+		if type(entry) == "table" then
+			table.insert(list, {
+				Slot = tonumber(slot) or 0,
+				ItemId = entry.ItemId,
+				Qty = entry.Qty,
+			})
+		end
+	end
+	table.sort(list, function(a, b)
+		return a.Slot < b.Slot
+	end)
+	return list
+end
+
+local function catalogHasItem(itemId)
+	local okCat, ItemCatalog = pcall(function()
+		return require(RealmFolder:WaitForChild("ItemCatalog", 2))
+	end)
+	if not okCat or not ItemCatalog or type(ItemCatalog.Get) ~= "function" then
+		return true
+	end
+	return ItemCatalog.Get(itemId) ~= nil
+end
+
 local function ensureBank(record)
 	if type(record.Bank) ~= "table" then
 		record.Bank = emptyBank()
@@ -97,6 +205,7 @@ local function ensureBank(record)
 	if type(record.Bank.Items) ~= "table" then
 		record.Bank.Items = {}
 	end
+	record.Bank.Items = normalizeBankItems(record.Bank.Items)
 	if type(record.Bank.Copper) ~= "number" then
 		record.Bank.Copper = 0
 	end
@@ -110,6 +219,44 @@ local function ensureBank(record)
 		record.Bank.Locked = true
 	end
 	return record.Bank
+end
+
+local function ensureWarfare(record)
+	if type(record.Warfare) ~= "table" then
+		record.Warfare = emptyWarfare()
+	end
+	local w = record.Warfare
+	if type(w.Participants) ~= "table" then
+		w.Participants = {}
+	end
+	if type(w.SchemaVersion) ~= "number" then
+		w.SchemaVersion = GuildSystem.WarfareSchemaVersion
+	end
+	if w.Locked == nil then
+		w.Locked = true
+	end
+	local state = tostring(w.State or "Idle")
+	if state ~= "Idle" and state ~= "Declared" then
+		state = "Idle"
+	end
+	w.State = state
+	return w
+end
+
+local function snapshotWarfareParticipants(warfare)
+	local list = {}
+	for _, entry in pairs(warfare.Participants) do
+		if type(entry) == "table" and type(entry.UserId) == "number" then
+			table.insert(list, {
+				UserId = entry.UserId,
+				JoinedAt = entry.JoinedAt,
+			})
+		end
+	end
+	table.sort(list, function(a, b)
+		return a.UserId < b.UserId
+	end)
+	return list
 end
 
 local function countMembers(record)
@@ -181,18 +328,41 @@ function GuildSystem.GetBank(guildId)
 		return nil
 	end
 	local bank = ensureBank(record)
-	local itemCount = 0
-	for _ in pairs(bank.Items) do
-		itemCount += 1
-	end
+	local slots = snapshotBankSlots(bank)
 	local writeLocked = (bank.Locked == true) or (not gateAllowsGuilds())
 	return {
 		Copper = bank.Copper,
-		ItemCount = itemCount,
-		Items = bank.Items,
+		ItemCount = #slots,
+		SlotCount = #slots,
+		Items = slots,
 		MaxSlots = bank.MaxSlots,
+		MaxStackPerSlot = GuildSystem.MaxStackPerSlot,
 		SchemaVersion = bank.SchemaVersion,
 		Locked = bank.Locked == true,
+		WriteLocked = writeLocked,
+		InMemoryOnly = true,
+	}
+end
+
+-- In-memory warfare snapshot. Live declare/join fail-closed while Locked / !AllowGuilds.
+function GuildSystem.GetWarfare(guildId)
+	local record = guildsById[guildId]
+	if not record then
+		return nil
+	end
+	local warfare = ensureWarfare(record)
+	local participants = snapshotWarfareParticipants(warfare)
+	local writeLocked = (warfare.Locked == true) or (not gateAllowsGuilds())
+	return {
+		State = warfare.State,
+		TargetGuildId = warfare.TargetGuildId,
+		DeclaredByUserId = warfare.DeclaredByUserId,
+		DeclaredAt = warfare.DeclaredAt,
+		ParticipantCount = #participants,
+		Participants = participants,
+		MaxParticipants = GuildSystem.MaxWarfareParticipants,
+		SchemaVersion = warfare.SchemaVersion,
+		Locked = warfare.Locked == true,
 		WriteLocked = writeLocked,
 		InMemoryOnly = true,
 	}
@@ -316,6 +486,342 @@ function GuildSystem.WithdrawCopper(player, amountRaw)
 	return true, res
 end
 
+local function normalizeItemId(itemRaw)
+	local itemId = tonumber(itemRaw)
+	if type(itemId) ~= "number" or itemId ~= itemId or itemId < 1 then
+		return nil, "InvalidItem"
+	end
+	itemId = math.floor(itemId)
+	if itemId < 1 or itemId > 9999 then
+		return nil, "InvalidItem"
+	end
+	if not catalogHasItem(itemId) then
+		return nil, "InvalidItem"
+	end
+	return itemId, nil
+end
+
+local function normalizeItemQty(qtyRaw)
+	local qty = tonumber(qtyRaw)
+	if type(qty) ~= "number" or qty ~= qty or qty <= 0 then
+		return nil, "InvalidAmount"
+	end
+	qty = math.floor(qty)
+	if qty < 1 or qty > GuildSystem.MaxItemQtyTxn then
+		return nil, "InvalidAmount"
+	end
+	return qty, nil
+end
+
+local function countOccupiedSlots(bank)
+	local n = 0
+	for _ in pairs(bank.Items) do
+		n += 1
+	end
+	return n
+end
+
+-- In-memory item slot delta (QA / smoke). Does NOT bypass live DepositItem/WithdrawItem gates.
+-- Positive qty = deposit into slots (stack then empty); negative = withdraw matching ItemId.
+local function applyBankItemDelta(guildId, itemId, qtyDelta)
+	local record = guildsById[guildId]
+	if not record then
+		return false, "NoGuild"
+	end
+	local bank = ensureBank(record)
+	local id = tonumber(itemId)
+	local d = tonumber(qtyDelta)
+	if type(id) ~= "number" or id ~= id or id < 1 then
+		return false, "InvalidItem"
+	end
+	if type(d) ~= "number" or d ~= d or d == 0 then
+		return false, "InvalidAmount"
+	end
+	id = math.floor(id)
+	d = math.floor(d)
+
+	if d > 0 then
+		local remaining = d
+		-- Stack into existing slots first
+		for slot = 1, bank.MaxSlots do
+			local entry = bank.Items[slot]
+			if entry and entry.ItemId == id and entry.Qty < GuildSystem.MaxStackPerSlot then
+				local room = GuildSystem.MaxStackPerSlot - entry.Qty
+				local add = math.min(room, remaining)
+				entry.Qty += add
+				remaining -= add
+				if remaining <= 0 then
+					break
+				end
+			end
+		end
+		while remaining > 0 do
+			if countOccupiedSlots(bank) >= bank.MaxSlots then
+				return false, "SlotsFull"
+			end
+			local emptySlot = nil
+			for slot = 1, bank.MaxSlots do
+				if bank.Items[slot] == nil then
+					emptySlot = slot
+					break
+				end
+			end
+			if not emptySlot then
+				return false, "SlotsFull"
+			end
+			local put = math.min(GuildSystem.MaxStackPerSlot, remaining)
+			bank.Items[emptySlot] = { ItemId = id, Qty = put }
+			remaining -= put
+		end
+		return true, GuildSystem.GetBank(guildId)
+	end
+
+	-- Withdraw
+	local need = -d
+	local available = 0
+	for slot = 1, bank.MaxSlots do
+		local entry = bank.Items[slot]
+		if entry and entry.ItemId == id then
+			available += entry.Qty
+		end
+	end
+	if available < need then
+		return false, "InsufficientItems"
+	end
+	local left = need
+	for slot = 1, bank.MaxSlots do
+		if left <= 0 then
+			break
+		end
+		local entry = bank.Items[slot]
+		if entry and entry.ItemId == id then
+			local take = math.min(entry.Qty, left)
+			entry.Qty -= take
+			left -= take
+			if entry.Qty <= 0 then
+				bank.Items[slot] = nil
+			end
+		end
+	end
+	return true, GuildSystem.GetBank(guildId)
+end
+
+-- Live path: fail-closed until AllowGuilds AND bank.Locked=false. Does not touch player inventory (W11 prep).
+function GuildSystem.DepositItem(player, itemRaw, qtyRaw)
+	local userId, realPlayer = resolveUserId(player)
+	if not userId then
+		return false, "InvalidPlayer"
+	end
+	local itemId, itemErr = normalizeItemId(itemRaw)
+	if not itemId then
+		return false, itemErr or "InvalidItem"
+	end
+	local qty, qtyErr = normalizeItemQty(qtyRaw)
+	if not qty then
+		return false, qtyErr or "InvalidAmount"
+	end
+	local info = membership[userId]
+	if not info then
+		return false, "NoMembership"
+	end
+	if not gateAllowsGuilds() then
+		return false, "Locked"
+	end
+	local record = guildsById[info.Id]
+	if not record then
+		return false, "NoGuild"
+	end
+	local bank = ensureBank(record)
+	if bank.Locked then
+		return false, "Locked"
+	end
+	local ok, res = applyBankItemDelta(info.Id, itemId, qty)
+	if not ok then
+		return false, res
+	end
+	if realPlayer then
+		pcall(function()
+			remote:FireClient(realPlayer, "GuildBank", res)
+		end)
+	end
+	return true, res
+end
+
+function GuildSystem.WithdrawItem(player, itemRaw, qtyRaw)
+	local userId, realPlayer = resolveUserId(player)
+	if not userId then
+		return false, "InvalidPlayer"
+	end
+	local itemId, itemErr = normalizeItemId(itemRaw)
+	if not itemId then
+		return false, itemErr or "InvalidItem"
+	end
+	local qty, qtyErr = normalizeItemQty(qtyRaw)
+	if not qty then
+		return false, qtyErr or "InvalidAmount"
+	end
+	local info = membership[userId]
+	if not info then
+		return false, "NoMembership"
+	end
+	if not gateAllowsGuilds() then
+		return false, "Locked"
+	end
+	local record = guildsById[info.Id]
+	if not record then
+		return false, "NoGuild"
+	end
+	local bank = ensureBank(record)
+	if bank.Locked then
+		return false, "Locked"
+	end
+	local ok, res = applyBankItemDelta(info.Id, itemId, -qty)
+	if not ok then
+		return false, res
+	end
+	if realPlayer then
+		pcall(function()
+			remote:FireClient(realPlayer, "GuildBank", res)
+		end)
+	end
+	return true, res
+end
+
+-- In-memory warfare declare (QA / smoke). Does NOT bypass live DeclareWarfare gates.
+local function applyWarfareDeclare(guildId, targetGuildId, declaredByUserId)
+	local record = guildsById[guildId]
+	if not record then
+		return false, "NoGuild"
+	end
+	local targetId = tostring(targetGuildId or "")
+	if #targetId < 2 then
+		return false, "InvalidTarget"
+	end
+	if targetId == tostring(guildId) then
+		return false, "SelfTarget"
+	end
+	local warfare = ensureWarfare(record)
+	if warfare.State == "Declared" and warfare.TargetGuildId == targetId then
+		-- idempotent redeclare same target
+		return true, GuildSystem.GetWarfare(guildId)
+	end
+	if warfare.State ~= "Idle" then
+		return false, "AlreadyActive"
+	end
+	local now = os.time()
+	warfare.State = "Declared"
+	warfare.TargetGuildId = targetId
+	warfare.DeclaredByUserId = tonumber(declaredByUserId)
+	warfare.DeclaredAt = now
+	warfare.Participants = {}
+	if type(declaredByUserId) == "number" then
+		warfare.Participants[declaredByUserId] = {
+			UserId = declaredByUserId,
+			JoinedAt = now,
+		}
+	end
+	return true, GuildSystem.GetWarfare(guildId)
+end
+
+local function applyWarfareJoin(guildId, userId)
+	local record = guildsById[guildId]
+	if not record then
+		return false, "NoGuild"
+	end
+	local uid = tonumber(userId)
+	if type(uid) ~= "number" then
+		return false, "InvalidPlayer"
+	end
+	local warfare = ensureWarfare(record)
+	if warfare.State ~= "Declared" then
+		return false, "NoWarfare"
+	end
+	if warfare.Participants[uid] then
+		return true, GuildSystem.GetWarfare(guildId)
+	end
+	local count = 0
+	for _ in pairs(warfare.Participants) do
+		count += 1
+	end
+	if count >= GuildSystem.MaxWarfareParticipants then
+		return false, "Full"
+	end
+	warfare.Participants[uid] = {
+		UserId = uid,
+		JoinedAt = os.time(),
+	}
+	return true, GuildSystem.GetWarfare(guildId)
+end
+
+-- Live path: fail-closed until AllowGuilds AND warfare.Locked=false.
+function GuildSystem.DeclareWarfare(player, targetGuildIdRaw)
+	local userId, realPlayer = resolveUserId(player)
+	if not userId then
+		return false, "InvalidPlayer"
+	end
+	local targetId = tostring(targetGuildIdRaw or "")
+	if #targetId < 2 then
+		return false, "InvalidTarget"
+	end
+	local info = membership[userId]
+	if not info then
+		return false, "NoMembership"
+	end
+	if not gateAllowsGuilds() then
+		return false, "Locked"
+	end
+	local record = guildsById[info.Id]
+	if not record then
+		return false, "NoGuild"
+	end
+	local warfare = ensureWarfare(record)
+	if warfare.Locked then
+		return false, "Locked"
+	end
+	local ok, res = applyWarfareDeclare(info.Id, targetId, userId)
+	if not ok then
+		return false, res
+	end
+	if realPlayer then
+		pcall(function()
+			remote:FireClient(realPlayer, "GuildWarfare", res)
+		end)
+	end
+	return true, res
+end
+
+function GuildSystem.JoinWarfare(player)
+	local userId, realPlayer = resolveUserId(player)
+	if not userId then
+		return false, "InvalidPlayer"
+	end
+	local info = membership[userId]
+	if not info then
+		return false, "NoMembership"
+	end
+	if not gateAllowsGuilds() then
+		return false, "Locked"
+	end
+	local record = guildsById[info.Id]
+	if not record then
+		return false, "NoGuild"
+	end
+	local warfare = ensureWarfare(record)
+	if warfare.Locked then
+		return false, "Locked"
+	end
+	local ok, res = applyWarfareJoin(info.Id, userId)
+	if not ok then
+		return false, res
+	end
+	if realPlayer then
+		pcall(function()
+			remote:FireClient(realPlayer, "GuildWarfare", res)
+		end)
+	end
+	return true, res
+end
+
 function GuildSystem.GetBankAudit()
 	local bankGuildCount = 0
 	local totalItems = 0
@@ -324,32 +830,73 @@ function GuildSystem.GetBankAudit()
 		local bank = ensureBank(record)
 		bankGuildCount += 1
 		totalCopper += bank.Copper
-		for _ in pairs(bank.Items) do
-			totalItems += 1
-		end
+		totalItems += countOccupiedSlots(bank)
 	end
 	return {
-		Phase = "F4-W10-guild-bank-write",
+		Phase = "F4-W12-guild-warfare",
 		DevOnly = true,
 		GateAllows = gateAllowsGuilds(),
 		AllowGuildsAttr = allowGuildsAttr(),
 		InMemoryOnly = true,
 		LiveBankWrites = false,
 		DepositWithdrawPrep = true,
+		ItemSlotsPrep = true,
 		LiveDepositRequiresAllowGuilds = true,
 		LiveDepositRequiresUnlocked = true,
+		LiveItemWrites = false,
 		BankSchemaVersion = GuildSystem.BankSchemaVersion,
 		MaxBankSlots = GuildSystem.MaxBankSlots,
+		MaxStackPerSlot = GuildSystem.MaxStackPerSlot,
 		MaxBankCopperTxn = GuildSystem.MaxBankCopperTxn,
+		MaxItemQtyTxn = GuildSystem.MaxItemQtyTxn,
 		BankShape = { "Copper", "Items", "MaxSlots", "SchemaVersion", "Locked" },
+		ItemSlotShape = { "Slot", "ItemId", "Qty" },
 		GuildsWithBank = bankGuildCount,
 		TotalBankItems = totalItems,
 		TotalBankCopper = totalCopper,
-		Note = "W10: live Deposit/Withdraw fail-closed Locked; SmokeBankDepositMock mutates in-memory",
+		Note = "W11 bank items + W12 warfare: live writes fail-closed Locked; smoke mutates in-memory only",
 	}
 end
 
--- Client panel snapshot: membership + roster + bank (fail-closed create / bank writes).
+function GuildSystem.GetWarfareAudit()
+	local warfareGuildCount = 0
+	local declaredCount = 0
+	for _, record in pairs(guildsById) do
+		local warfare = ensureWarfare(record)
+		warfareGuildCount += 1
+		if warfare.State == "Declared" then
+			declaredCount += 1
+		end
+	end
+	return {
+		Phase = "F4-W12-guild-warfare",
+		DevOnly = true,
+		GateAllows = gateAllowsGuilds(),
+		AllowGuildsAttr = allowGuildsAttr(),
+		InMemoryOnly = true,
+		LiveWarfareWrites = false,
+		WarfarePrep = true,
+		LiveDeclareRequiresAllowGuilds = true,
+		LiveDeclareRequiresUnlocked = true,
+		WarfareSchemaVersion = GuildSystem.WarfareSchemaVersion,
+		MaxWarfareParticipants = GuildSystem.MaxWarfareParticipants,
+		WarfareShape = {
+			"State",
+			"TargetGuildId",
+			"DeclaredByUserId",
+			"DeclaredAt",
+			"Participants",
+			"SchemaVersion",
+			"Locked",
+		},
+		States = { "Idle", "Declared" },
+		GuildsWithWarfare = warfareGuildCount,
+		DeclaredCount = declaredCount,
+		Note = "W12: live DeclareWarfare/JoinWarfare fail-closed Locked; SmokeWarfareMock mutates in-memory",
+	}
+end
+
+-- Client panel snapshot: membership + roster + bank + warfare (fail-closed create / writes).
 function GuildSystem.GetPanelSnapshot(player)
 	local info = GuildSystem.GetMembership(player)
 	local gateOk = gateAllowsGuilds()
@@ -359,23 +906,28 @@ function GuildSystem.GetPanelSnapshot(player)
 			GateAllows = gateOk,
 			CreateBlocked = not gateOk,
 			BankWriteLocked = true,
+			WarfareWriteLocked = true,
 			LockedMessage = if gateOk
 				then "Нет гильдии — вступите через /guild (когда открыто)"
 				else "Гильдии закрыты (ExpansionGate / dev-only)",
 			Roster = {},
 			Bank = nil,
+			Warfare = nil,
 		}
 	end
 	local roster = GuildSystem.GetRoster(info.Id) or {}
 	local bank = GuildSystem.GetBank(info.Id)
+	local warfare = GuildSystem.GetWarfare(info.Id)
 	return {
 		HasMembership = true,
 		GateAllows = gateOk,
 		CreateBlocked = not gateOk,
 		BankWriteLocked = (bank == nil) or (bank.WriteLocked == true),
+		WarfareWriteLocked = (warfare == nil) or (warfare.WriteLocked == true),
 		Membership = info,
 		Roster = roster,
 		Bank = bank,
+		Warfare = warfare,
 		LockedMessage = nil,
 	}
 end
@@ -383,25 +935,41 @@ end
 -- Read-only MVP persistence design (no live DS writes).
 function GuildSystem.GetMvpDesign()
 	return {
-		Phase = "F4-W10-guild-bank-write",
+		Phase = "F4-W12-guild-warfare",
 		DevOnly = true,
 		InMemoryOnly = true,
 		AllowGuildsRequiredForCreate = true,
 		AllowGuildsRequiredForRestore = false,
 		AllowGuildsRequiredForLeave = false,
 		AllowGuildsRequiredForBankWrite = true,
+		AllowGuildsRequiredForWarfare = true,
 		LiveDepositWithdrawFailClosed = true,
+		LiveItemWritesFailClosed = true,
+		LiveWarfareFailClosed = true,
 		PlayerProfileKey = GuildSystem.PlayerGuildKey,
 		PlayerShape = { "Id", "Name", "Tag", "Role" },
-		RosterShape = { "Id", "Name", "Tag", "LeaderUserId", "Members", "CreatedAt", "SchemaVersion", "Bank" },
+		RosterShape = { "Id", "Name", "Tag", "LeaderUserId", "Members", "CreatedAt", "SchemaVersion", "Bank", "Warfare" },
 		MemberEntryShape = { "UserId", "Role", "JoinedAt" },
 		BankShape = { "Copper", "Items", "MaxSlots", "SchemaVersion", "Locked" },
+		ItemSlotShape = { "Slot", "ItemId", "Qty" },
+		WarfareShape = {
+			"State",
+			"TargetGuildId",
+			"DeclaredByUserId",
+			"DeclaredAt",
+			"Participants",
+			"SchemaVersion",
+			"Locked",
+		},
 		Roles = { "Leader", "Officer", "Member" },
 		MaxNameLen = GuildSystem.MaxNameLen,
 		MaxTagLen = GuildSystem.MaxTagLen,
 		MaxMembersPerGuild = GuildSystem.MaxMembersPerGuild,
 		MaxBankSlots = GuildSystem.MaxBankSlots,
+		MaxStackPerSlot = GuildSystem.MaxStackPerSlot,
 		MaxBankCopperTxn = GuildSystem.MaxBankCopperTxn,
+		MaxItemQtyTxn = GuildSystem.MaxItemQtyTxn,
+		MaxWarfareParticipants = GuildSystem.MaxWarfareParticipants,
 		FutureStoreName = GuildSystem.GuildStoreNameFuture,
 		PersistencePlan = {
 			"A. Player optional Guild {Id,Name,Tag,Role} — schema v1 locked; no full roster in profile",
@@ -412,8 +980,10 @@ function GuildSystem.GetMvpDesign()
 			"F. W8 = Leave clears data.Guild + membership; same guild Id restores merge roster",
 			"G. W9 = GuildPanelUI + empty Bank on guild record (in-memory, Locked=true); no live bank DS",
 			"H. W10 = DepositCopper/WithdrawCopper fail-closed Locked; SmokeBankDepositMock in-memory mutate",
+			"I. W11 = DepositItem/WithdrawItem fail-closed Locked; SmokeBankItemSlotsMock slot stack/fill",
+			"J. W12 = DeclareWarfare/JoinWarfare fail-closed Locked; SmokeWarfareMock in-memory declare/join",
 		},
-		Note = "Restore/Leave/UI read work with gate OFF; CreateOrJoin + live bank writes fail-closed until AllowGuilds",
+		Note = "Restore/Leave/UI read work with gate OFF; CreateOrJoin + live bank/warfare writes fail-closed until AllowGuilds",
 	}
 end
 
@@ -427,7 +997,7 @@ function GuildSystem.GetGuildAudit()
 		guildCount += 1
 	end
 	return {
-		Phase = "F4-W10-guild-bank-write",
+		Phase = "F4-W12-guild-warfare",
 		DevOnly = true,
 		GateAllows = gateAllowsGuilds(),
 		AllowGuildsAttr = allowGuildsAttr(),
@@ -441,7 +1011,10 @@ function GuildSystem.GetGuildAudit()
 		LeaveRequiresAllowGuilds = false,
 		CreateRequiresAllowGuilds = true,
 		BankWriteRequiresAllowGuilds = true,
+		WarfareRequiresAllowGuilds = true,
 		LiveDepositWithdrawFailClosed = true,
+		LiveItemWritesFailClosed = true,
+		LiveWarfareFailClosed = true,
 		UiPanel = "GuildPanelUI",
 		ChatCommands = { "/guild", "/guildleave", "/guildpanel", "/expansiongate" },
 		Apis = {
@@ -451,9 +1024,15 @@ function GuildSystem.GetGuildAudit()
 			"GetGuildRecord",
 			"GetBank",
 			"GetBankAudit",
+			"GetWarfare",
+			"GetWarfareAudit",
 			"GetPanelSnapshot",
 			"DepositCopper",
 			"WithdrawCopper",
+			"DepositItem",
+			"WithdrawItem",
+			"DeclareWarfare",
+			"JoinWarfare",
 			"RestoreMembershipFromGuildTable",
 			"RestoreFromPlayerData",
 			"ClearGuildMembership",
@@ -464,15 +1043,17 @@ function GuildSystem.GetGuildAudit()
 			"SmokeGuildBankMock",
 			"SmokeGuildPanelPrepMock",
 			"SmokeBankDepositMock",
+			"SmokeBankItemSlotsMock",
+			"SmokeWarfareMock",
 			"CreateOrJoin",
 			"Leave",
 		},
 		NextSteps = {
 			"Keep AllowGuilds=false under dev-only",
-			"W11+: warfare stub or item bank slots (still gate OFF)",
-			"Owner unlock required before live guild DS + AllowGuilds + unlock Bank.Locked",
+			"W13+: inventory↔bank transfer or rated PvP prep when unlocked — still gate OFF until owner",
+			"Owner unlock required before live guild DS + AllowGuilds + unlock Bank/Warfare.Locked",
 		},
-		Note = "W10 deposit/withdraw prep — live path Locked; CreateOrJoin fail-closed until AllowGuilds",
+		Note = "W12 warfare stub — live Declare/Join Locked; CreateOrJoin fail-closed until AllowGuilds",
 	}
 end
 
@@ -480,6 +1061,7 @@ local function ensureGuildRecord(id, guildName, tag, leaderUserId)
 	local existing = guildsById[id]
 	if existing then
 		ensureBank(existing)
+		ensureWarfare(existing)
 		return existing
 	end
 	local now = os.time()
@@ -490,6 +1072,7 @@ local function ensureGuildRecord(id, guildName, tag, leaderUserId)
 		LeaderUserId = leaderUserId,
 		Members = {},
 		Bank = emptyBank(),
+		Warfare = emptyWarfare(),
 		CreatedAt = now,
 		SchemaVersion = GuildSystem.RosterSchemaVersion,
 	}
@@ -1101,6 +1684,196 @@ function GuildSystem.SmokeBankDepositMock()
 	}
 end
 
+-- Studio/dev smoke: live DepositItem/WithdrawItem Locked; in-memory slot stack/fill for QA.
+function GuildSystem.SmokeBankItemSlotsMock()
+	local smokeId = GuildSystem.SmokeItemGuildId
+	guildsById[smokeId] = nil
+	for uid, info in pairs(membership) do
+		if info.Id == smokeId then
+			membership[uid] = nil
+		end
+	end
+
+	local userId = 900000801
+	local okRestore = GuildSystem.RestoreMembershipFromGuildTable(userId, {
+		Id = smokeId,
+		Name = "W11 Item Guild",
+		Tag = "W11I",
+		Role = "Leader",
+	}, nil)
+	local fakeMember = { UserId = userId }
+
+	local okDep, depErr = GuildSystem.DepositItem(fakeMember, 101, 2)
+	local liveDepositBlocked = okDep == false and depErr == "Locked"
+
+	local okWd, wdErr = GuildSystem.WithdrawItem(fakeMember, 101, 1)
+	local liveWithdrawBlocked = okWd == false and wdErr == "Locked"
+
+	local okMutIn, bankAfterIn = applyBankItemDelta(smokeId, 101, 3)
+	local okMutOut, bankAfterOut = applyBankItemDelta(smokeId, 101, -1)
+	local bankFinal = GuildSystem.GetBank(smokeId)
+	local panel = GuildSystem.GetPanelSnapshot(fakeMember)
+	local createBlocked = not gateAllowsGuilds()
+
+	local slot0 = bankFinal and bankFinal.Items and bankFinal.Items[1] or nil
+	local qtyOk = slot0 ~= nil and slot0.ItemId == 101 and slot0.Qty == 2
+
+	-- Fill remaining slots to MaxSlots then expect SlotsFull
+	local fillOk = true
+	local bank = guildsById[smokeId] and ensureBank(guildsById[smokeId])
+	if bank then
+		for slot = 1, bank.MaxSlots do
+			if bank.Items[slot] == nil then
+				bank.Items[slot] = { ItemId = 102, Qty = 1 }
+			end
+		end
+	end
+	local okFull, fullErr = applyBankItemDelta(smokeId, 103, 1)
+	local slotsFullOk = okFull == false and fullErr == "SlotsFull"
+
+	local mutateOk = okRestore == true
+		and liveDepositBlocked == true
+		and liveWithdrawBlocked == true
+		and okMutIn == true
+		and okMutOut == true
+		and bankAfterIn ~= nil
+		and bankAfterIn.ItemCount == 1
+		and bankAfterIn.Items[1] ~= nil
+		and bankAfterIn.Items[1].Qty == 3
+		and bankAfterOut ~= nil
+		and bankAfterOut.Items[1] ~= nil
+		and bankAfterOut.Items[1].Qty == 2
+		and bankFinal ~= nil
+		and bankFinal.ItemCount == 1
+		and qtyOk == true
+		and bankFinal.Locked == true
+		and bankFinal.WriteLocked == true
+		and panel.BankWriteLocked == true
+		and createBlocked == true
+		and slotsFullOk == true
+		and fillOk == true
+
+	local design = GuildSystem.GetMvpDesign()
+	return {
+		Success = mutateOk,
+		SmokeGuildId = smokeId,
+		LiveDepositBlocked = liveDepositBlocked,
+		LiveWithdrawBlocked = liveWithdrawBlocked,
+		LiveDepositError = depErr,
+		LiveWithdrawError = wdErr,
+		ItemId = 101,
+		QtyAfterDepositMock = bankAfterIn and bankAfterIn.Items[1] and bankAfterIn.Items[1].Qty or nil,
+		QtyAfterWithdrawMock = bankFinal and bankFinal.Items[1] and bankFinal.Items[1].Qty or nil,
+		SlotCountAfter = bankFinal and bankFinal.ItemCount or nil,
+		SlotsFullBlocked = slotsFullOk,
+		BankLocked = bankFinal and bankFinal.Locked or nil,
+		WriteLocked = bankFinal and bankFinal.WriteLocked or nil,
+		PanelWriteLocked = panel.BankWriteLocked,
+		CreateOrJoinBlocked = createBlocked,
+		GateAllows = gateAllowsGuilds(),
+		AllowGuildsAttr = allowGuildsAttr(),
+		Phase = design.Phase,
+		InMemoryOnly = true,
+	}
+end
+
+-- Studio/dev smoke: live DeclareWarfare/JoinWarfare Locked; in-memory declare/join for QA.
+function GuildSystem.SmokeWarfareMock()
+	local smokeId = GuildSystem.SmokeWarfareGuildId
+	local targetId = GuildSystem.SmokeWarfareTargetGuildId
+	guildsById[smokeId] = nil
+	guildsById[targetId] = nil
+	for uid, info in pairs(membership) do
+		if info.Id == smokeId or info.Id == targetId then
+			membership[uid] = nil
+		end
+	end
+
+	-- Ensure target guild record exists (shape only; no membership needed for declare target)
+	ensureGuildRecord(targetId, "W12 Target Guild", "W12T", 900000912)
+
+	local userId = 900000901
+	local joinerId = 900000902
+	local okRestore = GuildSystem.RestoreMembershipFromGuildTable(userId, {
+		Id = smokeId,
+		Name = "W12 Warfare Guild",
+		Tag = "W12W",
+		Role = "Leader",
+	}, nil)
+	local okRestore2 = GuildSystem.RestoreMembershipFromGuildTable(joinerId, {
+		Id = smokeId,
+		Name = "W12 Warfare Guild",
+		Tag = "W12W",
+		Role = "Member",
+	}, nil)
+	local fakeLeader = { UserId = userId }
+	local fakeJoiner = { UserId = joinerId }
+
+	local okDec, decErr = GuildSystem.DeclareWarfare(fakeLeader, targetId)
+	local liveDeclareBlocked = okDec == false and decErr == "Locked"
+
+	local okJoin, joinErr = GuildSystem.JoinWarfare(fakeJoiner)
+	local liveJoinBlocked = okJoin == false and joinErr == "Locked"
+
+	local okMutDec, warAfterDec = applyWarfareDeclare(smokeId, targetId, userId)
+	local okMutJoin, warAfterJoin = applyWarfareJoin(smokeId, joinerId)
+	local warFinal = GuildSystem.GetWarfare(smokeId)
+	local panel = GuildSystem.GetPanelSnapshot(fakeLeader)
+	local createBlocked = not gateAllowsGuilds()
+
+	local selfOk, selfErr = applyWarfareDeclare(smokeId, smokeId, userId)
+	local selfBlocked = selfOk == false and selfErr == "SelfTarget"
+
+	local mutateOk = okRestore == true
+		and okRestore2 == true
+		and liveDeclareBlocked == true
+		and liveJoinBlocked == true
+		and okMutDec == true
+		and okMutJoin == true
+		and warAfterDec ~= nil
+		and warAfterDec.State == "Declared"
+		and warAfterDec.TargetGuildId == targetId
+		and warAfterDec.ParticipantCount == 1
+		and warAfterJoin ~= nil
+		and warAfterJoin.ParticipantCount == 2
+		and warFinal ~= nil
+		and warFinal.State == "Declared"
+		and warFinal.TargetGuildId == targetId
+		and warFinal.ParticipantCount == 2
+		and warFinal.Locked == true
+		and warFinal.WriteLocked == true
+		and panel.WarfareWriteLocked == true
+		and panel.Warfare ~= nil
+		and panel.Warfare.State == "Declared"
+		and createBlocked == true
+		and selfBlocked == true
+
+	local design = GuildSystem.GetMvpDesign()
+	local warAudit = GuildSystem.GetWarfareAudit()
+	return {
+		Success = mutateOk,
+		SmokeGuildId = smokeId,
+		TargetGuildId = targetId,
+		LiveDeclareBlocked = liveDeclareBlocked,
+		LiveJoinBlocked = liveJoinBlocked,
+		LiveDeclareError = decErr,
+		LiveJoinError = joinErr,
+		StateAfter = warFinal and warFinal.State or nil,
+		ParticipantCount = warFinal and warFinal.ParticipantCount or nil,
+		WarfareLocked = warFinal and warFinal.Locked or nil,
+		WriteLocked = warFinal and warFinal.WriteLocked or nil,
+		PanelWarfareWriteLocked = panel.WarfareWriteLocked,
+		PanelState = panel.Warfare and panel.Warfare.State or nil,
+		SelfTargetBlocked = selfBlocked,
+		CreateOrJoinBlocked = createBlocked,
+		GateAllows = gateAllowsGuilds(),
+		AllowGuildsAttr = allowGuildsAttr(),
+		WarfarePrep = warAudit.WarfarePrep == true,
+		Phase = design.Phase,
+		InMemoryOnly = true,
+	}
+end
+
 local function deferRestoreWhenDataReady(player)
 	task.spawn(function()
 		for _ = 1, 40 do
@@ -1159,6 +1932,37 @@ function GuildSystem.Start()
 			if not ok then
 				remote:FireClient(player, "Error", { Message = tostring(res), Action = "Withdraw" })
 			end
+		elseif action == "DepositItem" then
+			local ok, res = GuildSystem.DepositItem(player, payload.ItemId, payload.Amount or payload.Qty)
+			if not ok then
+				remote:FireClient(player, "Error", { Message = tostring(res), Action = "DepositItem" })
+			end
+		elseif action == "WithdrawItem" then
+			local ok, res = GuildSystem.WithdrawItem(player, payload.ItemId, payload.Amount or payload.Qty)
+			if not ok then
+				remote:FireClient(player, "Error", { Message = tostring(res), Action = "WithdrawItem" })
+			end
+		elseif action == "GetWarfare" then
+			local info = GuildSystem.GetMembership(player)
+			local warfare = info and GuildSystem.GetWarfare(info.Id) or nil
+			remote:FireClient(player, "GuildWarfare", warfare or {
+				State = "Idle",
+				Locked = true,
+				WriteLocked = true,
+				ParticipantCount = 0,
+				Participants = {},
+				InMemoryOnly = true,
+			})
+		elseif action == "DeclareWarfare" then
+			local ok, res = GuildSystem.DeclareWarfare(player, payload.TargetGuildId or payload.TargetId)
+			if not ok then
+				remote:FireClient(player, "Error", { Message = tostring(res), Action = "DeclareWarfare" })
+			end
+		elseif action == "JoinWarfare" then
+			local ok, res = GuildSystem.JoinWarfare(player)
+			if not ok then
+				remote:FireClient(player, "Error", { Message = tostring(res), Action = "JoinWarfare" })
+			end
 		end
 	end)
 
@@ -1208,7 +2012,7 @@ function GuildSystem.Start()
 		end)
 	end
 
-	print("Realm of Spirits - GuildSystem W10 bank deposit/withdraw prep (in-memory) loaded")
+	print("Realm of Spirits - GuildSystem W12 warfare stub (in-memory) loaded")
 end
 
 return GuildSystem
