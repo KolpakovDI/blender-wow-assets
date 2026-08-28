@@ -349,27 +349,6 @@ local function ensurePlayerPad(player)
 	orbLight.Color = Color3.fromRGB(200, 160, 255)
 	orbLight.Parent = orb
 
-	local bill = Instance.new("BillboardGui")
-	bill.Name = "ShowcaseLabel"
-	bill.Size = UDim2.fromOffset(190, 52)
-	bill.StudsOffset = Vector3.new(0, 2.2, 0)
-	bill.AlwaysOnTop = true
-	bill.Parent = orb
-	local lbl = Instance.new("TextLabel")
-	lbl.Name = "Text"
-	lbl.Size = UDim2.fromScale(1, 1)
-	lbl.BackgroundColor3 = Color3.fromRGB(25, 20, 40)
-	lbl.BackgroundTransparency = 0.35
-	lbl.Text = player.DisplayName .. "\nПусто"
-	lbl.TextColor3 = Color3.fromRGB(235, 220, 255)
-	lbl.Font = Enum.Font.GothamBold
-	lbl.TextSize = 14
-	lbl.TextStrokeTransparency = 0.4
-	lbl.Parent = bill
-	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, 8)
-	corner.Parent = lbl
-
 	model.PrimaryPart = pedestal
 	model.Parent = folder
 	return model
@@ -378,9 +357,7 @@ end
 local function refreshPad(player)
 	local pad = ensurePlayerPad(player)
 	local orb = pad:FindFirstChild("Orb")
-	local bill = orb and orb:FindFirstChild("ShowcaseLabel")
-	local lbl = bill and bill:FindFirstChild("Text")
-	if not lbl then
+	if not orb then
 		return
 	end
 	local playerData = getPlayerData(player)
@@ -388,10 +365,7 @@ local function refreshPad(player)
 	if entry then
 		entry = enrichShowcaseEntry(playerData, entry)
 	end
-	lbl.Text = player.DisplayName .. "\n" .. spiritLabel(entry)
-	if orb then
-		orb.Color = entry and Color3.fromRGB(255, 200, 120) or Color3.fromRGB(180, 140, 255)
-	end
+	orb.Color = entry and Color3.fromRGB(255, 200, 120) or Color3.fromRGB(180, 140, 255)
 
 	-- Offline mesh preview: parent template or placeholder (no AI AssetId)
 	local oldMesh = pad:FindFirstChild("DisplayMesh")

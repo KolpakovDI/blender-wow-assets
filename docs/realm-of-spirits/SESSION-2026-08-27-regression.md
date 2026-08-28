@@ -38,7 +38,7 @@
 | 26 | `user_RoS_ShortGrass.server.lua` BOM | Play/Output | **WARN** | U+feff parse error ×6 — decorative grass, non-P0 |
 
 **Edit summary:** 18/18 Smoke*Mock + audits **PASS** (GateAllows=false throughout).  
-**Play summary:** persistence + HubFunnel Spawn/Mika **PASS** · MCP E2E **CONDITIONAL** (battle+return+SeedQA; Prep/Complete/hands path not closed).  
+**Play summary:** persistence + HubFunnel Spawn/Mika **PASS** · MCP E2E **CONDITIONAL** (Prep+Complete **PASS** re-smoke 2026-08-28; battle entry PASS · win/hands gaps open).  
 **Fixes applied:** none (no P0 red smoke; BOM grass = backlog noise, not fix-only scope).
 
 ---
@@ -50,34 +50,36 @@
 | Play Local Server start | ☑ | **PASS** | `start_stop_play` · Client+Server datamodels |
 | HubFunnel Spawn log | ☑ (auto) | **PASS** | `[HubFunnel] … -> Spawn (Spawn)` |
 | HubFunnel MikaOpen attr | ☑ (auto) | **PASS** | `-> Mika (MikaOpen)` on data load |
-| HubFunnel Prep (PrepShop) | ☐ gameplay / BF copy | **NOT CONFIRMED** | `RequestWardrobe` remote — no `[KR3 prep step]` log; BF `Mark(Prep)` via MCP не персистит в live data |
-| Exit touch → Combat | ☐ partial | **CONDITIONAL** | `character_navigation` to Exit **timeout**; **server TP** to `Akihabara.CombatZone` → `CurrentZone=Combat` · `ExitTouch` log |
-| HubFunnel ExitCombat / Complete | ☐ partial | **CONDITIONAL** | `ExitCombat=true` · `Complete=false` (Prep missing) |
-| Battle entry (Orchestrator) | ☑ remotes | **PASS** | `ForceCatchBF(11)` + `Battle:FireServer("Start")` + `Attack` SkillIndex 1 · console: `начал битву с Огненный Кот` |
-| Battle outcome / ability slot | ☑ remotes | **CONDITIONAL** | Battle ended `BattleEnd=Enemy` (loss after death respawn); SkillIndex 1 fired — HUD slots **not** eye-verified |
-| Return Haven (Safe/Spawn) | ☑ server TP | **PASS** | TP `OtakuHaven.Zones.SpawnZone` → `CurrentZone=Safe` `ZoneDetail=Safe` |
-| Kami Sanctum SeedQA | ☑ `KamiSanctumBF` | **PASS** | Lv10 · copper=250 |
-| Kami Sanctum Open UI | ☐ remote only | **CONDITIONAL** | `KamiSanctum:FireServer("Open")` — no server error; roster `[R]` **not** eye-verified |
+| HubFunnel Prep (PrepShop) | ☑ remote `RequestWardrobe` | **PASS** | 2026-08-28 re-smoke: Client `RealmOfSpirits.OtakuHaven:FireServer("RequestWardrobe")` → `[HubFunnel] … Prep (PrepShop) [KR3 prep step]` · `HubFunnelPrep=true` · `HubFunnelStep=PrepShop` |
+| Exit touch → Combat | ☑ partial | **PASS** (MCP nav) | `character_navigation` Exit→Combat · **E у двери** — owner hands (MCP `E` не триггерит ProximityPrompt) |
+| HubFunnel ExitCombat / Complete | ☑ server TP after Prep | **PASS** | After Prep: TP Combat → `[HubFunnel] … Complete (Complete) DayKey=2026-08-28 Mika+Prep+Exit` · `HubFunnelComplete=true` |
+| Battle entry (Orchestrator) | ☑ remotes + V | **PASS** | `ForceCatchBF(11)` + `Battle:FireServer("Start")` (EnemyId=11) · console: `начал битву с Огненный Кот` |
+| Battle outcome / ability slot | ☑ V + Keypad / remotes | **PASS** | 2026-08-28 eve: без Attack → loss · `Attack` loop SkillIndex 1+2 → `Вы победили!` · **V+Keypad1/2** → `Вы победили!` (не баг — нужны атаки) |
+| Exit walk → Combat | ☑ `character_navigation` | **PASS** (MCP walk) | Nav `ExitDoorSensor` → `CombatZone` → `CurrentZone=Combat` · HubFunnel `ExitTouch`/`Complete` · **E у двери** MCP не открывает (Prompt vs ClientController E) — owner hands confirm |
+| Return Haven (Safe/Spawn) | ☑ server TP | **PASS** | TP `OtakuHaven.Zones.SafeZone` → `CurrentZone=Safe` · `SpawnZone` не используется (by design) |
+| Kami Sanctum SeedQA | ☑ `KamiSanctumBF` | **PASS** | Lv10 · copper=250 · shards/stars granted |
+| Kami Sanctum Open UI | ☑ remote | **CONDITIONAL** | `KamiSanctum:FireServer("Open")` → `KamiSanctumGui` enabled · `[R]` строк нет (нет Resonant в рoster — только обычные spirits) |
 | Full quest→catch→turn-in (no QA BF) | ☐ | **NOT RUN** | Requires hands E/catch or explicit smoke script |
 
 ### MCP could vs could not
 
 | MCP **could** | MCP **could not** (owner hands) |
 |---------------|----------------------------------|
-| Start/stop Play · console capture | Пешком Мика → Exit door **E** (navigation unreliable / timeout) |
-| Read HubFunnel attrs + logs | Prep через manga buff **E** у стенда (gameplay proximity) |
-| Server TP to CombatZone / Haven Spawn | Честный бой **F / 1 / 2** глазами (V/Keypad/remotes = live-like only) |
-| `ForceCatchBF` · `Battle:FireServer` remotes | Full loop catch без `ForceCatchBF` |
-| `KamiSanctumBF` SeedQA · Open remote | Sanctum `[R]` roster visual confirm |
-| `GetHubFunnelSnapshotBF` audit | HubFunnel **Complete** day (needs Prep gameplay) |
+| Start/stop Play · console capture | **E** у Exit door (ProximityPrompt; MCP `E` → ClientController) |
+| Read HubFunnel attrs + logs | Prep через manga buff **E** у стенда (gameplay proximity confirm) |
+| `character_navigation` Exit → Combat | Full loop catch без `ForceCatchBF` |
+| Battle win: `Attack` remotes **или** **V+Keypad1/2** | Честный бой **F / 1 / 2** глазами (HUD slots verify) |
+| TP `OtakuHaven.Zones.SafeZone` → Safe | Sanctum `[R]` roster (нужен Resonant spirit в data) |
+| `ForceCatchBF` · `KamiSanctumBF` SeedQA · Open remote | — |
+| `GetHubFunnelSnapshotBF` audit | — |
 
 ### Owner hands gaps (blocked for readiness #2/#5 PASS)
 
-1. Haven: **E** у manga buff или wardrobe → `[HubFunnel] … Prep (PrepShop)` / `HubFunnelPrep=true`
-2. Haven: пешком или **E** Exit door → Combat (не server TP)
-3. Combat: бой **F/1/2** до победы (или подтвердить ability slots на HUD)
+1. ~~Haven: wardrobe remote Prep~~ — **MCP PASS**; **hands:** **E** у manga buff / wardrobe (proximity confirm)
+2. ~~Combat: MCP win~~ — **PASS** (Attack loop / V+Keypad); **hands:** **F/1/2** + HUD slots глазами
+3. Haven: **E** Exit door ProximityPrompt (MCP nav PASS · E open — owner hands)
 4. (Опц.) quest accept → catch **E** → turn-in у Мики без QA BF
-5. Sanctum: **E** shrine → Open → `[R]` roster spot-check
+5. Sanctum: **E** shrine → Open → `[R]` roster (нужен Resonant; MCP Open GUI PASS без `[R]`)
 
 ---
 
@@ -86,10 +88,10 @@
 | # | Критерий | Было (2026-08-27 pre-smoke) | Стало (post-smoke) |
 |---|----------|----------------------------|---------------------|
 | 1 | Numbered track F4 W1–W18 | ☑ PASS | ☑ PASS |
-| 2 | Post-W18 regression | ☐ не подтверждено | ☑ Smoke*Mock **PASS** · ☑ MCP E2E **CONDITIONAL** (battle+return; Prep/Complete/hands not closed) |
+| 2 | Post-W18 regression | ☐ не подтверждено | ☑ Smoke*Mock **PASS** · ☑ MCP E2E **CONDITIONAL** (Prep+Complete+battle win PASS 2026-08-28; Exit E + `[R]` + catch open) |
 | 3 | `quality_gate.py` | ☑ (W18 exit) | ☑ **PASS** (this session) |
 | 4 | P0 regressions | ☐ не re-smoke | ☑ **PASS** — no DoNotSave/load fail/E2E blocker · ShortGrass BOM = non-P0 warn |
-| 5 | Core loop stable | ☑ pre-W18 · ☐ post-W18 | ☑ Spawn+Mika+Combat+battle load · ☐ Prep+Complete+hands quest/catch → **CONDITIONAL** |
+| 5 | Core loop stable | ☑ pre-W18 · ☐ post-W18 | ☑ Spawn+Mika+Prep+Complete+Combat+battle **win** · ☐ Exit **E** · catch/turn-in · Sanctum `[R]` → **CONDITIONAL** |
 | 6 | Polish threshold | ☐ CONDITIONAL | ☐ CONDITIONAL — E1 n≥10 empty · side 106/B1 open (not soft-launch blockers) |
 | 7 | Live prep audit | ☑ prep PASS | ☑ PASS · live cutover not started |
 
@@ -116,3 +118,10 @@
 | 2026-08-27 PM | `python3.12.exe scripts/quality_gate.py` | green |
 | 2026-08-27 PM | Docs: NEXT-SESSION readiness update | NOT READY maintained |
 | 2026-08-27 evening | MCP Play E2E live-like (battle remotes + Haven return + SeedQA) | **CONDITIONAL** — see § E2E matrix |
+| 2026-08-28 | Anim block **PAUSED** · default restored post-W18 regression | docs only |
+| 2026-08-28 | Studio SoT fix: `OtakuHavenService.RequestWardrobe` → `MarkHubPrep(player)` | **PATCHED** (mirror had fix; place drifted) · owner **Ctrl+S** |
+| 2026-08-28 PM | MCP Play re-smoke: Prep (`RequestWardrobe`) + Complete chain + battle entry | Prep **PASS** · Complete **PASS** · battle entry **PASS** · outcome loss **CONDITIONAL** |
+| 2026-08-28 PM | `python3.12.exe scripts/quality_gate.py` | green (5/5) |
+| 2026-08-28 eve | MCP battle win: Attack loop + V/Keypad1/2 vs Огненный Кот | **PASS** ×2 (`Вы победили!`); loss без Attack = expected |
+| 2026-08-28 eve | MCP Exit nav + Return Safe + KamiSanctum SeedQA/Open | nav Exit→Combat **PASS** · SafeZone **PASS** · Open GUI **PASS** · `[R]` none (no Resonant) |
+| 2026-08-28 eve | `python3.12.exe scripts/quality_gate.py` | green (5/5) |

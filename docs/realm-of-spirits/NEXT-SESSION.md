@@ -3,7 +3,7 @@
 > **DEV-ONLY MODE (default)** — разработка в unpublished Studio (PlaceId=0). **Publish / live cutover не default next.** Агент **может** предложить Publish **только** когда [`Readiness assessment`](#readiness-assessment-когда-агент-предложит-publish) = **PASS** — это рекомендация, не инструкция; финальное решение за владельцем. Чеклист cutover — [`OWNER-UNLOCK.md`](OWNER-UNLOCK.md) (**PAUSED**, gated до readiness PASS или «owner unlock»).
 
 **Статус:** 2026-08-27 — Фаза 1 **COMPLETE** · Фаза 2 **COMPLETE** · Фаза 3 **COMPLETE CONDITIONAL** · **Фаза 4 W1–W18 PASS** (W4 PREP CONDITIONAL) · numbered track **CLOSED** · **DEV-ONLY active**
-**Следующий фокус:** **hands E2E gaps** (Prep+Complete · Exit walk · F/1/2 win · опц. catch/turn-in) — MCP live-like **CONDITIONAL** ([`SESSION-2026-08-27-regression.md`](SESSION-2026-08-27-regression.md) § E2E matrix)
+**Следующий фокус:** **hands E2E gaps** (Exit **E** · F/1/2 HUD глазами · опц. catch/turn-in · Sanctum `[R]` Resonant) — MCP: Prep+Complete+battle win+nav **PASS** 2026-08-28 ([`SESSION-2026-08-27-regression.md`](SESSION-2026-08-27-regression.md) § E2E matrix)
 
 **Roadmap:** [`ROADMAP-2026-08-23.md`](ROADMAP-2026-08-23.md) · **Phase 4:** [`SESSION-2026-08-23-phase4-scale.md`](SESSION-2026-08-23-phase4-scale.md) · **Owner unlock (gated):** [`OWNER-UNLOCK.md`](OWNER-UNLOCK.md) · **Tracker (PAUSED):** [`SESSION-2026-08-27-owner-unlock.md`](SESSION-2026-08-27-owner-unlock.md)
 
@@ -38,10 +38,10 @@
 | # | Критерий | PASS | Сейчас (2026-08-27 post-regression) |
 |---|----------|------|-------------------------------------|
 | 1 | **Numbered track** Ф4 W1–W18 | все smoke PASS · GateAllows=false | ☑ PASS |
-| 2 | **Post-W18 regression** | Smoke*Mock suite + core loop (Mika→Exit→battle→Haven→Sanctum) зелёные в текущей сессии | ☑ Smoke*Mock **PASS** · ☑ MCP E2E **CONDITIONAL** (battle+return; Prep/Complete/hands not closed) |
+| 2 | **Post-W18 regression** | Smoke*Mock suite + core loop (Mika→Exit→battle→Haven→Sanctum) зелёные в текущей сессии | ☑ Smoke*Mock **PASS** · ☑ MCP E2E **CONDITIONAL** (Prep+Complete+battle win PASS 2026-08-28; Exit E + `[R]` + catch open) |
 | 3 | **`quality_gate.py`** | green в текущей сессии | ☑ PASS ([`SESSION-2026-08-27-regression.md`](SESSION-2026-08-27-regression.md)) |
 | 4 | **P0 regressions** | нет красного в play smoke / Output (DoNotSave, load fail, broken E2E) | ☑ PASS — ShortGrass BOM warn only (non-P0) |
-| 5 | **Core loop stable** | quest→catch→battle→turn-in без блокеров; Sanctum Resonant path OK | ☑ Spawn+Mika+Combat+battle load · ☐ Prep+Complete+hands path → **CONDITIONAL** |
+| 5 | **Core loop stable** | quest→catch→battle→turn-in без блокеров; Sanctum Resonant path OK | ☑ Spawn+Mika+Prep+Complete+Combat+battle **win** · ☐ Exit **E** · catch/turn-in · Sanctum `[R]` → **CONDITIONAL** |
 | 6 | **Polish threshold** | нет открытых P0 UX/blocker; named backlog (106, B1, décor) — не блокер soft launch | ☐ CONDITIONAL — E1 n≥10 таблица пуста; side 106/B1 open |
 | 7 | **Live prep audit** | PlaceId=0 OK for dev; audits F4-W4/W13/W18 prep PASS | ☑ prep PASS · live cutover **не начат** |
 
@@ -66,7 +66,7 @@
 | «проект готов» / «owner unlock» / «owner unlock step N» | [`OWNER-UNLOCK.md`](OWNER-UNLOCK.md) — cutover track (override readiness gate) |
 | «W14»–«W18» / rated / ladder / MM / season / wrap | already **PASS** — re-smoke if needed |
 | «106» / «B1» / «Haven décor» / «mesh» | Named backlog · не default |
-| **«A1»** / **«анимации»** / **«Anim block»** | [`BLOCK-ANIM-CHAR-ART-2026-08-28.md`](BLOCK-ANIM-CHAR-ART-2026-08-28.md) — старт **A1** (free IDs, $0); paid: [`OWNER-SETUP-PAID-AI.md`](OWNER-SETUP-PAID-AI.md) · **«A3 Tripo»** после Tripo Pro |
+| **«A1»** / **«анимации»** / **«Anim block»** | [`BLOCK-ANIM-CHAR-ART-2026-08-28.md`](BLOCK-ANIM-CHAR-ART-2026-08-28.md) — **PAUSED** (owner: «анимацию позже») · resume on command · A1–A2 PASS · A3 CONDITIONAL (1/8) preserved |
 | «Ф4 W4 cutover» / «AllowProfileService» | OwnerFlipChecklist · **только после** owner unlock step 3 PASS |
 
 ## Где остановились
@@ -91,7 +91,7 @@
 
 | # | Срез | Когда |
 |---|------|-------|
-| **Post-W18 regression** | Smoke*Mock ☑ · MCP E2E CONDITIONAL · hands gaps | **default «дальше»** = owner hands confirm |
+| **Post-W18 regression** | Smoke*Mock ☑ · MCP Prep+Complete+battle win ☑ · hands Exit E / F HUD / catch / `[R]` open | **default «дальше»** = owner hands confirm |
 | **Owner unlock** | Publish + live DS + FlipChecklist | **gated** — readiness PASS (агент предлагает) **или** «проект готов» / «owner unlock» |
 | **Side 106** | «Цикл стихий» polish | явная команда |
 | **Live Guild DS** | AllowGuilds + `RealmOfSpirits_Guilds_v1` | owner unlock шаг 6 |
@@ -99,7 +99,7 @@
 | **B1** | PvP slice 3 | явная команда |
 | **Online AI mesh** | AllowAiMeshOnline | явная команда |
 | **Haven décor p2** | polish | явная команда |
-| **Anim/Char Art block** | A1–A6 · **paid tier** (~$12/mo Tripo Pro minimal) · A1 free IDs → A3 Tripo mesh · [`BLOCK-ANIM-CHAR-ART-2026-08-28.md`](BLOCK-ANIM-CHAR-ART-2026-08-28.md) · setup [`OWNER-SETUP-PAID-AI.md`](OWNER-SETUP-PAID-AI.md) | **«A1»** (день 1) · **«A3 Tripo»** (после owner setup) |
+| **Anim/Char Art block** | **PAUSED** 2026-08-28 — A1–A2 PASS · A3 CONDITIONAL (1/8) preserved · uncommitted mirrors (`CombatAnimResolver`, `ClientController`) · [`BLOCK-ANIM-CHAR-ART-2026-08-28.md`](BLOCK-ANIM-CHAR-ART-2026-08-28.md) | resume on **«A1»** / **«анимации»** / **«Anim block»** only |
 | **Ф4 W14–W18** | Rated PvP track | ☑ **PASS** |
 | **Ф4 W13** | Inventory↔bank transfer | ☑ **PASS** |
 

@@ -8,6 +8,41 @@ local ZoneConfig = require(RealmFolder:WaitForChild("ZoneConfig"))
 
 local OtakuHavenBuilder = {}
 
+local HUB_WAYFIND_BB_NAMES = {
+	ExitWayfindBillboard = true,
+	DuelWayfindBillboard = true,
+	ExploreHub2WayfindBillboard = true,
+	ChestClusterWayfindBillboard = true,
+}
+
+local function clearHubWayfindBillboards(root)
+	if not root then
+		return
+	end
+	for _, d in ipairs(root:GetDescendants()) do
+		if d:IsA("BillboardGui") and (d:GetAttribute("HubWayfind") == true or HUB_WAYFIND_BB_NAMES[d.Name]) then
+			d:Destroy()
+		end
+	end
+end
+
+local function destroyHubWayfindFolders(haven)
+	if not haven then
+		return
+	end
+	for _, name in ipairs({ "DuelWayfind", "ExploreHub2Wayfind", "ChestClusterWayfind" }) do
+		local old = haven:FindFirstChild(name)
+		if old then
+			old:Destroy()
+		end
+	end
+	local trail = workspace:FindFirstChild("ExploreHub2Trail")
+	if trail then
+		trail:Destroy()
+	end
+	clearHubWayfindBillboards(haven)
+end
+
 local function makePart(props)
 	local p = Instance.new("Part")
 	p.Anchored = true
@@ -526,35 +561,6 @@ local function addSlidingGlassDoor(parent, opts)
 	click.Name = clickName
 	click.MaxActivationDistance = 22
 	click.Parent = sensor
-
-	if billboardText then
-		local showBillboard = opts.ShowBillboard
-		if showBillboard == nil then
-			showBillboard = (modelName == "ShopExit")
-		end
-		local sign = Instance.new("BillboardGui")
-		sign.Name = "ExitWayfindBillboard"
-		sign.Size = UDim2.new(0, 280, 0, 56)
-		sign.StudsOffset = Vector3.new(0, 6.2, 0)
-		sign.MaxDistance = 140
-		sign.AlwaysOnTop = showBillboard == true
-		sign.Enabled = showBillboard == true
-		sign:SetAttribute("HubWayfind", showBillboard == true)
-		sign:SetAttribute("KeepVisible", showBillboard == true)
-		sign.Parent = sensor
-		local lbl = Instance.new("TextLabel")
-		lbl.Size = UDim2.fromScale(1, 1)
-		lbl.BackgroundColor3 = Color3.fromRGB(30, 22, 40)
-		lbl.BackgroundTransparency = 0.25
-		lbl.Text = billboardText
-		lbl.TextColor3 = Color3.fromRGB(255, 220, 100)
-		lbl.TextScaled = true
-		lbl.Font = Enum.Font.GothamBold
-		lbl.Parent = sign
-		local corner = Instance.new("UICorner")
-		corner.CornerRadius = UDim.new(0, 8)
-		corner.Parent = lbl
-	end
 
 	local isOpen = false
 	local busy = false
@@ -1595,7 +1601,7 @@ function OtakuHavenBuilder.Build()
 		ModelName = "ShopExit",
 		ObjectText = "Выход в Акихабару",
 		BillboardText = "Exit → Combat",
-		ShowBillboard = true,
+		ShowBillboard = false,
 		LeftName = "ExitDoorLeft",
 		RightName = "ExitDoorRight",
 		SensorName = "ExitDoorSensor",
@@ -1643,9 +1649,8 @@ function OtakuHavenBuilder.Build()
 			end
 		end
 		if d:IsA("BillboardGui") then
-			if d:GetAttribute("HubWayfind") == true or d.Name == "ExitWayfindBillboard" or d.Name == "DuelWayfindBillboard" or d.Name == "ExploreHub2WayfindBillboard" or d.Name == "ChestClusterWayfindBillboard" then
-				d.AlwaysOnTop = true
-				d.Enabled = true
+			if d:GetAttribute("HubWayfind") == true or HUB_WAYFIND_BB_NAMES[d.Name] then
+				d:Destroy()
 			else
 				d.AlwaysOnTop = false
 			end
@@ -1707,249 +1712,22 @@ end
 
 function OtakuHavenBuilder.EnsureDuelWayfind(haven)
 	haven = haven or workspace:FindFirstChild("OtakuHaven")
-	if not haven then
-		return nil
-	end
-	local old = haven:FindFirstChild("DuelWayfind")
-	if old then
-		old:Destroy()
-	end
-	local folder = Instance.new("Folder")
-	folder.Name = "DuelWayfind"
-	folder.Parent = haven
-
-	local exitC = ZoneConfig.Zones.Exit.Center
-	local arenaP = ZoneConfig.BattleArenaPosition
-	local look = Vector3.new(arenaP.X - exitC.X, 0, arenaP.Z - exitC.Z)
-	if look.Magnitude < 1 then
-		look = Vector3.new(1, 0, 0)
-	end
-	look = look.Unit
-	local pos = Vector3.new(exitC.X, 0.2, exitC.Z) + look * 6 + Vector3.new(0, 0, 0)
-
-	local pole = makePart({
-		Name = "DuelWayfindPole",
-		Size = Vector3.new(0.35, 5.2, 0.35),
-		Position = pos + Vector3.new(0, 2.6, 0),
-		Color = Color3.fromRGB(50, 40, 70),
-		Material = Enum.Material.Metal,
-		CanCollide = false,
-		Parent = folder,
-	})
-	local board = makePart({
-		Name = "DuelWayfindBoard",
-		Size = Vector3.new(7.2, 2.1, 0.28),
-		CFrame = CFrame.lookAt(pole.Position + Vector3.new(0, 2.15, 0) + look * 0.25, pole.Position + Vector3.new(0, 2.15, 0) + look),
-		Color = Color3.fromRGB(40, 28, 55),
-		Material = Enum.Material.SmoothPlastic,
-		CanCollide = false,
-		Parent = folder,
-	})
-	local gui = Instance.new("SurfaceGui")
-	gui.Name = "Face"
-	gui.Face = Enum.NormalId.Front
-	gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
-	gui.PixelsPerStud = 40
-	gui.Parent = board
-	local text = Instance.new("TextLabel")
-	text.Size = UDim2.fromScale(1, 1)
-	text.BackgroundTransparency = 1
-	text.Text = "Выход → дуэль"
-	text.TextColor3 = Color3.fromRGB(255, 220, 120)
-	text.Font = Enum.Font.GothamBold
-	text.TextScaled = true
-	text.Parent = gui
-
-	local bb = Instance.new("BillboardGui")
-	bb.Name = "DuelWayfindBillboard"
-	bb.Size = UDim2.new(0, 300, 0, 56)
-	bb.StudsOffset = Vector3.new(0, 3.6, 0)
-	bb.AlwaysOnTop = true
-	bb.MaxDistance = 200
-	bb.Parent = board
-	local lbl = Instance.new("TextLabel")
-	lbl.Size = UDim2.fromScale(1, 1)
-	lbl.BackgroundColor3 = Color3.fromRGB(30, 22, 40)
-	lbl.BackgroundTransparency = 0.2
-	lbl.Text = "Дуэль · Y у Exit → арена"
-	lbl.TextColor3 = Color3.fromRGB(255, 230, 160)
-	lbl.Font = Enum.Font.GothamBold
-	lbl.TextScaled = true
-	lbl.Parent = bb
-	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, 8)
-	corner.Parent = lbl
-	return folder
+	destroyHubWayfindFolders(haven)
+	return nil
 end
 
--- B2 Explore hub 2: восточная обходная тропа Haven → ScoutPost → Combat (знаки + короткая гравийная полоса)
+-- Navigation wayfind removed; cleanup only on rebuild.
 function OtakuHavenBuilder.EnsureExploreHub2Route(haven)
 	haven = haven or workspace:FindFirstChild("OtakuHaven")
-	if not haven then
-		return nil
-	end
-	local old = workspace:FindFirstChild("ExploreHub2Trail")
-	if old then
-		old:Destroy()
-	end
-	local oldSigns = haven:FindFirstChild("ExploreHub2Wayfind")
-	if oldSigns then
-		oldSigns:Destroy()
-	end
-
-	local folder = Instance.new("Folder")
-	folder.Name = "ExploreHub2Wayfind"
-	folder.Parent = haven
-
-	local scoutC = (ZoneConfig.QuestLocations and ZoneConfig.QuestLocations.ScoutPost and ZoneConfig.QuestLocations.ScoutPost.Center)
-		or Vector3.new(40, 1, 55)
-	local combatC = (ZoneConfig.Zones and ZoneConfig.Zones.Combat and ZoneConfig.Zones.Combat.Center)
-		or Vector3.new(105, 1, 45)
-	local genkanC = (ZoneConfig.Zones and ZoneConfig.Zones.Genkan and ZoneConfig.Zones.Genkan.Center)
-		or Vector3.new(-25, 3, -6)
-
-	local function hubSign(name, position, lookAtPos, billboardText, boardText)
-		local dir = Vector3.new(lookAtPos.X - position.X, 0, lookAtPos.Z - position.Z)
-		if dir.Magnitude < 1 then
-			dir = Vector3.new(0, 0, 1)
-		end
-		dir = dir.Unit
-		local pole = makePart({
-			Name = name .. "Pole",
-			Size = Vector3.new(0.32, 4.8, 0.32),
-			Position = position + Vector3.new(0, 2.4, 0),
-			Color = Color3.fromRGB(55, 48, 72),
-			Material = Enum.Material.Metal,
-			CanCollide = false,
-			Parent = folder,
-		})
-		local board = makePart({
-			Name = name .. "Board",
-			Size = Vector3.new(6.8, 2.0, 0.26),
-			CFrame = CFrame.lookAt(pole.Position + Vector3.new(0, 2.2, 0) + dir * 0.2, pole.Position + Vector3.new(0, 2.2, 0) + dir),
-			Color = Color3.fromRGB(38, 32, 52),
-			Material = Enum.Material.SmoothPlastic,
-			CanCollide = false,
-			Parent = folder,
-		})
-		local gui = Instance.new("SurfaceGui")
-		gui.Face = Enum.NormalId.Front
-		gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
-		gui.PixelsPerStud = 40
-		gui.Parent = board
-		local text = Instance.new("TextLabel")
-		text.Size = UDim2.fromScale(1, 1)
-		text.BackgroundTransparency = 1
-		text.Text = boardText
-		text.TextColor3 = Color3.fromRGB(180, 230, 255)
-		text.Font = Enum.Font.GothamBold
-		text.TextScaled = true
-		text.Parent = gui
-
-		local bb = Instance.new("BillboardGui")
-		bb.Name = "ExploreHub2WayfindBillboard"
-		bb.Size = UDim2.new(0, 320, 0, 58)
-		bb.StudsOffset = Vector3.new(0, 3.8, 0)
-		bb.AlwaysOnTop = true
-		bb.MaxDistance = 200
-		bb:SetAttribute("HubWayfind", true)
-		bb:SetAttribute("KeepVisible", true)
-		bb.Parent = board
-		local lbl = Instance.new("TextLabel")
-		lbl.Size = UDim2.fromScale(1, 1)
-		lbl.BackgroundColor3 = Color3.fromRGB(28, 36, 58)
-		lbl.BackgroundTransparency = 0.18
-		lbl.Text = billboardText
-		lbl.TextColor3 = Color3.fromRGB(200, 235, 255)
-		lbl.Font = Enum.Font.GothamBold
-		lbl.TextScaled = true
-		lbl.Parent = bb
-		local corner = Instance.new("UICorner")
-		corner.CornerRadius = UDim.new(0, 8)
-		corner.Parent = lbl
-		return pole
-	end
-
-	-- Восточный обход: Genkan → ScoutPost → Combat (альтернатива главной дороге у Exit)
-	local startPos = Vector3.new(18, 0.2, genkanC.Z + 38)
-	local midPos = Vector3.new(scoutC.X - 8, 0.2, scoutC.Z - 3)
-	local endPos = Vector3.new(combatC.X - 48, 0.2, combatC.Z + 3)
-
-	hubSign(
-		"ExploreHub2Start",
-		startPos,
-		midPos,
-		"Обходная тропа → Combat · следуй знакам",
-		"Обход → Combat"
-	)
-	hubSign(
-		"ExploreHub2Mid",
-		midPos,
-		endPos,
-		"Лагерь разведки · лут E → Combat",
-		"ScoutPost · лут E"
-	)
-	hubSign(
-		"ExploreHub2End",
-		endPos,
-		combatC,
-		"Combat · лови духа E",
-		"Combat →"
-	)
-
-	-- Короткая гравийная полоса (не перестраивает OtakuHaven)
-	local trail = Instance.new("Model")
-	trail.Name = "ExploreHub2Trail"
-	trail.Parent = workspace
-	trail:SetAttribute("Route", "HavenEastBypass")
-	trail:SetAttribute("HubWayfind", true)
-
-	local gravelColor = Color3.fromRGB(120, 110, 95)
-	local pathPts = {
-		startPos,
-		Vector3.new(26, 0.2, startPos.Z + 8),
-		Vector3.new(scoutC.X - 14, 0.2, scoutC.Z - 8),
-		midPos,
-		Vector3.new(scoutC.X + 6, 0.2, scoutC.Z + 2),
-		endPos,
-	}
-	for i = 1, #pathPts - 1 do
-		local a, b = pathPts[i], pathPts[i + 1]
-		local delta = b - a
-		local len = delta.Magnitude
-		if len > 0.5 then
-			local mid = a + delta * 0.5
-			local cf = CFrame.lookAt(mid, b) * CFrame.Angles(0, math.rad(90), 0)
-			makePart({
-				Name = "GravelSeg" .. i,
-				Size = Vector3.new(4.2, 0.18, len + 0.6),
-				CFrame = cf,
-				Color = gravelColor,
-				Material = Enum.Material.Ground,
-				CanCollide = true,
-				Parent = trail,
-			})
-		end
-	end
-
-	return folder
+	destroyHubWayfindFolders(haven)
+	return nil
 end
 
 -- F2 scout line W1: wayfind Exit → ChestCluster (quest 109)
 function OtakuHavenBuilder.EnsureHubColdStartCopy(haven)
-	-- F3-W1: readability only (no rebuild) — Exit billboard + Mika TalkHint
 	haven = haven or workspace:FindFirstChild("OtakuHaven")
 	if haven then
-		for _, d in ipairs(haven:GetDescendants()) do
-			if d:IsA("BillboardGui") and (d.Name == "ExitWayfindBillboard" or d:GetAttribute("HubWayfind") == true) then
-				local lbl = d:FindFirstChildWhichIsA("TextLabel", true)
-				if lbl then
-					lbl.Text = "Exit → Combat"
-				end
-				d.Enabled = true
-				d.AlwaysOnTop = true
-			end
-		end
+		clearHubWayfindBillboards(haven)
 	end
 	local qm = workspace:FindFirstChild("QuestMaster")
 	if not qm then
@@ -1973,81 +1751,8 @@ end
 
 function OtakuHavenBuilder.EnsureChestClusterWayfind(haven)
 	haven = haven or workspace:FindFirstChild("OtakuHaven")
-	if not haven then
-		return nil
-	end
-	local old = haven:FindFirstChild("ChestClusterWayfind")
-	if old then
-		old:Destroy()
-	end
-	local folder = Instance.new("Folder")
-	folder.Name = "ChestClusterWayfind"
-	folder.Parent = haven
-
-	local exitC = ZoneConfig.Zones.Exit.Center
-	local chestC = (ZoneConfig.QuestLocations and ZoneConfig.QuestLocations.ChestCluster and ZoneConfig.QuestLocations.ChestCluster.Center)
-		or Vector3.new(130, 1, 20)
-	local look = Vector3.new(chestC.X - exitC.X, 0, chestC.Z - exitC.Z)
-	if look.Magnitude < 1 then
-		look = Vector3.new(1, 0, 0)
-	else
-		look = look.Unit
-	end
-	local pos = Vector3.new(exitC.X, 0.2, exitC.Z) + look * 7
-
-	local pole = makePart({
-		Name = "ChestClusterWayfindPole",
-		Size = Vector3.new(0.35, 5.0, 0.35),
-		Position = pos + Vector3.new(0, 2.5, 0),
-		Color = Color3.fromRGB(90, 70, 40),
-		Material = Enum.Material.Metal,
-		CanCollide = false,
-		Parent = folder,
-	})
-	local board = makePart({
-		Name = "ChestClusterWayfindBoard",
-		Size = Vector3.new(7.0, 2.0, 0.28),
-		CFrame = CFrame.lookAt(pole.Position + Vector3.new(0, 2.1, 0) + look * 0.25, pole.Position + Vector3.new(0, 2.1, 0) + look),
-		Color = Color3.fromRGB(55, 42, 28),
-		Material = Enum.Material.SmoothPlastic,
-		CanCollide = false,
-		Parent = folder,
-	})
-	local gui = Instance.new("SurfaceGui")
-	gui.Face = Enum.NormalId.Front
-	gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
-	gui.PixelsPerStud = 40
-	gui.Parent = board
-	local text = Instance.new("TextLabel")
-	text.Size = UDim2.fromScale(1, 1)
-	text.BackgroundTransparency = 1
-	text.Text = "Сундучный грот →"
-	text.TextColor3 = Color3.fromRGB(255, 210, 120)
-	text.Font = Enum.Font.GothamBold
-	text.TextScaled = true
-	text.Parent = gui
-
-	local bb = Instance.new("BillboardGui")
-	bb.Name = "ChestClusterWayfindBillboard"
-	bb.Size = UDim2.new(0, 300, 0, 56)
-	bb.StudsOffset = Vector3.new(0, 3.6, 0)
-	bb.AlwaysOnTop = true
-	bb.MaxDistance = 200
-	bb:SetAttribute("HubWayfind", true)
-	bb.Parent = board
-	local lbl = Instance.new("TextLabel")
-	lbl.Size = UDim2.fromScale(1, 1)
-	lbl.BackgroundColor3 = Color3.fromRGB(45, 35, 22)
-	lbl.BackgroundTransparency = 0.2
-	lbl.Text = "ChestCluster · восток от Exit"
-	lbl.TextColor3 = Color3.fromRGB(255, 220, 150)
-	lbl.Font = Enum.Font.GothamBold
-	lbl.TextScaled = true
-	lbl.Parent = bb
-	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, 8)
-	corner.Parent = lbl
-	return folder
+	destroyHubWayfindFolders(haven)
+	return nil
 end
 
 function OtakuHavenBuilder.BuildDirtRoadToArena()

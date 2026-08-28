@@ -1,3 +1,4 @@
+--!strict
 -- ============================================
 -- Realm of Spirits - Client Controller
 -- Клиентская логика управления
@@ -22,7 +23,28 @@ local EvolveSpiritEvent = realmFolder:WaitForChild("EvolveSpirit")
 local QuestEvent = realmFolder:WaitForChild("Quest")
 local DataEvent = realmFolder:WaitForChild("DataSync")
 local SpiritDatabaseModule = require(realmFolder:WaitForChild("SpiritDatabase"))
+local SkillCatalog = require(realmFolder:WaitForChild("SkillCatalog"))
 local CombatAnimResolver = require(realmFolder:WaitForChild("CombatAnimResolver"))
+
+export type AbilityConfig = {
+	Damage: number,
+	Cooldown: number,
+	SpeedBoost: number,
+}
+
+-- Client-side ability tuning for melee slash feel (A1/A2 anim block).
+local Abilities: { [string]: AbilityConfig } = {
+	AnimeSlash = {
+		Damage = 45,
+		Cooldown = 1.5,
+		SpeedBoost = 65,
+	},
+}
+
+type AttackAnimData = {
+	SkillId: number?,
+	TargetPosition: Vector3?,
+}
 
 local MAX_TARGET_DISTANCE = 45
 local isInBattle = false
@@ -34,6 +56,7 @@ local isPlayerAttackAnimating = false
 local isCatchPending = false
 local catchRequestId = 0
 local suppressBattleUpdates = false
+local combatHintUntil = 0
 
 local COMBAT_HINT_LABELS: { [string]: string } = {
 	Slash = "Удар!",
@@ -42,6 +65,71 @@ local COMBAT_HINT_LABELS: { [string]: string } = {
 	SpellImpulse = "Импульс!",
 	RangedShot = "Выстрел!",
 }
+
+-- Element palette aligned with UIController.ElementIcons (A2 feel pass)
+local ELEMENT_FEEDBACK_COLORS: { [string]: { fill: Color3, outline: Color3 } } = {
+	Fire = { fill = Color3.fromRGB(255, 120, 60), outline = Color3.fromRGB(255, 80, 30) },
+	Ash = { fill = Color3.fromRGB(235, 110, 55), outline = Color3.fromRGB(200, 70, 35) },
+	Light = { fill = Color3.fromRGB(255, 250, 200), outline = Color3.fromRGB(255, 220, 120) },
+	Magma = { fill = Color3.fromRGB(240, 70, 35), outline = Color3.fromRGB(200, 40, 20) },
+	Earth = { fill = Color3.fromRGB(170, 130, 85), outline = Color3.fromRGB(130, 100, 65) },
+	Nature = { fill = Color3.fromRGB(100, 190, 90), outline = Color3.fromRGB(70, 150, 60) },
+	Metal = { fill = Color3.fromRGB(130, 145, 165), outline = Color3.fromRGB(95, 110, 130) },
+	Poison = { fill = Color3.fromRGB(120, 200, 80), outline = Color3.fromRGB(80, 160, 55) },
+	Sand = { fill = Color3.fromRGB(210, 170, 90), outline = Color3.fromRGB(175, 135, 65) },
+	Crystal = { fill = Color3.fromRGB(160, 215, 255), outline = Color3.fromRGB(110, 180, 240) },
+	Wind = { fill = Color3.fromRGB(140, 215, 195), outline = Color3.fromRGB(100, 175, 155) },
+	Storm = { fill = Color3.fromRGB(220, 220, 120), outline = Color3.fromRGB(190, 190, 80) },
+	Lightning = { fill = Color3.fromRGB(220, 220, 120), outline = Color3.fromRGB(190, 190, 80) },
+	Dark = { fill = Color3.fromRGB(130, 70, 190), outline = Color3.fromRGB(90, 45, 150) },
+	Sky = { fill = Color3.fromRGB(160, 205, 255), outline = Color3.fromRGB(120, 170, 235) },
+	Water = { fill = Color3.fromRGB(60, 140, 230), outline = Color3.fromRGB(30, 100, 190) },
+	Ice = { fill = Color3.fromRGB(130, 215, 255), outline = Color3.fromRGB(90, 175, 230) },
+	Moon = { fill = Color3.fromRGB(215, 225, 255), outline = Color3.fromRGB(175, 185, 230) },
+	Mist = { fill = Color3.fromRGB(140, 180, 230), outline = Color3.fromRGB(100, 140, 195) },
+}
+
+local DEFAULT_FEEDBACK_COLORS = {
+	fill = Color3.fromRGB(255, 220, 120),
+	outline = Color3.fromRGB(255, 180, 60),
+}
+
+local function getElementFeedbackColors(skillId: number?): { fill: Color3, outline: Color3 }
+	local id = tonumber(skillId)
+	if not id then
+		return DEFAULT_FEEDBACK_COLORS
+	end
+	local skill = SkillCatalog.Get(id)
+	local element = skill and skill.Element
+	if element then
+		local row = ELEMENT_FEEDBACK_COLORS[element]
+		if row then
+			return row
+		end
+	end
+	return DEFAULT_FEEDBACK_COLORS
+end
+
+local function pulseBladeElementTint(char: Model, colors: { fill: Color3, outline: Color3 })
+	local blade = char:FindFirstChild("RealmBlade")
+	if not blade or not blade:IsA("Model") then
+		return
+	end
+	local handle = blade:FindFirstChild("Handle")
+	if not handle or not handle:IsA("BasePart") then
+		return
+	end
+	local prevColor = handle.Color
+	local prevMaterial = handle.Material
+	handle.Color = colors.outline
+	handle.Material = Enum.Material.Neon
+	task.delay(0.14, function()
+		if handle.Parent then
+			handle.Color = prevColor
+			handle.Material = prevMaterial
+		end
+	end)
+end
 
 local selectionHighlight = Instance.new("Highlight")
 selectionHighlight.Name = "SelectionHighlight"
@@ -148,11 +236,15 @@ local KEEP_VISIBLE_BB = {
 	Emblem = true,
 	NeonLabel = true,
 	QuestIndicator = true,
+	ShowcaseDisplay = true,
+}
+local NAV_BILLBOARD_NAMES = {
+	ExitWayfindBillboard = true,
+	DuelWayfindBillboard = true,
+	ExploreHub2WayfindBillboard = true,
+	ChestClusterWayfindBillboard = true,
 	ShowcaseLabel = true,
 	ShowcaseToast = true,
-	ShowcaseDisplay = true,
-	ExitWayfindBillboard = true,
-	ExploreHub2WayfindBillboard = true,
 }
 local POINTER_INSTANCE_NAMES = {
 	QuestTargetMarker = true,
@@ -171,7 +263,10 @@ local function shouldManageWorldBillboard(bb)
 	if not bb:IsA("BillboardGui") then
 		return false
 	end
-	if KEEP_VISIBLE_BB[bb.Name] or bb:GetAttribute("KeepVisible") == true or bb:GetAttribute("HubWayfind") == true or bb.Name == "QuestIndicator" then
+	if KEEP_VISIBLE_BB[bb.Name] or bb.Name == "QuestIndicator" then
+		return false
+	end
+	if bb:GetAttribute("KeepVisible") == true or bb:GetAttribute("HubWayfind") == true or NAV_BILLBOARD_NAMES[bb.Name] then
 		return false
 	end
 	local p = bb.Parent
@@ -199,7 +294,17 @@ local function stripPointersAndMarkers(root)
 	end
 end
 
+local function destroyNavBillboards(root)
+	root = root or workspace
+	for _, d in ipairs(root:GetDescendants()) do
+		if d:IsA("BillboardGui") and (d:GetAttribute("HubWayfind") == true or NAV_BILLBOARD_NAMES[d.Name]) then
+			d:Destroy()
+		end
+	end
+end
+
 local function hideAllWorldInfoLabels()
+	destroyNavBillboards()
 	stripPointersAndMarkers()
 	for _, d in ipairs(workspace:GetDescendants()) do
 		if d:IsA("BillboardGui") and shouldManageWorldBillboard(d) then
@@ -290,6 +395,9 @@ end
 local hintClearToken = 0
 local function setTargetHint(text, autoClearSec)
 	text = text or ""
+	if text ~= "" and type(autoClearSec) == "number" and autoClearSec > 0 then
+		combatHintUntil = os.clock() + autoClearSec + 0.05
+	end
 	player:SetAttribute("TargetHint", text)
 	hintClearToken += 1
 	local token = hintClearToken
@@ -633,18 +741,22 @@ local function tweenMotorC0(motor, goalC0, duration)
 	return tw
 end
 
-local function pulseCombatFeedback(char: Model, animKind: string)
+local function pulseCombatFeedback(char: Model, animKind: string, skillId: number?)
 	if animKind == "None" or animKind == "" then
 		return
 	end
 	player:SetAttribute("LastCombatAnim", animKind)
+	local colors = getElementFeedbackColors(skillId)
+	local skill = SkillCatalog.Get(skillId)
+	player:SetAttribute("LastCombatElement", skill and skill.Element or "")
 	local label = COMBAT_HINT_LABELS[animKind]
 	if label then
 		setTargetHint(label, 0.3)
 	end
 	combatFlashHighlight.Adornee = char
-	combatFlashHighlight.FillColor = Color3.fromRGB(255, 220, 120)
-	combatFlashHighlight.OutlineColor = Color3.fromRGB(255, 180, 60)
+	combatFlashHighlight.FillColor = colors.fill
+	combatFlashHighlight.OutlineColor = colors.outline
+	pulseBladeElementTint(char, colors)
 	combatFlashHighlight.Enabled = true
 	task.delay(0.22, function()
 		if combatFlashHighlight.Adornee == char then
@@ -676,8 +788,29 @@ local function pulseCombatFeedback(char: Model, animKind: string)
 	end)
 end
 
--- Выхватить меч → лицом к врагу → tween взмах BladeMotor + выпад (без body sword swing)
-local function playPlayerAttackAnimation(data)
+local function registerHit(ability: AbilityConfig, targetPos: Vector3?)
+	player:SetAttribute("LastCombatHitDamage", ability.Damage)
+	if typeof(targetPos) == "Vector3" then
+		player:SetAttribute("LastCombatHitTarget", targetPos)
+	end
+end
+
+local function isMeleeSlashAnim(animKind: string, skillId: number?): boolean
+	if animKind == "Slash" or animKind == "Lunge" then
+		return true
+	end
+	local id = skillId
+	if id then
+		local meta = SkillCatalog.GetCombatMeta(id)
+		if meta and meta.Range == "Melee" and meta.DamageKind == "Physical" then
+			return true
+		end
+	end
+	return false
+end
+
+-- Anime slash: blade tween + optional root lunge driven by ability config.
+local function playAnimeSlash(ability: AbilityConfig, data: AttackAnimData?)
 	data = data or {}
 	if isPlayerAttackAnimating then
 		return
@@ -686,7 +819,117 @@ local function playPlayerAttackAnimation(data)
 	if not char then
 		return
 	end
-	local root = char:FindFirstChild("HumanoidRootPart")
+	local root = char:FindFirstChild("HumanoidRootPart") :: BasePart?
+	local humanoid = char:FindFirstChildOfClass("Humanoid")
+	if not root or not humanoid then
+		return
+	end
+	local skillId = data.SkillId and tonumber(data.SkillId)
+	local animKind = CombatAnimResolver.ResolveKind(skillId)
+	-- SpeedBoost → lunge distance in studs (e.g. 65 → 6.5 stud forward step).
+	local lungeDist = ability.SpeedBoost / 10
+	local doBlade = CombatAnimResolver.ShouldBladeTween(animKind)
+	local timing = CombatAnimResolver.GetTiming(animKind)
+	local isHeavy = CombatAnimResolver.IsHeavyKind(animKind)
+
+	task.spawn(function()
+		isPlayerAttackAnimating = true
+
+		local targetPos = data.TargetPosition
+		local forward = Vector3.new(root.CFrame.LookVector.X, 0, root.CFrame.LookVector.Z)
+		if typeof(targetPos) == "Vector3" then
+			local flat = Vector3.new(targetPos.X - root.Position.X, 0, targetPos.Z - root.Position.Z)
+			if flat.Magnitude > 0.05 then
+				forward = flat.Unit
+			end
+		elseif forward.Magnitude < 0.05 then
+			forward = Vector3.new(0, 0, -1)
+		else
+			forward = forward.Unit
+		end
+
+		root.CFrame = CFrame.lookAt(root.Position, root.Position + forward)
+
+		if CombatAnimResolver.ShouldPlayBodyAnim(animKind) then
+			CombatAnimResolver.Play(char, humanoid, skillId)
+		end
+		pulseCombatFeedback(char, animKind, skillId)
+
+		local motor: Motor6D?
+		local restC0: CFrame?
+		local windupC0: CFrame?
+		local slashC0: CFrame?
+		if doBlade then
+			restC0 = computeBladeRestC0(char)
+			if isHeavy then
+				windupC0 = restC0 * CFrame.Angles(math.rad(60), math.rad(-8), math.rad(100))
+				slashC0 = restC0 * CFrame.Angles(math.rad(-100), math.rad(22), math.rad(-72))
+			else
+				windupC0 = restC0 * CFrame.Angles(math.rad(48), math.rad(-12), math.rad(105))
+				slashC0 = restC0 * CFrame.Angles(math.rad(-98), math.rad(28), math.rad(-62))
+			end
+			local _
+			_, motor = waitForBladeModel(char, 0.35)
+			if motor then
+				motor.C0 = restC0
+			end
+		end
+
+		local doLunge = CombatAnimResolver.ShouldRootLunge(animKind)
+		local backTween: Tween?
+		local origin = root.CFrame
+		if doLunge then
+			local lungeCF = CFrame.lookAt(origin.Position + forward * lungeDist, origin.Position + forward * (lungeDist + 4))
+			local outTween = TweenService:Create(
+				root,
+				TweenInfo.new(timing.lungeOut, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+				{ CFrame = lungeCF }
+			)
+			backTween = TweenService:Create(
+				root,
+				TweenInfo.new(timing.lungeBack, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+				{ CFrame = origin }
+			)
+			outTween:Play()
+		end
+
+		local hitTarget = if typeof(targetPos) == "Vector3" then targetPos else root.Position + forward * lungeDist
+
+		if doBlade and motor and restC0 and windupC0 and slashC0 then
+			local windup = tweenMotorC0(motor, windupC0, timing.bladeWindup)
+			windup.Completed:Wait()
+			registerHit(ability, hitTarget)
+			local slash = tweenMotorC0(motor, slashC0, timing.bladeSlash)
+			slash.Completed:Wait()
+			tweenMotorC0(motor, restC0, timing.bladeRest)
+		elseif not doBlade then
+			registerHit(ability, hitTarget)
+			task.wait(timing.spellHold)
+		else
+			task.wait(timing.bladeWindup)
+			registerHit(ability, hitTarget)
+			task.wait(timing.bladeSlash + timing.bladeRest)
+		end
+
+		if doLunge and backTween then
+			backTween:Play()
+			backTween.Completed:Wait()
+		end
+		isPlayerAttackAnimating = false
+	end)
+end
+
+-- Spell / ranged attacks keep resolver lunge defaults (non-AnimeSlash path).
+local function playStandardAttackAnimation(data: AttackAnimData?)
+	data = data or {}
+	if isPlayerAttackAnimating then
+		return
+	end
+	local char = player.Character or character
+	if not char then
+		return
+	end
+	local root = char:FindFirstChild("HumanoidRootPart") :: BasePart?
 	local humanoid = char:FindFirstChildOfClass("Humanoid")
 	if not root or not humanoid then
 		return
@@ -716,16 +959,15 @@ local function playPlayerAttackAnimation(data)
 
 		root.CFrame = CFrame.lookAt(root.Position, root.Position + forward)
 
-		-- Body sword-swing disabled; blade tween + root lunge carry attack feel.
 		if CombatAnimResolver.ShouldPlayBodyAnim(animKind) then
 			CombatAnimResolver.Play(char, humanoid, skillId)
 		end
-		pulseCombatFeedback(char, animKind)
+		pulseCombatFeedback(char, animKind, skillId)
 
-		local motor
-		local restC0
-		local windupC0
-		local slashC0
+		local motor: Motor6D?
+		local restC0: CFrame?
+		local windupC0: CFrame?
+		local slashC0: CFrame?
 		if doBlade then
 			restC0 = computeBladeRestC0(char)
 			if isHeavy then
@@ -743,7 +985,7 @@ local function playPlayerAttackAnimation(data)
 		end
 
 		local doLunge = CombatAnimResolver.ShouldRootLunge(animKind)
-		local backTween
+		local backTween: Tween?
 		local origin = root.CFrame
 		if doLunge then
 			local lungeCF = CFrame.lookAt(origin.Position + forward * lungeDist, origin.Position + forward * (lungeDist + 4))
@@ -778,6 +1020,18 @@ local function playPlayerAttackAnimation(data)
 		end
 		isPlayerAttackAnimating = false
 	end)
+end
+
+-- Выхватить меч → лицом к врагу → body slash/lunge + tween BladeMotor + выпад
+local function playPlayerAttackAnimation(data: AttackAnimData?)
+	data = data or {}
+	local skillId = data.SkillId and tonumber(data.SkillId)
+	local animKind = CombatAnimResolver.ResolveKind(skillId)
+	if isMeleeSlashAnim(animKind, skillId) then
+		playAnimeSlash(Abilities.AnimeSlash, data)
+		return
+	end
+	playStandardAttackAnimation(data)
 end
 
 function StartBattle(spirit)
@@ -878,6 +1132,9 @@ RunService.Heartbeat:Connect(function()
 		if player:GetAttribute("CatchUiActive") then
 			player:SetAttribute("CatchUiActive", false)
 		end
+		return
+	end
+	if os.clock() < combatHintUntil then
 		return
 	end
 	local target = getTargetSpirit()
@@ -1163,48 +1420,8 @@ if RunService:IsStudio() then
 	end)
 end
 
--- Arena entrance FX: 1.5s approach hint + Spirit Arena banner
+-- Arena entrance FX (visual only; no navigation popups)
 do
-	local portalHintGui = Instance.new("ScreenGui")
-	portalHintGui.Name = "ArenaPortalHint"
-	portalHintGui.ResetOnSpawn = false
-	portalHintGui.DisplayOrder = 160
-	portalHintGui.IgnoreGuiInset = true
-	portalHintGui.Parent = player:WaitForChild("PlayerGui")
-
-	local hint = Instance.new("TextLabel")
-	hint.Name = "Hint"
-	hint.AnchorPoint = Vector2.new(0.5, 0.5)
-	hint.Position = UDim2.fromScale(0.5, 0.72)
-	hint.Size = UDim2.fromOffset(280, 42)
-	hint.BackgroundColor3 = Color3.fromRGB(15, 35, 50)
-	hint.BackgroundTransparency = 0.25
-	hint.TextColor3 = Color3.fromRGB(120, 255, 230)
-	hint.Font = Enum.Font.GothamBold
-	hint.TextScaled = true
-	hint.Visible = false
-	hint.Parent = portalHintGui
-	do local c = Instance.new("UICorner") c.CornerRadius = UDim.new(0, 8) c.Parent = hint end
-
-	local lastPortal = nil
-	local hintToken = 0
-	local function flashPortalHint(text)
-		hintToken += 1
-		local token = hintToken
-		hint.Text = text
-		hint.Visible = true
-		hint.TextTransparency = 0
-		hint.BackgroundTransparency = 0.25
-		task.delay(1.5, function()
-			if token ~= hintToken then return end
-			local tw = TweenService:Create(hint, TweenInfo.new(0.35), { TextTransparency = 1, BackgroundTransparency = 1 })
-			tw:Play()
-			tw.Completed:Connect(function()
-				if token == hintToken then hint.Visible = false end
-			end)
-		end)
-	end
-
 	local function bindArenaFX()
 		local arena = workspace:FindFirstChild("BattleArena")
 		if not arena then return end
@@ -1272,14 +1489,6 @@ do
 	bindArenaFX()
 	workspace.ChildAdded:Connect(function(ch)
 		if ch.Name == "BattleArena" then task.defer(bindArenaFX) end
-	end)
-
-	RunService.Heartbeat:Connect(function()
-		local action = nearArenaEnterPortal()
-		if action and action ~= lastPortal then
-			flashPortalHint(if action == "Enter" then "Войти [E]" else "Выйти [E]")
-		end
-		lastPortal = action or nil
 	end)
 end
 

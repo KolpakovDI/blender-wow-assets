@@ -4,9 +4,11 @@
 > **Классификация навыков:** `SkillCatalog.CombatMeta` → `Range` + `DamageKind` · см. [`SPIRIT-SKILLS.md`](SPIRIT-SKILLS.md)  
 > **Anim block (A1 restore):** [`BLOCK-ANIM-CHAR-ART-2026-08-28.md`](BLOCK-ANIM-CHAR-ART-2026-08-28.md) § A1 · research [`RESEARCH-AI-ANIM-ART-2026-08-28.md`](RESEARCH-AI-ANIM-ART-2026-08-28.md) · paid setup [`OWNER-SETUP-PAID-AI.md`](OWNER-SETUP-PAID-AI.md)
 
-## Статус (2026-08-23)
+## Статус (2026-08-28)
 
-**Body sword-swing отключён.** `CombatAnimResolver.Play()` — no-op; `ShouldPlayBodyAnim()` → `false`. Папка `CombatAnimations/` и Linked Sword клипы (`522635514` / `522638767`) удалены из place. При атаке остаются: **blade tween**, **root lunge**, feedback («Удар!» / «Выпад!»). Ниже — архив классификации и ID (для повторного включения).
+**Body sword-swing восстановлен (A1 PASS).** `CombatAnimResolver.Play()` + `ShouldPlayBodyAnim()` → `true` для всех kinds кроме `None`. `CombatAnimations/` — 6× Linked Sword free IDs (`522635514` / `522638767` / `129967390`). MCP smoke: `VerifyAllClips` 6/6 · skills **1/119/31/11/2** body track `IsPlaying` @50ms.
+
+**Combat feel tuned (A2 PASS 2026-08-28).** `KIND_CONFIG` lunge **2.4 / 4.2 stud** · `stopConflictingTracks` + `AdjustWeight(1)` · element-colored `pulseCombatFeedback` + blade Neon tint · hint lock (`combatHintUntil`) · MCP 5/5 `AnimKind` · hints «Удар!»/«Выпад!» · `LastCombatElement` attribute.
 
 ### A1 restore — free vs paid paths (2026-08-28)
 

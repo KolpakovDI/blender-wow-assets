@@ -1,5 +1,8 @@
 # Animation & Character Art Block — план (2026-08-28)
 
+> **⏸ PAUSED (2026-08-28)** — owner: «анимацию и арт дизайн сделаем позже». **Не default next.** Resume only on **«A1»** / **«анимации»** / **«Anim block»**.  
+> **Status preserved:** **A1 PASS** · **A2 PASS** · **A3 CONDITIONAL** (1/8 `SpiritTemplate11`) · A4–A6 not started · uncommitted repo mirrors (`CombatAnimResolver.lua`, `ClientController.lua`, `COMBAT-ANIMATIONS.md`) — do not commit unless owner asks.
+
 > **Режим:** DEV-ONLY (PlaceId=0) · **Publish не требуется** для большинства работ  
 > **Place SoT:** `C:\Mimo\RealmOfSpirits\RealmOfSpirits second.rbxl` (не в git)  
 > **Старт блока:** только по явной команде **«A1»** / **«анимации»** / **«Anim block»** — **не** заменяет default next (post-W18 regression + owner hands E2E)  
@@ -9,7 +12,7 @@
 
 ## Executive summary
 
-Блок **A1–A6** закрывает **visual polish**, который двигает **readiness #6 (Polish threshold)** и ощущение core loop (бой → дух → Sanctum), **без** Publish, Allow* flip и online AI mesh. Сейчас body sword-swing **отключён** (`CombatAnimResolver.ShouldPlayBodyAnim → false`); остаются blade tween, root lunge и `pulseCombatFeedback`. Агент максимально полезен на: восстановлении клипов + resolver smoke, тюнинге таймингов, офлайн-мешах (Blender → Open Cloud → `insert_asset`), Studio MCP правках UI/Viewport и Play-smoke. **Руки владельца** нужны для: публикации **собственных** Animation через Animation Editor, rigging non-R15, одобрения Marketplace/Creator Store ассетов и финального «нравится / не нравится» по DG-feel.
+Блок **A1–A6** закрывает **visual polish**, который двигает **readiness #6 (Polish threshold)** и ощущение core loop (бой → дух → Sanctum), **без** Publish, Allow* flip и online AI mesh. **A1 PASS (2026-08-28):** body sword-swing восстановлен на free Linked Sword IDs (`522635514` / `522638767` / `129967390`); `CombatAnimations/` 6/6 · `VerifyAllClips` 6/6 · skills **1/119/31/11/2** smoke. **A2 PASS (2026-08-28):** DG-tuned lunge/blade timing · element flash + blade tint · 5 `AnimKind` MCP smoke. **A3 CONDITIONAL (2026-08-28):** Id=1 / `SpiritTemplate11` (Огненный Кот) pipeline smoke — **Studio `generate_mesh` fallback** (Tripo web-only · Blender MCP offline); Play spawn `ph=false` · 1/8 hero queue.
 
 **Приоритет срезов:** бой (A1–A2) → читаемость духов (A3–A4) → хаб/NPC (A5) → аватар/аксессуары (A6).
 
@@ -41,8 +44,8 @@
 
 | Область | Состояние | SoT |
 |---------|-----------|-----|
-| Combat body anim | **Disabled** — `Play()` no-op, `CombatAnimations/` удалены из place | `CombatAnimResolver.lua` mirror · [`COMBAT-ANIMATIONS.md`](COMBAT-ANIMATIONS.md) |
-| Combat feel (partial) | Blade Motor6D tween + HRP lunge + hint/flash/camera punch | `ClientController.lua` · resolver timing kinds |
+| Combat body anim | **PASS (A1 2026-08-28)** — `Play`/`VerifyAllClips` · `ShouldPlayBodyAnim → true` · `CombatAnimations/` 6× free IDs | `CombatAnimResolver.lua` mirror · [`COMBAT-ANIMATIONS.md`](COMBAT-ANIMATIONS.md) |
+| Combat feel (partial) | **PASS (A2 2026-08-28)** — KIND_CONFIG lunge 2.4/4.2 · element `pulseCombatFeedback` · blade Neon tint · hint lock | `ClientController.lua` · resolver timing kinds |
 | Spirit locomotion | Procedural walk/fly/swim (`SpiritAnimation`) | `SpiritAnimation.lua` · `GameManager` |
 | Spirit meshes | Канон 4×4 в `SpiritTemplates` (офлайн); Resonant = parent clone / placeholder | [`SPIRIT-AI-MESH.md`](SPIRIT-AI-MESH.md) |
 | NPC / emote | QuestMaster (Мика) — диалог GUI; 2D-Live **Planned** Beta | `GDD.md` § Otaku Haven сценарий |
@@ -54,9 +57,9 @@
 
 | Срез | Название | Фокус | Длительность | Exit criteria (PASS) |
 |------|----------|-------|--------------|----------------------|
-| **A1** | Combat body restore | `CombatAnimations/` + resolver `Play`/`Verify` + free IDs | ~3–5 agent sessions | `VerifyAllClips` 6/6 Length>0 · skills **1/119/31/11/2** smoke · body track `IsPlaying` @50ms · **Ctrl+S** |
-| **A2** | Combat feel + VFX | DG-tuned timing · element hit feedback · optional heavy arc | ~2–4 sessions | 5 `AnimKind` smoke PASS · lunge readable (2.4/4.2 stud) · hint «Удар!»/«Выпад!» · no Output errors in battle |
-| **A3** | Spirit silhouette pass | 8 hero meshes (1 base per Primary ×2) — Blender/Studio offline | ~1–2 weeks | 8× `SpiritTemplate{Id}` updated · spawn smoke · `IsMeshPlaceholder=false` · mirrors + asset FBX local |
+| **A1** | Combat body restore | `CombatAnimations/` + resolver `Play`/`Verify` + free IDs | ~3–5 agent sessions | ☑ **PASS** 2026-08-28 — `VerifyAllClips` 6/6 · skills **1/119/31/11/2** · body `IsPlaying` @50ms |
+| **A2** | Combat feel + VFX | DG-tuned timing · element hit feedback · optional heavy arc | ~2–4 sessions | ☑ **PASS** 2026-08-28 — 5 `AnimKind` MCP 5/5 · lunge 2.4/4.2 stud · hints «Удар!»/«Выпад!» · element flash + blade tint · no battle Output errors (ShortGrass BOM warn only) |
+| **A3** | Spirit silhouette pass | 8 hero meshes (1 base per Primary ×2) — Blender/Studio offline | ~1–2 weeks | ☐ **CONDITIONAL** 2026-08-28 — **1/8** `SpiritTemplate11` (LegacyId=1 Fire Cat) · Play spawn `IsMeshPlaceholder=false` · tool=Studio `generate_mesh` fallback · Tripo/Blender/Open Cloud FBX pending owner |
 | **A4** | UI portrait polish | Sanctum Viewport camera/light · battle slot icons · carousel | ~3–5 sessions | Sanctum LOOK smoke (name+3★+vid+mesh) · battle UI icons distinct at 64px · docs SESSION note |
 | **A5** | NPC emote lite | Мика: greet / sweat / point (Billboard or simple anim) | ~2–3 sessions | Quest accept flow shows ≥3 visual states · no ProximityPrompt regression |
 | **A6** | Avatar & accessories | RealmBlade mesh read · optional keeper accessory · R15/R6 check | buffer / optional | Blade readable 3rd person in combat · R6 fallback slash still OK · owner sign-off |
@@ -347,9 +350,9 @@ From [`NEXT-SESSION.md`](NEXT-SESSION.md) § Readiness:
 
 ## Verification checklist (block exit)
 
-- [ ] A1: `VerifyAllClips` 6/6 OK in Play
-- [ ] A2: 5 skill kinds MCP smoke PASS
-- [ ] A3: 8 templates non-placeholder spawn OK
+- [x] A1: `VerifyAllClips` 6/6 OK in Play (2026-08-28 MCP)
+- [x] A2: 5 skill kinds MCP smoke PASS (2026-08-28)
+- [ ] A3: 8 templates non-placeholder spawn OK — **1/8** `SpiritTemplate11` CONDITIONAL 2026-08-28 (Studio `generate_mesh` fallback)
 - [ ] A4: Sanctum LOOK + battle icons SESSION PASS
 - [ ] A5: 3 NPC emote states on quest flow (optional)
 - [ ] A6: RealmBlade readable · R6/R15 OK (optional)

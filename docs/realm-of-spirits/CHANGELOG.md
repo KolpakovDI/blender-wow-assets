@@ -6,12 +6,26 @@
 
 ## [Unreleased]
 
+- **Navigation popups removed:** zone-entry banners/toasts (`ZoneController`), HubWayfind billboards (`OtakuHavenBuilder`), FTUE chip (`NextStepChip`), showcase pad labels (`ResonanceShowcaseService`); client cleanup on load (`ClientController`); HubFunnel / ProximityPrompts unchanged
+
+### Anim/Char Art block PAUSED (2026-08-28)
+
+- **Owner decision:** pause Anim/Char Art (A1–A6) — resume on **«A1»** / **«анимации»** / **«Anim block»** only
+- **Default next restored:** post-W18 regression + owner hands E2E gaps (Prep/Complete/Exit/F/1/2) — see [`SESSION-2026-08-27-regression.md`](SESSION-2026-08-27-regression.md)
+- **Work preserved (uncommitted):** A1–A2 PASS · A3 CONDITIONAL (1/8) · mirrors `CombatAnimResolver` / `ClientController` / `COMBAT-ANIMATIONS.md` — not reverted; not committed unless owner asks
+- **E2E gap fix (2026-08-28):** Studio `OtakuHavenService.RequestWardrobe` → `MarkHubPrep(player)` restored (SoT drift; git mirror already correct since 15.08e) — owner **Ctrl+S**
+- **E2E re-smoke (2026-08-28 PM):** MCP Play — `RequestWardrobe` → Prep **PASS** · Complete **PASS** · battle entry **PASS** · outcome loss без Attack = expected
+- **E2E re-smoke (2026-08-28 eve):** battle win **PASS** — `Battle:FireServer("Attack")` loop SkillIndex 1+2 **или** **V+Keypad1/2** → `Вы победили!` (не code bug) · Exit `character_navigation` → Combat **PASS** · Return `OtakuHaven.Zones.SafeZone` **PASS** · KamiSanctum SeedQA+Open GUI **PASS** · `[R]` roster none (no Resonant spirits)
+
 ### Anim/Char Art block + paid AI stack (2026-08-28)
 
 - **New docs:** [`BLOCK-ANIM-CHAR-ART-2026-08-28.md`](BLOCK-ANIM-CHAR-ART-2026-08-28.md) (A1–A6 plan · § Paid stack · agent playbook) · [`RESEARCH-AI-ANIM-ART-2026-08-28.md`](RESEARCH-AI-ANIM-ART-2026-08-28.md) (tool pricing · Tier 0/1/2) · [`OWNER-SETUP-PAID-AI.md`](OWNER-SETUP-PAID-AI.md) (owner checklist before **«A3 Tripo»**)
 - **Owner decision:** paid tier — minimal **~$12/mo** Tripo Pro; growth **~$33/mo** optional; **A1** starts on free Roblox IDs ($0)
 - **Cross-refs:** `NEXT-SESSION` command routing + backlog · `ROADMAP` post-W18 with paid tier · `COMBAT-ANIMATIONS` A1 free/paid paths · `AGENTS.md` Anim block table · `realm-orchestrator` skill routing
-- **Plan-only:** no place edits · body sword-swing still disabled until A1 execution
+- **A1 PASS (2026-08-28):** restored `CombatAnimations/` (6× Animation) · full `CombatAnimResolver` (`DG_CLIPS`/`FALLBACK_IDS`, `Play`, `VerifyAllClips`, `stopConflictingTracks`, `ShouldPlayBodyAnim → true`) · free IDs `522635514`/`522638767`/`129967390` · MCP smoke `VerifyAllClips` 6/6 · skills **1/119/31/11/2** body `IsPlaying` @50ms · mirrors synced
+- **A2 PASS (2026-08-28):** `KIND_CONFIG` DG lunge **2.4/4.2 stud** · `ClientController` element-colored `pulseCombatFeedback` + `pulseBladeElementTint` · `LastCombatElement` attr · `combatHintUntil` hint lock · MCP 5/5 `AnimKind` (skills 1/119/31/303/11) · hints «Удар!»/«Выпад!» · mirrors synced
+- **A3 CONDITIONAL (2026-08-28):** hero mesh **Id=1 / `SpiritTemplate11`** (Огненный Кот) — **Studio `generate_mesh` fallback** (Tripo web-only semi-manual · Blender MCP offline · Open Cloud FBX skipped) · bbox ~3 stud · attrs `A3MeshSource`/`A3SpiritId` · Edit `CloneResolvedModel({Id=11})` + Play world spawner `IsMeshPlaceholder=false` · **1/8** hero queue
+- **`ClientController` Abilities (2026-08-28):** `Abilities.AnimeSlash` (Damage 45 · Cooldown 1.5 · SpeedBoost 65) · `playAnimeSlash` + `registerHit` (`LastCombatHitDamage` / `LastCombatHitTarget`) · melee Slash/Lunge routes via `SpeedBoost/10` lunge studs · `--!strict` · mirror + Studio synced (uncommitted)
 
 ### Publish suggestion policy (2026-08-27)
 

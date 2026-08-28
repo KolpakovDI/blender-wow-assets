@@ -133,18 +133,7 @@ end
 
 local function refresh()
 	ensureGui()
-	-- ZoneHint wins after FTUE Done, or alongside Exit/Loot when quest points somewhere
-	if type(zoneHintOverride) == "string" and zoneHintOverride ~= "" then
-		frame.Visible = true
-		label.Text = "→  " .. zoneHintOverride
-		return
-	end
-	if current == STEP.Done then
-		frame.Visible = false
-		return
-	end
-	frame.Visible = true
-	label.Text = "→  " .. (STEP_TEXT[current] or "")
+	frame.Visible = false
 end
 
 local function setStep(nextStep)

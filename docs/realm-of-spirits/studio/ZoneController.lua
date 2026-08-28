@@ -1,163 +1,17 @@
 -- ZoneController - client feedback for Otaku Haven zones
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local TweenService = game:GetService("TweenService")
 
 local player = Players.LocalPlayer
 local RealmFolder = ReplicatedStorage:WaitForChild("RealmOfSpirits")
 local zoneChanged = RealmFolder:WaitForChild("ZoneChanged")
 local ZoneConfig = require(RealmFolder:WaitForChild("ZoneConfig"))
-local ToastRouter = require(RealmFolder:WaitForChild("ToastRouter"))
-
-local hubIntroShown = false
-local prepHintShown = false
-local elementCycleHintShown = false
 
 local gui = Instance.new("ScreenGui")
 gui.Name = "ZoneUI"
 gui.ResetOnSpawn = false
 gui.DisplayOrder = 150
 gui.Parent = player:WaitForChild("PlayerGui")
-
-local banner = Instance.new("TextLabel")
-banner.Name = "ZoneBanner"
-banner.AnchorPoint = Vector2.new(0.5, 0.5)
-banner.Position = UDim2.new(0.5, 0, 0.22, 0)
-banner.Size = UDim2.new(0, 420, 0, 56)
-banner.BackgroundColor3 = Color3.fromRGB(18, 16, 28)
-banner.BackgroundTransparency = 0.2
-banner.TextColor3 = Color3.fromRGB(255, 235, 245)
-banner.Text = ""
-banner.TextSize = 28
-banner.Font = Enum.Font.GothamBold
-banner.TextTruncate = Enum.TextTruncate.AtEnd
-banner.Visible = false
-banner.Parent = gui
-
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0, 12)
-corner.Parent = banner
-
-local stroke = Instance.new("UIStroke")
-stroke.Color = Color3.fromRGB(255, 180, 220)
-stroke.Thickness = 1.5
-stroke.Transparency = 0.35
-stroke.Parent = banner
-
-local toast = Instance.new("TextLabel")
-toast.Name = "ZoneToast"
-toast.AnchorPoint = Vector2.new(0.5, 1)
-toast.Position = UDim2.new(0.5, 0, 1, -80)
-toast.Size = UDim2.new(0, 520, 0, 36)
-toast.TextWrapped = true
-toast.BackgroundTransparency = 1
-toast.TextColor3 = Color3.fromRGB(200, 255, 220)
-toast.Text = ""
-toast.TextSize = 16
-toast.Font = Enum.Font.Gotham
-toast.Visible = false
-toast.Parent = gui
-
-local bannerToken = 0
-local ZONE_TITLE_DURATION = 1.5
-
-local function showZoneTitle(text, color)
-	if not text or text == "" then
-		return
-	end
-	bannerToken += 1
-	local token = bannerToken
-	banner.Text = text
-	banner.TextColor3 = color or Color3.fromRGB(255, 235, 245)
-	banner.TextTransparency = 0
-	banner.BackgroundTransparency = 0.2
-	stroke.Transparency = 0.35
-	banner.Visible = true
-	task.delay(ZONE_TITLE_DURATION, function()
-		if token ~= bannerToken then
-			return
-		end
-		local fade = TweenService:Create(banner, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-			TextTransparency = 1,
-			BackgroundTransparency = 1,
-		})
-		local fadeStroke = TweenService:Create(stroke, TweenInfo.new(0.35), { Transparency = 1 })
-		fade:Play()
-		fadeStroke:Play()
-		fade.Completed:Connect(function()
-			if token == bannerToken then
-				banner.Visible = false
-			end
-		end)
-	end)
-end
-
--- legacy alias
-local function showBanner(text, color)
-	showZoneTitle(text, color)
-end
-
-local function showToast(text, duration)
-	-- Tip priority; shares queue with battle/loot notifications (UI package A)
-	ToastRouter.Tip(text, duration or 2.5)
-end
-
-local MESSAGES = {
-	Genkan = "Генкан: надеты домашние тапочки",
-	Safe = "Otaku Haven — Safe Zone",
-	Exit = "Выход в боевую зону: Акихабара",
-	Combat = "Акихабара — Combat Zone",
-	Akihabara = "Акихабара — Combat Zone",
-	MistPond = "Прибрежное море — Водный Карп",
-	FrostRidge = "Морозный хребет — Ледяная Птица",
-	ShadowHollow = "Теневая лощина — Теневой Пёс",
-	StormSpire = "Грозовой шпиль — Грозовой Дракон",
-	DawnMeadow = "Луг рассвета — Световой Единорог",
-	StoneBasin = "Каменный бассейн — Каменный Голем",
-	AshGarden = "Пепельный сад — Пепельный Саламандр",
-	GaleCliff = "Ветряной утёс — Ветряной Лис",
-	MossGlade = "Моховая поляна — Моховой Олень",
-	Moonwell = "Лунный колодец — Лунный Кролик",
-	VenomHollow = "Ядовитое ущелье — Ядовитая Гадюка",
-	SandDunes = "Песчаные дюны — [архив] Пустынный Скорпион",
-	IronWastes = "Железные пустоши — Стальной Жук",
-	CrystalCaves = "Кристальные пещеры — [архив] Хрустальный Лис",
-	MagmaFissure = "Лавовый разлом — Лавовый Краб",
-	FogBasin = "Туманная низина — Туманный Дух",
-	SkyRidge = "Небесный хребет — Небесный Сокол",
-	ScoutPost = "Лагерь разведки — квесты локаций",
-	Waystone = "Каменный алтарь — путевая метка",
-	ChestCluster = "Сундучный грот — охота за сундуками",
-	ElementShrine = "Святилище стихий — у Морозного хребта",
-	Overlook = "Обзорный утёс — вид на арену",
-	TrailCamp = "Придорожный стан — короткий привал",
-}
-
-local HABITAT_BANNERS = {
-	MistPond = {Title = "Прибрежное море", Color = Color3.fromRGB(80, 160, 220)},
-	FrostRidge = {Title = "Морозный хребет", Color = Color3.fromRGB(140, 210, 255)},
-	ShadowHollow = {Title = "Теневая лощина", Color = Color3.fromRGB(140, 90, 200)},
-	StormSpire = {Title = "Грозовой шпиль", Color = Color3.fromRGB(230, 220, 100)},
-	DawnMeadow = {Title = "Луг рассвета", Color = Color3.fromRGB(255, 240, 180)},
-	StoneBasin = {Title = "Каменный бассейн", Color = Color3.fromRGB(180, 140, 90)},
-	AshGarden = {Title = "Пепельный сад", Color = Color3.fromRGB(255, 100, 40)},
-	GaleCliff = {Title = "Ветряной утёс", Color = Color3.fromRGB(120, 200, 180)},
-	MossGlade = {Title = "Моховая поляна", Color = Color3.fromRGB(80, 160, 70)},
-	Moonwell = {Title = "Лунный колодец", Color = Color3.fromRGB(180, 195, 255)},
-	VenomHollow = {Title = "Ядовитое ущелье", Color = Color3.fromRGB(90, 180, 60)},
-	SandDunes = {Title = "Песчаные дюны (архив)", Color = Color3.fromRGB(210, 170, 90)},
-	IronWastes = {Title = "Железные пустоши", Color = Color3.fromRGB(140, 155, 175)},
-	CrystalCaves = {Title = "Кристальные пещеры (архив)", Color = Color3.fromRGB(180, 220, 255)},
-	MagmaFissure = {Title = "Лавовый разлом", Color = Color3.fromRGB(255, 90, 40)},
-	FogBasin = {Title = "Туманная низина", Color = Color3.fromRGB(160, 190, 220)},
-	SkyRidge = {Title = "Небесный хребет", Color = Color3.fromRGB(180, 210, 255)},
-	ScoutPost = {Title = "Лагерь разведки", Color = Color3.fromRGB(90, 140, 200)},
-	Waystone = {Title = "Каменный алтарь", Color = Color3.fromRGB(160, 150, 130)},
-	ChestCluster = {Title = "Сундучный грот", Color = Color3.fromRGB(200, 160, 60)},
-	ElementShrine = {Title = "Святилище стихий", Color = Color3.fromRGB(140, 200, 255)},
-	Overlook = {Title = "Обзорный утёс", Color = Color3.fromRGB(180, 120, 90)},
-	TrailCamp = {Title = "Придорожный стан", Color = Color3.fromRGB(100, 160, 90)},
-}
 
 local SLIPPER_COLOR = Color3.fromRGB(255, 170, 200)
 local SLIPPER_SOLE = Color3.fromRGB(245, 245, 250)
@@ -359,7 +213,7 @@ bellSound.RollOffMaxDistance = 1000
 bellSound.Parent = gui
 
 local bellDebounce = false
-local function ringEntranceBell(showBellToast)
+local function ringEntranceBell()
 	if bellDebounce then return end
 	bellDebounce = true
 	bellSound.TimePosition = 0
@@ -372,58 +226,8 @@ local function ringEntranceBell(showBellToast)
 		worldSnd.TimePosition = 0
 		worldSnd:Play()
 	end
-	if showBellToast ~= false then
-		showToast("Колокольчик — иррасшаймасе!", 2)
-	end
 	task.delay(2.5, function()
 		bellDebounce = false
-	end)
-end
-
-local ZONE_TITLES = {
-	Genkan = { Title = "Otaku Haven", Color = Color3.fromRGB(255, 180, 220) },
-	Safe = { Title = "Otaku Haven", Color = Color3.fromRGB(255, 180, 220) },
-	Spawn = { Title = "Otaku Haven", Color = Color3.fromRGB(255, 180, 220) },
-	Exit = { Title = "Выход в Акихабару", Color = Color3.fromRGB(255, 200, 120) },
-	Combat = { Title = "Акихабара", Color = Color3.fromRGB(255, 180, 80) },
-	Akihabara = { Title = "Акихабара", Color = Color3.fromRGB(255, 180, 80) },
-}
-
-local function resolveZoneTitle(zoneType, detail)
-	local habitat = HABITAT_BANNERS[detail]
-	if habitat then
-		return habitat.Title, habitat.Color
-	end
-	local z = ZONE_TITLES[detail] or ZONE_TITLES[zoneType]
-	if z then
-		return z.Title, z.Color
-	end
-	return nil, nil
-end
-
--- F3-W1 cold-start: once per session, 2-step toast (Mika → Exit)
--- Delay tips until ToastRouter.Bind (UIController) settles — early Tip can be dropped.
-local function showHubIntro()
-	if hubIntroShown then
-		return
-	end
-	hubIntroShown = true
-	showZoneTitle("Otaku Haven", Color3.fromRGB(255, 180, 220))
-	task.delay(1.2, function()
-		if player.Parent == nil then
-			return
-		end
-		showToast("Поговори с Микой [E]", 3.5)
-	end)
-	task.delay(5.4, function()
-		if player.Parent == nil then
-			return
-		end
-		local zone = player:GetAttribute("CurrentZone")
-		if zone == "Combat" then
-			return
-		end
-		showToast("Exit → Combat", 3.5)
 	end)
 end
 
@@ -431,49 +235,24 @@ zoneChanged.OnClientEvent:Connect(function(zoneType, detail)
 	detail = detail or zoneType
 
 	if detail == "Spawn" then
-		showHubIntro()
 		syncFootwearFromZone(false)
 		return
 	end
 
-	local title, color = resolveZoneTitle(zoneType, detail)
-	if title then
-		showZoneTitle(title, color)
-	end
-
 	if zoneType == "Combat" then
 		syncFootwearFromZone(false)
-		if not elementCycleHintShown then
-			elementCycleHintShown = true
-			task.delay(1.6, function()
-				showToast("Огонь→Земля→Ветер→Вода→Огонь · ×1.5 / ×0.7", 3.5)
-			end)
-		end
 	elseif zoneType == "Safe" then
 		if detail == "Genkan" then
 			syncFootwearFromZone(false)
 			if not havenBellWelcomed then
 				havenBellWelcomed = true
-				ringEntranceBell(false)
+				ringEntranceBell()
 			end
 		elseif detail == "Exit" then
 			syncFootwearFromZone(false)
-			showToast("Снаружи: огонь / лёд / манга / сундук (E) — разный лут", 4)
 		elseif detail == "Safe" then
 			syncFootwearFromZone(true)
-			if not prepHintShown then
-				prepHintShown = true
-				task.delay(1.6, function()
-					showToast("Подготовка: манга «Путь Меча» или примерочная", 3.5)
-				end)
-			end
 		end
-	end
-end)
-
-task.defer(function()
-	if (player:GetAttribute("ZoneDetail") or "Spawn") == "Spawn" then
-		showHubIntro()
 	end
 end)
 
@@ -517,7 +296,7 @@ task.spawn(function()
 		local character = player.Character
 		if not character then return end
 		if hit:IsDescendantOf(character) then
-			ringEntranceBell(true)
+			ringEntranceBell()
 		end
 	end
 
@@ -551,7 +330,7 @@ task.defer(function()
 	local detail = player:GetAttribute("ZoneDetail")
 	if shouldWearSlippers(zone, detail) and not havenBellWelcomed then
 		havenBellWelcomed = true
-		ringEntranceBell(true)
+		ringEntranceBell()
 	end
 	task.wait(1.5)
 	syncFootwearFromZone(false)
