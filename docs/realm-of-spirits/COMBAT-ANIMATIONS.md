@@ -1,11 +1,23 @@
 # Боевые анимации — классификация и выбор
 
 > **SoT (код):** `ClientController` · `CombatAnimResolver` · `CombatAnimations` в `ReplicatedStorage.RealmOfSpirits`  
-> **Классификация навыков:** `SkillCatalog.CombatMeta` → `Range` + `DamageKind` · см. [`SPIRIT-SKILLS.md`](SPIRIT-SKILLS.md)
+> **Классификация навыков:** `SkillCatalog.CombatMeta` → `Range` + `DamageKind` · см. [`SPIRIT-SKILLS.md`](SPIRIT-SKILLS.md)  
+> **Anim block (A1 restore):** [`BLOCK-ANIM-CHAR-ART-2026-08-28.md`](BLOCK-ANIM-CHAR-ART-2026-08-28.md) § A1 · research [`RESEARCH-AI-ANIM-ART-2026-08-28.md`](RESEARCH-AI-ANIM-ART-2026-08-28.md) · paid setup [`OWNER-SETUP-PAID-AI.md`](OWNER-SETUP-PAID-AI.md)
 
 ## Статус (2026-08-23)
 
 **Body sword-swing отключён.** `CombatAnimResolver.Play()` — no-op; `ShouldPlayBodyAnim()` → `false`. Папка `CombatAnimations/` и Linked Sword клипы (`522635514` / `522638767`) удалены из place. При атаке остаются: **blade tween**, **root lunge**, feedback («Удар!» / «Выпад!»). Ниже — архив классификации и ID (для повторного включения).
+
+### A1 restore — free vs paid paths (2026-08-28)
+
+| Path | Cost | When | Steps |
+|------|------|------|-------|
+| **Free (recommended day 1)** | **$0** | Команда **«A1»** | Restore `CombatAnimations/` + resolver · IDs `522635514` / `522638767` / `129967390` · `VerifyAllClips` smoke |
+| **Mixamo custom** | **$0** | Need custom feel, no subscription | Mixamo FBX → Blender root-key fix → owner publish Animation → agent wires ID |
+| **UGCraft Creator** | **~$9/mo** | Free IDs feel weak after A1 PASS | Text→R15 → owner publish → **«A1 UGCraft»** |
+| **DG proprietary** | License | Owner has Team Create / license | Manual extract → owner publish — blocked for public hunt |
+
+Подробно: [`BLOCK-ANIM-CHAR-ART-2026-08-28.md`](BLOCK-ANIM-CHAR-ART-2026-08-28.md) § A1 · [`RESEARCH-AI-ANIM-ART-2026-08-28.md`](RESEARCH-AI-ANIM-ART-2026-08-28.md) § Step-by-step A1.
 
 ## Dueling Grounds — deep hunt (2026-08-23)
 

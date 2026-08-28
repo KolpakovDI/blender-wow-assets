@@ -66,6 +66,7 @@
 | «проект готов» / «owner unlock» / «owner unlock step N» | [`OWNER-UNLOCK.md`](OWNER-UNLOCK.md) — cutover track (override readiness gate) |
 | «W14»–«W18» / rated / ladder / MM / season / wrap | already **PASS** — re-smoke if needed |
 | «106» / «B1» / «Haven décor» / «mesh» | Named backlog · не default |
+| **«A1»** / **«анимации»** / **«Anim block»** | [`BLOCK-ANIM-CHAR-ART-2026-08-28.md`](BLOCK-ANIM-CHAR-ART-2026-08-28.md) — старт **A1** (free IDs, $0); paid: [`OWNER-SETUP-PAID-AI.md`](OWNER-SETUP-PAID-AI.md) · **«A3 Tripo»** после Tripo Pro |
 | «Ф4 W4 cutover» / «AllowProfileService» | OwnerFlipChecklist · **только после** owner unlock step 3 PASS |
 
 ## Где остановились
@@ -98,6 +99,7 @@
 | **B1** | PvP slice 3 | явная команда |
 | **Online AI mesh** | AllowAiMeshOnline | явная команда |
 | **Haven décor p2** | polish | явная команда |
+| **Anim/Char Art block** | A1–A6 · **paid tier** (~$12/mo Tripo Pro minimal) · A1 free IDs → A3 Tripo mesh · [`BLOCK-ANIM-CHAR-ART-2026-08-28.md`](BLOCK-ANIM-CHAR-ART-2026-08-28.md) · setup [`OWNER-SETUP-PAID-AI.md`](OWNER-SETUP-PAID-AI.md) | **«A1»** (день 1) · **«A3 Tripo»** (после owner setup) |
 | **Ф4 W14–W18** | Rated PvP track | ☑ **PASS** |
 | **Ф4 W13** | Inventory↔bank transfer | ☑ **PASS** |
 

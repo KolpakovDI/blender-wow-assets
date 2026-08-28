@@ -29,6 +29,7 @@ Entry skill for all Realm of Spirits agent work.
 | Mesh / model from text prompt → Studio | Read [realm-mesh-from-prompt](../realm-mesh-from-prompt/SKILL.md) |
 | Save / pause / checkpoint | Read [realm-session-checkpoint](../realm-session-checkpoint/SKILL.md) |
 | Skills / effects / battle orchestrator / GameManager combat | Read [realm-battle-pipeline](../realm-battle-pipeline/SKILL.md) |
+| **«A1»** / **«анимации»** / **«Anim block»** | [`BLOCK-ANIM-CHAR-ART-2026-08-28.md`](../../docs/realm-of-spirits/BLOCK-ANIM-CHAR-ART-2026-08-28.md) · paid setup [`OWNER-SETUP-PAID-AI.md`](../../docs/realm-of-spirits/OWNER-SETUP-PAID-AI.md) |
 | Changelog / GDD / docs only | `.cursor/rules/realm-of-spirits.mdc` |
 
 ## Hard rules

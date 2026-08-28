@@ -6,6 +6,13 @@
 
 ## [Unreleased]
 
+### Anim/Char Art block + paid AI stack (2026-08-28)
+
+- **New docs:** [`BLOCK-ANIM-CHAR-ART-2026-08-28.md`](BLOCK-ANIM-CHAR-ART-2026-08-28.md) (A1–A6 plan · § Paid stack · agent playbook) · [`RESEARCH-AI-ANIM-ART-2026-08-28.md`](RESEARCH-AI-ANIM-ART-2026-08-28.md) (tool pricing · Tier 0/1/2) · [`OWNER-SETUP-PAID-AI.md`](OWNER-SETUP-PAID-AI.md) (owner checklist before **«A3 Tripo»**)
+- **Owner decision:** paid tier — minimal **~$12/mo** Tripo Pro; growth **~$33/mo** optional; **A1** starts on free Roblox IDs ($0)
+- **Cross-refs:** `NEXT-SESSION` command routing + backlog · `ROADMAP` post-W18 with paid tier · `COMBAT-ANIMATIONS` A1 free/paid paths · `AGENTS.md` Anim block table · `realm-orchestrator` skill routing
+- **Plan-only:** no place edits · body sword-swing still disabled until A1 execution
+
 ### Publish suggestion policy (2026-08-27)
 
 - **Owner policy:** агент **может** предложить Publish / owner unlock когда readiness checklist **PASS**; владелец решает сам; suggestion ≠ instruction
