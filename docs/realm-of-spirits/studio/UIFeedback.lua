@@ -34,18 +34,8 @@ function UIFeedback.init(screenGui)
 	centerFlashLabel.Parent = centerFlashFrame
 end
 
-function UIFeedback.showCenter(text, duration)
-	duration = duration or 1.5
-	if not centerFlashFrame then return end
-	centerFlashToken += 1
-	local token = centerFlashToken
-	centerFlashLabel.Text = text
-	centerFlashFrame.Visible = true
-	centerFlashLabel.TextTransparency = 0
-	task.delay(duration, function()
-		if centerFlashToken ~= token then return end
-		centerFlashFrame.Visible = false
-	end)
+function UIFeedback.showCenter(_text, _duration)
+	-- Center flash toasts disabled (UX cleanup 2026-08-28)
 end
 
 function UIFeedback.showDamage(popups)

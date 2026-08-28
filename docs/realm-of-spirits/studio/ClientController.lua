@@ -246,6 +246,13 @@ local NAV_BILLBOARD_NAMES = {
 	ShowcaseLabel = true,
 	ShowcaseToast = true,
 }
+local TRANSIENT_BB_NAMES = {
+	TalkHint = true,
+	LootLabel = true,
+	FomoBillboard = true,
+	TradeHint = true,
+	MangaHint = true,
+}
 local POINTER_INSTANCE_NAMES = {
 	QuestTargetMarker = true,
 	WayBillboard = true,
@@ -307,7 +314,9 @@ local function hideAllWorldInfoLabels()
 	destroyNavBillboards()
 	stripPointersAndMarkers()
 	for _, d in ipairs(workspace:GetDescendants()) do
-		if d:IsA("BillboardGui") and shouldManageWorldBillboard(d) then
+		if d:IsA("BillboardGui") and TRANSIENT_BB_NAMES[d.Name] then
+			d:Destroy()
+		elseif d:IsA("BillboardGui") and shouldManageWorldBillboard(d) then
 			d.Enabled = false
 		end
 	end
@@ -370,43 +379,15 @@ local function collectHoverBillboards(inst)
 	return list
 end
 
-local function flashHoverLabels(inst)
-	local list = collectHoverBillboards(inst)
-	if #list == 0 then
-		return
-	end
-	hoverLabelToken += 1
-	local token = hoverLabelToken
-	for _, bb in ipairs(list) do
-		bb.Enabled = true
-	end
-	task.delay(HOVER_LABEL_SEC, function()
-		if token ~= hoverLabelToken then
-			return
-		end
-		for _, bb in ipairs(list) do
-			if bb.Parent then
-				bb.Enabled = false
-			end
-		end
-	end)
+local function flashHoverLabels(_inst)
+	-- Hover billboard flash disabled (UX cleanup 2026-08-28)
 end
 
 local hintClearToken = 0
-local function setTargetHint(text, autoClearSec)
-	text = text or ""
-	if text ~= "" and type(autoClearSec) == "number" and autoClearSec > 0 then
-		combatHintUntil = os.clock() + autoClearSec + 0.05
-	end
-	player:SetAttribute("TargetHint", text)
-	hintClearToken += 1
-	local token = hintClearToken
-	if text ~= "" and type(autoClearSec) == "number" and autoClearSec > 0 then
-		task.delay(autoClearSec, function()
-			if token == hintClearToken and player:GetAttribute("TargetHint") == text then
-				player:SetAttribute("TargetHint", "")
-			end
-		end)
+local function setTargetHint(_text, _autoClearSec)
+	-- Transient combat TargetHint disabled (UX cleanup 2026-08-28)
+	if player:GetAttribute("TargetHint") ~= "" then
+		player:SetAttribute("TargetHint", "")
 	end
 end
 

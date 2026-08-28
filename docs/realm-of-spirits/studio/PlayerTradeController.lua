@@ -62,47 +62,8 @@ local TOAST_KIND = {
 	},
 }
 
-local function showToast(text, kind)
-	if not text or text == "" then
-		return
-	end
-	kind = TOAST_KIND[kind] and kind or "info"
-	local style = TOAST_KIND[kind]
-	local pg = player:WaitForChild("PlayerGui")
-	local gui = pg:FindFirstChild("PlayerTradeToastGui")
-	if not gui then
-		gui = Instance.new("ScreenGui")
-		gui.Name = "PlayerTradeToastGui"
-		gui.ResetOnSpawn = false
-		gui.DisplayOrder = 500
-		gui.IgnoreGuiInset = true
-		gui.Parent = pg
-	end
-	local label = gui:FindFirstChild("Toast")
-	if not label then
-		label = Instance.new("TextLabel")
-		label.Name = "Toast"
-		label.AnchorPoint = Vector2.new(0.5, 0)
-		label.Position = UDim2.new(0.5, 0, 0.12, 0)
-		label.Size = UDim2.new(0, 520, 0, 52)
-		label.BackgroundTransparency = 0.08
-		label.Font = Enum.Font.GothamBold
-		label.TextSize = 17
-		label.TextWrapped = true
-		label.Parent = gui
-		local c = Instance.new("UICorner")
-		c.CornerRadius = UDim.new(0, 8)
-		c.Parent = label
-	end
-	label.BackgroundColor3 = style.BackgroundColor3
-	label.TextColor3 = style.TextColor3
-	label.Text = text
-	label.Visible = true
-	task.delay(5, function()
-		if label.Parent and label.Text == text then
-			label.Visible = false
-		end
-	end)
+local function showToast(_text, _kind)
+	-- Trade toasts disabled (UX cleanup 2026-08-28)
 end
 
 local guiRoot, panel, panelStroke, titleLabel, myOfferLabel, partnerOfferLabel, readyLabel, invList, cosList, readyBtn, confirmFrame

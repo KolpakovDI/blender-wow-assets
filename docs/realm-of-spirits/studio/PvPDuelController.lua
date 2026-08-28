@@ -104,45 +104,8 @@ local function inChallengeZone(plr)
 	return flat.Magnitude <= CHALLENGE_FROM_ARENA
 end
 
-local function showToast(text)
-	if not text or text == "" then
-		return
-	end
-	local pg = player:WaitForChild("PlayerGui")
-	local gui = pg:FindFirstChild("PvPDuelToastGui")
-	if not gui then
-		gui = Instance.new("ScreenGui")
-		gui.Name = "PvPDuelToastGui"
-		gui.ResetOnSpawn = false
-		gui.DisplayOrder = 510
-		gui.IgnoreGuiInset = true
-		gui.Parent = pg
-	end
-	local label = gui:FindFirstChild("Toast")
-	if not label then
-		label = Instance.new("TextLabel")
-		label.Name = "Toast"
-		label.AnchorPoint = Vector2.new(0.5, 0)
-		label.Position = UDim2.new(0.5, 0, 0.18, 0)
-		label.Size = UDim2.new(0, 520, 0, 52)
-		label.BackgroundColor3 = Color3.fromRGB(28, 22, 40)
-		label.BackgroundTransparency = 0.08
-		label.Font = Enum.Font.GothamBold
-		label.TextSize = 17
-		label.TextWrapped = true
-		label.TextColor3 = Color3.fromRGB(255, 230, 200)
-		label.Parent = gui
-		local c = Instance.new("UICorner")
-		c.CornerRadius = UDim.new(0, 8)
-		c.Parent = label
-	end
-	label.Text = text
-	label.Visible = true
-	task.delay(5, function()
-		if label.Parent and label.Text == text then
-			label.Visible = false
-		end
-	end)
+local function showToast(_text)
+	-- PvP duel toasts disabled (UX cleanup 2026-08-28)
 end
 
 local function hideChallengeGui()

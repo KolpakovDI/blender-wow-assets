@@ -2216,33 +2216,13 @@ minimapTitle.ZIndex = 15
 -- Функции обновления UI
 -- ============================================
 
-UpdateHint = function(text)
-	text = text or ""
-	hintText.Text = text
-	if not hintFrame then return end
-	if text ~= "" then
-		hintFrame.Visible = true
-		hintFrame.BackgroundTransparency = 0.25
-		hintText.TextTransparency = 0
-		hintText.TextStrokeTransparency = 0.5
-	else
-		-- Гасим подсказку
-		local fadeToken = (hintFrame:GetAttribute("FadeToken") or 0) + 1
-		hintFrame:SetAttribute("FadeToken", fadeToken)
-		task.spawn(function()
-			for t = 1, 6 do
-				if hintFrame:GetAttribute("FadeToken") ~= fadeToken then return end
-				if hintText.Text ~= "" then return end
-				hintFrame.BackgroundTransparency = 0.25 + t * 0.12
-				hintText.TextTransparency = t * 0.15
-				task.wait(0.04)
-			end
-			if hintFrame:GetAttribute("FadeToken") == fadeToken and hintText.Text == "" then
-				hintFrame.Visible = false
-				hintFrame.BackgroundTransparency = 0.25
-				hintText.TextTransparency = 0
-			end
-		end)
+UpdateHint = function(_text)
+	-- Transient TargetHint bar disabled (UX cleanup 2026-08-28)
+	if hintText then
+		hintText.Text = ""
+	end
+	if hintFrame then
+		hintFrame.Visible = false
 	end
 end
 

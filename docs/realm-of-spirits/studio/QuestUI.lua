@@ -1102,16 +1102,11 @@ local function createQuestEntry(quest, isActive, progress, order, readyToTurnIn)
 	if readyToTurnIn then
 		infoLbl.Text = "Готов к сдаче у квестора!"
 		infoLbl.TextColor3 = COLORS.Gold
-	elseif isActive and type(quest.ZoneHint) == "string" and quest.ZoneHint ~= "" then
-		infoLbl.Text = "→ " .. quest.ZoneHint
-		infoLbl.TextColor3 = COLORS.Accent
 	elseif isActive then
 		infoLbl.Text = "Ур. " .. (quest.Level or 1) .. " · В процессе"
 	elseif quest._completed then
 		infoLbl.Text = "Выполнено"
 		infoLbl.TextColor3 = COLORS.Complete
-	elseif type(quest.ZoneHint) == "string" and quest.ZoneHint ~= "" then
-		infoLbl.Text = "Ур. " .. (quest.Level or 1) .. " · " .. quest.ZoneHint
 	else
 		infoLbl.Text = "Ур. " .. (quest.Level or 1) .. " · " .. (quest.Type == "Story" and "Сюжетный" or "Побочный")
 	end
@@ -1187,59 +1182,8 @@ end
 -- Уведомления
 -- ============================================
 
-local function showNotification(title, text, color)
-	color = color or COLORS.Accent
-
-	local notif = Instance.new("Frame")
-	notif.Size = UDim2.new(0, 350, 0, 70)
-	notif.Position = UDim2.new(0.5, -175, 0, -100)
-	notif.BackgroundColor3 = COLORS.Background
-	notif.BorderSizePixel = 0
-	notif.Parent = screenGui
-
-	local notifCorner = Instance.new("UICorner")
-	notifCorner.CornerRadius = UDim.new(0, 10)
-	notifCorner.Parent = notif
-
-	local notifStroke = Instance.new("UIStroke")
-	notifStroke.Color = color
-	notifStroke.Thickness = 2
-	notifStroke.Parent = notif
-
-	local titleLbl = Instance.new("TextLabel")
-	titleLbl.Size = UDim2.new(1, -20, 0, 30)
-	titleLbl.Position = UDim2.new(0, 10, 0, 8)
-	titleLbl.BackgroundTransparency = 1
-	titleLbl.Text = title
-	titleLbl.TextColor3 = color
-	titleLbl.Font = Enum.Font.FredokaOne
-	titleLbl.TextScaled = true
-	titleLbl.TextXAlignment = Enum.TextXAlignment.Left
-	titleLbl.Parent = notif
-
-	local textLbl = Instance.new("TextLabel")
-	textLbl.Size = UDim2.new(1, -20, 0, 25)
-	textLbl.Position = UDim2.new(0, 10, 0, 38)
-	textLbl.BackgroundTransparency = 1
-	textLbl.Text = text
-	textLbl.TextColor3 = COLORS.Text
-	textLbl.Font = Enum.Font.Gotham
-	textLbl.TextScaled = true
-	textLbl.TextXAlignment = Enum.TextXAlignment.Left
-	textLbl.Parent = notif
-
-	-- Анимация появления
-	TweenService:Create(notif, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-		Position = UDim2.new(0.5, -175, 0, 20)
-	}):Play()
-
-	task.delay(3, function()
-		TweenService:Create(notif, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-			Position = UDim2.new(0.5, -175, 0, -100)
-		}):Play()
-		task.wait(0.5)
-		notif:Destroy()
-	end)
+local function showNotification(_title, _text, _color)
+	-- Quest toast notifications disabled (UX cleanup 2026-08-28)
 end
 
 -- ============================================

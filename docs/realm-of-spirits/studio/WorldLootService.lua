@@ -55,25 +55,9 @@ local function giveItem(playerData, itemId, quantity)
 	table.insert(playerData.Inventory, { Id = itemId, Quantity = quantity })
 end
 
-local function makeBillboard(parent, text, color, opts)
-	opts = opts or {}
-	local bb = Instance.new("BillboardGui")
-	bb.Name = "LootLabel"
-	bb.Size = opts.Size or UDim2.new(0, 160, 0, 32)
-	bb.StudsOffset = Vector3.new(0, opts.OffsetY or 2.6, 0)
-	bb.AlwaysOnTop = true
-	bb.MaxDistance = opts.MaxDistance or 90
-	bb.Enabled = opts.Visible ~= false
-	bb.Parent = parent
-	local label = Instance.new("TextLabel")
-	label.Size = UDim2.new(1, 0, 1, 0)
-	label.BackgroundTransparency = 1
-	label.Text = text
-	label.TextColor3 = color
-	label.Font = Enum.Font.GothamBold
-	label.TextScaled = true
-	label.Parent = bb
-	return bb
+local function makeBillboard(_parent, _text, _color, _opts)
+	-- Loot world labels disabled (UX cleanup 2026-08-28)
+	return nil
 end
 
 local function makePrompt(parent, actionText, objectText)
@@ -155,7 +139,6 @@ local function spawnCrystal(position, index, opts)
 			_G.UpdateQuestProgress(player, "CollectItem", { ItemId = id, Count = 1 })
 		end
 		DataEvent:FireClient(player, "FullSync", data)
-		HavenEvent:FireClient(player, "Toast", { Text = "Собран: " .. label })
 		part.Transparency = 1
 		prompt.Enabled = false
 		local lightObj = part:FindFirstChildOfClass("PointLight")
@@ -256,7 +239,6 @@ local function spawnChest(position, index)
 				.. (forced and "Pity! " or "")
 				.. (catName or ("кристалл " .. tostring(crystalId)))
 		end
-		HavenEvent:FireClient(player, "Toast", { Text = toast })
 		lid.CFrame = lid.CFrame * CFrame.Angles(math.rad(-35), 0, 0)
 	end)
 end

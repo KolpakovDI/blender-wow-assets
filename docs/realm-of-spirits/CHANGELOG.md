@@ -7,6 +7,7 @@
 ## [Unreleased]
 
 - **Navigation popups removed:** zone-entry banners/toasts (`ZoneController`), HubWayfind billboards (`OtakuHavenBuilder`), FTUE chip (`NextStepChip`), showcase pad labels (`ResonanceShowcaseService`); client cleanup on load (`ClientController`); HubFunnel / ProximityPrompts unchanged
+- **All transient hints/toasts removed (2026-08-28):** `ToastRouter.Notify` no-op · `TargetHint` / `UpdateHint` (`ClientController`, `UIController`) · quest toasts + `ZoneHint` in journal list (`QuestUI`) · Haven/loot/PvP/trade toasts (`OtakuHavenController`, `WorldLootService`, `PvPDuelController`, `PlayerTradeController`) · world billboards `TalkHint`/`LootLabel`/`FomoBillboard`/`TradeHint`/`MangaHint` · hover billboard flash · `UIFeedback.showCenter` · battle HUD / quest journal (J) / ProximityPrompts kept
 
 ### Anim/Char Art block PAUSED (2026-08-28)
 

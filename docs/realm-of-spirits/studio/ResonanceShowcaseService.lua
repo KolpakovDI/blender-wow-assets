@@ -225,17 +225,6 @@ local function ensurePlaza()
 	titleLbl.TextScaled = true
 	titleLbl.Parent = gui
 
-	local hint = Instance.new("TextLabel")
-	hint.Name = "Hint"
-	hint.Size = UDim2.new(1, 0, 0.35, 0)
-	hint.Position = UDim2.new(0, 0, 0.65, 0)
-	hint.BackgroundTransparency = 1
-	hint.Text = "E — выставить активного духа"
-	hint.TextColor3 = Color3.fromRGB(180, 200, 255)
-	hint.Font = Enum.Font.Gotham
-	hint.TextScaled = true
-	hint.Parent = gui
-
 	local glow = part({
 		Name = "InnerGlow",
 		Size = Vector3.new(0.6, 0.6, 0.6),

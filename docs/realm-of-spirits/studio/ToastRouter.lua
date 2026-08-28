@@ -154,17 +154,8 @@ pump = function()
 end
 
 -- text, durationSeconds?, priority (number|"Critical"|"Reward"|"Tip")?, color?
-function ToastRouter.Notify(text, duration, priority, color)
-	if type(text) ~= "string" or text == "" then
-		return
-	end
-	enqueue({
-		text = text,
-		duration = duration,
-		priority = normalizePriority(priority),
-		color = typeof(color) == "Color3" and color or nil,
-	})
-	pump()
+function ToastRouter.Notify(_text, _duration, _priority, _color)
+	-- Transient toasts disabled (UX cleanup 2026-08-28)
 end
 
 function ToastRouter.Critical(text, duration)

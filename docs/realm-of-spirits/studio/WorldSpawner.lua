@@ -392,8 +392,8 @@ local function EnsureQuestMasterInteract(model)
 		corner.CornerRadius = UDim.new(0, 8)
 		corner.Parent = lbl
 	end
-	-- F3-W1: keep TalkHint readable for cold-start (Ensure*)
-	hint.Enabled = true
+	-- F3-W1: TalkHint disabled (UX cleanup 2026-08-28)
+	hint.Enabled = false
 	hint.Size = UDim2.new(0, 140, 0, 36)
 	local hintLbl = hint:FindFirstChild("Label")
 	if hintLbl and hintLbl:IsA("TextLabel") then

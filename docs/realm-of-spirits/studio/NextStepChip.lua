@@ -132,8 +132,10 @@ local function ensureGui()
 end
 
 local function refresh()
-	ensureGui()
-	frame.Visible = false
+	if gui and gui.Parent then
+		gui:Destroy()
+		gui, frame, label = nil, nil, nil
+	end
 end
 
 local function setStep(nextStep)
@@ -319,4 +321,4 @@ task.spawn(function()
 	refresh()
 end)
 
-print("[RoS] NextStepChip ready (F3-W1 cold-start copy + ZoneHint)")
+print("[RoS] NextStepChip ready (disabled — UX cleanup 2026-08-28)")

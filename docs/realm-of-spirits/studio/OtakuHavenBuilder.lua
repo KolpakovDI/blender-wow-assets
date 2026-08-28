@@ -253,27 +253,6 @@ local function addGacha(parent, position)
 	prompt.RequiresLineOfSight = false
 	prompt.Enabled = true
 	prompt.Parent = g
-
-	local bb = Instance.new("BillboardGui")
-	bb.Name = "FomoBillboard"
-	bb.Size = UDim2.new(0, 180, 0, 40)
-	bb.StudsOffset = Vector3.new(0, 3.2, 0)
-	bb.AlwaysOnTop = true
-	bb.Enabled = false
-	bb.Parent = g
-	local label = Instance.new("TextLabel")
-	label.Name = "FomoLabel"
-	label.Size = UDim2.fromScale(1, 1)
-	label.BackgroundColor3 = Color3.fromRGB(40, 20, 50)
-	label.BackgroundTransparency = 0.25
-	label.TextColor3 = Color3.fromRGB(255, 180, 220)
-	label.Font = Enum.Font.GothamBold
-	label.TextSize = 14
-	label.Text = "Лимит: 2:00:00"
-	label.Parent = bb
-	local c = Instance.new("UICorner")
-	c.CornerRadius = UDim.new(0, 6)
-	c.Parent = label
 end
 
 local function addFittingRoom(parent, position)
@@ -302,25 +281,6 @@ local function addFittingRoom(parent, position)
 		CanCollide = false,
 		Parent = parent,
 	})
-	local bb = Instance.new("BillboardGui")
-	bb.Name = "TradeHint"
-	bb.Size = UDim2.new(0, 280, 0, 56)
-	bb.StudsOffset = Vector3.new(0, 0.2, 0)
-	bb.AlwaysOnTop = true
-	bb.Enabled = false
-	bb.Parent = sign
-	local label = Instance.new("TextLabel")
-	label.Size = UDim2.fromScale(1, 1)
-	label.BackgroundColor3 = Color3.fromRGB(28, 22, 40)
-	label.BackgroundTransparency = 0.15
-	label.Text = "P2P ОБМЕН\nПодойди к игроку → T"
-	label.TextColor3 = Color3.fromRGB(255, 220, 150)
-	label.Font = Enum.Font.GothamBold
-	label.TextScaled = true
-	label.Parent = bb
-	local c = Instance.new("UICorner")
-	c.CornerRadius = UDim.new(0, 8)
-	c.Parent = label
 end
 
 local function addMangaBuff(parent, position)
@@ -407,28 +367,6 @@ local function addMangaBuff(parent, position)
 	signLbl.TextScaled = true
 	signLbl.Font = Enum.Font.GothamBold
 	signLbl.Parent = signGui
-
-	local bb = Instance.new("BillboardGui")
-	bb.Name = "MangaHint"
-	bb.Size = UDim2.new(0, 260, 0, 70)
-	bb.StudsOffset = Vector3.new(0, 5.2, 0)
-	bb.AlwaysOnTop = true
-	bb.MaxDistance = 60
-	bb.Enabled = false
-	bb.Parent = shelf
-	local hint = Instance.new("TextLabel")
-	hint.Size = UDim2.fromScale(1, 1)
-	hint.BackgroundColor3 = Color3.fromRGB(40, 25, 60)
-	hint.BackgroundTransparency = 0.1
-	hint.TextColor3 = Color3.fromRGB(255, 230, 180)
-	hint.Font = Enum.Font.GothamBold
-	hint.TextSize = 16
-	hint.Text = "Читай мангу «Путь Меча»\nПодойди сюда → нажми E\nБафф: +15% урона на 30 мин"
-	hint.TextWrapped = true
-	hint.Parent = bb
-	local hc = Instance.new("UICorner")
-	hc.CornerRadius = UDim.new(0, 8)
-	hc.Parent = hint
 
 	local prompt = Instance.new("ProximityPrompt")
 	prompt.ObjectText = "Манга «Путь Меча»"
@@ -1741,7 +1679,7 @@ function OtakuHavenBuilder.EnsureHubColdStartCopy(haven)
 	if not hint then
 		return
 	end
-	hint.Enabled = true
+	hint.Enabled = false
 	hint.Size = UDim2.new(0, 140, 0, 36)
 	local lbl = hint:FindFirstChild("Label")
 	if lbl and lbl:IsA("TextLabel") then
